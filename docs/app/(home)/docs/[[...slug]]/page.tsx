@@ -22,11 +22,12 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   return (
     <DocsPage toc={data.toc} full={data.full} footer={{ enabled: false }} tableOfContentPopover={{ enabled: false }}>
-      <DocsTitle>{data.title}</DocsTitle>
-      <DocsDescription>{data.description}</DocsDescription>
-      <div className="flex items-center gap-2 mt-2 mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex-1" />
         <CopyPage path={page.url} />
       </div>
+      <DocsTitle>{data.title}</DocsTitle>
+      <DocsDescription className="mb-6">{data.description}</DocsDescription>
       <DocsBody>
         <MDX
           components={getMDXComponents({

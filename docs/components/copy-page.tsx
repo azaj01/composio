@@ -36,7 +36,7 @@ export function CopyPage({ path }: CopyPageProps) {
     <button
       onClick={handleCopy}
       disabled={state === 'loading'}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-fd-muted-foreground hover:text-fd-foreground bg-fd-secondary hover:bg-fd-accent rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50"
       aria-label="Copy page as markdown"
     >
       {state === 'loading' ? (
@@ -46,7 +46,7 @@ export function CopyPage({ path }: CopyPageProps) {
       ) : (
         <Copy className="w-4 h-4" aria-hidden="true" />
       )}
-      {state === 'copied' ? 'Copied!' : 'Copy page'}
+      {state === 'copied' ? 'Copied!' : 'Copy markdown'}
     </button>
   );
 }
