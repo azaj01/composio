@@ -116,14 +116,12 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
 
     if (toolkit) {
       return (
-        <>
-          <PageActions path={`/toolkits/${toolkit.slug}`} />
-          <ToolkitDetail
-            toolkit={toolkit}
-            tools={toolkit.tools}
-            triggers={toolkit.triggers}
-          />
-        </>
+        <ToolkitDetail
+          toolkit={toolkit}
+          tools={toolkit.tools}
+          triggers={toolkit.triggers}
+          path={`/toolkits/${toolkit.slug}`}
+        />
       );
     }
   }
