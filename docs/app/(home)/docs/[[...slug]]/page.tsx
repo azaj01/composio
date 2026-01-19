@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/mdx-components';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
+import { CopyPage } from '@/components/copy-page';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
@@ -22,7 +23,10 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   return (
     <DocsPage toc={data.toc} full={data.full} footer={{ enabled: false }} tableOfContentPopover={{ enabled: false }}>
       <DocsTitle>{data.title}</DocsTitle>
-      <DocsDescription className="mb-4">{data.description}</DocsDescription>
+      <DocsDescription>{data.description}</DocsDescription>
+      <div className="flex items-center gap-2 mt-2 mb-6">
+        <CopyPage path={page.url} />
+      </div>
       <DocsBody>
         <MDX
           components={getMDXComponents({
