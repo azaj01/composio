@@ -13,8 +13,13 @@ const config = {
   },
   async rewrites() {
     return [
+      // Support both .md and .mdx extensions for AI agents
       {
         source: '/docs/:path*.mdx',
+        destination: '/llms.mdx/docs/:path*',
+      },
+      {
+        source: '/docs/:path*.md',
         destination: '/llms.mdx/docs/:path*',
       },
     ];
