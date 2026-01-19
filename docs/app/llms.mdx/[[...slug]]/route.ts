@@ -79,7 +79,8 @@ export async function GET(
 
   if (page) {
     try {
-      return new Response(await getLLMText(page), {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return new Response(await getLLMText(page as any), {
         headers: {
           'Content-Type': 'text/markdown; charset=utf-8',
         },
