@@ -387,24 +387,30 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Active nav link - orange indicator overlaps the navbar border */
+/* Active nav link - orange color on all screens */
 #nd-nav nav > a[data-active="true"] {
   color: var(--composio-orange);
-  position: relative;
-}
-
-#nd-nav nav > a[data-active="true"]::after {
-  content: '';
-  position: absolute;
-  bottom: -0.5rem; /* Extend down to overlap navbar border */
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--composio-orange);
 }
 
 #nd-nav nav > a[data-active="true"]:hover {
   background: transparent;
+}
+
+/* Active nav indicator - only on desktop where nav is horizontal */
+@media (min-width: 768px) {
+  #nd-nav nav > a[data-active="true"] {
+    position: relative;
+  }
+
+  #nd-nav nav > a[data-active="true"]::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem; /* Extend down to overlap navbar border */
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--composio-orange);
+  }
 }
 
 /* Right side items - consistent gaps */
