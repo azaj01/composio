@@ -1,6 +1,5 @@
 import {
   DocsBody,
-  DocsDescription,
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/layouts/docs/page';
@@ -24,7 +23,6 @@ export function createDocsPage(source: Source) {
     return (
       <DocsPage toc={page.data.toc} full={page.data.full} footer={{ enabled: false }} tableOfContentPopover={{ enabled: false }}>
         <DocsTitle>{page.data.title}</DocsTitle>
-        <DocsDescription className="mb-2">{page.data.description}</DocsDescription>
         <PageActions path={page.url} />
         <DocsBody>
           <MDX

@@ -3,7 +3,6 @@ import { referenceSource } from '@/lib/source';
 import { APIPage } from '@/components/api-page';
 import {
   DocsBody,
-  DocsDescription,
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/layouts/docs/page';
@@ -50,7 +49,6 @@ export default async function Page({
   return (
     <DocsPage toc={mdxData.toc} full={mdxData.full} footer={{ enabled: false }} tableOfContentPopover={{ enabled: false }}>
       <DocsTitle>{mdxData.title}</DocsTitle>
-      <DocsDescription className="mb-2">{mdxData.description}</DocsDescription>
       <PageActions path={page.url} />
       <DocsBody>
         <MDX

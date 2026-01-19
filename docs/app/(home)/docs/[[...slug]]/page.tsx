@@ -1,7 +1,6 @@
 import { getPageImage, source } from '@/lib/source';
 import {
   DocsBody,
-  DocsDescription,
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/layouts/docs/page';
@@ -23,7 +22,6 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   return (
     <DocsPage toc={data.toc} full={data.full} footer={{ enabled: false }} tableOfContentPopover={{ enabled: false }}>
       <DocsTitle>{data.title}</DocsTitle>
-      <DocsDescription className="mb-2">{data.description}</DocsDescription>
       <PageActions path={page.url} />
       <DocsBody>
         <MDX
