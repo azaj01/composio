@@ -387,7 +387,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Active nav link - orange indicator sits above the navbar border */
+/* Active nav link - orange indicator overlaps the navbar border */
 #nd-nav nav > a[data-active="true"] {
   color: var(--composio-orange);
   position: relative;
@@ -396,7 +396,7 @@ textarea:focus-visible {
 #nd-nav nav > a[data-active="true"]::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -0.5rem; /* Extend down to overlap navbar border */
   left: 0;
   right: 0;
   height: 2px;
@@ -467,6 +467,20 @@ nav a[href*="app.composio"]:hover {
 nav a[href*="app.composio"]:focus-visible {
   outline: 2px solid var(--composio-orange);
   outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Table of Contents (Right Sidebar)
+   ========================================================================== */
+
+/* Prevent "On this page" from being cut off by header */
+#nd-toc {
+  top: 4rem;
+}
+
+/* TOC - scope primary color to orange for active indicator */
+#nd-toc {
+  --color-fd-primary: var(--composio-orange);
 }
 
 @layer base {
