@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Copy, Check, Loader2, ExternalLink } from 'lucide-react';
+import { Feedback } from './feedback';
 
 interface PageActionsProps {
   path: string;
@@ -64,6 +65,10 @@ export function PageActions({ path }: PageActionsProps) {
         <ExternalLink className="w-4 h-4" aria-hidden="true" />
         View as markdown
       </a>
+
+      <span className="text-fd-muted-foreground/50" aria-hidden="true">·</span>
+
+      <Feedback page={path} />
     </div>
   );
 }
