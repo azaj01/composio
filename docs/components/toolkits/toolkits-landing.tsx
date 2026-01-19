@@ -53,10 +53,11 @@ function CopySlugButton({ slug }: { slug: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 rounded bg-fd-muted px-1.5 py-0.5 font-mono text-xs text-fd-muted-foreground transition-colors hover:text-fd-foreground"
+      aria-label={`Copy ${slug.toUpperCase()} to clipboard`}
+      className="inline-flex items-center gap-1 rounded bg-fd-muted px-1.5 py-0.5 font-mono text-xs text-fd-muted-foreground transition-colors hover:text-fd-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
     >
       <span className="max-w-[120px] truncate sm:max-w-none">{slug.toUpperCase()}</span>
-      {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+      {copied ? <Check className="h-3 w-3 text-green-500" aria-hidden="true" /> : <Copy className="h-3 w-3" aria-hidden="true" />}
     </button>
   );
 }
@@ -78,11 +79,11 @@ function ToolkitRow({ toolkit }: { toolkit: Toolkit }) {
       {/* Right side: Counts */}
       <div className="flex items-center gap-3 pl-12 text-xs text-fd-muted-foreground sm:pl-0">
         <span className="flex items-center gap-1">
-          <Wrench className="h-3.5 w-3.5" />
+          <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
           {toolkit.toolCount}
         </span>
         <span className="flex items-center gap-1">
-          <Zap className="h-3.5 w-3.5" />
+          <Zap className="h-3.5 w-3.5" aria-hidden="true" />
           {toolkit.triggerCount}
         </span>
       </div>
@@ -109,14 +110,13 @@ export function ToolkitsLanding() {
       result = result.filter((t) => t.category === category);
     }
 
-    // Filter by search
+    // Filter by search (name and slug only)
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(
         (toolkit) =>
           toolkit.name.toLowerCase().includes(searchLower) ||
-          toolkit.slug.toLowerCase().includes(searchLower) ||
-          toolkit.description.toLowerCase().includes(searchLower)
+          toolkit.slug.toLowerCase().includes(searchLower)
       );
     }
 
@@ -188,13 +188,16 @@ export function ToolkitsLanding() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fd-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fd-muted-foreground" aria-hidden="true" />
           <input
             type="text"
-            placeholder="Search toolkits..."
+            name="toolkit-search"
+            aria-label="Search toolkits"
+            placeholder="Search toolkits…"
+            autoComplete="off"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 w-full rounded-lg border border-fd-border bg-fd-background pl-10 pr-4 text-sm text-fd-foreground placeholder:text-fd-muted-foreground focus:border-fd-primary focus:outline-none focus:ring-1 focus:ring-fd-primary"
+            className="h-10 w-full rounded-lg border border-fd-border bg-fd-background pl-10 pr-4 text-sm text-fd-foreground placeholder:text-fd-muted-foreground focus:outline-none focus-visible:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/20"
           />
         </div>
 
@@ -203,7 +206,8 @@ export function ToolkitsLanding() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="h-10 w-full appearance-none rounded-lg border border-fd-border bg-fd-background pl-4 pr-10 text-sm text-fd-foreground focus:border-fd-primary focus:outline-none focus:ring-1 focus:ring-fd-primary sm:w-auto"
+            aria-label="Filter by category"
+            className="h-10 w-full appearance-none rounded-lg border border-fd-border bg-fd-background pl-4 pr-10 text-sm text-fd-foreground focus:outline-none focus-visible:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/20 sm:w-auto"
           >
             <option value="all">All categories</option>
             {categories.map((cat) => (
