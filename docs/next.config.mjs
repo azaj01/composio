@@ -13,15 +13,27 @@ const config = {
   },
   async rewrites() {
     return [
-      // Support both .md and .mdx extensions for AI agents
-      {
-        source: '/docs/:path*.mdx',
-        destination: '/llms.mdx/docs/:path*',
-      },
-      {
-        source: '/docs/:path*.md',
-        destination: '/llms.mdx/docs/:path*',
-      },
+      // Support .md and .mdx extensions for AI agents across all sections
+      // Docs
+      { source: '/docs/:path*.mdx', destination: '/llms.mdx/docs/:path*' },
+      { source: '/docs/:path*.md', destination: '/llms.mdx/docs/:path*' },
+      { source: '/docs.md', destination: '/llms.mdx/docs' },
+      { source: '/docs.mdx', destination: '/llms.mdx/docs' },
+      // Tool Router
+      { source: '/tool-router/:path*.mdx', destination: '/llms.mdx/tool-router/:path*' },
+      { source: '/tool-router/:path*.md', destination: '/llms.mdx/tool-router/:path*' },
+      { source: '/tool-router.md', destination: '/llms.mdx/tool-router' },
+      { source: '/tool-router.mdx', destination: '/llms.mdx/tool-router' },
+      // Examples
+      { source: '/examples/:path*.mdx', destination: '/llms.mdx/examples/:path*' },
+      { source: '/examples/:path*.md', destination: '/llms.mdx/examples/:path*' },
+      { source: '/examples.md', destination: '/llms.mdx/examples' },
+      { source: '/examples.mdx', destination: '/llms.mdx/examples' },
+      // Reference
+      { source: '/reference/:path*.mdx', destination: '/llms.mdx/reference/:path*' },
+      { source: '/reference/:path*.md', destination: '/llms.mdx/reference/:path*' },
+      { source: '/reference.md', destination: '/llms.mdx/reference' },
+      { source: '/reference.mdx', destination: '/llms.mdx/reference' },
     ];
   },
   async redirects() {
