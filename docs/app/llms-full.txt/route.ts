@@ -5,7 +5,16 @@ export const revalidate = false;
 export async function GET() {
   try {
     const pages = source.getPages();
-    const results = await Promise.all(pages.map(getLLMText));
+    const results = await Promise.all(
+      pages.map(async (page) => {
+        try {
+          return await getLLMText(page);
+        } catch {
+          // Graceful fallback if getText fails
+          return `# ${page.data.title} (${page.url})\n\n${page.data.description || ''}`;
+        }
+      })
+    );
 
     return new Response(results.join('\n\n---\n\n'), {
       headers: {
