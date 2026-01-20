@@ -208,16 +208,24 @@ async function openapiPageToMarkdown(
       }> | undefined;
 
       if (responses) {
+        // Response status codes table
         lines.push('### Responses', '');
+        lines.push('| Status | Description |');
+        lines.push('|--------|-------------|');
         for (const [status, response] of Object.entries(responses)) {
-          const desc = response.description || '';
-          lines.push(`#### ${status} - ${desc}`, '');
+          const desc = (response.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+          lines.push(`| ${status} | ${desc} |`);
+        }
+        lines.push('');
 
+        // Success response body (2xx only)
+        for (const [status, response] of Object.entries(responses)) {
+          if (!status.startsWith('2')) continue;
           const jsonContent = response.content?.['application/json'];
           if (jsonContent?.schema) {
             const schemaProps = renderSchemaProperties(jsonContent.schema);
             if (schemaProps.length > 0) {
-              lines.push('**Response body:**', '');
+              lines.push(`### Response Body (${status})`, '');
               lines.push(...schemaProps);
               lines.push('');
             }
