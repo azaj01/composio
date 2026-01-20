@@ -341,8 +341,7 @@ async function openapiPageToMarkdown(
         lines.push('### Responses', '');
 
         for (const [status, response] of Object.entries(operation.responses)) {
-          const statusEmoji = status.startsWith('2') ? '✅' : status.startsWith('4') ? '⚠️' : '❌';
-          lines.push(`#### ${statusEmoji} ${status} - ${response.description || ''}`, '');
+          lines.push(`#### ${status} - ${response.description || ''}`, '');
 
           const jsonContent = response.content?.['application/json'];
           if (jsonContent?.schema) {
