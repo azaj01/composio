@@ -69,6 +69,55 @@ def json_schema_to_pydantic_type(
         # Use reduce to create Union[Type1, Type2, ...] properly
         return reduce(lambda a, b: t.Union[a, b], cast_types)  # type: ignore
 
+    # Handle anyOf schemas (commonly used for nullable types)
+    if "anyOf" in json_schema:
+        any_of_options = json_schema["anyOf"]
+        pydantic_types = [
+            json_schema_to_pydantic_type(option) for option in any_of_options
+        ]
+        # Filter out None/null types for the base type
+        # "null" type maps to t.Optional[t.Any], so we need to check for that too
+        null_type = PYDANTIC_TYPE_TO_PYTHON_TYPE.get("null")
+        has_null = any(
+            ptype == null_type or ptype is type(None)
+            for ptype in pydantic_types
+            if ptype is not None
+        )
+        valid_types = [
+            ptype
+            for ptype in pydantic_types
+            if ptype is not None and ptype is not type(None) and ptype != null_type
+        ]
+        if len(valid_types) == 0:
+            return str  # fallback to string type
+        if len(valid_types) == 1:
+            base_type = valid_types[0]
+            # If null was one of the options, make it Optional
+            if has_null:
+                return t.Optional[t.cast(t.Type, base_type)]  # type: ignore
+            return base_type
+        cast_types = [t.cast(t.Type, ptype) for ptype in valid_types]
+        union_type = reduce(lambda a, b: t.Union[a, b], cast_types)  # type: ignore
+        # If null was one of the options, include None in the Union
+        if has_null:
+            return t.Optional[union_type]  # type: ignore
+        return union_type
+
+    # Handle allOf schemas (usually for combining schemas)
+    if "allOf" in json_schema:
+        all_of_options = json_schema["allOf"]
+        # For allOf with single option, use that option's type
+        if len(all_of_options) == 1:
+            return json_schema_to_pydantic_type(all_of_options[0])
+        # For multiple allOf options, try to find the primary type
+        # Usually the first non-ref schema or the one with "type" key
+        for option in all_of_options:
+            if "type" in option:
+                return json_schema_to_pydantic_type(option)
+        # Fallback: process first option
+        if all_of_options:
+            return json_schema_to_pydantic_type(all_of_options[0])
+
     # Add fallback type - string
     if "type" not in json_schema:
         json_schema["type"] = "string"

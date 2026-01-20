@@ -559,6 +559,89 @@ class TestJsonSchemaToPydanticType:
         with pytest.raises(ValueError, match="Unsupported JSON schema type"):
             json_schema_to_pydantic_type(json_schema)
 
+    def test_anyof_nullable_object(self):
+        """Test anyOf with object and null types (common for nullable fields)."""
+        json_schema = {
+            "anyOf": [{"type": "object", "additionalProperties": {}}, {"type": "null"}]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should return Optional[Dict], not str (to allow both dict and None)
+        assert hasattr(result, "__origin__")
+        assert result.__origin__ is t.Union
+        assert t.Dict in result.__args__
+        assert type(None) in result.__args__
+
+    def test_anyof_nullable_object_with_properties(self):
+        """Test anyOf with object (with properties) and null types."""
+        json_schema = {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "title": "CustomFields",
+                    "properties": {"field1": {"type": "string"}},
+                },
+                {"type": "null"},
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should return Optional[BaseModel subclass] (Union with None)
+        assert hasattr(result, "__origin__")
+        assert result.__origin__ is t.Union
+        # One of the args should be a BaseModel subclass
+        model_types = [
+            arg
+            for arg in result.__args__
+            if isinstance(arg, type) and issubclass(arg, BaseModel)
+        ]
+        assert len(model_types) == 1
+        # None should also be in the union
+        assert type(None) in result.__args__
+
+    def test_anyof_multiple_types(self):
+        """Test anyOf with multiple non-null types."""
+        json_schema = {
+            "anyOf": [{"type": "string"}, {"type": "integer"}, {"type": "object"}]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        assert hasattr(result, "__origin__")
+        assert result.__origin__ is t.Union
+
+    def test_anyof_single_type(self):
+        """Test anyOf with single type returns the type directly."""
+        json_schema = {"anyOf": [{"type": "string"}]}
+        result = json_schema_to_pydantic_type(json_schema)
+        assert result is str
+        assert not hasattr(result, "__origin__")
+
+    def test_allof_single_option(self):
+        """Test allOf with single option."""
+        json_schema = {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {"name": {"type": "string"}},
+                    "title": "Test",
+                }
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        assert isinstance(result, type)
+        assert issubclass(result, BaseModel)
+
+    def test_allof_multiple_options_with_type(self):
+        """Test allOf with multiple options where one has type."""
+        json_schema = {
+            "allOf": [{"description": "Some description"}, {"type": "string"}]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        assert result is str
+
+    def test_allof_empty_options(self):
+        """Test allOf with empty options falls back to string."""
+        json_schema = {"allOf": []}
+        result = json_schema_to_pydantic_type(json_schema)
+        assert result is str
+
 
 class TestJsonSchemaToFieldsDict:
     """Test cases for json_schema_to_fields_dict function."""
@@ -753,6 +836,132 @@ class TestEdgeCases:
         except (RecursionError, ValueError):
             # Acceptable for now - circular references are complex
             pass
+
+
+class TestCrewAICustomFieldsBug:
+    """Regression tests for PLEN-1177 - CustomFields type error with CrewAI."""
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_custom_fields_object_type_preserved(self):
+        """
+        Test that CustomFields with anyOf [object, null] returns Dict, not str.
+
+        This is the exact bug scenario from PLEN-1177.
+        """
+        # Schema similar to what Salesforce tools return for CustomFields
+        json_schema = {
+            "title": "CreateLeadRequest",
+            "type": "object",
+            "properties": {
+                "Company": {"type": "string", "title": "Company"},
+                "LastName": {"type": "string", "title": "LastName"},
+                "CustomFields": {
+                    "anyOf": [
+                        {"type": "object", "additionalProperties": {}},
+                        {"type": "null"},
+                    ],
+                    "default": None,
+                    "description": "Dictionary of custom field API names and their values.",
+                    "title": "CustomFields",
+                },
+            },
+            "required": ["Company", "LastName"],
+        }
+
+        model_class = json_schema_to_model(json_schema)
+
+        # The model should accept a dict for CustomFields
+        instance = model_class(
+            Company="Test Corp",
+            LastName="Smith",
+            CustomFields={"Custom_Field__c": "Value"},
+        )
+        assert instance.CustomFields == {"Custom_Field__c": "Value"}
+
+        # The model should also accept None
+        instance_none = model_class(
+            Company="Test Corp",
+            LastName="Smith",
+            CustomFields=None,
+        )
+        assert instance_none.CustomFields is None
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_pydantic_model_json_schema_preserves_object_type(self):
+        """
+        Test that when Pydantic model is converted back to JSON schema,
+        the object type is preserved (not converted to string).
+        """
+        json_schema = {
+            "title": "TestModel",
+            "type": "object",
+            "properties": {
+                "custom_dict": {
+                    "anyOf": [{"type": "object"}, {"type": "null"}],
+                    "default": None,
+                }
+            },
+        }
+
+        model_class = json_schema_to_model(json_schema)
+        generated_schema = model_class.model_json_schema()
+
+        # The generated schema should have object type, not string
+        custom_dict_schema = generated_schema["properties"]["custom_dict"]
+
+        # It might be wrapped in anyOf or have direct type
+        if "anyOf" in custom_dict_schema:
+            types = [opt.get("type") for opt in custom_dict_schema["anyOf"]]
+            assert "object" in types
+            assert "string" not in types
+        else:
+            assert (
+                custom_dict_schema.get("type") == "object"
+                or custom_dict_schema.get("additionalProperties") is not None
+            )
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_anyof_with_nested_custom_fields(self):
+        """
+        Test anyOf handling with more complex nested CustomFields scenario.
+        """
+        json_schema = {
+            "title": "SalesforceRequest",
+            "type": "object",
+            "properties": {
+                "leadData": {
+                    "type": "object",
+                    "title": "LeadData",
+                    "properties": {
+                        "Name": {"type": "string", "title": "Name"},
+                        "CustomFields": {
+                            "anyOf": [
+                                {"type": "object", "additionalProperties": {}},
+                                {"type": "null"},
+                            ],
+                            "default": None,
+                        },
+                    },
+                    "required": ["Name"],
+                }
+            },
+            "required": ["leadData"],
+        }
+
+        model_class = json_schema_to_model(json_schema)
+
+        # Test with CustomFields as dict
+        instance = model_class(
+            leadData={"Name": "John", "CustomFields": {"Industry__c": "Tech"}}
+        )
+        assert instance.leadData.CustomFields == {"Industry__c": "Tech"}
+
+        # Test with CustomFields as None
+        instance_none = model_class(leadData={"Name": "John", "CustomFields": None})
+        assert instance_none.leadData.CustomFields is None
 
 
 if __name__ == "__main__":
