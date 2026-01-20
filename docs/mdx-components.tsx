@@ -8,6 +8,7 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
+import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
 import { Figure } from '@/components/figure';
 import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
@@ -43,6 +44,9 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Cards,
     ProviderCard,
     ProviderGrid,
+    FrameworkSelector,
+    QuickstartFlow,
+    FrameworkOption,
     Figure,
     Video,
     CapabilityCard,
