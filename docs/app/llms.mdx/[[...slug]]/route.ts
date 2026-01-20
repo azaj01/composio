@@ -6,6 +6,7 @@ import {
   toolkitsSource,
   getLLMText,
 } from '@/lib/source';
+import { openapi } from '@/lib/openapi';
 import { notFound } from 'next/navigation';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -13,21 +14,63 @@ import type { Toolkit } from '@/types/toolkit';
 
 export const revalidate = false;
 
-// OpenAPI spec cache
-let openapiSpecCache: Record<string, unknown> | null = null;
+// Types for OpenAPI structures (from dereferenced document)
+interface OpenAPISchema {
+  type?: string;
+  format?: string;
+  description?: string;
+  properties?: Record<string, OpenAPISchema>;
+  items?: OpenAPISchema;
+  required?: string[];
+  enum?: string[];
+  oneOf?: OpenAPISchema[];
+  anyOf?: OpenAPISchema[];
+  allOf?: OpenAPISchema[];
+  default?: unknown;
+  example?: unknown;
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+}
 
-async function getOpenAPISpec(): Promise<Record<string, unknown>> {
-  if (openapiSpecCache) return openapiSpecCache;
-  const filePath = join(process.cwd(), 'public/openapi.json');
-  const data = await readFile(filePath, 'utf-8');
-  const spec = JSON.parse(data) as Record<string, unknown>;
-  openapiSpecCache = spec;
-  return spec;
+interface OpenAPIParameter {
+  name: string;
+  in: 'query' | 'path' | 'header' | 'cookie';
+  description?: string;
+  required?: boolean;
+  schema?: OpenAPISchema;
+  example?: unknown;
+}
+
+interface OpenAPIRequestBody {
+  description?: string;
+  required?: boolean;
+  content?: Record<string, { schema?: OpenAPISchema; example?: unknown }>;
+}
+
+interface OpenAPIResponse {
+  description?: string;
+  content?: Record<string, { schema?: OpenAPISchema; example?: unknown }>;
+}
+
+interface OpenAPISecurityScheme {
+  type: string;
+  description?: string;
+  name?: string;
+  in?: string;
+  scheme?: string;
+  bearerFormat?: string;
 }
 
 interface OpenAPIOperation {
-  method: string;
-  path: string;
+  summary?: string;
+  description?: string;
+  operationId?: string;
+  parameters?: OpenAPIParameter[];
+  requestBody?: OpenAPIRequestBody;
+  responses?: Record<string, OpenAPIResponse>;
+  security?: Array<Record<string, string[]>>;
   tags?: string[];
 }
 
@@ -36,42 +79,93 @@ interface OpenAPIPageData {
   description?: string;
   getAPIPageProps: () => {
     document: string;
-    operations?: OpenAPIOperation[];
-    webhooks?: { name: string; method: string }[];
+    operations?: Array<{ method: string; path: string; tags?: string[] }>;
+    webhooks?: Array<{ name: string; method: string }>;
   };
 }
 
-// Helper to render JSON schema properties as markdown
-function renderSchemaProperties(
-  schema: Record<string, unknown>,
-  indent = 0
-): string[] {
+// Generate sample value for a schema
+function generateSampleValue(schema: OpenAPISchema, depth = 0): unknown {
+  if (depth > 3) return '...'; // Prevent infinite recursion
+
+  if (schema.example !== undefined) return schema.example;
+  if (schema.default !== undefined) return schema.default;
+  if (schema.enum && schema.enum.length > 0) return schema.enum[0];
+
+  switch (schema.type) {
+    case 'string':
+      if (schema.format === 'email') return 'user@example.com';
+      if (schema.format === 'uri' || schema.format === 'url') return 'https://example.com';
+      if (schema.format === 'date') return '2024-01-15';
+      if (schema.format === 'date-time') return '2024-01-15T10:30:00Z';
+      if (schema.format === 'uuid') return '550e8400-e29b-41d4-a716-446655440000';
+      return 'string';
+    case 'integer':
+    case 'number':
+      return schema.minimum ?? 1;
+    case 'boolean':
+      return true;
+    case 'array':
+      if (schema.items) {
+        return [generateSampleValue(schema.items, depth + 1)];
+      }
+      return [];
+    case 'object':
+      if (schema.properties) {
+        const obj: Record<string, unknown> = {};
+        for (const [key, prop] of Object.entries(schema.properties)) {
+          obj[key] = generateSampleValue(prop, depth + 1);
+        }
+        return obj;
+      }
+      return {};
+    default:
+      return null;
+  }
+}
+
+// Render schema as markdown with proper nesting
+function renderSchema(schema: OpenAPISchema, indent = 0, maxDepth = 4): string[] {
+  if (indent > maxDepth) return ['  '.repeat(indent) + '- ...'];
+
   const lines: string[] = [];
   const prefix = '  '.repeat(indent);
+  const required = schema.required || [];
 
   if (schema.type === 'object' && schema.properties) {
-    const props = schema.properties as Record<string, Record<string, unknown>>;
-    const required = (schema.required as string[]) || [];
-
-    for (const [name, prop] of Object.entries(props)) {
+    for (const [name, prop] of Object.entries(schema.properties)) {
       const isRequired = required.includes(name);
-      const type = (prop.type as string) || 'any';
-      const desc = (prop.description as string) || '';
-      const reqMark = isRequired ? ' **(required)**' : '';
+      const reqMark = isRequired ? ' *(required)*' : '';
+      const typeStr = getTypeString(prop);
+      const desc = prop.description ? `: ${prop.description}` : '';
 
-      lines.push(`${prefix}- \`${name}\` (${type})${reqMark}: ${desc}`);
+      lines.push(`${prefix}- \`${name}\` (${typeStr})${reqMark}${desc}`);
 
-      // Recurse for nested objects
+      // Recurse for nested objects/arrays
       if (prop.type === 'object' && prop.properties) {
-        lines.push(...renderSchemaProperties(prop, indent + 1));
+        lines.push(...renderSchema(prop, indent + 1, maxDepth));
+      } else if (prop.type === 'array' && prop.items?.type === 'object' && prop.items.properties) {
+        lines.push(`${prefix}  - Array items:`);
+        lines.push(...renderSchema(prop.items, indent + 2, maxDepth));
       }
     }
   } else if (schema.oneOf || schema.anyOf) {
-    const variants = (schema.oneOf || schema.anyOf) as Record<string, unknown>[];
-    lines.push(`${prefix}One of the following:`);
+    const variants = schema.oneOf || schema.anyOf || [];
+    lines.push(`${prefix}*One of:*`);
     for (const variant of variants.slice(0, 3)) {
-      if (variant.type === 'object') {
-        lines.push(...renderSchemaProperties(variant, indent + 1));
+      if (variant.type === 'object' && variant.properties) {
+        lines.push(...renderSchema(variant, indent + 1, maxDepth));
+      } else {
+        lines.push(`${prefix}  - ${getTypeString(variant)}`);
+      }
+    }
+    if (variants.length > 3) {
+      lines.push(`${prefix}  - ... and ${variants.length - 3} more`);
+    }
+  } else if (schema.allOf) {
+    for (const part of schema.allOf) {
+      if (part.type === 'object' && part.properties) {
+        lines.push(...renderSchema(part, indent, maxDepth));
       }
     }
   }
@@ -79,36 +173,77 @@ function renderSchemaProperties(
   return lines;
 }
 
-// Generate cURL example
-function generateCurlExample(
+// Get a readable type string
+function getTypeString(schema: OpenAPISchema): string {
+  if (schema.enum) {
+    return `enum: ${schema.enum.slice(0, 3).map(e => `"${e}"`).join(' | ')}${schema.enum.length > 3 ? ' | ...' : ''}`;
+  }
+  if (schema.type === 'array' && schema.items) {
+    return `array<${getTypeString(schema.items)}>`;
+  }
+  if (schema.format) {
+    return `${schema.type} (${schema.format})`;
+  }
+  return schema.type || 'any';
+}
+
+// Generate cURL example with sample data
+function generateCurl(
   method: string,
   path: string,
   baseUrl: string,
-  hasBody: boolean
+  parameters: OpenAPIParameter[] = [],
+  requestBody?: OpenAPIRequestBody
 ): string {
-  const pathWithExample = path.replace(/\{(\w+)\}/g, 'example_$1');
-  let curl = `curl -X ${method.toUpperCase()} "${baseUrl}${pathWithExample}"`;
-  curl += ` \\\n  -H "x-api-key: YOUR_API_KEY"`;
-  if (hasBody) {
-    curl += ` \\\n  -H "Content-Type: application/json"`;
-    curl += ` \\\n  -d '{}'`;
+  // Build path with sample values
+  let url = path;
+  const queryParams: string[] = [];
+
+  for (const param of parameters) {
+    const sample = param.example ?? generateSampleValue(param.schema || { type: 'string' });
+    if (param.in === 'path') {
+      url = url.replace(`{${param.name}}`, String(sample));
+    } else if (param.in === 'query' && param.required) {
+      queryParams.push(`${param.name}=${encodeURIComponent(String(sample))}`);
+    }
   }
+
+  if (queryParams.length > 0) {
+    url += '?' + queryParams.join('&');
+  }
+
+  let curl = `curl -X ${method.toUpperCase()} "${baseUrl}${url}"`;
+  curl += ` \\\n  -H "x-api-key: YOUR_API_KEY"`;
+
+  // Add request body
+  if (requestBody?.content?.['application/json']) {
+    curl += ` \\\n  -H "Content-Type: application/json"`;
+    const schema = requestBody.content['application/json'].schema;
+    const example = requestBody.content['application/json'].example;
+    const body = example ?? (schema ? generateSampleValue(schema) : {});
+    curl += ` \\\n  -d '${JSON.stringify(body, null, 2).split('\n').join('\n  ')}'`;
+  }
+
   return curl;
 }
 
-// Convert OpenAPI page to markdown
+// Convert OpenAPI page to comprehensive markdown
 async function openapiPageToMarkdown(
   page: { url: string; data: OpenAPIPageData }
 ): Promise<string> {
   const { title, description } = page.data;
   const props = page.data.getAPIPageProps();
-  const spec = await getOpenAPISpec();
-  const paths = spec.paths as Record<string, Record<string, unknown>> | undefined;
-  const securitySchemes = (spec.components as Record<string, unknown>)?.securitySchemes as Record<string, Record<string, unknown>> | undefined;
+
+  // Get fully dereferenced document from fumadocs-openapi
+  const processed = await openapi.getSchema(props.document);
+  const spec = processed.dereferenced;
+  const paths = spec.paths as Record<string, Record<string, OpenAPIOperation>> | undefined;
+  const securitySchemes = (spec.components as Record<string, unknown>)?.securitySchemes as Record<string, OpenAPISecurityScheme> | undefined;
   const servers = spec.servers as Array<{ url: string; description?: string }> | undefined;
   const baseUrl = servers?.[0]?.url || 'https://backend.composio.dev';
 
-  const lines: string[] = [`# ${title} (${page.url})`, ''];
+  const lines: string[] = [`# ${title}`, ''];
+  lines.push(`**Documentation:** ${page.url}`, '');
 
   if (description) {
     lines.push(description, '');
@@ -120,123 +255,119 @@ async function openapiPageToMarkdown(
       const pathData = paths[op.path];
       if (!pathData) continue;
 
-      const methodData = pathData[op.method] as Record<string, unknown> | undefined;
-      if (!methodData) continue;
+      const operation = pathData[op.method];
+      if (!operation) continue;
 
-      lines.push(`## ${(op.method as string).toUpperCase()} ${op.path}`, '');
-      lines.push(`**Base URL:** \`${baseUrl}\``, '');
+      lines.push('---', '');
+      lines.push(`## ${op.method.toUpperCase()} \`${op.path}\``, '');
+      lines.push(`**Endpoint:** \`${baseUrl}${op.path}\``, '');
 
-      if (methodData.summary) {
-        lines.push(`${methodData.summary}`, '');
+      if (operation.summary) {
+        lines.push(`**Summary:** ${operation.summary}`, '');
       }
 
-      if (methodData.description) {
-        lines.push(`${methodData.description}`, '');
+      if (operation.description) {
+        lines.push(operation.description, '');
       }
 
       // Authentication
-      const security = methodData.security as Array<Record<string, string[]>> | undefined;
+      const security = operation.security;
       if (security && security.length > 0 && securitySchemes) {
         lines.push('### Authentication', '');
+        const authMethods: string[] = [];
         for (const secReq of security) {
           for (const schemeName of Object.keys(secReq)) {
             const scheme = securitySchemes[schemeName];
             if (scheme) {
-              const inLoc = scheme.in as string;
-              const headerName = scheme.name as string;
-              const schemeDesc = scheme.description as string;
-              lines.push(`- **${schemeName}**: ${schemeDesc || ''}`);
-              lines.push(`  - Type: \`${scheme.type}\``);
-              lines.push(`  - In: \`${inLoc}\``);
-              lines.push(`  - Header: \`${headerName}\``);
+              if (scheme.type === 'apiKey') {
+                authMethods.push(`**${schemeName}** - API Key in \`${scheme.in}\` header \`${scheme.name}\``);
+              } else if (scheme.type === 'http' && scheme.scheme === 'bearer') {
+                authMethods.push(`**${schemeName}** - Bearer token in Authorization header`);
+              } else {
+                authMethods.push(`**${schemeName}** - ${scheme.type}`);
+              }
             }
           }
         }
-        lines.push('');
+        lines.push(authMethods.join(' OR '), '');
       }
 
-      // Parameters
-      const parameters = methodData.parameters as Array<{
-        name: string;
-        in: string;
-        description?: string;
-        required?: boolean;
-        schema?: { type?: string; format?: string; default?: unknown };
-      }> | undefined;
-
-      if (parameters && parameters.length > 0) {
-        lines.push('### Parameters', '');
-        lines.push('| Name | In | Required | Type | Description |');
-        lines.push('|------|-----|----------|------|-------------|');
-        for (const param of parameters) {
-          const type = param.schema?.type || 'string';
-          const format = param.schema?.format ? ` (${param.schema.format})` : '';
-          const required = param.required ? 'Yes' : 'No';
-          const desc = (param.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
-          lines.push(`| ${param.name} | ${param.in} | ${required} | ${type}${format} | ${desc} |`);
+      // Path Parameters
+      const pathParams = operation.parameters?.filter(p => p.in === 'path') || [];
+      if (pathParams.length > 0) {
+        lines.push('### Path Parameters', '');
+        for (const param of pathParams) {
+          const typeStr = getTypeString(param.schema || { type: 'string' });
+          lines.push(`- \`${param.name}\` (${typeStr}) *(required)*: ${param.description || ''}`);
         }
         lines.push('');
       }
 
-      // Request body
-      const requestBody = methodData.requestBody as {
-        description?: string;
-        required?: boolean;
-        content?: Record<string, { schema?: Record<string, unknown> }>;
-      } | undefined;
+      // Query Parameters
+      const queryParams = operation.parameters?.filter(p => p.in === 'query') || [];
+      if (queryParams.length > 0) {
+        lines.push('### Query Parameters', '');
+        for (const param of queryParams) {
+          const typeStr = getTypeString(param.schema || { type: 'string' });
+          const reqMark = param.required ? ' *(required)*' : '';
+          lines.push(`- \`${param.name}\` (${typeStr})${reqMark}: ${param.description || ''}`);
+        }
+        lines.push('');
+      }
 
-      if (requestBody?.content) {
+      // Request Body
+      if (operation.requestBody?.content?.['application/json']) {
         lines.push('### Request Body', '');
-        if (requestBody.description) {
-          lines.push(requestBody.description, '');
+        if (operation.requestBody.description) {
+          lines.push(operation.requestBody.description, '');
         }
-        const jsonContent = requestBody.content['application/json'];
-        if (jsonContent?.schema) {
-          const schemaProps = renderSchemaProperties(jsonContent.schema);
-          if (schemaProps.length > 0) {
-            lines.push('**Properties:**', '');
-            lines.push(...schemaProps);
-            lines.push('');
-          }
+        const schema = operation.requestBody.content['application/json'].schema;
+        if (schema) {
+          lines.push('**Schema:**', '');
+          lines.push(...renderSchema(schema));
+          lines.push('');
+
+          // Example
+          const example = operation.requestBody.content['application/json'].example ?? generateSampleValue(schema);
+          lines.push('**Example:**', '');
+          lines.push('```json');
+          lines.push(JSON.stringify(example, null, 2));
+          lines.push('```', '');
         }
       }
 
       // Responses
-      const responses = methodData.responses as Record<string, {
-        description?: string;
-        content?: Record<string, { schema?: Record<string, unknown> }>;
-      }> | undefined;
-
-      if (responses) {
-        // Response status codes table
+      if (operation.responses) {
         lines.push('### Responses', '');
-        lines.push('| Status | Description |');
-        lines.push('|--------|-------------|');
-        for (const [status, response] of Object.entries(responses)) {
-          const desc = (response.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
-          lines.push(`| ${status} | ${desc} |`);
-        }
-        lines.push('');
 
-        // Success response body (2xx only)
-        for (const [status, response] of Object.entries(responses)) {
-          if (!status.startsWith('2')) continue;
+        for (const [status, response] of Object.entries(operation.responses)) {
+          const statusEmoji = status.startsWith('2') ? '✅' : status.startsWith('4') ? '⚠️' : '❌';
+          lines.push(`#### ${statusEmoji} ${status} - ${response.description || ''}`, '');
+
           const jsonContent = response.content?.['application/json'];
           if (jsonContent?.schema) {
-            const schemaProps = renderSchemaProperties(jsonContent.schema);
-            if (schemaProps.length > 0) {
-              lines.push(`### Response Body (${status})`, '');
-              lines.push(...schemaProps);
-              lines.push('');
+            lines.push('**Response Schema:**', '');
+            lines.push(...renderSchema(jsonContent.schema));
+            lines.push('');
+
+            // Only show example for success responses
+            if (status.startsWith('2')) {
+              const example = jsonContent.example ?? generateSampleValue(jsonContent.schema);
+              if (example && Object.keys(example as object).length > 0) {
+                lines.push('**Example Response:**', '');
+                lines.push('```json');
+                lines.push(JSON.stringify(example, null, 2));
+                lines.push('```', '');
+              }
             }
           }
         }
       }
 
-      // cURL example
-      lines.push('### Example Request', '');
+      // cURL Example
+      lines.push('### Example cURL Request', '');
       lines.push('```bash');
-      lines.push(generateCurlExample(op.method, op.path, baseUrl, !!requestBody?.content));
+      lines.push(generateCurl(op.method, op.path, baseUrl, operation.parameters, operation.requestBody));
       lines.push('```', '');
     }
   }
