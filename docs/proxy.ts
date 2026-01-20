@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * Serves markdown when AI agents request it via Accept: text/markdown header.
  * Test: curl -H "Accept: text/markdown" http://localhost:3000/docs/quickstart
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const accept = request.headers.get('accept') || '';
 
   if (accept.includes('text/markdown') || accept.includes('text/plain')) {
