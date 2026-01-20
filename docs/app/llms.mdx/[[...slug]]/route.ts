@@ -41,6 +41,61 @@ interface OpenAPIPageData {
   };
 }
 
+// Helper to render JSON schema properties as markdown
+function renderSchemaProperties(
+  schema: Record<string, unknown>,
+  indent = 0
+): string[] {
+  const lines: string[] = [];
+  const prefix = '  '.repeat(indent);
+
+  if (schema.type === 'object' && schema.properties) {
+    const props = schema.properties as Record<string, Record<string, unknown>>;
+    const required = (schema.required as string[]) || [];
+
+    for (const [name, prop] of Object.entries(props)) {
+      const isRequired = required.includes(name);
+      const type = (prop.type as string) || 'any';
+      const desc = (prop.description as string) || '';
+      const reqMark = isRequired ? ' **(required)**' : '';
+
+      lines.push(`${prefix}- \`${name}\` (${type})${reqMark}: ${desc}`);
+
+      // Recurse for nested objects
+      if (prop.type === 'object' && prop.properties) {
+        lines.push(...renderSchemaProperties(prop, indent + 1));
+      }
+    }
+  } else if (schema.oneOf || schema.anyOf) {
+    const variants = (schema.oneOf || schema.anyOf) as Record<string, unknown>[];
+    lines.push(`${prefix}One of the following:`);
+    for (const variant of variants.slice(0, 3)) {
+      if (variant.type === 'object') {
+        lines.push(...renderSchemaProperties(variant, indent + 1));
+      }
+    }
+  }
+
+  return lines;
+}
+
+// Generate cURL example
+function generateCurlExample(
+  method: string,
+  path: string,
+  baseUrl: string,
+  hasBody: boolean
+): string {
+  const pathWithExample = path.replace(/\{(\w+)\}/g, 'example_$1');
+  let curl = `curl -X ${method.toUpperCase()} "${baseUrl}${pathWithExample}"`;
+  curl += ` \\\n  -H "x-api-key: YOUR_API_KEY"`;
+  if (hasBody) {
+    curl += ` \\\n  -H "Content-Type: application/json"`;
+    curl += ` \\\n  -d '{}'`;
+  }
+  return curl;
+}
+
 // Convert OpenAPI page to markdown
 async function openapiPageToMarkdown(
   page: { url: string; data: OpenAPIPageData }
@@ -49,6 +104,9 @@ async function openapiPageToMarkdown(
   const props = page.data.getAPIPageProps();
   const spec = await getOpenAPISpec();
   const paths = spec.paths as Record<string, Record<string, unknown>> | undefined;
+  const securitySchemes = (spec.components as Record<string, unknown>)?.securitySchemes as Record<string, Record<string, unknown>> | undefined;
+  const servers = spec.servers as Array<{ url: string; description?: string }> | undefined;
+  const baseUrl = servers?.[0]?.url || 'https://backend.composio.dev';
 
   const lines: string[] = [`# ${title} (${page.url})`, ''];
 
@@ -66,6 +124,7 @@ async function openapiPageToMarkdown(
       if (!methodData) continue;
 
       lines.push(`## ${(op.method as string).toUpperCase()} ${op.path}`, '');
+      lines.push(`**Base URL:** \`${baseUrl}\``, '');
 
       if (methodData.summary) {
         lines.push(`${methodData.summary}`, '');
@@ -75,13 +134,34 @@ async function openapiPageToMarkdown(
         lines.push(`${methodData.description}`, '');
       }
 
+      // Authentication
+      const security = methodData.security as Array<Record<string, string[]>> | undefined;
+      if (security && security.length > 0 && securitySchemes) {
+        lines.push('### Authentication', '');
+        for (const secReq of security) {
+          for (const schemeName of Object.keys(secReq)) {
+            const scheme = securitySchemes[schemeName];
+            if (scheme) {
+              const inLoc = scheme.in as string;
+              const headerName = scheme.name as string;
+              const schemeDesc = scheme.description as string;
+              lines.push(`- **${schemeName}**: ${schemeDesc || ''}`);
+              lines.push(`  - Type: \`${scheme.type}\``);
+              lines.push(`  - In: \`${inLoc}\``);
+              lines.push(`  - Header: \`${headerName}\``);
+            }
+          }
+        }
+        lines.push('');
+      }
+
       // Parameters
       const parameters = methodData.parameters as Array<{
         name: string;
         in: string;
         description?: string;
         required?: boolean;
-        schema?: { type?: string };
+        schema?: { type?: string; format?: string; default?: unknown };
       }> | undefined;
 
       if (parameters && parameters.length > 0) {
@@ -90,9 +170,10 @@ async function openapiPageToMarkdown(
         lines.push('|------|-----|----------|------|-------------|');
         for (const param of parameters) {
           const type = param.schema?.type || 'string';
+          const format = param.schema?.format ? ` (${param.schema.format})` : '';
           const required = param.required ? 'Yes' : 'No';
           const desc = (param.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
-          lines.push(`| ${param.name} | ${param.in} | ${required} | ${type} | ${desc} |`);
+          lines.push(`| ${param.name} | ${param.in} | ${required} | ${type}${format} | ${desc} |`);
         }
         lines.push('');
       }
@@ -101,7 +182,7 @@ async function openapiPageToMarkdown(
       const requestBody = methodData.requestBody as {
         description?: string;
         required?: boolean;
-        content?: Record<string, { schema?: unknown }>;
+        content?: Record<string, { schema?: Record<string, unknown> }>;
       } | undefined;
 
       if (requestBody?.content) {
@@ -109,25 +190,46 @@ async function openapiPageToMarkdown(
         if (requestBody.description) {
           lines.push(requestBody.description, '');
         }
-        const contentTypes = Object.keys(requestBody.content);
-        lines.push(`Content types: ${contentTypes.join(', ')}`, '');
+        const jsonContent = requestBody.content['application/json'];
+        if (jsonContent?.schema) {
+          const schemaProps = renderSchemaProperties(jsonContent.schema);
+          if (schemaProps.length > 0) {
+            lines.push('**Properties:**', '');
+            lines.push(...schemaProps);
+            lines.push('');
+          }
+        }
       }
 
       // Responses
       const responses = methodData.responses as Record<string, {
         description?: string;
+        content?: Record<string, { schema?: Record<string, unknown> }>;
       }> | undefined;
 
       if (responses) {
         lines.push('### Responses', '');
-        lines.push('| Status | Description |');
-        lines.push('|--------|-------------|');
         for (const [status, response] of Object.entries(responses)) {
-          const desc = (response.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
-          lines.push(`| ${status} | ${desc} |`);
+          const desc = response.description || '';
+          lines.push(`#### ${status} - ${desc}`, '');
+
+          const jsonContent = response.content?.['application/json'];
+          if (jsonContent?.schema) {
+            const schemaProps = renderSchemaProperties(jsonContent.schema);
+            if (schemaProps.length > 0) {
+              lines.push('**Response body:**', '');
+              lines.push(...schemaProps);
+              lines.push('');
+            }
+          }
         }
-        lines.push('');
       }
+
+      // cURL example
+      lines.push('### Example Request', '');
+      lines.push('```bash');
+      lines.push(generateCurlExample(op.method, op.path, baseUrl, !!requestBody?.content));
+      lines.push('```', '');
     }
   }
 
