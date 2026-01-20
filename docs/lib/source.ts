@@ -82,9 +82,20 @@ function mdxToCleanMarkdown(content: string): string {
   );
 
   // Convert Card - handle multiline and various attribute orders
+  // Self-closing Cards with description attribute
   result = result.replace(
     /<Card[\s\S]*?title="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?description="([^"]*)"[\s\S]*?\/>/g,
     '- [$1]($2): $3'
+  );
+  // Cards with children content (non-self-closing)
+  result = result.replace(
+    /<Card[\s\S]*?title="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Card>/g,
+    '- [$1]($2): $3'
+  );
+  // Cards with href before title
+  result = result.replace(
+    /<Card[\s\S]*?href="([^"]*)"[\s\S]*?title="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Card>/g,
+    '- [$2]($1): $3'
   );
 
   // Convert ProviderCard to markdown link

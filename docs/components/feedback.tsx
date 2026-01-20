@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Loader2 } from 'lucide-react';
 
 type Sentiment = 'positive' | 'neutral' | 'negative' | null;
@@ -15,6 +15,15 @@ export function Feedback({ page }: FeedbackProps) {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +46,7 @@ export function Feedback({ page }: FeedbackProps) {
       if (!response.ok) throw new Error('Failed to send');
 
       setState('success');
-      setTimeout(() => {
+      closeTimeoutRef.current = setTimeout(() => {
         setIsOpen(false);
         setState('idle');
         setSentiment(null);
@@ -50,6 +59,10 @@ export function Feedback({ page }: FeedbackProps) {
   };
 
   const handleClose = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     setIsOpen(false);
     setState('idle');
     setSentiment(null);
