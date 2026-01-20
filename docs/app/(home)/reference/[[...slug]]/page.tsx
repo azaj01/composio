@@ -34,6 +34,7 @@ export default async function Page({
     return (
       <DocsPage full tableOfContentPopover={{ enabled: false }}>
         <h1 className="text-2xl font-semibold mb-4">{pageData.title}</h1>
+        <PageActions path={page.url} />
         <DocsBody>
           <APIPage {...pageData.getAPIPageProps()} />
         </DocsBody>
