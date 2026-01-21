@@ -964,5 +964,124 @@ class TestCrewAICustomFieldsBug:
         assert instance_none.leadData.CustomFields is None
 
 
+class TestBooleanSchemas:
+    """Test cases for JSON Schema boolean schema handling (draft-06+)."""
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_true_schema_in_anyof(self):
+        """Test that true boolean schema in anyOf doesn't crash."""
+        json_schema = {
+            "anyOf": [
+                {"type": "string"},
+                True,  # Boolean schema
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should handle gracefully, creating a union including Any
+        assert result is not None
+        # The result should include Any type from the true schema
+        assert hasattr(result, "__origin__")
+        assert result.__origin__ is t.Union
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_false_schema_in_anyof(self):
+        """Test that false boolean schema in anyOf doesn't crash."""
+        json_schema = {
+            "anyOf": [
+                {"type": "string"},
+                False,  # Boolean schema - should be filtered out
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should handle gracefully, false schema filtered out leaving just string
+        assert result is str
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_boolean_schema_in_allof_with_type(self):
+        """Test that boolean schemas in allOf don't crash when combined with typed schema."""
+        json_schema = {
+            "allOf": [
+                {"type": "string"},
+                True,
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should find the schema with type and return string
+        assert result is str
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_boolean_schema_in_allof_single(self):
+        """Test that single boolean schema in allOf returns appropriate type."""
+        json_schema = {"allOf": [True]}
+        result = json_schema_to_pydantic_type(json_schema)
+        # Single true schema should return Any
+        assert result is t.Any
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_boolean_schema_in_oneof(self):
+        """Test that boolean schemas in oneOf don't crash."""
+        json_schema = {
+            "oneOf": [
+                {"type": "string"},
+                True,
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should handle gracefully
+        assert result is not None
+        assert hasattr(result, "__origin__")
+        assert result.__origin__ is t.Union
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_standalone_true_schema(self):
+        """Test that standalone true schema returns Any."""
+        result = json_schema_to_pydantic_type(True)
+        assert result is t.Any
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_standalone_false_schema(self):
+        """Test that standalone false schema returns None (to be filtered out)."""
+        result = json_schema_to_pydantic_type(False)
+        assert result is None
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_only_false_schemas_in_anyof(self):
+        """Test anyOf with only false schemas falls back to string."""
+        json_schema = {
+            "anyOf": [
+                False,
+                False,
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # All false schemas filtered out, should fall back to string
+        assert result is str
+
+    @pytest.mark.unit
+    @pytest.mark.schema
+    def test_mixed_boolean_schemas_in_anyof(self):
+        """Test anyOf with mixed true and false schemas."""
+        json_schema = {
+            "anyOf": [
+                True,
+                False,
+                {"type": "integer"},
+            ]
+        }
+        result = json_schema_to_pydantic_type(json_schema)
+        # Should create union of Any and int (false filtered out)
+        assert result is not None
+        assert hasattr(result, "__origin__")
+        assert result.__origin__ is t.Union
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

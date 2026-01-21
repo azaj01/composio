@@ -43,14 +43,22 @@ reserved_names = ["validate"]
 
 
 def json_schema_to_pydantic_type(
-    json_schema: t.Dict[str, t.Any],
+    json_schema: t.Union[t.Dict[str, t.Any], bool],
 ) -> t.Union[t.Type, t.Optional[t.Any]]:
     """
     Converts a JSON schema type to a Pydantic type.
 
-    :param json_schema: The JSON schema to convert.
+    :param json_schema: The JSON schema to convert (can be dict or boolean).
     :return: A Pydantic type.
     """
+    # Handle boolean schemas (JSON Schema draft-06+)
+    # true = accept anything, false = reject everything
+    if isinstance(json_schema, bool):
+        if json_schema:
+            return t.Any  # true schema accepts any value
+        else:
+            return None  # false schema - will be filtered out in union processing
+
     # Handle oneOf schemas first
     if "oneOf" in json_schema:
         one_of_options = json_schema["oneOf"]
