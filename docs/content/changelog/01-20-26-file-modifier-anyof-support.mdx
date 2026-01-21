@@ -27,49 +27,55 @@ We recommend updating to version `0.5.3` (TypeScript) or `0.10.8` (Python) or la
 
 File properties inside `anyOf`, `oneOf`, or `allOf` were not detected:
 
-```typescript
-// This schema's file_uploadable was NOT being processed
-inputParameters: {
-  type: 'object',
-  properties: {
-    fileInput: {
-      anyOf: [
-        {
-          type: 'string',
-          file_uploadable: true  // ❌ Not detected
-        },
-        {
-          type: 'null'
-        }
-      ]
+```json
+{
+  "inputParameters": {
+    "type": "object",
+    "properties": {
+      "fileInput": {
+        "anyOf": [
+          {
+            "type": "string",
+            "file_uploadable": true
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
     }
   }
 }
 ```
+
+This schema's `file_uploadable` was **not** being processed.
 
 ### After (Fixed)
 
 File properties are now correctly detected and processed at any nesting level:
 
-```typescript
-// Now properly detected and transformed
-inputParameters: {
-  type: 'object',
-  properties: {
-    fileInput: {
-      anyOf: [
-        {
-          type: 'string',
-          file_uploadable: true  // ✅ Detected and processed
-        },
-        {
-          type: 'null'
-        }
-      ]
+```json
+{
+  "inputParameters": {
+    "type": "object",
+    "properties": {
+      "fileInput": {
+        "anyOf": [
+          {
+            "type": "string",
+            "file_uploadable": true
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
     }
   }
 }
 ```
+
+Now properly detected and processed.
 
 ## Affected Scenarios
 
