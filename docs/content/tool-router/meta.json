@@ -11,8 +11,6 @@
     "white-labeling-authentication",
     "using-custom-auth-configs",
     "using-with-mcp-clients",
-    "using-as-a-native-tool",
-    "---Resources---",
-    "migration-guide"
+    "using-as-a-native-tool"
   ]
 }

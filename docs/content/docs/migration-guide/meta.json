@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "new-sdk",
-    "toolkit-versioning"
+    "toolkit-versioning",
+    "tool-router-beta"
   ]
 }

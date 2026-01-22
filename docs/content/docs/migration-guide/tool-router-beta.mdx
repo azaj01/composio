@@ -1,0 +1,39 @@
+---
+title: Tool Router Beta to Stable Migration
+description: Migrate from Tool Router Beta to the stable release
+---
+
+This guide helps you migrate from the Tool Router Beta to the stable release.
+
+## Breaking changes
+
+### Session creation
+
+The `create` method now accepts a user ID directly instead of an options object:
+
+```typescript
+// Before (Beta)
+const session = await composio.create({ userId: 'user_123' });
+
+// After (Stable)
+const session = await composio.create('user_123');
+```
+
+### Tool fetching
+
+Tools are now fetched from the session object:
+
+```typescript
+// Before (Beta)
+const tools = await composio.tools.get('user_123', { toolkits: ['GITHUB'] });
+
+// After (Stable)
+const session = await composio.create('user_123');
+const tools = await session.tools();
+```
+
+## New features
+
+- Simplified session-based API
+- Built-in provider support for popular AI frameworks
+- Improved type safety and error handling
