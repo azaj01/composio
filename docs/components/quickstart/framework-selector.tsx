@@ -13,6 +13,7 @@ interface FrameworkOption {
   id: Framework;
   name: string;
   logo: string;
+  logoDark?: string;
 }
 
 const frameworks: FrameworkOption[] = [
@@ -20,21 +21,25 @@ const frameworks: FrameworkOption[] = [
     id: 'openai-agents',
     name: 'OpenAI Agents',
     logo: '/images/providers/openai-logo.svg',
+    logoDark: '/images/providers/openai-logo-dark.svg',
   },
   {
     id: 'claude-agents',
     name: 'Claude Agents',
     logo: '/images/providers/anthropic-logo.svg',
+    logoDark: '/images/providers/anthropic-logo-dark.svg',
   },
   {
     id: 'langchain',
     name: 'LangChain',
     logo: '/images/providers/langchain-logo.svg',
+    logoDark: '/images/providers/langchain-logo-dark.svg',
   },
   {
     id: 'vercel-ai',
     name: 'Vercel AI',
     logo: '/images/providers/vercel-logo.svg',
+    logoDark: '/images/providers/vercel-logo-dark.svg',
   },
 ];
 
@@ -59,13 +64,32 @@ function FrameworkCard({ framework, selected, onSelect }: FrameworkCardProps) {
       `}
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-        <Image
-          src={framework.logo}
-          alt={`${framework.name} logo`}
-          width={40}
-          height={40}
-          className="h-8 w-auto dark:invert"
-        />
+        {framework.logoDark ? (
+          <>
+            <Image
+              src={framework.logo}
+              alt={`${framework.name} logo`}
+              width={40}
+              height={40}
+              className="h-8 w-auto dark:hidden"
+            />
+            <Image
+              src={framework.logoDark}
+              alt={`${framework.name} logo`}
+              width={40}
+              height={40}
+              className="h-8 w-auto hidden dark:block"
+            />
+          </>
+        ) : (
+          <Image
+            src={framework.logo}
+            alt={`${framework.name} logo`}
+            width={40}
+            height={40}
+            className="h-8 w-auto"
+          />
+        )}
       </div>
 
       <span className="text-sm font-medium text-fd-foreground">

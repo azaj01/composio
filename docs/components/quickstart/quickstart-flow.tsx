@@ -15,6 +15,7 @@ interface FrameworkData {
   id: string;
   name: string;
   logo: string;
+  logoDark?: string;
 }
 
 interface QuickstartContextValue {
@@ -37,19 +38,20 @@ interface FrameworkOptionProps {
   id: string;
   name: string;
   logo: string;
+  logoDark?: string;
   children: ReactNode;
 }
 
-export function FrameworkOption({ id, name, logo, children }: FrameworkOptionProps) {
+export function FrameworkOption({ id, name, logo, logoDark, children }: FrameworkOptionProps) {
   const context = useContext(QuickstartContext);
   const hasRegistered = useRef(false);
 
   useEffect(() => {
     if (context && !hasRegistered.current) {
-      context.registerFramework({ id, name, logo });
+      context.registerFramework({ id, name, logo, logoDark });
       hasRegistered.current = true;
     }
-  }, [context, id, name, logo]);
+  }, [context, id, name, logo, logoDark]);
 
   // Only render if this framework is selected
   if (!context || context.selectedId !== id) {
@@ -64,11 +66,12 @@ interface FrameworkCardProps {
   id: string;
   name: string;
   logo: string;
+  logoDark?: string;
   selected: boolean;
   onSelect: () => void;
 }
 
-function FrameworkCard({ name, logo, selected, onSelect }: FrameworkCardProps) {
+function FrameworkCard({ name, logo, logoDark, selected, onSelect }: FrameworkCardProps) {
   return (
     <button
       type="button"
@@ -83,13 +86,32 @@ function FrameworkCard({ name, logo, selected, onSelect }: FrameworkCardProps) {
       `}
     >
       <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-        <Image
-          src={logo}
-          alt={`${name} logo`}
-          width={24}
-          height={24}
-          className="h-5 w-auto dark:invert"
-        />
+        {logoDark ? (
+          <>
+            <Image
+              src={logo}
+              alt={`${name} logo`}
+              width={24}
+              height={24}
+              className="h-5 w-auto dark:hidden"
+            />
+            <Image
+              src={logoDark}
+              alt={`${name} logo`}
+              width={24}
+              height={24}
+              className="h-5 w-auto hidden dark:block"
+            />
+          </>
+        ) : (
+          <Image
+            src={logo}
+            alt={`${name} logo`}
+            width={24}
+            height={24}
+            className="h-5 w-auto"
+          />
+        )}
       </div>
       <span className="text-sm font-medium text-fd-foreground">{name}</span>
     </button>
@@ -145,6 +167,7 @@ export function QuickstartFlow({ children }: QuickstartFlowProps) {
                 id={framework.id}
                 name={framework.name}
                 logo={framework.logo}
+                logoDark={framework.logoDark}
                 selected={selectedId === framework.id}
                 onSelect={() => setSelectedId(framework.id)}
               />
