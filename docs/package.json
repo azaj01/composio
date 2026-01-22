@@ -47,7 +47,6 @@
     "@composio/vercel": "^0.4.0",
     "@google/genai": "^1.35.0",
     "@langchain/core": "^1.1.12",
-    "langchain": "^0.3.0",
     "@langchain/langgraph": "^1.0.15",
     "@langchain/openai": "^1.2.1",
     "@llamaindex/openai": "^0.4.22",
