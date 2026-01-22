@@ -74,4 +74,4 @@ test/e2e/*/node_modules
 
 
 # Agent memory
-.agent_cache
+.agent_cachecomposio-worktree-1/
