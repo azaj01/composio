@@ -35,6 +35,27 @@ const config = {
         destination: '/tool-router',
         permanent: true,
       },
+      // Core concepts moved from tool-router to docs
+      {
+        source: '/tool-router/users-and-sessions',
+        destination: '/docs/users-and-sessions',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/migration-guide',
+        destination: '/docs/migration-guide/tool-router-beta',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/authentication',
+        destination: '/docs/authentication',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/tools-and-toolkits',
+        destination: '/docs/tools-and-toolkits',
+        permanent: true,
+      },
       // Provider redirects (old fern URLs -> new docs URLs)
       {
         source: '/providers/openai',

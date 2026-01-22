@@ -472,7 +472,6 @@ nav a[href*="app.composio"]:focus-visible {
   --color-fd-primary: var(--composio-orange);
 }
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
