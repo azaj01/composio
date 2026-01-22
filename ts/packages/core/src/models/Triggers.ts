@@ -48,6 +48,7 @@ import { ToolkitVersionParam } from '../types/tool.types';
 import { ComposioConfig } from '../composio';
 import { BaseComposioProvider } from '../provider/BaseProvider';
 import { hmacSha256Base64, timingSafeEqual } from '../utils/crypto';
+import { CONFIG_DEFAULTS } from '../utils/config-defaults';
 /**
  * Trigger (Instance) class
  * /api/v3/trigger_instances
@@ -61,7 +62,7 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
   constructor(client: ComposioClient, config?: ComposioConfig<TProvider>) {
     this.client = client;
     this.pusherService = new PusherService(client);
-    this.toolkitVersions = config?.toolkitVersions ?? 'latest';
+    this.toolkitVersions = config?.toolkitVersions ?? CONFIG_DEFAULTS.toolkitVersions;
     telemetry.instrument(this, 'Triggers');
   }
 

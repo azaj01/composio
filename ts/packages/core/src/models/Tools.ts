@@ -54,6 +54,7 @@ import { getToolkitVersion } from '../utils/toolkitVersion';
 import { handleToolExecutionError } from '../errors/ToolErrors';
 import { ToolExecuteMetaParams } from '../types/tool.types';
 import { SessionExecuteMetaParams } from '@composio/client/resources/tool-router.mjs';
+import { CONFIG_DEFAULTS } from '../utils/config-defaults';
 /**
  * This class is used to manage tools in the Composio SDK.
  * It provides methods to list, get, and execute tools.
@@ -80,8 +81,9 @@ export class Tools<
     this.client = client;
     this.customTools = new CustomTools(client);
     this.provider = config.provider;
-    this.autoUploadDownloadFiles = config?.autoUploadDownloadFiles ?? true;
-    this.toolkitVersions = config?.toolkitVersions ?? 'latest';
+    this.autoUploadDownloadFiles =
+      config?.autoUploadDownloadFiles ?? CONFIG_DEFAULTS.autoUploadDownloadFiles;
+    this.toolkitVersions = config?.toolkitVersions ?? CONFIG_DEFAULTS.toolkitVersions;
     // Bind the execute method to ensure correct 'this' context
     this.execute = this.execute.bind(this);
     // Set the execute method for the provider.

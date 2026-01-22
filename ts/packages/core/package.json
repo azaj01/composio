@@ -45,6 +45,18 @@
         "import": "./dist/utils/modifiers/FileToolModifier.node.mjs",
         "require": "./dist/utils/modifiers/FileToolModifier.node.cjs"
       }
+    },
+    "#config_defaults": {
+      "workerd": "./dist/utils/config-defaults/ConfigDefaults.workerd.mjs",
+      "edge-light": "./dist/utils/config-defaults/ConfigDefaults.workerd.mjs",
+      "node": {
+        "import": "./dist/utils/config-defaults/ConfigDefaults.node.mjs",
+        "require": "./dist/utils/config-defaults/ConfigDefaults.node.cjs"
+      },
+      "default": {
+        "import": "./dist/utils/config-defaults/ConfigDefaults.node.mjs",
+        "require": "./dist/utils/config-defaults/ConfigDefaults.node.cjs"
+      }
     }
   },
   "exports": {
