@@ -94,3 +94,5 @@ jobs:
 
       - name: Run Cloudflare Workers E2E Tests
         run: pnpm run test:e2e:cloudflare
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
