@@ -23,6 +23,8 @@ import {
   Code,
   Blocks,
   Plug,
+  Play,
+  Terminal,
 } from 'lucide-react';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -63,6 +65,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Code,
     Blocks,
     Plug,
+    Play,
+    Terminal,
     ...components,
   };
 }

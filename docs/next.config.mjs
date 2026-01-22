@@ -128,6 +128,22 @@ const config = {
         destination: '/reference/api-reference/:path*',
         permanent: true,
       },
+      // Features section redirects
+      {
+        source: '/docs/using-triggers',
+        destination: '/docs/triggers',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp-quickstart',
+        destination: '/docs/mcp/mcp-quickstart',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp-server-management',
+        destination: '/docs/mcp/mcp-server-management',
+        permanent: true,
+      },
     ];
   },
 };
