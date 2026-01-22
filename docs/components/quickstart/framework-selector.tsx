@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export type Framework =
   | 'openai-agents'
@@ -106,6 +106,11 @@ interface FrameworkSelectorProps {
 
 export function FrameworkSelector({ value = 'openai-agents', onChange }: FrameworkSelectorProps) {
   const [selected, setSelected] = useState<Framework>(value);
+
+  // Sync internal state with prop changes
+  useEffect(() => {
+    setSelected(value);
+  }, [value]);
 
   const handleSelect = (framework: Framework) => {
     setSelected(framework);
