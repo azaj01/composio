@@ -20,6 +20,8 @@ export async function PATCH(request: NextRequest) {
   return handleProxy(request);
 }
 
+const ALLOWED_HOST = 'backend.composio.dev';
+
 async function handleProxy(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -27,6 +29,22 @@ async function handleProxy(request: NextRequest) {
 
     if (!targetUrl) {
       return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
+    }
+
+    // Validate the target URL to prevent SSRF
+    let parsedTarget: URL;
+    try {
+      parsedTarget = new URL(targetUrl);
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
+
+    if (parsedTarget.hostname !== ALLOWED_HOST) {
+      return NextResponse.json({ error: 'URL not allowed' }, { status: 403 });
+    }
+
+    if (parsedTarget.protocol !== 'https:') {
+      return NextResponse.json({ error: 'Only HTTPS allowed' }, { status: 403 });
     }
 
     // Get request body for non-GET requests
