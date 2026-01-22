@@ -160,15 +160,26 @@ export function ToolkitsLanding() {
             Browse {toolkits.length} toolkits supported by Composio
           </p>
         </div>
-        <a
-          href="https://request.composio.dev/boards/tool-requests"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-md border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-500/20 dark:text-orange-400"
-        >
-          Request a tool
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="https://platform.composio.dev/auth?next_page=%2Ftool-router"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-fd-border bg-fd-background px-3 py-1.5 text-sm font-medium text-fd-foreground transition-colors hover:bg-fd-accent"
+          >
+            Playground
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          <a
+            href="https://request.composio.dev/boards/tool-requests"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-500/20 dark:text-orange-400"
+          >
+            Request a tool
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* Premium Tools Card */}
