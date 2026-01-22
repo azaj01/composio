@@ -1,14 +1,21 @@
 import { source } from '@/lib/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-// Insert changelog into page tree after Get Started section (after providers)
+// Insert changelog into page tree after Get Started section
 const changelogPage = { type: 'page' as const, name: 'Changelog', url: '/docs/changelog' };
+const children = source.pageTree.children;
+const getStartedIdx = children.findIndex(
+  (c) => c.type === 'separator' && c.name === 'Get Started'
+);
+const nextSeparatorIdx = children.findIndex(
+  (c, i) => i > getStartedIdx && c.type === 'separator'
+);
 const pageTree = {
   ...source.pageTree,
-  children: source.pageTree.children.flatMap((child) =>
-    child.type === 'page' && child.url === '/docs/providers'
-      ? [child, changelogPage]
-      : [child]
-  ) as typeof source.pageTree.children,
+  children: [
+    ...children.slice(0, nextSeparatorIdx),
+    changelogPage,
+    ...children.slice(nextSeparatorIdx),
+  ] as typeof children,
 };
 
 export default function Layout({ children }: LayoutProps<'/docs'>) {
