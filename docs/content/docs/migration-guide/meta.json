@@ -1,9 +1,4 @@
 {
   "title": "Migration Guide",
-  "pages": [
-    "index",
-    "new-sdk",
-    "toolkit-versioning",
-    "tool-router-beta"
-  ]
+  "pages": ["..."]
 }
