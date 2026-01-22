@@ -25,7 +25,12 @@ jobs:
       COMPOSIO_API_KEY: ${{ inputs.api_key || secrets.COMPOSIO_API_KEY }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
 
       - name: Log trigger source
         run: |
@@ -41,6 +46,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        env:
+          BYPASS_BUN_VERSION_CHECK: '1'
+
       - name: Install Python Dependencies
         working-directory: ./fern
         run: |
