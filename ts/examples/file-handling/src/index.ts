@@ -27,7 +27,7 @@ async function main() {
     console.log('🚀 Starting File-handling Example...');
 
     // Get available tools
-    const tools = await composio.tools.get('default', 'GMAIL_SEND_EMAIL');
+    const tools = await composio.tools.get('jkomyno', 'GMAIL_SEND_EMAIL');
 
     console.log(`✅ Found ${tools.length} tools`);
 
@@ -35,14 +35,15 @@ async function main() {
     console.log(`Sending file from ${filePath}`);
 
     const result = await composio.tools.execute('GMAIL_SEND_EMAIL', {
-      userId: 'default',
+      userId: 'jkomyno',
       arguments: {
         attachment: filePath,
-        recipient_email: 'musthaq@composio.dev',
+        recipient_email: 'alberto.schiabel@gmail.com',
         user_id: 'me',
         body: 'Hello, this is a test email with a file attachment.',
         subject: 'Test Email with Attachment',
       },
+      dangerouslySkipVersionCheck: true,
     });
 
     console.log(result);

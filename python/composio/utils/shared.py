@@ -4,151 +4,37 @@ Shared utils.
 
 import typing as t
 import uuid
-from functools import reduce
 from inspect import Parameter
 
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
 from composio.utils.logging import get as get_logger
+from composio.utils.schema_converter import (
+    json_schema_to_pydantic_type,
+    PYDANTIC_TYPE_TO_PYTHON_TYPE,
+    CONTAINER_TYPE,
+    FALLBACK_VALUES,
+)
 
 logger = get_logger(__name__)
 
-PYDANTIC_TYPE_TO_PYTHON_TYPE = {
-    "string": str,
-    "integer": int,
-    "number": float,
-    "boolean": bool,
-    "array": t.List,
-    "object": t.Dict,
-    "null": t.Optional[t.Any],
-}
-
-CONTAINER_TYPE = ("array", "object")
-
-# Should be deprecated,
-# required values will always be provided by users
-# Non-required values are nullable(None) if default value not provided.
-FALLBACK_VALUES = {
-    "string": "",
-    "number": 0.0,
-    "integer": 0,
-    "boolean": False,
-    "object": {},
-    "array": [],
-    "null": None,
-}
+# Re-export for backward compatibility
+__all__ = [
+    "json_schema_to_pydantic_type",
+    "PYDANTIC_TYPE_TO_PYTHON_TYPE",
+    "CONTAINER_TYPE",
+    "FALLBACK_VALUES",
+    "json_schema_to_pydantic_field",
+    "json_schema_to_fields_dict",
+    "json_schema_to_model",
+    "pydantic_model_from_param_schema",
+    "get_signature_format_from_schema_params",
+    "get_pydantic_signature_format_from_schema_params",
+    "generate_request_id",
+]
 
 reserved_names = ["validate"]
-
-
-def json_schema_to_pydantic_type(
-    json_schema: t.Union[t.Dict[str, t.Any], bool],
-) -> t.Union[t.Type, t.Optional[t.Any]]:
-    """
-    Converts a JSON schema type to a Pydantic type.
-
-    :param json_schema: The JSON schema to convert (can be dict or boolean).
-    :return: A Pydantic type.
-    """
-    # Handle boolean schemas (JSON Schema draft-06+)
-    # true = accept anything, false = reject everything
-    if isinstance(json_schema, bool):
-        if json_schema:
-            return t.Any  # true schema accepts any value
-        else:
-            return None  # false schema - will be filtered out in union processing
-
-    # Handle oneOf schemas first
-    if "oneOf" in json_schema:
-        one_of_options = json_schema["oneOf"]
-        pydantic_types = [
-            json_schema_to_pydantic_type(option) for option in one_of_options
-        ]
-        # Filter out None values and ensure we have valid types
-        valid_types = [ptype for ptype in pydantic_types if ptype is not None]
-        if len(valid_types) == 1:
-            return valid_types[0]
-        if len(valid_types) == 0:
-            return str  # fallback to string type
-        # Create Union with any number of types
-        # Cast all types and use functools.reduce to create proper Union
-        cast_types = [t.cast(t.Type, ptype) for ptype in valid_types]
-        # Use reduce to create Union[Type1, Type2, ...] properly
-        return reduce(lambda a, b: t.Union[a, b], cast_types)  # type: ignore
-
-    # Handle anyOf schemas (commonly used for nullable types)
-    if "anyOf" in json_schema:
-        any_of_options = json_schema["anyOf"]
-        pydantic_types = [
-            json_schema_to_pydantic_type(option) for option in any_of_options
-        ]
-        # Filter out None/null types for the base type
-        # "null" type maps to t.Optional[t.Any], so we need to check for that too
-        null_type = PYDANTIC_TYPE_TO_PYTHON_TYPE.get("null")
-        has_null = any(
-            ptype == null_type or ptype is type(None)
-            for ptype in pydantic_types
-            if ptype is not None
-        )
-        valid_types = [
-            ptype
-            for ptype in pydantic_types
-            if ptype is not None and ptype is not type(None) and ptype != null_type
-        ]
-        if len(valid_types) == 0:
-            return str  # fallback to string type
-        if len(valid_types) == 1:
-            base_type = valid_types[0]
-            # If null was one of the options, make it Optional
-            if has_null:
-                return t.Optional[t.cast(t.Type, base_type)]  # type: ignore
-            return base_type
-        cast_types = [t.cast(t.Type, ptype) for ptype in valid_types]
-        union_type = reduce(lambda a, b: t.Union[a, b], cast_types)  # type: ignore
-        # If null was one of the options, include None in the Union
-        if has_null:
-            return t.Optional[union_type]  # type: ignore
-        return union_type
-
-    # Handle allOf schemas (usually for combining schemas)
-    if "allOf" in json_schema:
-        all_of_options = json_schema["allOf"]
-        # For allOf with single option, use that option's type
-        if len(all_of_options) == 1:
-            return json_schema_to_pydantic_type(all_of_options[0])
-        # For multiple allOf options, try to find the primary type
-        # Usually the first non-ref schema or the one with "type" key
-        for option in all_of_options:
-            if "type" in option:
-                return json_schema_to_pydantic_type(option)
-        # Fallback: process first option
-        if all_of_options:
-            return json_schema_to_pydantic_type(all_of_options[0])
-
-    # Add fallback type - string
-    if "type" not in json_schema:
-        json_schema["type"] = "string"
-    type_ = t.cast(str, json_schema.get("type"))
-    if type_ == "array":
-        items_schema = json_schema.get("items")
-        if items_schema:
-            ItemType = json_schema_to_pydantic_type(items_schema)
-            return t.List[t.cast(t.Type, ItemType)]  # type: ignore
-        return t.List
-
-    if type_ == "object":
-        properties = json_schema.get("properties")
-        if properties:
-            nested_model = json_schema_to_model(json_schema)
-            return nested_model
-        return t.Dict
-
-    pytype = PYDANTIC_TYPE_TO_PYTHON_TYPE.get(type_)
-    if pytype is not None:
-        return pytype
-
-    raise ValueError(f"Unsupported JSON schema type: {type_}")
 
 
 def json_schema_to_pydantic_field(

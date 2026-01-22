@@ -481,6 +481,7 @@ version = "0.10.9"
 source = { virtual = "python" }
 dependencies = [
     { name = "composio-client" },
+    { name = "json-schema-to-pydantic" },
     { name = "openai" },
     { name = "pydantic" },
     { name = "pysher" },
@@ -507,6 +508,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "composio-client", specifier = "==1.26.0" },
+    { name = "json-schema-to-pydantic", specifier = ">=0.4.8" },
     { name = "openai" },
     { name = "pydantic", specifier = ">=2.6.4" },
     { name = "pysher", specifier = ">=1.0.8" },
@@ -1897,6 +1899,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cb/74/f8e4eb4ce31be034c08fd3da37328c9ab7a7503831cf6f41d2121699cc88/json_repair-0.46.2.tar.gz", hash = "sha256:4c81154d61c028ca3750b451472dbb33978f2ee6f44be84c42b444b03d9f4b16", size = 33605, upload-time = "2025-06-06T08:05:48.46Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8c/d7/5f31df5ad00474f3005bbbac5f3a1e8d36535b40f1d352e6a5bd9880bf1f/json_repair-0.46.2-py3-none-any.whl", hash = "sha256:21fb339de583ab68db4272f984ec6fca9cc453d8117d9870e83c28b6b56c20e6", size = 22326, upload-time = "2025-06-06T08:05:47.064Z" },
+]
+
+[[package]]
+name = "json-schema-to-pydantic"
+version = "0.4.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/42/57/49f1329c118f371c2e0c04b3f09e31bcaf1d74f6cadaa5deb64a44f62810/json_schema_to_pydantic-0.4.8.tar.gz", hash = "sha256:fba739dba6d94845017dc8416410f9a220944d233d55d8f4e61bf03a200ce45d", size = 51552, upload-time = "2026-01-17T10:08:53.188Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/32/47d63743ebc478c3c4af187d0aabfe404eece61a8d2ae3ae15c4b1607c78/json_schema_to_pydantic-0.4.8-py3-none-any.whl", hash = "sha256:e3298faed5fe2f976991686e302e4731357ace18ec835eef2ccbb412b951d9a7", size = 15601, upload-time = "2026-01-17T10:08:52.182Z" },
 ]
 
 [[package]]

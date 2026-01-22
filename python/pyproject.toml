@@ -10,6 +10,7 @@ dependencies = [
     "composio-client==1.26.0",
     "typing-extensions>=4.0.0",
     "openai",
+    "json-schema-to-pydantic>=0.4.8",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
