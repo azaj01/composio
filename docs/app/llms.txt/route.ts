@@ -1,11 +1,10 @@
-import { source, toolRouterSource, examplesSource } from '@/lib/source';
+import { source, examplesSource } from '@/lib/source';
 
 export const revalidate = false;
 
 export async function GET() {
   try {
     const docsPages = source.getPages();
-    const toolRouterPages = toolRouterSource.getPages();
     const examplesPages = examplesSource.getPages();
 
     // Group docs pages by directory
@@ -68,10 +67,6 @@ ${modifierDocs.map(formatPage).join('\n')}
 ## Providers
 
 ${providerDocs.map(formatPage).join('\n')}
-
-## Tool Router
-
-${toolRouterPages.map(formatPage).join('\n')}
 
 ## Troubleshooting
 
