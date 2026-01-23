@@ -33,6 +33,18 @@
         "import": "./dist/models/Files.node.mjs",
         "require": "./dist/models/Files.node.cjs"
       }
+    },
+    "#file_tool_modifier": {
+      "workerd": "./dist/utils/modifiers/FileToolModifier.workerd.mjs",
+      "edge-light": "./dist/utils/modifiers/FileToolModifier.workerd.mjs",
+      "node": {
+        "import": "./dist/utils/modifiers/FileToolModifier.node.mjs",
+        "require": "./dist/utils/modifiers/FileToolModifier.node.cjs"
+      },
+      "default": {
+        "import": "./dist/utils/modifiers/FileToolModifier.node.mjs",
+        "require": "./dist/utils/modifiers/FileToolModifier.node.cjs"
+      }
     }
   },
   "exports": {
