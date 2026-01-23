@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ExternalLink, Search, Copy, Check, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import type { Toolkit, Tool, Trigger } from '@/types/toolkit';
 import { PageActions } from '@/components/page-actions';
+import { AuthDetailsSection } from '@/components/toolkits/auth-details-section';
 
 interface ToolkitDetailProps {
   toolkit: Toolkit;
@@ -163,12 +164,6 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
                   Try {toolkit.name.trim()}
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
-                <Link
-                  href="/docs/authenticating-tools"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-fd-border bg-fd-background px-3 py-1.5 text-sm font-medium text-fd-foreground transition-colors hover:bg-fd-accent"
-                >
-                  Authentication guide
-                </Link>
               </div>
               {toolkit.authSchemes.length > 0 && (
                 <div className="flex items-center gap-1.5 text-sm text-fd-muted-foreground">
@@ -189,6 +184,11 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
             <PageActions path={path} />
           </div>
       </div>
+
+      {/* Authentication Details */}
+      {toolkit.authConfigDetails && toolkit.authConfigDetails.length > 0 && (
+        <AuthDetailsSection authConfigDetails={toolkit.authConfigDetails} />
+      )}
 
       {/* Tools & Triggers */}
       {(tools.length > 0 || triggers.length > 0) && (
