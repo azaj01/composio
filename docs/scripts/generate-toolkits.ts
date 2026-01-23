@@ -133,9 +133,10 @@ async function fetchToolsForToolkit(slug: string): Promise<Tool[]> {
   if (!response.ok) return [];
 
   const data = await response.json();
-  const items = data.items || data || [];
+  const rawItems = data.items || data;
+  const items = Array.isArray(rawItems) ? rawItems : [];
 
-  return items.map((raw: any) => ({
+  return items.filter((raw: any) => raw && typeof raw === 'object').map((raw: any) => ({
     slug: raw.slug || '',
     name: raw.name || raw.display_name || raw.slug || '',
     description: raw.description || '',
@@ -153,9 +154,10 @@ async function fetchTriggersForToolkit(slug: string): Promise<Trigger[]> {
   if (!response.ok) return [];
 
   const data = await response.json();
-  const items = data.items || data || [];
+  const rawItems = data.items || data;
+  const items = Array.isArray(rawItems) ? rawItems : [];
 
-  return items.map((raw: any) => ({
+  return items.filter((raw: any) => raw && typeof raw === 'object').map((raw: any) => ({
     slug: raw.slug || '',
     name: raw.name || raw.display_name || raw.slug || '',
     description: raw.description || '',

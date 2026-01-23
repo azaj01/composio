@@ -41,7 +41,7 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
     const rawItems = data.items || data;
     const items = Array.isArray(rawItems) ? rawItems : [];
 
-    return items.map((tool: any) => {
+    return items.filter((tool: any) => tool && typeof tool === 'object').map((tool: any) => {
       // Extract parameters from JSON Schema format
       const inputSchema = tool.input_parameters || tool.parameters;
       const outputSchema = tool.output_parameters || tool.response;
@@ -154,7 +154,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug?: st
     const toolkit = toolkits.find((t) => t.slug === slug[0]);
     if (toolkit) {
       return {
-        title: `${toolkit.name.trim()} - Composio Toolkit`,
+        title: `${toolkit.name?.trim() || toolkit.slug} - Composio Toolkit`,
         description: toolkit.description,
       };
     }

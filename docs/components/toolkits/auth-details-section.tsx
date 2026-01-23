@@ -47,11 +47,12 @@ function fieldsToTypeTable(fields: AuthConfigField[]): Record<string, {
 }
 
 function getAllFields(detail: AuthConfigDetail): AuthConfigField[] {
+  if (!detail?.fields) return [];
   return [
-    ...detail.fields.auth_config_creation.required,
-    ...detail.fields.auth_config_creation.optional,
-    ...detail.fields.connected_account_initiation.required,
-    ...detail.fields.connected_account_initiation.optional,
+    ...(detail.fields.auth_config_creation?.required || []),
+    ...(detail.fields.auth_config_creation?.optional || []),
+    ...(detail.fields.connected_account_initiation?.required || []),
+    ...(detail.fields.connected_account_initiation?.optional || []),
   ];
 }
 
@@ -62,7 +63,7 @@ export function AuthDetailsSection({ authConfigDetails }: AuthDetailsSectionProp
 
   // Filter out auth modes with no fields in either section
   const validDetails = authConfigDetails.filter((detail) => {
-    return getAllFields(detail).length > 0;
+    return detail && getAllFields(detail).length > 0;
   });
 
   if (validDetails.length === 0) {

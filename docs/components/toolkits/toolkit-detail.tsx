@@ -24,7 +24,7 @@ function ToolkitIcon({ toolkit }: { toolkit: Toolkit }) {
         backgroundSize: '60%',
       } : undefined}
     >
-      {!toolkit.logo && toolkit.name.trim().charAt(0).toUpperCase()}
+      {!toolkit.logo && (toolkit.name?.trim() || toolkit.slug).charAt(0).toUpperCase()}
     </div>
   );
 }
@@ -133,22 +133,24 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
   const [activeTab, setActiveTab] = useState<'tools' | 'triggers'>('tools');
 
   const filteredTools = useMemo(() => {
-    if (!toolSearch) return tools;
+    const toolsArray = tools || [];
+    if (!toolSearch) return toolsArray;
     const search = toolSearch.toLowerCase();
-    return tools.filter(
+    return toolsArray.filter(
       (tool) =>
-        tool.name.toLowerCase().includes(search) ||
-        tool.slug.toLowerCase().includes(search)
+        tool.name?.toLowerCase().includes(search) ||
+        tool.slug?.toLowerCase().includes(search)
     );
   }, [tools, toolSearch]);
 
   const filteredTriggers = useMemo(() => {
-    if (!toolSearch) return triggers;
+    const triggersArray = triggers || [];
+    if (!toolSearch) return triggersArray;
     const search = toolSearch.toLowerCase();
-    return triggers.filter(
+    return triggersArray.filter(
       (trigger) =>
-        trigger.name.toLowerCase().includes(search) ||
-        trigger.slug.toLowerCase().includes(search)
+        trigger.name?.toLowerCase().includes(search) ||
+        trigger.slug?.toLowerCase().includes(search)
     );
   }, [triggers, toolSearch]);
 
@@ -184,7 +186,7 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
             {/* Title row */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-fd-foreground">{toolkit.name.trim()}</h1>
+                <h1 className="text-xl font-bold tracking-tight text-fd-foreground">{(toolkit.name?.trim() || toolkit.slug)}</h1>
                 <button
                   onClick={copySlug}
                   className="inline-flex items-center gap-1 rounded bg-fd-muted px-1.5 py-0.5 font-mono text-xs text-fd-muted-foreground transition-colors hover:text-fd-foreground"
@@ -218,7 +220,7 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
                   target="_blank"
                   className="inline-flex items-center gap-1.5 rounded-md border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-500/20 dark:text-orange-400"
                 >
-                  Try {toolkit.name.trim()}
+                  Try {(toolkit.name?.trim() || toolkit.slug)}
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               </div>
