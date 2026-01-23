@@ -165,19 +165,6 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               </div>
-              {toolkit.authSchemes.length > 0 && (
-                <div className="flex items-center gap-1.5 text-sm text-fd-muted-foreground">
-                  <span>Auth:</span>
-                  {toolkit.authSchemes.map((scheme, index) => (
-                    <span
-                      key={`${scheme}-${index}`}
-                      className="rounded bg-fd-muted px-1.5 py-0.5 text-xs text-fd-foreground"
-                    >
-                      {scheme}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Page actions */}
