@@ -13,10 +13,11 @@ const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/
 const API_KEY = process.env.COMPOSIO_API_KEY;
 
 // Fetch detailed tool info from Composio API (server-side only)
-async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[]> {
+// Returns null on failure, empty array if toolkit has no tools
+async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
   if (!API_KEY) {
     console.warn('[Toolkits] COMPOSIO_API_KEY not set, skipping detailed tool fetch');
-    return [];
+    return null;
   }
 
   try {
@@ -33,7 +34,7 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[]> {
 
     if (!response.ok) {
       console.warn(`[Toolkits] Failed to fetch tools for ${toolkitSlug}: ${response.status}`);
-      return [];
+      return null;
     }
 
     const data = await response.json();
@@ -78,7 +79,7 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[]> {
     });
   } catch (error) {
     console.error(`[Toolkits] Error fetching detailed tools for ${toolkitSlug}:`, error);
-    return [];
+    return null;
   }
 }
 
@@ -191,8 +192,8 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
       // Fetch detailed tool info from API (includes input/output params)
       const detailedTools = await fetchDetailedTools(toolkitSlug);
 
-      // Merge detailed info with static tools, or use detailed if available
-      const tools = detailedTools.length > 0 ? detailedTools : toolkit.tools;
+      // Use detailed tools if fetch succeeded, otherwise fall back to static data
+      const tools = detailedTools !== null ? detailedTools : toolkit.tools;
 
       return (
         <ToolkitDetail
