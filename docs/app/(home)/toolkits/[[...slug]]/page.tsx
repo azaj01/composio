@@ -38,7 +38,8 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
     }
 
     const data = await response.json();
-    const items = data.items || data || [];
+    const rawItems = data.items || data;
+    const items = Array.isArray(rawItems) ? rawItems : [];
 
     return items.map((tool: any) => {
       // Extract parameters from JSON Schema format
