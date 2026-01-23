@@ -57,6 +57,11 @@ const config = {
         permanent: true,
       },
       {
+        source: '/tool-router/migration-guide/beta-to-stable',
+        destination: '/docs/migration-guide/tool-router-beta',
+        permanent: true,
+      },
+      {
         source: '/tool-router/authentication',
         destination: '/docs/authentication',
         permanent: true,
