@@ -1,4 +1,4 @@
-import { source, toolRouterSource, referenceSource, examplesSource } from '@/lib/source';
+import { source, toolRouterSource, examplesSource } from '@/lib/source';
 
 export const revalidate = false;
 
@@ -6,7 +6,6 @@ export async function GET() {
   try {
     const docsPages = source.getPages();
     const toolRouterPages = toolRouterSource.getPages();
-    const referencePages = referenceSource.getPages();
     const examplesPages = examplesSource.getPages();
 
     // Group docs pages by directory
@@ -82,10 +81,6 @@ ${coreDocs.filter(p => ['cli', 'debugging-info'].some(s => p.slugs.includes(s)))
 ## Migration Guides
 
 ${migrationDocs.map(formatPage).join('\n')}
-
-## API Reference
-
-${referencePages.map(formatPage).join('\n')}
 
 ## Examples
 
