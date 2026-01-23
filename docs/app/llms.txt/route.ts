@@ -22,10 +22,10 @@ export async function GET() {
       groupedDocs.get(category)!.push(page);
     }
 
-    // Format page as markdown link with .mdx extension
+    // Format page as simple URL (like Cursor's llms.txt)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatPage = (page: any) =>
-      `- [${page.data.title}](https://composio.dev${page.url}.mdx): ${page.data.description || ''}`;
+      `- https://composio.dev${page.url}.md`;
 
     // Build sections
     const coreDocs = groupedDocs.get('core') || [];
@@ -93,7 +93,7 @@ ${examplesPages.map(formatPage).join('\n')}
 
 ## Full Documentation
 
-- [llms-full.txt](https://composio.dev/llms-full.txt): Complete documentation in a single file for LLM context
+- https://composio.dev/llms-full.txt
 `;
 
     return new Response(index, {
