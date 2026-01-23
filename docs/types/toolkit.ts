@@ -1,7 +1,23 @@
+// Parameter schema for tool inputs/outputs
+export interface ParameterSchema {
+  type: string;
+  description?: string;
+  required?: boolean;
+  default?: unknown;
+  example?: unknown;
+  enum?: string[];
+}
+
 export interface Tool {
   slug: string;
   name: string;
   description: string;
+  // Detailed fields fetched on-demand
+  input_parameters?: Record<string, ParameterSchema>;
+  output_parameters?: Record<string, ParameterSchema>;
+  scopes?: string[];
+  tags?: string[];
+  is_deprecated?: boolean;
 }
 
 export interface Trigger {

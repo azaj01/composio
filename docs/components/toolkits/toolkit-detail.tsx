@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Search, Copy, Check, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
-import type { Toolkit, Tool, Trigger } from '@/types/toolkit';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
 import { PageActions } from '@/components/page-actions';
 import { AuthDetailsSection } from '@/components/toolkits/auth-details-section';
 
@@ -28,6 +29,37 @@ function ToolkitIcon({ toolkit }: { toolkit: Toolkit }) {
   );
 }
 
+// Convert parameter schema to TypeTable format
+function paramsToTypeTable(params: Record<string, ParameterSchema>): Record<string, {
+  type: string;
+  description?: string;
+  default?: string;
+  required?: boolean;
+}> {
+  const result: Record<string, {
+    type: string;
+    description?: string;
+    default?: string;
+    required?: boolean;
+  }> = {};
+
+  for (const [name, param] of Object.entries(params)) {
+    result[name] = {
+      type: param.type || 'string',
+      description: param.description || undefined,
+      default: param.default !== undefined ? String(param.default) : undefined,
+      required: param.required,
+    };
+  }
+
+  return result;
+}
+
+// Check if item is a Tool with parameters
+function isTool(item: Tool | Trigger): item is Tool {
+  return 'input_parameters' in item || 'output_parameters' in item;
+}
+
 function ToolItem({ item }: { item: Tool | Trigger }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -38,6 +70,10 @@ function ToolItem({ item }: { item: Tool | Trigger }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const tool = isTool(item) ? item : null;
+  const hasInputParams = tool?.input_parameters && Object.keys(tool.input_parameters).length > 0;
+  const hasOutputParams = tool?.output_parameters && Object.keys(tool.output_parameters).length > 0;
 
   return (
     <div className="border-b border-fd-border/50 last:border-0">
@@ -61,8 +97,22 @@ function ToolItem({ item }: { item: Tool | Trigger }) {
         </span>
       </button>
       {expanded && (
-        <div className="bg-fd-muted/20 px-4 py-3 pl-10">
+        <div className="space-y-4 bg-fd-muted/20 px-4 py-3 pl-10">
           <p className="text-sm text-fd-muted-foreground">{item.description}</p>
+
+          {hasInputParams && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-fd-muted-foreground">Input Parameters</h4>
+              <TypeTable type={paramsToTypeTable(tool.input_parameters!)} />
+            </div>
+          )}
+
+          {hasOutputParams && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-fd-muted-foreground">Output</h4>
+              <TypeTable type={paramsToTypeTable(tool.output_parameters!)} />
+            </div>
+          )}
         </div>
       )}
     </div>

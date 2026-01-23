@@ -7,7 +7,80 @@ import { PageActions } from '@/components/page-actions';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import type { Metadata } from 'next';
-import type { Toolkit } from '@/types/toolkit';
+import type { Toolkit, Tool } from '@/types/toolkit';
+
+const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
+const API_KEY = process.env.COMPOSIO_API_KEY;
+
+// Fetch detailed tool info from Composio API (server-side only)
+async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[]> {
+  if (!API_KEY) {
+    console.warn('[Toolkits] COMPOSIO_API_KEY not set, skipping detailed tool fetch');
+    return [];
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&limit=1000`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+        },
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      }
+    );
+
+    if (!response.ok) {
+      console.warn(`[Toolkits] Failed to fetch tools for ${toolkitSlug}: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const items = data.items || data || [];
+
+    return items.map((tool: any) => {
+      // Extract parameters from JSON Schema format
+      const inputSchema = tool.input_parameters || tool.parameters;
+      const outputSchema = tool.output_parameters || tool.response;
+
+      // Get properties and required array from JSON Schema
+      const inputProps = inputSchema?.properties || inputSchema;
+      const inputRequired = inputSchema?.required || [];
+      const outputProps = outputSchema?.properties || outputSchema;
+      const outputRequired = outputSchema?.required || [];
+
+      // Add required flag to each property based on the required array
+      const processParams = (props: any, requiredList: string[]) => {
+        if (!props || typeof props !== 'object') return undefined;
+        const result: Record<string, any> = {};
+        for (const [key, value] of Object.entries(props)) {
+          if (typeof value === 'object' && value !== null) {
+            result[key] = {
+              ...(value as object),
+              required: requiredList.includes(key),
+            };
+          }
+        }
+        return Object.keys(result).length > 0 ? result : undefined;
+      };
+
+      return {
+        slug: tool.slug || '',
+        name: tool.name || tool.display_name || tool.slug || '',
+        description: tool.description || '',
+        input_parameters: processParams(inputProps, inputRequired),
+        output_parameters: processParams(outputProps, outputRequired),
+        scopes: tool.scopes || undefined,
+        tags: tool.tags || undefined,
+        is_deprecated: tool.is_deprecated || false,
+      };
+    });
+  } catch (error) {
+    console.error(`[Toolkits] Error fetching detailed tools for ${toolkitSlug}:`, error);
+    return [];
+  }
+}
 
 async function getToolkits(): Promise<Toolkit[]> {
   const filePath = join(process.cwd(), 'public/data/toolkits.json');
@@ -115,10 +188,16 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
     const toolkit = toolkits.find((t) => t.slug === toolkitSlug);
 
     if (toolkit) {
+      // Fetch detailed tool info from API (includes input/output params)
+      const detailedTools = await fetchDetailedTools(toolkitSlug);
+
+      // Merge detailed info with static tools, or use detailed if available
+      const tools = detailedTools.length > 0 ? detailedTools : toolkit.tools;
+
       return (
         <ToolkitDetail
           toolkit={toolkit}
-          tools={toolkit.tools}
+          tools={tools}
           triggers={toolkit.triggers}
           path={`/toolkits/${toolkit.slug}`}
         />
