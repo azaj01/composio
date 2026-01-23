@@ -129,11 +129,11 @@ export function ToolkitsLanding() {
 
     // First sort all toolkits alphabetically (trim to handle leading spaces)
     const sorted = [...filteredToolkits].sort((a, b) =>
-      a.name.trim().localeCompare(b.name.trim())
+      (a.name?.trim() || '').localeCompare(b.name?.trim() || '')
     );
 
     sorted.forEach((toolkit) => {
-      const firstChar = toolkit.name.trim().charAt(0).toUpperCase();
+      const firstChar = (toolkit.name?.trim() || '#').charAt(0).toUpperCase();
       // Group all numbers under '#'
       const letter = /[0-9]/.test(firstChar) ? '#' : firstChar;
       if (!groups[letter]) {
