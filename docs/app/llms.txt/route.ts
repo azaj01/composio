@@ -85,8 +85,7 @@ ${migrationDocs.map(formatPage).join('\n')}
 
 ## API Reference
 
-${referencePages.slice(0, 20).map(formatPage).join('\n')}
-${referencePages.length > 20 ? `\n... and ${referencePages.length - 20} more API reference pages` : ''}
+${referencePages.map(formatPage).join('\n')}
 
 ## Examples
 
