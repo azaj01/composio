@@ -29,6 +29,13 @@ function ToolkitIcon({ toolkit }: { toolkit: Toolkit }) {
   );
 }
 
+// Format default value for display
+function formatDefault(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
 // Convert parameter schema to TypeTable format
 function paramsToTypeTable(params: Record<string, ParameterSchema>): Record<string, {
   type: string;
@@ -47,7 +54,7 @@ function paramsToTypeTable(params: Record<string, ParameterSchema>): Record<stri
     result[name] = {
       type: param.type || 'string',
       description: param.description || undefined,
-      default: param.default !== undefined ? String(param.default) : undefined,
+      default: formatDefault(param.default),
       required: param.required,
     };
   }
