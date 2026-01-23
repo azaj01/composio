@@ -31,8 +31,18 @@ const config = {
         permanent: true,
       },
       {
+        source: '/tool-router',
+        destination: '/docs/quickstart',
+        permanent: true,
+      },
+      {
         source: '/tool-router/overview',
-        destination: '/tool-router',
+        destination: '/docs/quickstart',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/quickstart',
+        destination: '/docs/quickstart-tool-router',
         permanent: true,
       },
       // Core concepts moved from tool-router to docs
@@ -54,6 +64,37 @@ const config = {
       {
         source: '/tool-router/tools-and-toolkits',
         destination: '/docs/tools-and-toolkits',
+        permanent: true,
+      },
+      // Authentication pages moved from tool-router to docs
+      {
+        source: '/tool-router/using-in-chat-authentication',
+        destination: '/docs/authenticating-users/in-chat-authentication',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/manually-authenticating-users',
+        destination: '/docs/authenticating-users/manually-authenticating',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/using-custom-auth-configs',
+        destination: '/docs/guides/using-custom-auth-configuration',
+        permanent: true,
+      },
+      {
+        source: '/docs/authenticating-users/using-custom-auth-configs',
+        destination: '/docs/guides/using-custom-auth-configuration',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/white-labeling-authentication',
+        destination: '/docs/guides/white-labeling-authentication',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/managing-multiple-accounts',
+        destination: '/docs/guides/managing-multiple-connected-accounts',
         permanent: true,
       },
       // Provider redirects (old fern URLs -> new docs URLs)
