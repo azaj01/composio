@@ -25,6 +25,7 @@ import {
   Plug,
   Play,
   Terminal,
+  Palette,
 } from 'lucide-react';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -67,6 +68,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Plug,
     Play,
     Terminal,
+    Palette,
     ...components,
   };
 }
