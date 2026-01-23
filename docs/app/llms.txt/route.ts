@@ -34,10 +34,12 @@ export async function GET() {
     const troubleshootingDocs = groupedDocs.get('troubleshooting') || [];
     const migrationDocs = groupedDocs.get('migration-guide') || [];
     const nativeToolsDocs = groupedDocs.get('native-tools') || [];
+    const mcpDocs = groupedDocs.get('mcp') || [];
+    const featuresDocs = groupedDocs.get('features') || [];
 
     const index = `# Composio Documentation
 
-> Composio is the simplest way to connect AI agents to external tools and services. Build AI agents with 250+ tools across GitHub, Slack, Gmail, and more.
+> Composio is the simplest way to connect AI agents to external tools and services. Build AI agents with 800+ tools across GitHub, Slack, Gmail, and more.
 
 ## Getting Started
 
@@ -54,11 +56,11 @@ ${nativeToolsDocs.length > 0 ? nativeToolsDocs.map(formatPage).join('\n') : ''}
 
 ## MCP (Model Context Protocol)
 
-${coreDocs.filter(p => p.slugs.some(s => s.startsWith('mcp'))).map(formatPage).join('\n')}
+${mcpDocs.map(formatPage).join('\n')}
 
 ## Triggers
 
-${coreDocs.filter(p => ['using-triggers'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+${coreDocs.filter(p => ['triggers'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
 
 ## Modify Tool Behavior
 
