@@ -3,8 +3,6 @@ title: "Consistent Error Response Structure"
 date: "2026-01-07"
 ---
 
-# Consistent Error Response Structure
-
 Tool execution errors now return a standardized response format across all failure types. Previously, the `data` field was empty on errors—now it always includes `status_code` and `message`, matching the structure of successful responses.
 
 ## What Changed
@@ -46,7 +44,7 @@ All error responses from tool execution now include:
 
 ---
 
-# Union Types Preserved in Tool Schemas
+## Union Types Preserved in Tool Schemas
 
 Tool schemas now use standard JSON Schema `anyOf` for union types, providing accurate type information for LLMs and code generators.
 
