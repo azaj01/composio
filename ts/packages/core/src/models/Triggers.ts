@@ -101,8 +101,8 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
         ? {
             auth_config_ids: parsedParams.data.authConfigIds,
             connected_account_ids: parsedParams.data.connectedAccountIds,
+            cursor: parsedParams.data.cursor,
             limit: parsedParams.data.limit,
-            page: parsedParams.data.page,
             show_disabled: parsedParams.data.showDisabled,
             trigger_ids: parsedParams.data.triggerIds,
             trigger_names: parsedParams.data.triggerNames,
