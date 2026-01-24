@@ -1,0 +1,162 @@
+---
+title: Configuring Sessions
+description: Enable toolkits, set auth configs, and select connected accounts
+keywords: [session, toolkits, auth configs, connected accounts]
+---
+
+## Creating a session
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+session = composio.create(user_id="user_123")
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+const session = await composio.create("user_123");
+```
+</Tab>
+</Tabs>
+
+## Enabling toolkits
+
+Restrict the session to specific toolkits:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# Using array format
+session = composio.create(
+    user_id="user_123",
+    toolkits=["github", "gmail", "slack"]
+)
+
+# Using object format with enable key
+session = composio.create(
+    user_id="user_123",
+    toolkits={"enable": ["github", "gmail", "slack"]}
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+// Using array format
+const session = await composio.create("user_123", {
+  toolkits: ["github", "gmail", "slack"],
+});
+
+// Using object format with enable key
+const session2 = await composio.create("user_123", {
+  toolkits: { enable: ["github", "gmail", "slack"] },
+});
+```
+</Tab>
+</Tabs>
+
+## Disabling toolkits
+
+Keep all toolkits enabled except specific ones:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+session = composio.create(
+    user_id="user_123",
+    toolkits={"disable": ["exa", "firecrawl"]}
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+const session = await composio.create("user_123", {
+  toolkits: { disable: ["exa", "firecrawl"] },
+});
+```
+</Tab>
+</Tabs>
+
+## Custom auth configs
+
+Use your own OAuth credentials instead of Composio's defaults:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+session = composio.create(
+    user_id="user_123",
+    auth_configs={
+        "github": "ac_your_github_config",
+        "slack": "ac_your_slack_config"
+    }
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+const session = await composio.create("user_123", {
+  authConfigs: {
+    github: "ac_your_github_config",
+    slack: "ac_your_slack_config",
+  },
+});
+```
+</Tab>
+</Tabs>
+
+See [White-labeling authentication](/docs/guides/white-labeling-authentication) for branding, or [Using custom auth configs](/docs/guides/using-custom-auth-configuration) for toolkits that require your own credentials.
+
+## Account selection
+
+If a user has multiple connected accounts for the same toolkit, you can specify which one to use:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+session = composio.create(
+    user_id="user_123",
+    connected_accounts={
+        "gmail": "ca_work_gmail",
+        "github": "ca_personal_github"
+    }
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+const session = await composio.create("user_123", {
+  connectedAccounts: {
+    gmail: "ca_work_gmail",
+    github: "ca_personal_github",
+  },
+});
+```
+</Tab>
+</Tabs>
+
+### Precedence
+
+When executing a tool, the connected account is selected in this order:
+
+1. `connectedAccounts` override if provided in session config
+2. `authConfigs` override - finds or creates connection on that config
+3. Auth config previously created for this toolkit
+4. Creates new auth config using Composio managed auth
+5. Error if no Composio managed auth scheme exists for the toolkit
+
+If a user has multiple connected accounts for a toolkit, the most recently connected one is used.
