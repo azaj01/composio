@@ -12,7 +12,7 @@ We handle those by pre-filtering them before passing to the library.
 import typing as t
 from functools import reduce
 
-from json_schema_to_pydantic import (
+from json_schema_to_pydantic import (  # type: ignore[import-untyped]
     create_model as create_model_from_schema,
     SchemaError,
     CombinerError,
@@ -170,10 +170,10 @@ def _is_simple_primitive(schema: t.Dict[str, t.Any]) -> bool:
     )
 
 
-def _convert_simple_type(schema: t.Dict[str, t.Any]) -> t.Type:
+def _convert_simple_type(schema: t.Dict[str, t.Any]) -> t.Type[t.Any]:
     """Convert simple primitive types directly."""
     type_ = schema.get("type", "string")
-    return PYDANTIC_TYPE_TO_PYTHON_TYPE.get(type_, str)
+    return t.cast(t.Type[t.Any], PYDANTIC_TYPE_TO_PYTHON_TYPE.get(type_, str))
 
 
 def _convert_with_library(
