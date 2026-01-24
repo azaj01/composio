@@ -21,6 +21,7 @@ Added `waitForConnections` (TypeScript) / `wait_for_connections` (Python) proper
 
 **TypeScript:**
 ```typescript
+// @noErrors
 const session = await composio.toolRouter.create(userId, {
   manageConnections: {
     enable: true,
@@ -48,6 +49,7 @@ Introduced new modifier types for better session-based tool execution: `SessionE
 
 **TypeScript:**
 ```typescript
+// @noErrors
 const tools = await session.tools({
   modifySchema: ({ toolSlug, toolkitSlug, schema }) => schema,
   beforeExecute: ({ toolSlug, toolkitSlug, sessionId, params }) => params,
@@ -76,6 +78,7 @@ Added `getRawToolRouterMetaTools` (TypeScript) / `get_raw_tool_router_meta_tools
 
 **TypeScript:**
 ```typescript
+// @noErrors
 const metaTools = await composio.tools.getRawToolRouterMetaTools('session_123', {
   modifySchema: ({ toolSlug, toolkitSlug, schema }) => {
     // Customize schema

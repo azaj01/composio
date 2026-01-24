@@ -24,6 +24,7 @@ When calling `connectedAccounts.initiate()`, the SDK now filters by `statuses: [
 ### Before (Bug)
 
 ```typescript
+// @noErrors
 // Expired accounts would incorrectly trigger ComposioMultipleConnectedAccountsError
 await composio.connectedAccounts.initiate(userId, authConfigId);
 // ❌ Error: Multiple connected accounts found (even if they're all expired)
@@ -32,6 +33,7 @@ await composio.connectedAccounts.initiate(userId, authConfigId);
 ### After (Fixed)
 
 ```typescript
+// @noErrors
 // Only ACTIVE accounts are considered
 await composio.connectedAccounts.initiate(userId, authConfigId);
 // ✅ Works - expired/inactive accounts are ignored

@@ -47,6 +47,7 @@ if session.experimental:
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+// @noErrors
 import { Composio } from "@composio/core";
 
 const composio = new Composio();
@@ -95,11 +96,12 @@ triggers = composio.triggers.list_active(cursor="cursor_string", limit=10)
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+// @noErrors
 // Before (deprecated)
 const triggers = await composio.triggers.listActive({ page: 1, limit: 10 });
 
 // After
-const triggers = await composio.triggers.listActive({ cursor: "cursor_string", limit: 10 });
+const triggers2 = await composio.triggers.listActive({ cursor: "cursor_string", limit: 10 });
 // Use response.nextCursor for the next page
 ```
 </Tab>
