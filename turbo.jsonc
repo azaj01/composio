@@ -19,7 +19,7 @@
     },
     "test:e2e": {
       "dependsOn": ["^build"],
-      "env": ["COMPOSIO_API_KEY"],
+      "env": ["COMPOSIO_API_KEY", "OPENAI_API_KEY"],
       "cache": false
     },
     "test:e2e:node": {
@@ -29,7 +29,7 @@
     },
     "test:e2e:cloudflare": {
       "dependsOn": ["^build"],
-      "env": ["COMPOSIO_API_KEY"],
+      "env": ["COMPOSIO_API_KEY", "OPENAI_API_KEY"],
       "cache": false
     },
     "clean": {
