@@ -9,6 +9,7 @@ import { Card, Cards } from 'fumadocs-ui/components/card';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
 import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
+import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
 import { Figure } from '@/components/figure';
 import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
@@ -50,6 +51,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     FrameworkSelector,
     QuickstartFlow,
     FrameworkOption,
+    ToolTypeFlow,
+    ToolTypeOption,
     Figure,
     Video,
     CapabilityCard,

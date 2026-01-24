@@ -4,6 +4,130 @@ description: Use Composio with OpenAI's Agents SDK
 keywords: [agents sdk]
 ---
 
+OpenAI Agents SDK is a lightweight framework for building agentic AI apps with minimal abstractions.
+
+## Usage
+
+<ToolTypeFlow>
+
+<ToolTypeOption id="native" name="Native Tools" icon="native">
+<Steps>
+<Step>
+### Install
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```bash
+pip install composio composio-openai-agents openai-agents
+```
+</Tab>
+<Tab value="TypeScript">
+```bash
+npm install @composio/core @composio/openai-agents @openai/agents
+```
+</Tab>
+</Tabs>
+</Step>
+
+<Step>
+### Configure API Keys
+
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `OPENAI_API_KEY` with your [OpenAI API key](https://platform.openai.com/api-keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+OPENAI_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+### Create session and run agent
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# TODO: Native tools Python code
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+// TODO: Native tools TypeScript code
+```
+</Tab>
+</Tabs>
+</Step>
+</Steps>
+</ToolTypeOption>
+
+<ToolTypeOption id="mcp" name="MCP" icon="mcp">
+<Steps>
+<Step>
+### Install
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```bash
+pip install composio openai-agents
+```
+</Tab>
+<Tab value="TypeScript">
+```bash
+npm install @composio/core @openai/agents
+```
+</Tab>
+</Tabs>
+</Step>
+
+<Step>
+### Configure API Keys
+
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `OPENAI_API_KEY` with your [OpenAI API key](https://platform.openai.com/api-keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+OPENAI_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+### Create session and run agent
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# TODO: MCP Python code
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+// TODO: MCP TypeScript code
+```
+</Tab>
+</Tabs>
+</Step>
+</Steps>
+</ToolTypeOption>
+
+</ToolTypeFlow>
+
+<Accordions>
+<Accordion title="Direct tool usage">
+TODO: Direct tool usage content
+</Accordion>
+
+<Accordion title="Direct MCP usage">
+TODO: Direct MCP usage content
+</Accordion>
+</Accordions>
+
+---
+
+## Old Content (to be removed)
+
 The OpenAI Agents Provider is a provider that formats the Composio tools into an object compatible with OpenAI's Agents API.
 
 OpenAI Agents SDK is different from the OpenAI SDK. It helps build agentic AI apps in a lightweight, easy-to-use package with very few abstractions.
