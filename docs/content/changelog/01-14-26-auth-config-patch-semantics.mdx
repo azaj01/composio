@@ -19,9 +19,9 @@ date: "2026-01-14"
 
 The `PATCH /api/v3/auth_configs/{id}` endpoint now implements proper partial update semantics. Previously, omitting fields would clear them (behaving like PUT). Now, omitted fields are preserved—only explicitly provided fields are modified.
 
-<Warning>
+<Callout type="warn">
 **Breaking Change**: If you relied on omitting fields to clear them, you must now explicitly send `null` or `[]`. See [Migration Guide](#migration-guide) below.
-</Warning>
+</Callout>
 
 ## What Changed
 
@@ -32,9 +32,9 @@ The `PATCH /api/v3/auth_configs/{id}` endpoint now implements proper partial upd
 | `scopes` (type: default)      | Cleared if omitted       | Preserved if omitted              |
 | `restrict_to_following_tools` | Reset to `[]` if omitted | Preserved if omitted              |
 
-<Note>
+<Callout type="info">
 **Merge Behavior**: The `credentials` object is merged—send only the fields you want to change, and existing fields are preserved.
-</Note>
+</Callout>
 
 ## New Capabilities
 
@@ -42,8 +42,9 @@ The `PATCH /api/v3/auth_configs/{id}` endpoint now implements proper partial upd
 
 Update just `client_secret` without resending `client_id` or other fields:
 
-<CodeBlocks>
-```python title="Python SDK"
+<Tabs groupId="language" items={['Python', 'TypeScript']}>
+<Tab value="Python">
+```python
 from composio import Composio
 
 composio = Composio()
@@ -51,18 +52,18 @@ composio = Composio()
 # Only send the field you want to update - other credentials are preserved
 
 composio.auth_configs.update(
-"ac_yourAuthConfigId",
-options={
-"type": "custom",
-"credentials": {
-"client_secret": "new_rotated_secret",
-},
-},
+    "ac_yourAuthConfigId",
+    options={
+        "type": "custom",
+        "credentials": {
+            "client_secret": "new_rotated_secret",
+        },
+    },
 )
-
-````
-
-```typescript title="TypeScript SDK"
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
 import { Composio } from "@composio/core";
 
 const composio = new Composio();
@@ -74,16 +75,17 @@ await composio.authConfigs.update("ac_yourAuthConfigId", {
     client_secret: "new_rotated_secret",
   },
 });
-````
-
-</CodeBlocks>
+```
+</Tab>
+</Tabs>
 
 ### Update Tool Restrictions Without Touching Credentials
 
 Previously, this would fail because `credentials` was required. Now it works:
 
-<CodeBlocks>
-```python title="Python SDK"
+<Tabs groupId="language" items={['Python', 'TypeScript']}>
+<Tab value="Python">
+```python
 from composio import Composio
 
 composio = Composio()
@@ -91,18 +93,18 @@ composio = Composio()
 # Update tool restrictions - credentials are automatically preserved
 
 composio.auth_configs.update(
-"ac_yourAuthConfigId",
-options={
-"type": "custom",
-"tool_access_config": {
-"tools_available_for_execution": ["GMAIL_SEND_EMAIL", "GMAIL_READ_EMAIL"],
-},
-},
+    "ac_yourAuthConfigId",
+    options={
+        "type": "custom",
+        "tool_access_config": {
+            "tools_available_for_execution": ["GMAIL_SEND_EMAIL", "GMAIL_READ_EMAIL"],
+        },
+    },
 )
-
-````
-
-```typescript title="TypeScript SDK"
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
 import { Composio } from "@composio/core";
 
 const composio = new Composio();
@@ -117,9 +119,9 @@ await composio.authConfigs.update("ac_yourAuthConfigId", {
     toolsAvailableForExecution: ["GMAIL_SEND_EMAIL", "GMAIL_READ_EMAIL"],
   },
 });
-````
-
-</CodeBlocks>
+```
+</Tab>
+</Tabs>
 
 ## Migration Guide
 
@@ -136,8 +138,9 @@ await composio.authConfigs.update("ac_yourAuthConfigId", {
 | `tool_access_config` | `"tool_access_config": {"tools_available_for_execution": []}` | `toolAccessConfig: { toolsAvailableForExecution: [] }` |
 | `scopes` (default)   | `"scopes": ""`                                                | `scopes: ""` (via HTTP API)                            |
 
-<CodeBlocks>
-```python title="Python SDK - Clear tool restrictions"
+<Tabs groupId="language" items={['Python', 'TypeScript']}>
+<Tab value="Python">
+```python
 from composio import Composio
 
 composio = Composio()
@@ -145,18 +148,18 @@ composio = Composio()
 # Explicitly clear tool restrictions with empty array
 
 composio.auth_configs.update(
-"ac_yourAuthConfigId",
-options={
-"type": "custom",
-"tool_access_config": {
-"tools_available_for_execution": [],
-},
-},
+    "ac_yourAuthConfigId",
+    options={
+        "type": "custom",
+        "tool_access_config": {
+            "tools_available_for_execution": [],
+        },
+    },
 )
-
-````
-
-```typescript title="TypeScript SDK - Clear tool restrictions"
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
 import { Composio } from "@composio/core";
 
 const composio = new Composio();
@@ -171,9 +174,9 @@ await composio.authConfigs.update("ac_yourAuthConfigId", {
     toolsAvailableForExecution: [],
   },
 });
-````
-
-</CodeBlocks>
+```
+</Tab>
+</Tabs>
 
 ### Raw HTTP API
 

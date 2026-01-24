@@ -21,12 +21,13 @@ date: "2026-01-22"
 
 Tool Router sessions now support experimental configuration for timezone-aware assistive prompts. When you provide a user's timezone, the session returns a contextual assistive prompt that includes timezone-specific guidance.
 
-<Warning>
+<Callout type="warn">
 This is an experimental feature. The API may change or be removed in future versions.
-</Warning>
+</Callout>
 
-<CodeBlocks>
-```python title="Python SDK"
+<Tabs groupId="language" items={['Python', 'TypeScript']}>
+<Tab value="Python">
+```python
 from composio import Composio
 
 composio = Composio()
@@ -45,8 +46,9 @@ session = composio.tool_router.create(
 if session.experimental:
     print(session.experimental.assistive_prompt)
 ```
-
-```typescript title="TypeScript SDK"
+</Tab>
+<Tab value="TypeScript">
+```typescript
 import { Composio } from "@composio/core";
 
 const composio = new Composio();
@@ -65,11 +67,12 @@ if (session.experimental) {
   console.log(session.experimental.assistivePrompt);
 }
 ```
-</CodeBlocks>
+</Tab>
+</Tabs>
 
-<Note>
+<Callout type="info">
 The `experimental` field is only available on sessions created with `create()`. Sessions retrieved with `use()` do not include the experimental data.
-</Note>
+</Callout>
 
 ### Toolkit Endpoint Method
 
@@ -81,8 +84,9 @@ The toolkit retrieve response now includes `getCurrentUserEndpointMethod` (TypeS
 
 The `page` parameter in `listActive` / `list_active` for trigger instances has been replaced with `cursor` for cursor-based pagination. There was a bug in earlier APIs which caused `page` param to be ignored, going ahead for pagination please use `cursor` instead. 
 
-<CodeBlocks>
-```python title="Python SDK"
+<Tabs groupId="language" items={['Python', 'TypeScript']}>
+<Tab value="Python">
+```python
 # Before (deprecated)
 triggers = composio.triggers.list_active(page=1, limit=10)
 
@@ -90,8 +94,9 @@ triggers = composio.triggers.list_active(page=1, limit=10)
 triggers = composio.triggers.list_active(cursor="cursor_string", limit=10)
 # Use response.next_cursor for the next page
 ```
-
-```typescript title="TypeScript SDK"
+</Tab>
+<Tab value="TypeScript">
+```typescript
 // Before (deprecated)
 const triggers = await composio.triggers.listActive({ page: 1, limit: 10 });
 
@@ -99,7 +104,8 @@ const triggers = await composio.triggers.listActive({ page: 1, limit: 10 });
 const triggers = await composio.triggers.listActive({ cursor: "cursor_string", limit: 10 });
 // Use response.nextCursor for the next page
 ```
-</CodeBlocks>
+</Tab>
+</Tabs>
 
 ## Impact Summary
 
