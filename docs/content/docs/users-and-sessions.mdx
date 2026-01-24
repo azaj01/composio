@@ -53,6 +53,47 @@ const session = await composio.create("user_123");
 </Tab>
 </Tabs>
 
-For details on enabling toolkits, setting auth configs, and selecting connected accounts:
+### Session methods
+
+Once created, a session provides methods to get tools and manage connections:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# Get tools for your AI framework
+tools = session.tools()
+
+# Get MCP server URL
+mcp_url = session.mcp.url
+
+# Authenticate a user to a toolkit
+connection_request = session.authorize("github")
+
+# List available toolkits and their connection status
+toolkits = session.toolkits()
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+const session = await composio.create("user_123");
+// ---cut---
+// Get tools for your AI framework
+const tools = await session.tools();
+
+// Get MCP server URL
+const mcpUrl = session.mcp.url;
+
+// Authenticate a user to a toolkit
+const connectionRequest = await session.authorize("github");
+
+// List available toolkits and their connection status
+const toolkits = await session.toolkits();
+```
+</Tab>
+</Tabs>
+
+For details on enabling toolkits, setting auth configs, and using session methods:
 
 <Card title="Configuring Sessions" href="/docs/configuring-sessions" description="Enable toolkits, set auth configs, and select connected accounts" />
