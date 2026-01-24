@@ -1,7 +1,9 @@
 ---
-title: "[Critical] File Upload/Download Fixes for anyOf, oneOf, and allOf Schemas"
+title: "File Upload/Download Fixes for latest tool with anyOf, oneOf, and allOf Schemas"
 date: "2026-01-20"
 ---
+
+# [Critical] File Upload/Download Fixes for `latest` tool with anyOf, oneOf, and allOf Schemas
 
 ## Version Information
 
@@ -17,9 +19,9 @@ date: "2026-01-20"
 
 The file handling modifiers now properly handle `file_uploadable` and `file_downloadable` properties nested within `anyOf`, `oneOf`, and `allOf` JSON Schema declarations. Previously, only direct child properties (and partial `allOf` support) were detected for file upload/download transformations.
 
-<Callout type="info">
+<Note>
 We recommend updating to version `0.5.3` (TypeScript) or `0.10.8` (Python) or later to ensure file uploads and downloads work correctly with tools that use union or intersection types in their schemas.
-</Callout>
+</Note>
 
 ## What Changed
 
@@ -28,7 +30,6 @@ We recommend updating to version `0.5.3` (TypeScript) or `0.10.8` (Python) or la
 File properties inside `anyOf`, `oneOf`, or `allOf` were not detected:
 
 ```typescript
-// @noErrors
 // This schema's file_uploadable was NOT being processed
 inputParameters: {
   type: 'object',
@@ -53,7 +54,6 @@ inputParameters: {
 File properties are now correctly detected and processed at any nesting level:
 
 ```typescript
-// @noErrors
 // Now properly detected and transformed
 inputParameters: {
   type: 'object',
@@ -77,56 +77,48 @@ inputParameters: {
 
 | Scenario | Before | After |
 |----------|--------|-------|
-| `file_uploadable` in `anyOf` | Not detected | Works |
-| `file_uploadable` in `oneOf` | Not detected | Works |
-| `file_uploadable` in `allOf` | Not detected | Works |
-| `file_downloadable` in `anyOf` | Not detected | Works |
-| `file_downloadable` in `oneOf` | Not detected | Works |
-| `file_downloadable` in `allOf` | Not detected | Works |
-| Nested objects inside union types | Not detected | Works |
-| Array items with union types | Not detected | Works |
+| `file_uploadable` in `anyOf` | Not detected | ✅ Works |
+| `file_uploadable` in `oneOf` | Not detected | ✅ Works |
+| `file_uploadable` in `allOf` | Not detected | ✅ Works |
+| `file_downloadable` in `anyOf` | Not detected | ✅ Works |
+| `file_downloadable` in `oneOf` | Not detected | ✅ Works |
+| `file_downloadable` in `allOf` | Not detected | ✅ Works |
+| Nested objects inside union types | Not detected | ✅ Works |
+| Array items with union types | Not detected | ✅ Works |
 
 ## How to Update
 
 ### TypeScript/JavaScript
 
-<Tabs groupId="package-manager" items={['npm', 'pnpm', 'yarn']} persist>
-<Tab value="npm">
-```bash
+<CodeBlocks>
+```bash title="npm"
 npm update @composio/core@latest
 ```
-</Tab>
-<Tab value="pnpm">
-```bash
+
+```bash title="pnpm"
 pnpm update @composio/core@latest
 ```
-</Tab>
-<Tab value="yarn">
-```bash
+
+```bash title="yarn"
 yarn upgrade @composio/core@latest
 ```
-</Tab>
-</Tabs>
+</CodeBlocks>
 
 ### Python
 
-<Tabs groupId="python-package-manager" items={['pip', 'uv', 'poetry']} persist>
-<Tab value="pip">
-```bash
+<CodeBlocks>
+```bash title="pip"
 pip install --upgrade composio
 ```
-</Tab>
-<Tab value="uv">
-```bash
+
+```bash title="uv"
 uv pip install --upgrade composio
 ```
-</Tab>
-<Tab value="poetry">
-```bash
+
+```bash title="poetry"
 poetry update composio
 ```
-</Tab>
-</Tabs>
+</CodeBlocks>
 
 ## Backward Compatibility
 

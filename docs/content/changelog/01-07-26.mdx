@@ -1,20 +1,20 @@
 ---
-title: "Consistent Error Response Structure & Union Types Preserved"
+title: "Consistent Error Response Structure"
 date: "2026-01-07"
 ---
 
-## Consistent Error Response Structure
+# Consistent Error Response Structure
 
 Tool execution errors now return a standardized response format across all failure types. Previously, the `data` field was empty on errors—now it always includes `status_code` and `message`, matching the structure of successful responses.
 
-### What Changed
+## What Changed
 
 All error responses from tool execution now include:
 - `data.status_code`: HTTP status code (or `null` for non-HTTP errors)
 - `data.message`: Detailed error message
 - `error`: Same detailed message at the top level
 
-### Before vs After
+## Before vs After
 
 **Previous error response:**
 ```json
@@ -38,7 +38,7 @@ All error responses from tool execution now include:
 }
 ```
 
-### Why This Matters
+## Why This Matters
 
 - **Easier parsing**: Agents and code can reliably access error details from `data.message` without special-casing empty `data` objects
 - **Better debugging**: Detailed error messages replace generic HTTP error strings
@@ -46,11 +46,11 @@ All error responses from tool execution now include:
 
 ---
 
-## Union Types Preserved in Tool Schemas
+# Union Types Preserved in Tool Schemas
 
 Tool schemas now use standard JSON Schema `anyOf` for union types, providing accurate type information for LLMs and code generators.
 
-### What Changed
+## What Changed
 
 Two changes affect how types appear in request/response schemas:
 
@@ -59,7 +59,6 @@ Two changes affect how types appear in request/response schemas:
 | **Nullable fields** | **All toolkits** | Fields that accept `null` now use `anyOf: [{type}, {type: "null"}]` instead of `type` + `nullable: true` |
 | **Multi-type fields** | 157 toolkits | Fields accepting multiple value types (e.g., `string \| number`) preserve the full `anyOf` array instead of flattening to the first type |
 
-<Accordions>
 <Accordion title="Toolkits with multi-type union fields (157 total)">
 
 ### CRM & Sales
@@ -111,11 +110,9 @@ clearout, icypeas, neverbounce, zerobounce
 bitwarden, canny, cardly, castingwords, confluence, formdesk, getform, habitica, headout, highergov, jira, keen_io, landbot, moonclerk, one_drive, outlook, googlesheets, resend, ritekit, sms_alert, tapfiliate, thanks_io, uptimerobot
 
 </Accordion>
-</Accordions>
 
-### Before vs After
+## Before vs After
 For example, the `GOOGLECALENDAR_GET_CURRENT_DATE_TIME` request schema changes:
-
 **Previous (only a single type):**
 ```json
 {
@@ -173,7 +170,7 @@ Similarly, nullable fields like `page_token` in `GOOGLECALENDAR_LIST_CALENDARS`:
 }
 ```
 
-### Why This Matters
+## Why This Matters
 
 - **Accurate schemas**: LLMs and code generators see the full set of allowed types
 - **Better validation**: Input validation can now correctly accept all valid types, not just the first one
