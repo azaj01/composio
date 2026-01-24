@@ -195,6 +195,37 @@ const config = {
         destination: '/docs/mcp/mcp-server-management',
         permanent: true,
       },
+      // Tools section moved to tools-direct folder
+      {
+        source: '/docs/fetching-tools',
+        destination: '/docs/tools-direct/fetching-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/authenticating-tools',
+        destination: '/docs/tools-direct/authenticating-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/executing-tools',
+        destination: '/docs/tools-direct/executing-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/modify-tool-behavior/:path*',
+        destination: '/docs/tools-direct/modify-tool-behavior/:path*',
+        permanent: true,
+      },
+      {
+        source: '/docs/custom-tools',
+        destination: '/docs/tools-direct/custom-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/toolkit-versioning',
+        destination: '/docs/tools-direct/toolkit-versioning',
+        permanent: true,
+      },
       // Authentication section moved to auth-configuration folder
       {
         source: '/docs/custom-auth-configs',
