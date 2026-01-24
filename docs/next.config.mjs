@@ -195,6 +195,27 @@ const config = {
         destination: '/docs/mcp/mcp-server-management',
         permanent: true,
       },
+      // Authentication section moved to auth-configuration folder
+      {
+        source: '/docs/custom-auth-configs',
+        destination: '/docs/auth-configuration/custom-auth-configs',
+        permanent: true,
+      },
+      {
+        source: '/docs/programmatic-auth-configs',
+        destination: '/docs/auth-configuration/programmatic-auth-configs',
+        permanent: true,
+      },
+      {
+        source: '/docs/custom-auth-params',
+        destination: '/docs/auth-configuration/custom-auth-params',
+        permanent: true,
+      },
+      {
+        source: '/docs/connected-accounts',
+        destination: '/docs/auth-configuration/connected-accounts',
+        permanent: true,
+      },
     ];
   },
 };
