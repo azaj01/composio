@@ -1,4 +1,5 @@
 import ComposioClient from '@composio/client';
+import { FileToolModifier } from '#file_tool_modifier';
 import {
   Tool,
   ToolExecuteParams,
@@ -48,7 +49,6 @@ import {
 } from '../errors/ToolErrors';
 import { ValidationError } from '../errors/ValidationErrors';
 import { telemetry } from '../telemetry/Telemetry';
-import { FileToolModifier } from '../utils/modifiers/FileToolModifier';
 import { ComposioConfig } from '../composio';
 import { getToolkitVersion } from '../utils/toolkitVersion';
 import { handleToolExecutionError } from '../errors/ToolErrors';

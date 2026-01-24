@@ -8,6 +8,8 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
+import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
+import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
 import { Figure } from '@/components/figure';
 import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
@@ -22,6 +24,9 @@ import {
   Code,
   Blocks,
   Plug,
+  Play,
+  Terminal,
+  Palette,
 } from 'lucide-react';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -43,6 +48,11 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Cards,
     ProviderCard,
     ProviderGrid,
+    FrameworkSelector,
+    QuickstartFlow,
+    FrameworkOption,
+    ToolTypeFlow,
+    ToolTypeOption,
     Figure,
     Video,
     CapabilityCard,
@@ -59,6 +69,9 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Code,
     Blocks,
     Plug,
+    Play,
+    Terminal,
+    Palette,
     ...components,
   };
 }
