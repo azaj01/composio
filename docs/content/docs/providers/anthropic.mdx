@@ -4,18 +4,143 @@ description: Use Composio tools with Claude
 keywords: [claude]
 ---
 
-The Anthropic Provider transforms Composio tools into a format compatible with Anthropic's function calling capabilities through its Messages API.
+## Claude Agents SDK
 
-## Usage with MCP
+<ToolTypeFlow>
 
-Use Composio Tool Router with the Claude Agent SDK for a fully managed MCP experience.
-
-### Installation
+<ToolTypeOption id="native" name="Native Tools" icon="native">
+<Steps>
+<Step>
+**Install**
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```bash
-pip install python-dotenv composio claude-agent-sdk
+pip install composio composio-claude-agent-sdk claude-agent-sdk
+```
+</Tab>
+<Tab value="TypeScript">
+```bash
+npm install dotenv @composio/core @composio/claude-agent-sdk @anthropic-ai/claude-agent-sdk
+```
+</Tab>
+</Tabs>
+</Step>
+
+<Step>
+**Configure API Keys**
+
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `ANTHROPIC_API_KEY` with your [Anthropic API key](https://console.anthropic.com/settings/keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+ANTHROPIC_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+**Create session and run agent**
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+import asyncio
+from dotenv import load_dotenv
+load_dotenv()
+
+from composio import Composio
+from composio_claude_agent_sdk import ClaudeAgentSDKProvider
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, create_sdk_mcp_server
+
+# Initialize Composio with Claude Agent SDK provider
+composio = Composio(provider=ClaudeAgentSDKProvider())
+
+external_user_id = "user_2nFh83Hde"
+recipient_email = "soham.g@composio.dev"
+
+# Create a session
+session = composio.create(user_id=external_user_id)
+
+# Get tools from the session
+tools = session.tools()
+custom_server = create_sdk_mcp_server(name="composio", version="1.0.0", tools=tools)
+
+# Run the agent
+async def main():
+    options = ClaudeAgentOptions(
+        system_prompt="You are a helpful assistant.",
+        permission_mode="bypassPermissions",
+        mcp_servers={"composio": custom_server},
+    )
+
+    async with ClaudeSDKClient(options=options) as client:
+        await client.query(f"Send an email to {recipient_email} with the subject 'Hello from Composio' and the body 'This is a test email!'")
+        async for msg in client.receive_response():
+            print(msg)
+
+asyncio.run(main())
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import "dotenv/config";
+import { Composio } from "@composio/core";
+import { ClaudeAgentSDKProvider } from "@composio/claude-agent-sdk";
+import { createSdkMcpServer, query } from "@anthropic-ai/claude-agent-sdk";
+
+// Initialize Composio with Claude Agent SDK provider
+const composio = new Composio({
+  provider: new ClaudeAgentSDKProvider(),
+});
+
+const externalUserId = "user_2nFh83Hde";
+const recipientEmail = "soham.g@composio.dev";
+
+// Create a session
+const session = await composio.create(externalUserId);
+
+// Get tools from the session
+const tools = await session.tools();
+
+const customServer = createSdkMcpServer({
+  name: "composio",
+  version: "1.0.0",
+  tools: tools,
+});
+
+// Run the agent
+console.log("Running agent...");
+for await (const content of query({
+  prompt: `Send an email to ${recipientEmail} with the subject 'Hello from Composio' and the body 'This is a test email!'`,
+  options: {
+    mcpServers: { composio: customServer },
+    permissionMode: "bypassPermissions",
+  },
+})) {
+  if (content.type === "assistant") {
+    console.log("Claude:", content.message);
+  }
+}
+
+console.log("Received response from Claude");
+```
+</Tab>
+</Tabs>
+</Step>
+</Steps>
+</ToolTypeOption>
+
+<ToolTypeOption id="mcp" name="MCP" icon="mcp">
+<Steps>
+<Step>
+**Install**
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```bash
+pip install composio claude-agent-sdk
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -24,228 +149,168 @@ npm install dotenv @composio/core @anthropic-ai/claude-agent-sdk
 ```
 </Tab>
 </Tabs>
+</Step>
 
-### Usage
-
-Create a Tool Router session and execute tasks with Claude:
+<Step>
+**Configure API Keys**
 
 <Callout type="info">
-- Set your `COMPOSIO_API_KEY` environment variable with your API key from [Settings](https://platform.composio.dev/?next_page=/settings).
-- Set your `ANTHROPIC_API_KEY` environment variable with your [Anthropic API key](https://platform.claude.com/settings/keys).
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `ANTHROPIC_API_KEY` with your [Anthropic API key](https://console.anthropic.com/settings/keys).
 </Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+ANTHROPIC_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+**Create session and run agent**
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```python
 import asyncio
 from dotenv import load_dotenv
-from claude_agent_sdk.client import ClaudeSDKClient
-from claude_agent_sdk.types import (
-    ClaudeAgentOptions,
-    AssistantMessage,
-    TextBlock,
-    ToolUseBlock,
-)
-from composio import Composio
-
 load_dotenv()
 
-# Initialize Composio (API key from env var COMPOSIO_API_KEY or pass explicitly)
+from composio import Composio
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
+
+# Initialize Composio
 composio = Composio()
 
-# Unique identifier of the user
-user_id = "user_123"
-# Create a tool router session for the user
-session = composio.create(user_id=user_id)
+external_user_id = "user_2nFh83Hde"
+recipient_email = "soham.g@composio.dev"
 
-# Configure Claude with Composio MCP server
-options = ClaudeAgentOptions(
-    system_prompt=(
-        "You are a helpful assistant with access to external tools. "
-        "Always use the available tools to complete user requests."
-    ),
-    mcp_servers={
-        "composio": {
-            "type": "http",
-            "url": session.mcp.url,
-            "headers": session.mcp.headers,  # Authentication headers for the Composio MCP server
-        }
-    },
-    permission_mode="bypassPermissions",  # Auto-approve tools (demo only)
-)
+# Create a session
+session = composio.create(user_id=external_user_id)
 
+# Run the agent
 async def main():
-    print("""
-What task would you like me to help you with?
-I can use tools like Gmail, GitHub, Linear, Notion, and more.
-(Type 'exit' to exit)
-Example tasks:
-  • 'Summarize my emails from today'
-  • 'List all open issues on the composio github repository and create a notion page with the issues'
-""")
+    options = ClaudeAgentOptions(
+        system_prompt="You are a helpful assistant.",
+        permission_mode="bypassPermissions",
+        mcp_servers={
+            "composio": {
+                "type": "http",
+                "url": session.mcp.url,
+                "headers": session.mcp.headers,
+            }
+        },
+    )
 
-    async with ClaudeSDKClient(options) as client:
-        # Multi-turn conversation with agentic tool calling
-        while True:
-            user_input = input("\nYou: ").strip()
-            if user_input.lower() == "exit":
-                break
+    async with ClaudeSDKClient(options=options) as client:
+        await client.query(f"Send an email to {recipient_email} with the subject 'Hello from Composio' and the body 'This is a test email!'")
+        async for msg in client.receive_response():
+            print(msg)
 
-            print("\nClaude: ", end="", flush=True)
-            try:
-                await client.query(user_input)
-                async for msg in client.receive_response():
-                    if isinstance(msg, AssistantMessage):
-                        for block in msg.content:
-                            if isinstance(block, ToolUseBlock):
-                                print(f"\n[Using tool: {block.name}]", end="")
-                            elif isinstance(block, TextBlock):
-                                print(block.text, end="", flush=True)
-            except Exception as e:
-                print(f"\n[Error]: {e}")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 </Tab>
 <Tab value="TypeScript">
 ```typescript
 import "dotenv/config";
-import { query, type Options } from "@anthropic-ai/claude-agent-sdk";
 import { Composio } from "@composio/core";
-import { createInterface } from "readline/promises";
+import { query } from "@anthropic-ai/claude-agent-sdk";
 
-// Initialize Composio (API key from env var COMPOSIO_API_KEY or pass explicitly: { apiKey: "your-key" })
+// Initialize Composio
 const composio = new Composio();
 
-// Unique identifier of the user
-const userId = "user_123";
+const externalUserId = "user_2nFh83Hde";
+const recipientEmail = "soham.g@composio.dev";
 
-// Create a tool router session for the user
-const session = await composio.create(userId);
+// Create a session
+const session = await composio.create(externalUserId);
 
-const options: Options = {
-  systemPrompt: `You are a helpful assistant with access to external tools. ` +
-    `Always use the available tools to complete user requests.`,
-  mcpServers: {
-    composio: {
-      type: "http",
-      url: session.mcp.url,
-      headers: session.mcp.headers // Authentication headers for the Composio MCP server
+// Run the agent
+console.log("Running agent...");
+for await (const content of query({
+  prompt: `Send an email to ${recipientEmail} with the subject 'Hello from Composio' and the body 'This is a test email!'`,
+  options: {
+    mcpServers: {
+      composio: {
+        type: "http",
+        url: session.mcp.url,
+        headers: session.mcp.headers,
+      },
     },
+    permissionMode: "bypassPermissions",
   },
-  permissionMode: "bypassPermissions", // Auto-approve tools (demo only - use "default" in production)
-};
-
-// Set up interactive terminal input/output for the conversation
-const readline = createInterface({ input: process.stdin, output: process.stdout });
-
-console.log(`
-What task would you like me to help you with?
-I can use tools like Gmail, GitHub, Linear, Notion, and more.
-(Type 'exit' to exit)
-Example tasks:
-  • 'Summarize my emails from today'
-  • 'List all open issues on the composio github repository and create a notion page with the issues'
-`);
-
-let isFirstQuery = true;
-
-// Multi-turn conversation with agentic tool calling
-while (true) {
-  const answer = await readline.question('You: ');
-  const input = answer.trim();
-  if (input.toLowerCase() === "exit") break;
-
-  process.stdout.write("Claude: ");
-
-  const queryOptions = isFirstQuery ? options : { ...options, continue: true };
-  isFirstQuery = false;
-
-  try {
-    for await (const stream of query({ prompt: input, options: queryOptions })) {
-      // Only process assistant messages (the SDK also sends result/error messages)
-      if (stream.type === "assistant") {
-        const { content } = stream.message;
-        for (const block of content) {
-          if (block.type === "tool_use") {
-            process.stdout.write(`\n[Using tool: ${block.name}]`);
-          } else if (block.type === "text") {
-            process.stdout.write(block.text);
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error("\n[Error]:", error instanceof Error ? error.message : error);
+})) {
+  if (content.type === "assistant") {
+    console.log("Claude:", content.message);
   }
-  process.stdout.write("\n");
 }
 
-readline.close();
+console.log("Received response from Claude");
 ```
 </Tab>
 </Tabs>
+</Step>
+</Steps>
+</ToolTypeOption>
 
-## Usage with direct tools
+</ToolTypeFlow>
 
-### Setup
+## Anthropic API
 
-<Tabs items={["Python", "TypeScript"]}>
+<Steps>
+<Step>
+**Install**
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```bash
-pip install composio composio-anthropic
+pip install composio composio-anthropic anthropic
 ```
 </Tab>
 <Tab value="TypeScript">
 ```bash
-npm install @composio/anthropic @anthropic-ai/sdk
+npm install dotenv @composio/core @composio/anthropic @anthropic-ai/sdk
 ```
 </Tab>
 </Tabs>
+</Step>
 
-You can specify the provider in the constructor. The constructor also takes in an optional `cacheTools` parameter.
+<Step>
+**Configure API Keys**
 
-<Tabs items={["Python", "TypeScript"]}>
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `ANTHROPIC_API_KEY` with your [Anthropic API key](https://console.anthropic.com/settings/keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+ANTHROPIC_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+**Create session and run agent**
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```python
 import anthropic
+from dotenv import load_dotenv
+load_dotenv()
 
 from composio import Composio
 from composio_anthropic import AnthropicProvider
 
-# Initialize tools.
+# Initialize Composio with Anthropic provider
 anthropic_client = anthropic.Anthropic()
 composio = Composio(provider=AnthropicProvider())
-```
-</Tab>
-<Tab value="TypeScript">
-```typescript
-import { Composio } from "@composio/core";
-import { AnthropicProvider } from "@composio/anthropic";
-import Anthropic from '@anthropic-ai/sdk';
 
-const composio = new Composio({
-  provider: new AnthropicProvider({
-    cacheTools: false,  // default
-  }),
-});
+external_user_id = "user_2nFh83Hde"
+recipient_email = "soham.g@composio.dev"
 
-const anthropic = new Anthropic();
-```
-</Tab>
-</Tabs>
+# Create a session
+session = composio.create(user_id=external_user_id)
 
-### Usage
-
-<Tabs items={["Python", "TypeScript"]}>
-<Tab value="Python">
-```python
-# Define your user ID
-user_id = "your-user-id"
-
-# Get GitHub tool for listing stargazers
-tools = composio.tools.get(user_id=user_id, tools=["GITHUB_LIST_STARGAZERS"])
+# Get tools from the session
+tools = session.tools()
 
 # Get response from the LLM
 response = anthropic_client.messages.create(
@@ -253,12 +318,108 @@ response = anthropic_client.messages.create(
     max_tokens=1024,
     tools=tools,
     messages=[
-        {"role": "user", "content": "List my github stargazers. for the repo composiohq/composio"},
+        {"role": "user", "content": f"Send an email to {recipient_email} with the subject 'Hello from Composio' and the body 'This is a test email!'"},
     ],
 )
 
-# Execute the function calls.
-result = composio.provider.handle_tool_calls(user_id=user_id, response=response)
+# Execute the function calls
+result = composio.provider.handle_tool_calls(user_id=external_user_id, response=response)
+print(result)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import "dotenv/config";
+import { Composio } from "@composio/core";
+import { AnthropicProvider } from "@composio/anthropic";
+import Anthropic from "@anthropic-ai/sdk";
+
+// Initialize Composio with Anthropic provider
+const composio = new Composio({
+  provider: new AnthropicProvider(),
+});
+const anthropic = new Anthropic();
+
+const externalUserId = "user_2nFh83Hde";
+const recipientEmail = "soham.g@composio.dev";
+
+// Create a session
+const session = await composio.create(externalUserId);
+
+// Get tools from the session
+const tools = await session.tools();
+
+// Get response from the LLM
+const msg = await anthropic.messages.create({
+  model: "claude-sonnet-4-5",
+  messages: [
+    {
+      role: "user",
+      content: `Send an email to ${recipientEmail} with the subject 'Hello from Composio' and the body 'This is a test email!'`,
+    },
+  ],
+  tools: tools,
+  max_tokens: 1000,
+});
+
+// Execute the function calls
+const result = await composio.provider.handleToolCalls(externalUserId, msg);
+console.log(result);
+```
+</Tab>
+</Tabs>
+</Step>
+</Steps>
+
+<Accordions>
+<Accordion title="Direct tool usage">
+<Callout type="info">
+Only use this if you want to use a single, direct tool with your AI Agent.
+</Callout>
+
+**Install**
+
+<Tabs items={["Python", "TypeScript"]}>
+<Tab value="Python">
+```bash
+pip install composio composio-anthropic anthropic
+```
+</Tab>
+<Tab value="TypeScript">
+```bash
+npm install @composio/core @composio/anthropic @anthropic-ai/sdk
+```
+</Tab>
+</Tabs>
+
+**Usage**
+
+<Tabs items={["Python", "TypeScript"]}>
+<Tab value="Python">
+```python
+import anthropic
+from composio import Composio
+from composio_anthropic import AnthropicProvider
+
+anthropic_client = anthropic.Anthropic()
+composio = Composio(provider=AnthropicProvider())
+
+external_user_id = "user_2nFh83Hde"
+recipient_email = "soham.g@composio.dev"
+
+# Get a specific tool
+tools = composio.tools.get(user_id=external_user_id, tools=["GMAIL_SEND_EMAIL"])
+
+response = anthropic_client.messages.create(
+    model="claude-sonnet-4-5",
+    max_tokens=1024,
+    tools=tools,
+    messages=[
+        {"role": "user", "content": f"Send an email to {recipient_email} with the subject 'Hello from Composio' and the body 'This is a test email!'"},
+    ],
+)
+
+result = composio.provider.handle_tool_calls(user_id=external_user_id, response=response)
 print(result)
 ```
 </Tab>
@@ -266,30 +427,37 @@ print(result)
 ```typescript
 import { Composio } from "@composio/core";
 import { AnthropicProvider } from "@composio/anthropic";
-import Anthropic from '@anthropic-ai/sdk';
-const composio = new Composio({ provider: new AnthropicProvider() });
+import Anthropic from "@anthropic-ai/sdk";
+
+const composio = new Composio({
+  provider: new AnthropicProvider(),
+});
 const anthropic = new Anthropic();
-// ---cut---
-const userId = "your-user-id";
-const tools = await composio.tools.get(userId, {
-  tools: ["GITHUB_LIST_STARGAZERS"]
-})
+
+const externalUserId = "user_2nFh83Hde";
+const recipientEmail = "soham.g@composio.dev";
+
+// Get a specific tool
+const tools = await composio.tools.get(externalUserId, {
+  tools: ["GMAIL_SEND_EMAIL"],
+});
 
 const msg = await anthropic.messages.create({
   model: "claude-sonnet-4-5",
   messages: [
     {
       role: "user",
-      content: "List my github stargazers. for the repo composiohq/composio",
+      content: `Send an email to ${recipientEmail} with the subject 'Hello from Composio' and the body 'This is a test email!'`,
     },
   ],
   tools: tools,
   max_tokens: 1000,
 });
 
-const res = await composio.provider.handleToolCalls(userId, msg);
-
-console.log(res[0].content);
+const result = await composio.provider.handleToolCalls(externalUserId, msg);
+console.log(result);
 ```
 </Tab>
 </Tabs>
+</Accordion>
+</Accordions>

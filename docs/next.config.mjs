@@ -84,22 +84,22 @@ const config = {
       },
       {
         source: '/tool-router/using-custom-auth-configs',
-        destination: '/docs/guides/using-custom-auth-configuration',
+        destination: '/docs/using-custom-auth-configuration',
         permanent: true,
       },
       {
         source: '/docs/authenticating-users/using-custom-auth-configs',
-        destination: '/docs/guides/using-custom-auth-configuration',
+        destination: '/docs/using-custom-auth-configuration',
         permanent: true,
       },
       {
         source: '/tool-router/white-labeling-authentication',
-        destination: '/docs/guides/white-labeling-authentication',
+        destination: '/docs/white-labeling-authentication',
         permanent: true,
       },
       {
         source: '/tool-router/managing-multiple-accounts',
-        destination: '/docs/guides/managing-multiple-connected-accounts',
+        destination: '/docs/managing-multiple-connected-accounts',
         permanent: true,
       },
       // Provider redirects (old fern URLs -> new docs URLs)
@@ -176,6 +176,11 @@ const config = {
       },
       // Features section redirects
       {
+        source: '/docs/user-management',
+        destination: '/docs/users-and-sessions#users',
+        permanent: true,
+      },
+            {
         source: '/docs/using-triggers',
         destination: '/docs/triggers',
         permanent: true,
