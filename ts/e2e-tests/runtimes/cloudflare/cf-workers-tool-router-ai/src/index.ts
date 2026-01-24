@@ -101,34 +101,36 @@ app.get('/test/agent', async c => {
     },
   });
 
-  const tools = await mcpClient.tools();
-  const openai = createOpenAI({ apiKey: c.env.OPENAI_API_KEY });
-
-  const result = await generateText({
-    model: openai('gpt-5.1-codex'),
-    prompt: `Look up the HackerNews user "pg", and tell me their karma score.`,
-    output: Output.object({
-      schema: z.object({
-        karma: z.number(),
+  try {
+    const tools = await mcpClient.tools();
+    const openai = createOpenAI({ apiKey: c.env.OPENAI_API_KEY });
+  
+    const result = await generateText({
+      model: openai('gpt-5.1-codex'),
+      prompt: `Look up the HackerNews user "pg", and tell me their karma score.`,
+      output: Output.object({
+        schema: z.object({
+          karma: z.number(),
+        }),
       }),
-    }),
-    stopWhen: stepCountIs(10),
-    tools,
-  });
+      stopWhen: stepCountIs(10),
+      tools,
+    });
+  
+    const toolCalls = result.steps.flatMap(step =>
+      step.toolCalls.map(tc => ({ toolName: tc.toolName }))
+    );
 
-  const toolCalls = result.steps.flatMap(step =>
-    step.toolCalls.map(tc => ({ toolName: tc.toolName }))
-  );
-
-  c.executionCtx.waitUntil(mcpClient.close());
-
-  return c.json({
-    message: 'Agent executed successfully',
-    sessionId,
-    toolCount: Object.keys(tools).length,
-    toolCalls,
-    response: result.output,
-  });
+    return c.json({
+      message: 'Agent executed successfully',
+      sessionId,
+      toolCount: Object.keys(tools).length,
+      toolCalls,
+      response: result.output,
+    });
+  } finally {
+    c.executionCtx.waitUntil(mcpClient.close());
+  }
 });
 
 export default app;
