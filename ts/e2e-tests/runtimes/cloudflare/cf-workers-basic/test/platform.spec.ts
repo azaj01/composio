@@ -89,7 +89,7 @@ describe('@composio/core Cloudflare Workers compatibility', () => {
     expect(body.error).toContain('not supported in Cloudflare Workers');
   });
 
-  it.skip('should fetch HackerNews user pg successfully', async () => {
+  it('should fetch HackerNews user pg successfully', async () => {
     const request = new IncomingRequest('http://localhost/test/hackernews');
     const ctx = createExecutionContext();
     const response = await app.fetch(request, env, ctx);
