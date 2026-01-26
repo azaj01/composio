@@ -1,8 +1,7 @@
-import { writeFileSync, appendFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import type { E2EConfig, E2EPhaseResults, E2ETestResult } from './types';
-import { getRepoRoot, resolveNodeVersions } from './config';
-import { checkDocker, ensureNodeImage, runNodeContainer } from './image-lifecycle';
+import { describe, beforeAll } from 'bun:test';
+import type { E2EConfig, E2ETestResult, NodeVersionMeta } from './types';
+import { getRepoRoot, resolveNodeVersionMetaList } from './config';
+import { ensureNodeImage, runNodeContainer } from './image-lifecycle';
 
 /**
  * Environment variables to automatically pass through to Docker containers.
@@ -32,92 +31,6 @@ function buildContainerEnv(
 }
 
 /**
- * Initialize the DEBUG.log file with a header.
- */
-function initDebugLog(logPath: string, suiteName: string, nodeVersions: readonly string[]): void {
-  const header = [
-    `=== E2E Test: ${suiteName} ===`,
-    `Started: ${new Date().toISOString()}`,
-    `Node versions: ${nodeVersions.join(', ')}`,
-    '',
-    '',
-  ].join('\n');
-  writeFileSync(logPath, header, 'utf8');
-}
-
-/**
- * Append a phase result to the DEBUG.log file.
- */
-function appendPhaseToDebugLog(
-  logPath: string,
-  nodeVersion: string,
-  phaseName: 'Setup' | 'Test',
-  result: E2ETestResult
-): void {
-  const lines = [
-    `=== ${phaseName} (Node ${nodeVersion}) ===`,
-    '',
-    '[stdout]',
-    result.stdout || '(empty)',
-    '',
-    '[stderr]',
-    result.stderr || '(empty)',
-    '',
-    `[exit code] ${result.exitCode}`,
-    '',
-    '',
-  ];
-  appendFileSync(logPath, lines.join('\n'), 'utf8');
-}
-
-/**
- * Append a summary to the DEBUG.log file.
- */
-function appendSummaryToDebugLog(
-  logPath: string,
-  results: E2EPhaseResults[],
-  allPassed: boolean
-): void {
-  const lines = ['=== Summary ===', ''];
-  for (const r of results) {
-    const status = r.test.exitCode === 0 ? 'PASS' : 'FAIL';
-    lines.push(`Node ${r.nodeVersion}: ${status}`);
-  }
-  lines.push('');
-  lines.push(allPassed ? 'All tests passed!' : 'Some tests failed');
-  lines.push('');
-  lines.push(`Finished: ${new Date().toISOString()}`);
-  lines.push('');
-  appendFileSync(logPath, lines.join('\n'), 'utf8');
-}
-
-/**
- * Default summary printer for e2e test results.
- */
-function printDefaultSummary(
-  suiteName: string,
-  results: E2EPhaseResults[],
-  allPassed: boolean
-): void {
-  const divider = '='.repeat(Math.max(suiteName.length + 4, 30));
-
-  console.log(`\n${divider}`);
-  console.log(`Test Summary`);
-  console.log(divider);
-
-  for (const r of results) {
-    const testStatus = r.test.exitCode === 0 ? 'PASS' : 'FAIL';
-    console.log(`Node ${r.nodeVersion}: ${testStatus}`);
-  }
-
-  if (allPassed) {
-    console.log(`\nAll tests passed!`);
-  } else {
-    console.error(`\nSome tests failed`);
-  }
-}
-
-/**
  * Internal configuration for runE2E.
  */
 interface RunE2EInternalConfig extends E2EConfig {
@@ -126,129 +39,69 @@ interface RunE2EInternalConfig extends E2EConfig {
 }
 
 /**
- * Runs e2e tests with Docker containers.
- *
- * For each Node version:
- * 1. Ensures Docker image exists (builds if needed)
- * 2. Runs setup command (if provided) and fixture in a single container
- * 3. Captures output and exit codes
- * 4. Calls assertion callbacks
- *
- * Writes detailed output to DEBUG.log and prints a summary.
+ * Creates Docker execution utilities for a specific Node version.
  */
-export async function runE2E(config: RunE2EInternalConfig): Promise<never> {
-  const { cwd, suiteName, fixture, setup, env, onSetup, onTest, printSummary } = config;
-  const nodeVersions = resolveNodeVersions(config.nodeVersions);
+function createDockerExecutors(
+  config: RunE2EInternalConfig,
+  nodeVersion: string,
+  imageTag: string
+) {
+  const { cwd, suiteName, env } = config;
+  const containerEnv = buildContainerEnv(env);
+
+  const runCmd = async (command: string): Promise<E2ETestResult> => {
+    const containerName = `e2e-${suiteName}-${nodeVersion.replace(/\./g, '-')}-${Date.now()}`;
+    return runNodeContainer({
+      imageTag,
+      cmd: command,
+      cwd,
+      env: containerEnv,
+      name: containerName,
+    });
+  };
+
+  const runFixture = async (fixturePath: string): Promise<E2ETestResult> => {
+    return runCmd(`node ${fixturePath}`);
+  };
+
+  return { runCmd, runFixture };
+}
+
+/**
+ * Runs e2e tests using bun:test.
+ * Creates a describe block per Node version and passes test utilities to defineTests.
+ */
+export function runE2E(config: RunE2EInternalConfig): void {
+  const { suiteName, defineTests } = config;
+  const nodeVersionMetaList = resolveNodeVersionMetaList(config.nodeVersions);
   const repoRoot = getRepoRoot();
-  const debugLogPath = resolve(repoRoot, cwd, 'DEBUG.log');
 
-  // Initialize DEBUG.log
-  initDebugLog(debugLogPath, suiteName, nodeVersions);
-  console.log(`Debug log: ${debugLogPath}`);
-
-  // Print header
-  console.log(`\n${suiteName}`);
-  console.log('='.repeat(suiteName.length));
-  console.log(`Node versions: ${nodeVersions.join(', ')}`);
-  console.log(`Fixture: ${fixture}\n`);
-
-  // Check Docker availability
-  let dockerOk = false;
-  let dockerFailureMessage = '';
-  try {
-    const dockerCheck = await checkDocker({ repoRoot });
-    dockerOk = dockerCheck.exitCode === 0;
-    dockerFailureMessage = dockerCheck.stderr || dockerCheck.stdout || '';
-  } catch (error) {
-    dockerOk = false;
-    dockerFailureMessage = error instanceof Error ? error.message : String(error);
+  function renderNodeVersionMeta({ kind, value }: NodeVersionMeta) {
+    switch (kind) {
+      case 'current':
+        return `Node.js ${value} [current]`;
+      case 'overridden':
+        return `Node.js ${value} [overridden]`;
+      case 'static':
+        return `Node.js ${value}`;
+    }
   }
 
-  if (!dockerOk) {
-    const reason = dockerFailureMessage.trim() || 'Docker is not available';
-    const message = `Skipping e2e suite because Docker is not available. Reason: ${reason}`;
-    console.log(message);
-    appendFileSync(debugLogPath, `\n${message}\n`, 'utf8');
-    process.exit(0);
-  }
+  for (const nodeVersionMeta of nodeVersionMetaList) {
+    describe(`${suiteName} (Node ${renderNodeVersionMeta(nodeVersionMeta)})`, () => {
+      let executors: ReturnType<typeof createDockerExecutors>;
 
-  const results: E2EPhaseResults[] = [];
+      // Ensure Docker image exists before tests run
+      beforeAll(async () => {
+        const imageTag = await ensureNodeImage(nodeVersionMeta.value, { repoRoot });
+        executors = createDockerExecutors(config, nodeVersionMeta.value, imageTag);
+      }, 600_000); // 10 minute timeout for Docker image build
 
-  try {
-    for (const nodeVersion of nodeVersions) {
-      console.log(`\n=== Running e2e test for Node.js ${nodeVersion} ===\n`);
-
-      const imageTag = await ensureNodeImage(nodeVersion, { repoRoot });
-
-      const phaseResult: E2EPhaseResults = {
-        nodeVersion,
-        test: undefined as unknown as E2ETestResult,
-      };
-
-      // Build combined command: setup (if provided) && fixture
-      const fixtureCmd = `node ${fixture}`;
-      const combinedCmd = setup ? `${setup} && ${fixtureCmd}` : fixtureCmd;
-
-      if (setup) {
-        console.log(`[Node ${nodeVersion}] Running setup: ${setup}`);
-      }
-      console.log(`[Node ${nodeVersion}] Running fixture: ${fixtureCmd}`);
-
-      const containerName = `e2e-${suiteName}-${nodeVersion.replace(/\./g, '-')}`;
-      const result = await runNodeContainer({
-        imageTag,
-        cmd: combinedCmd,
-        cwd,
-        env: buildContainerEnv(env),
-        name: containerName,
+      // Call user's defineTests with bun:test functions and Docker utilities
+      defineTests({
+        runCmd: (cmd) => executors.runCmd(cmd),
+        runFixture: (path) => executors.runFixture(path),
       });
-
-      phaseResult.test = result;
-
-      if (setup) {
-        phaseResult.setup = result;
-        console.log(`[Setup+Test stdout]\n${result.stdout || '(empty)'}`);
-        console.log(`[Setup+Test stderr]\n${result.stderr || '(empty)'}`);
-        console.log(`[Exit code] ${result.exitCode}\n`);
-
-        appendPhaseToDebugLog(debugLogPath, nodeVersion, 'Setup', result);
-        appendPhaseToDebugLog(debugLogPath, nodeVersion, 'Test', result);
-
-        if (onSetup) {
-          await onSetup(result);
-        }
-      } else {
-        if (result.stdout) {
-          console.log(`[Test stdout]\n${result.stdout}`);
-        }
-        if (result.stderr) {
-          console.log(`[Test stderr]\n${result.stderr}`);
-        }
-        console.log(`[Test exit code] ${result.exitCode}\n`);
-
-        appendPhaseToDebugLog(debugLogPath, nodeVersion, 'Test', result);
-      }
-
-      if (onTest) {
-        await onTest(result);
-      }
-
-      results.push(phaseResult);
-    }
-
-    const allPassed = results.every((r) => r.test.exitCode === 0);
-
-    appendSummaryToDebugLog(debugLogPath, results, allPassed);
-
-    if (printSummary) {
-      printSummary(results, allPassed);
-    } else {
-      printDefaultSummary(suiteName, results, allPassed);
-    }
-
-    process.exit(allPassed ? 0 : 1);
-  } catch (error) {
-    console.error('Test runner failed:', error);
-    process.exit(1);
+    });
   }
 }

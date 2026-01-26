@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { $ } from 'bun';
 import { resolve } from 'node:path';
 import { getRepoRoot } from './config';
 
@@ -57,6 +57,14 @@ export interface CheckDockerOptions {
 }
 
 /**
+ * Escapes a shell argument for safe use in Bun shell raw strings.
+ */
+function escapeShellArg(arg: string): string {
+  // Single-quote the arg and escape any embedded single quotes
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
+/**
  * Creates default Docker labels for e2e images.
  */
 function defaultLabels(nodeVersion?: string): Record<string, string> {
@@ -71,7 +79,7 @@ function defaultLabels(nodeVersion?: string): Record<string, string> {
 }
 
 /**
- * Converts labels object to Docker CLI arguments.
+ * Converts labels object to Docker CLI arguments array.
  */
 function labelsToArgs(labels: Record<string, string> = {}): string[] {
   const args: string[] = [];
@@ -82,36 +90,31 @@ function labelsToArgs(labels: Record<string, string> = {}): string[] {
 }
 
 /**
- * Executes a command and captures stdout/stderr.
+ * Executes a command and captures stdout/stderr using Bun shell.
  */
 async function exec(cmd: string, args: string[], options: ExecOptions = {}): Promise<ExecResult> {
   const { cwd, env } = options;
-  const child = spawn(cmd, args, {
-    cwd,
-    env: env ? { ...process.env, ...env } : process.env,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  const escapedArgs = args.map(escapeShellArg).join(' ');
 
-  let stdout = '';
-  let stderr = '';
+  let shell = $`${{ raw: cmd }} ${{ raw: escapedArgs }}`
+    .nothrow()
+    .quiet();
 
-  child.stdout.setEncoding('utf8');
-  child.stderr.setEncoding('utf8');
+  if (cwd) {
+    shell = shell.cwd(cwd);
+  }
 
-  child.stdout.on('data', (d: string) => {
-    stdout += d;
-  });
+  if (env) {
+    shell = shell.env({ ...process.env, ...env });
+  }
 
-  child.stderr.on('data', (d: string) => {
-    stderr += d;
-  });
+  const result = await shell;
 
-  const code = await new Promise<number>((res, rej) => {
-    child.on('error', rej);
-    child.on('close', (exitCode) => res(exitCode ?? 1));
-  });
-
-  return { exitCode: code, stdout, stderr };
+  return {
+    exitCode: result.exitCode,
+    stdout: result.stdout.toString(),
+    stderr: result.stderr.toString(),
+  };
 }
 
 /**
@@ -145,7 +148,7 @@ export async function ensureNodeImage(
   options: EnsureNodeImageOptions = {}
 ): Promise<string> {
   if (!nodeVersion || typeof nodeVersion !== 'string') {
-    throw new Error('ensureNodeImage(nodeVersion): nodeVersion must be a non-empty string');
+    throw new Error(`ensureNodeImage(${nodeVersion}): nodeVersion must be a non-empty string`);
   }
 
   const repoRoot = options.repoRoot ?? getRepoRoot();

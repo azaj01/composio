@@ -1,6 +1,7 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { NodeVersion } from './types';
+import process from 'node:process';
+import type { NodeVersionMeta, NodeVersionFromUser } from './types';
 
 /**
  * Get the repository root path.
@@ -20,17 +21,29 @@ export function getRepoRoot(): string {
  * 2. Provided nodeVersions from config
  * 3. Current Node.js runtime version
  */
-export function resolveNodeVersions(
-  configNodeVersions?: readonly NodeVersion[]
-): readonly NodeVersion[] {
+export function resolveNodeVersionMetaList(
+  configNodeVersions?: readonly NodeVersionFromUser[]
+): readonly NodeVersionMeta[] {
   const envVersion = process.env.COMPOSIO_E2E_NODE_VERSION;
   if (envVersion) {
-    return [envVersion];
+    return [{ kind: 'overridden', value: envVersion }];
   }
 
-  if (configNodeVersions && configNodeVersions.length > 0) {
-    return configNodeVersions;
+  const currentNodeVersion = process.versions.node;
+
+  if (configNodeVersions === undefined) {
+    return [{ kind: 'current', value: currentNodeVersion }];
   }
 
-  return [process.versions.node];
+  const distinctNodeVersions = Array.from(
+    new Set(
+      configNodeVersions
+        .map((v => v === 'current'
+          ? { kind: 'current', value: currentNodeVersion } as const
+          : { kind: 'static', value: v } as const)
+        )
+    )
+  );
+
+  return distinctNodeVersions;
 }

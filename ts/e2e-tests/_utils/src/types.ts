@@ -1,4 +1,11 @@
-export type NodeVersion = '20.18.0' | '20.19.0' | '22.12.0' | (string & {});
+import { WELL_KNOWN_NODE_VERSIONS } from './const';
+
+export type NodeVersionFromUser = typeof WELL_KNOWN_NODE_VERSIONS[number];
+
+export type NodeVersionMeta =
+  | { kind: 'static', value: Exclude<typeof WELL_KNOWN_NODE_VERSIONS[number], 'current'> }
+  | { kind: 'overridden', value: string }
+  | { kind: 'current', value: string };
 
 /**
  * Result of executing a command in a Docker container.
@@ -13,62 +20,51 @@ export interface E2ETestResult {
 }
 
 /**
- * Results for both phases of a two-phase e2e test.
+ * Context passed to defineTests callback.
  */
-export interface E2EPhaseResults {
-  /** Node.js version this test ran against */
-  nodeVersion: string;
-  /** Result of the setup phase (undefined if no setup command) */
-  setup?: E2ETestResult;
-  /** Result of the test/fixture phase */
-  test: E2ETestResult;
+export interface DefineTestsContext {
+  /** Run an arbitrary command in the Docker container */
+  runCmd: (command: string) => Promise<E2ETestResult>;
+  /** Run a fixture file with Node.js (equivalent to runCmd(`node ${path}`)) */
+  runFixture: (fixturePath: string) => Promise<E2ETestResult>;
 }
-
-/**
- * Assertion callback for validating phase results.
- */
-export type E2EAssertionCallback = (result: E2ETestResult) => void | Promise<void>;
 
 /**
  * Configuration for e2e tests.
  */
 export interface E2EConfig {
   /**
-   * The fixture file to execute (e.g., 'fixtures/test.mjs').
-   */
-  fixture: string;
-
-  /**
    * Node.js versions to test against.
+   * Each version creates a separate describe block.
    * If not provided, defaults to the current Node runtime version.
    */
-  nodeVersions?: readonly NodeVersion[];
+  nodeVersions?: readonly NodeVersionFromUser[];
 
   /**
-   * Setup command to run before the test fixture.
-   * Runs inside the Docker container after dependencies are installed.
-   */
-  setup?: string;
-
-  /**
-   * Environment variables to pass to the container.
+   * Environment variables to pass to the Docker container.
    */
   env?: Record<string, string | undefined>;
 
   /**
-   * Assertion callback for the setup phase.
-   * Called after setup completes (if setup is defined).
+   * Define your tests using bun:test primitives.
+   * Called once per Node version during test registration.
+   *
+   * @example
+   * ```typescript
+   * defineTests: ({ describe, it, expect, beforeAll, runFixture }) => {
+   *   let result: E2ETestResult;
+   *
+   *   beforeAll(async () => {
+   *     result = await runFixture('fixtures/test.mjs');
+   *   }, 300_000);
+   *
+   *   describe('output', () => {
+   *     it('exits successfully', () => {
+   *       expect(result.exitCode).toBe(0);
+   *     });
+   *   });
+   * }
+   * ```
    */
-  onSetup?: E2EAssertionCallback;
-
-  /**
-   * Assertion callback for the test phase.
-   * Called after the fixture completes.
-   */
-  onTest?: E2EAssertionCallback;
-
-  /**
-   * Custom summary printer. If not provided, uses default summary format.
-   */
-  printSummary?: (results: E2EPhaseResults[], allPassed: boolean) => void;
+  defineTests: (ctx: DefineTestsContext) => void;
 }

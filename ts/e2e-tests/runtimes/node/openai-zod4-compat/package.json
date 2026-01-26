@@ -1,11 +1,12 @@
 {
-  "name": "@test-e2e/node-openai-zod4-compat",
+  "name": "@e2e-tests/node-openai-zod4-compat",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test:e2e": "bun e2e.ts",
-    "test:e2e:node": "bun e2e.ts"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "bun test e2e.test.ts",
+    "test:e2e:node": "bun test e2e.test.ts"
   },
   "devDependencies": {
     "@e2e-tests/utils": "workspace:*"

@@ -60,7 +60,7 @@ pnpm test:e2e:cloudflare
 ### Node.js Runtime Tests
 
 1. Create a new directory under `runtimes/node/` (e.g., `runtimes/node/my-test`)
-2. Add a `package.json` with name `@test-e2e/node-my-test`
+2. Add a `package.json` with name `@e2e-tests/node-my-test`
 3. Add `test:e2e` and `test:e2e:node` scripts
 4. Create an `e2e.ts` file with inline configuration:
 
@@ -86,6 +86,6 @@ await e2e(import.meta.url, {
 ### Cloudflare Runtime Tests
 
 1. Create a new directory under `runtimes/cloudflare/` (e.g., `runtimes/cloudflare/my-test`)
-2. Add a `package.json` with name `@test-e2e/cf-my-test`
+2. Add a `package.json` with name `@e2e-tests/cf-my-test`
 3. Add `test:e2e` and `test:e2e:cloudflare` scripts
 4. Configure vitest with `@cloudflare/vitest-pool-workers`

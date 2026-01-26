@@ -13,6 +13,10 @@
       }
     }
   },
+  "scripts": {
+    "docker:build": "bun run scripts/docker-build.ts",
+    "docker:clean": "bun run scripts/docker-clean.ts"
+  },
   "devDependencies": {
     "typescript": "catalog:"
   }

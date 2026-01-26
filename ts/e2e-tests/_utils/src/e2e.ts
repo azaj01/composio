@@ -36,25 +36,46 @@ function inferCwd(importMetaUrl: string, repoRoot: string): string {
 }
 
 /**
- * Run an e2e test with inline configuration.
+ * Run e2e tests with full bun:test capabilities.
  *
- * This is the main entry point for e2e tests. It automatically infers
- * the working directory and suite name from the caller's location.
+ * This function sets up bun:test describe/it blocks internally.
+ * When the test file is run via `bun test`, the full bun:test API
+ * is available in your defineTests callback.
  *
  * @param importMetaUrl - Pass `import.meta.url` from your test file
- * @param config - Test configuration
+ * @param config - Test configuration with defineTests callback
  *
  * @example
  * ```typescript
- * await e2e(import.meta.url, { fixture: 'fixtures/test.mjs' });
+ * // e2e.test.ts
+ * import { e2e } from '@e2e-tests/utils';
+ * import type { E2ETestResult } from '@e2e-tests/utils';
+ *
+ * e2e(import.meta.url, {
+ *   nodeVersions: ['20.19.0', '22.12.0'],
+ *   env: { COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY },
+ *   defineTests: ({ describe, it, expect, beforeAll, runFixture }) => {
+ *     let result: E2ETestResult;
+ *
+ *     beforeAll(async () => {
+ *       result = await runFixture('fixtures/test.mjs');
+ *     }, 300_000);
+ *
+ *     describe('output', () => {
+ *       it('exits successfully', () => {
+ *         expect(result.exitCode).toBe(0);
+ *       });
+ *     });
+ *   },
+ * });
  * ```
  */
-export async function e2e(importMetaUrl: string, config: E2EConfig): Promise<never> {
+export function e2e(importMetaUrl: string, config: E2EConfig): void {
   validateImportMetaUrl(importMetaUrl);
 
   const repoRoot = getRepoRoot();
   const cwd = inferCwd(importMetaUrl, repoRoot);
   const suiteName = cwd.split('/').pop() ?? 'unknown';
 
-  return runE2E({ ...config, cwd, suiteName });
+  runE2E({ ...config, cwd, suiteName });
 }
