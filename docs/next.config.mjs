@@ -42,7 +42,7 @@ const config = {
       },
       {
         source: '/tool-router/quickstart',
-        destination: '/docs/quickstart-tool-router',
+        destination: '/docs/quickstart',
         permanent: true,
       },
       // Core concepts moved from tool-router to docs
@@ -187,12 +187,69 @@ const config = {
       },
       {
         source: '/docs/mcp-quickstart',
-        destination: '/docs/mcp/mcp-quickstart',
+        destination: '/docs/single-toolkit-mcp',
         permanent: true,
       },
       {
         source: '/docs/mcp-server-management',
-        destination: '/docs/mcp/mcp-server-management',
+        destination: '/docs/single-toolkit-mcp',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp/:path*',
+        destination: '/docs/single-toolkit-mcp',
+        permanent: true,
+      },
+      // Tools section moved to tools-direct folder
+      {
+        source: '/docs/fetching-tools',
+        destination: '/docs/tools-direct/fetching-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/authenticating-tools',
+        destination: '/docs/tools-direct/authenticating-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/executing-tools',
+        destination: '/docs/tools-direct/executing-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/modify-tool-behavior/:path*',
+        destination: '/docs/tools-direct/modify-tool-behavior/:path*',
+        permanent: true,
+      },
+      {
+        source: '/docs/custom-tools',
+        destination: '/docs/tools-direct/custom-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/toolkit-versioning',
+        destination: '/docs/tools-direct/toolkit-versioning',
+        permanent: true,
+      },
+      // Authentication section moved to auth-configuration folder
+      {
+        source: '/docs/custom-auth-configs',
+        destination: '/docs/auth-configuration/custom-auth-configs',
+        permanent: true,
+      },
+      {
+        source: '/docs/programmatic-auth-configs',
+        destination: '/docs/auth-configuration/programmatic-auth-configs',
+        permanent: true,
+      },
+      {
+        source: '/docs/custom-auth-params',
+        destination: '/docs/auth-configuration/custom-auth-params',
+        permanent: true,
+      },
+      {
+        source: '/docs/connected-accounts',
+        destination: '/docs/auth-configuration/connected-accounts',
         permanent: true,
       },
     ];
