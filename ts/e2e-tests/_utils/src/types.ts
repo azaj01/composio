@@ -2,10 +2,22 @@ import { WELL_KNOWN_NODE_VERSIONS } from './const';
 
 export type NodeVersionFromUser = typeof WELL_KNOWN_NODE_VERSIONS[number];
 
+/**
+ * Result of CI skip check for a specific Node version.
+ */
+export interface SkipInCI {
+  value: boolean;
+  reason?: string;
+}
+
+/**
+ * Metadata for a resolved Node.js version to test against.
+ * Includes skip state for CI mode.
+ */
 export type NodeVersionMeta =
-  | { kind: 'static', value: Exclude<typeof WELL_KNOWN_NODE_VERSIONS[number], 'current'> }
-  | { kind: 'overridden', value: string }
-  | { kind: 'current', value: string };
+  | { kind: 'static'; value: Exclude<typeof WELL_KNOWN_NODE_VERSIONS[number], 'current'>; skip: SkipInCI }
+  | { kind: 'overridden'; value: string; skip: SkipInCI }
+  | { kind: 'current'; value: string; skip: SkipInCI };
 
 /**
  * Result of executing a command in a Docker container.

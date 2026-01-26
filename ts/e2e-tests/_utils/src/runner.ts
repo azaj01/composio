@@ -1,4 +1,4 @@
-import { describe, beforeAll } from 'bun:test';
+import { describe, beforeAll, it } from 'bun:test';
 import type { E2EConfig, E2ETestResult, NodeVersionMeta } from './types';
 import { getRepoRoot, resolveNodeVersionMetaList } from './config';
 import { ensureNodeImage, runNodeContainer } from './image-lifecycle';
@@ -70,6 +70,9 @@ function createDockerExecutors(
 /**
  * Runs e2e tests using bun:test.
  * Creates a describe block per Node version and passes test utilities to defineTests.
+ *
+ * In CI mode, versions not matching COMPOSIO_E2E_NODE_VERSION are skipped.
+ * Each version's skipInCI state is computed by resolveNodeVersionMetaList().
  */
 export function runE2E(config: RunE2EInternalConfig): void {
   const { suiteName, defineTests } = config;
@@ -88,7 +91,17 @@ export function runE2E(config: RunE2EInternalConfig): void {
   }
 
   for (const nodeVersionMeta of nodeVersionMetaList) {
-    describe(`${suiteName} (Node ${renderNodeVersionMeta(nodeVersionMeta)})`, () => {
+    const testName = `${suiteName} (${renderNodeVersionMeta(nodeVersionMeta)})`;
+
+    // Skip this version in CI if not selected
+    if (nodeVersionMeta.skip.value) {
+      describe.skip(`${testName} - skipped: ${nodeVersionMeta.skip.reason}`, () => {
+        it('this version should not run in this CI matrix job', () => {});
+      });
+      continue;
+    }
+
+    describe(testName, () => {
       let executors: ReturnType<typeof createDockerExecutors>;
 
       // Ensure Docker image exists before tests run
