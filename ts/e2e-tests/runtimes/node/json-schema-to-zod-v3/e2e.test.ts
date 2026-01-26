@@ -116,9 +116,11 @@ describe('json-schema-to-zod with Zod v3', () => {
       };
 
       const zodSchema = jsonSchemaToZod(schema);
+      // @ts-expect-error Type instantiation is excessively deep and possibly infinite.
       const convertedBack = zodToJsonSchema(zodSchema, { target: 'jsonSchema7' });
-
+      // @ts-expect-error Property 'additionalProperties' does not exist on type.
       expect(convertedBack.additionalProperties).toBe(true);
+      // @ts-expect-error Property 'type' does not exist on type
       expect(convertedBack.type).toBe('object');
 
       expect(zodSchema.parse({})).toEqual({});
@@ -139,8 +141,11 @@ describe('json-schema-to-zod with Zod v3', () => {
       const zodSchema = jsonSchemaToZod(schema);
       const convertedBack = zodToJsonSchema(zodSchema, { target: 'jsonSchema7' });
 
+      // @ts-expect-error Property 'additionalProperties' does not exist on type.
       expect(convertedBack.additionalProperties).toBe(true);
+      // @ts-expect-error Type instantiation is excessively deep and possibly infinite.
       expect(convertedBack.properties).toBeDefined();
+      // @ts-expect-error Property 'required' does not exist on type
       expect(convertedBack.required).toEqual(['name']);
 
       expect(zodSchema.parse({ name: 'John' })).toEqual({ name: 'John' });
@@ -163,9 +168,12 @@ describe('json-schema-to-zod with Zod v3', () => {
       // zod-to-json-schema may convert z.object({}).strict() to { not: {} }
       // which is semantically equivalent to additionalProperties: false
       const additionalPropsValid =
+        // @ts-expect-error Property 'additionalProperties' does not exist on type.
         convertedBack.additionalProperties === false ||
+        // @ts-expect-error Property 'not' does not exist on type.
         (convertedBack.not && typeof convertedBack.not === 'object');
       expect(additionalPropsValid).toBe(true);
+      // @ts-expect-error Property 'type' does not exist on type.
       expect(convertedBack.type).toBe('object');
 
       expect(zodSchema.parse({})).toEqual({});
@@ -184,7 +192,9 @@ describe('json-schema-to-zod with Zod v3', () => {
       const zodSchema = jsonSchemaToZod(schema);
       const convertedBack = zodToJsonSchema(zodSchema, { target: 'jsonSchema7' });
 
+      // @ts-expect-error Property 'additionalProperties' does not exist on type.
       expect(convertedBack.additionalProperties).toBe(false);
+      // @ts-expect-error Property 'properties' does not exist on type.
       expect(convertedBack.properties).toBeDefined();
 
       expect(zodSchema.parse({ name: 'John' })).toEqual({ name: 'John' });
@@ -203,7 +213,9 @@ describe('json-schema-to-zod with Zod v3', () => {
       const zodSchema = jsonSchemaToZod(schema);
       const convertedBack = zodToJsonSchema(zodSchema, { target: 'jsonSchema7' });
 
+      // @ts-expect-error Property 'additionalProperties' does not exist on type.
       expect(convertedBack.additionalProperties).toEqual({ type: 'number' });
+      // @ts-expect-error Property 'properties' does not exist on type.
       expect(convertedBack.properties).toBeDefined();
 
       expect(zodSchema.parse({ name: 'John' })).toEqual({ name: 'John' });
@@ -236,8 +248,11 @@ describe('json-schema-to-zod with Zod v3', () => {
       const zodSchema = jsonSchemaToZod(schema);
       const convertedBack = zodToJsonSchema(zodSchema, { target: 'jsonSchema7' });
 
+      // @ts-expect-error Property 'additionalProperties' does not exist on type.
       expect(convertedBack.additionalProperties).toEqual({ type: 'string' });
+      // @ts-expect-error Property 'properties' does not exist on type.
       expect((convertedBack.properties as Record<string, unknown>)?.strictChild).toBeDefined();
+      // @ts-expect-error Property 'properties' does not exist on type.
       expect((convertedBack.properties as Record<string, unknown>)?.flexibleChild).toBeDefined();
 
       const validData = {
