@@ -28,6 +28,7 @@ Create a Tool Router session and use it as a native tool with Vercel AI SDK:
 </Callout>
 
 ```typescript
+// @noErrors
 import "dotenv/config";
 import { anthropic } from "@ai-sdk/anthropic";
 import { Composio } from "@composio/core";
@@ -88,6 +89,7 @@ Use Tool Router with Vercel AI SDK's `streamText` for completions:
 </Callout>
 
 ```typescript
+// @noErrors
 import "dotenv/config";
 import { anthropic } from "@ai-sdk/anthropic";
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";

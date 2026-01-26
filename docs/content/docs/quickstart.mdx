@@ -688,6 +688,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 ### Create session and run agent
 
 ```typescript
+// @noErrors
 import "dotenv/config";
 import { anthropic } from "@ai-sdk/anthropic";
 import { Composio } from "@composio/core";
@@ -721,7 +722,7 @@ while (true) {
   const input = (await readline.question("You: ")).trim();
   if (input.toLowerCase() === "exit") break;
 
-  messages.push({ role: "user", content: [{ type: "text", text: input }] });
+  messages.push({ role: "user", content: input });
   process.stdout.write("Assistant: ");
 
   try {
@@ -746,7 +747,7 @@ while (true) {
     console.log();
 
     // Add assistant response to history for context
-    messages.push({ role: "assistant", content: [{ type: "text", text: assistantResponse }] });
+    messages.push({ role: "assistant", content: assistantResponse });
   } catch (error) {
     console.error("\n[Error]:", error instanceof Error ? error.message : error);
   }
@@ -786,6 +787,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 ### Create session and run agent
 
 ```typescript
+// @noErrors
 import "dotenv/config";
 import { anthropic } from "@ai-sdk/anthropic";
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
@@ -828,7 +830,7 @@ while (true) {
   const input = (await readline.question("You: ")).trim();
   if (input.toLowerCase() === "exit") break;
 
-  messages.push({ role: "user", content: [{ type: "text", text: input }] });
+  messages.push({ role: "user", content: input });
   process.stdout.write("Assistant: ");
 
   try {
@@ -853,7 +855,7 @@ while (true) {
     console.log();
 
     // Add assistant response to history for context
-    messages.push({ role: "assistant", content: [{ type: "text", text: assistantResponse }] });
+    messages.push({ role: "assistant", content: assistantResponse });
   } catch (error) {
     console.error("\n[Error]:", error instanceof Error ? error.message : error);
   }
