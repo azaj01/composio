@@ -19,47 +19,45 @@ e2e(import.meta.url, {
   env: {
     COMPOSIO_API_KEY: Bun.env.COMPOSIO_API_KEY,
   },
-  defineTests: ({ runCmd, runFixture }) => {
-    let setupResult: E2ETestResult;
-    let testResult: E2ETestResult;
+  defineTests: ({ runCmd }) => {
+    let result: E2ETestResult;
 
     beforeAll(async () => {
-      // Run npm install first
-      setupResult = await runCmd('npm --prefix fixtures install --legacy-peer-deps');
-      // Then run the test fixture
-      testResult = await runFixture('fixtures/index.mjs');
+      result = await runCmd(
+        'npm --prefix fixtures install --legacy-peer-deps && node fixtures/index.mjs'
+      );
     });
 
     describe('setup', () => {
       it('npm install completes successfully', () => {
-        expect(setupResult.exitCode).toBe(0);
+        expect(result.stdout).toMatch(/added \d+ packages/);
       });
     });
 
     describe('OpenAI v6 + Zod v4 compatibility', () => {
       it('exits successfully', () => {
-        expect(testResult.exitCode).toBe(0);
+        expect(result.exitCode).toBe(0);
       });
 
       it('zod@4 works', () => {
-        expect(testResult.stdout).toContain('zod@4 works');
+        expect(result.stdout).toContain('zod@4 works');
       });
 
       it('openai@5 works', () => {
-        expect(testResult.stdout).toContain('openai@5 works');
+        expect(result.stdout).toContain('openai@5 works');
       });
 
       it('@composio/core works', () => {
-        expect(testResult.stdout).toContain('@composio/core works');
+        expect(result.stdout).toContain('@composio/core works');
       });
 
       it('wrapTool works', () => {
-        expect(testResult.stdout).toContain('wrapTool works');
+        expect(result.stdout).toContain('wrapTool works');
       });
 
       it('all packages work together', () => {
-        expect(testResult.stdout).toContain('All packages work together!');
+        expect(result.stdout).toContain('All packages work together!');
       });
-    });
+    },);
   },
 });

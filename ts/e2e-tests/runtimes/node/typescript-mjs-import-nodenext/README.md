@@ -24,17 +24,15 @@ This causes `TS2307: Cannot find module './foo.mjs'` errors.
 
 ## Isolation Tool
 
-**Docker** with Node.js versions: 20.19.0, 22.12.0
+**Docker** with Node.js version: current runtime
 
-This ensures tests run against exact Node.js versions independent of the developer's local setup.
+This test uses the current Node.js runtime version for simplicity.
 
 ## Running
 
 ```bash
 pnpm test:e2e
 ```
-
-Debug output is written to `DEBUG.log`.
 
 ## Expected Behavior
 

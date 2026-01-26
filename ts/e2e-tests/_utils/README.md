@@ -7,32 +7,70 @@ Shared infrastructure for running `@composio/core` end-to-end tests in isolated 
 | File/Directory    | Purpose                                              |
 | ----------------- | ---------------------------------------------------- |
 | `src/`            | TypeScript utilities (e2e runner, config, types)     |
+| `scripts/`        | Docker build and cleanup scripts                     |
 | `Dockerfile.node` | Multi-stage Dockerfile for Node.js test environments |
 
 ## API
 
 ### `e2e`
 
-The main entry point for e2e tests. Automatically infers the working directory and suite name from the caller's location:
+The main entry point for e2e tests. Automatically infers the working directory and suite name from the caller's location. Uses `bun:test` for the test framework.
 
 ```typescript
-import { e2e } from '@e2e-tests/utils';
+import { e2e, type E2ETestResult } from '@e2e-tests/utils';
+import { describe, it, expect, beforeAll } from 'bun:test';
 
-await e2e(import.meta.url, {
+e2e(import.meta.url, {
   nodeVersions: ['20.18.0', '20.19.0', '22.12.0'], // optional
-  setup: 'npm install',                            // optional setup command
-  fixture: 'fixtures/test.mjs',                    // required fixture file
-  env: { MY_VAR: 'value' },                        // optional env vars
-  onSetup: (result) => { /* validate setup */ },   // optional
-  onTest: (result) => {                            // optional
-    if (result.exitCode !== 0) {
-      throw new Error(`Test failed with exit code ${result.exitCode}`);
-    }
+  env: { MY_VAR: 'value' },                         // optional env vars
+  defineTests: ({ runCmd, runFixture }) => {
+    let result: E2ETestResult;
+
+    beforeAll(async () => {
+      result = await runFixture('fixtures/test.mjs');
+    });
+
+    describe('output', () => {
+      it('exits successfully', () => {
+        expect(result.exitCode).toBe(0);
+      });
+    });
   },
 });
 ```
 
-### Node Version Resolution
+### `DefineTestsContext`
+
+The context passed to the `defineTests` callback:
+
+| Function                         | Description                                                 |
+| -------------------------------- | ----------------------------------------------------------- |
+| `runCmd(command: string)`        | Run arbitrary command in Docker container                   |
+| `runFixture(fixturePath: string)` | Run a fixture file with Node.js (equivalent to `runCmd(\`node ${path}\`)`) |
+
+### `E2ETestResult`
+
+Result returned by `runCmd` and `runFixture`:
+
+```typescript
+interface E2ETestResult {
+  exitCode: number;  // Exit code from the command (0 = success)
+  stdout: string;    // Captured stdout
+  stderr: string;    // Captured stderr
+}
+```
+
+### `sanitizeOutput`
+
+Utility for stable test comparisons. Removes ANSI escape codes, normalizes line endings, and trims whitespace.
+
+```typescript
+import { sanitizeOutput } from '@e2e-tests/utils';
+
+const clean = sanitizeOutput(result.stdout);
+```
+
+## Node Version Resolution
 
 Node.js versions to test are resolved in this order:
 
@@ -40,14 +78,24 @@ Node.js versions to test are resolved in this order:
 2. **`config.nodeVersions`**: Use the provided array
 3. **Default**: Use `[process.versions.node]` (current runtime)
 
-### DEBUG.log
+### Well-Known Node Versions
 
-Each test run generates a `DEBUG.log` file in the test directory containing:
-- Test start timestamp
-- Node.js versions tested
-- stdout/stderr for each phase (setup and test)
-- Exit codes
-- Summary with pass/fail status
+The following versions are pre-defined in `const.ts`:
+
+- `20.18.0`
+- `20.19.0`
+- `22.12.0`
+- `current` (resolves to current Node runtime version)
+
+## Scripts
+
+```bash
+# Pre-build Docker images for all well-known Node versions
+pnpm docker:build
+
+# Remove all e2e Docker images
+pnpm docker:clean
+```
 
 ## Behavior
 

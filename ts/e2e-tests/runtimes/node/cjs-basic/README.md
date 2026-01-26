@@ -35,5 +35,3 @@ This ensures tests run against exact Node.js versions independent of the develop
 ```bash
 pnpm test:e2e
 ```
-
-Debug output is written to `DEBUG.log`.

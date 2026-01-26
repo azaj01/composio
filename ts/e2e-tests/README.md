@@ -8,11 +8,17 @@ End-to-end tests for `@composio/core` across different JavaScript runtimes.
 ts/e2e-tests/
 ├── _utils/                                  # Shared test infrastructure
 │   ├── Dockerfile.node                      # Docker image for Node.js tests
+│   ├── scripts/                             # Docker build and cleanup scripts
+│   │   ├── docker-build.ts                  # Pre-build images for all Node versions
+│   │   └── docker-clean.ts                  # Remove all e2e Docker images
 │   ├── src/                                 # TypeScript runner utilities
-│   │   ├── e2e.ts                           # Main e2e test entry point
-│   │   ├── runner.ts                        # Docker test runner
-│   │   ├── image-lifecycle.ts               # Docker image build/run utilities
 │   │   ├── config.ts                        # Configuration utilities
+│   │   ├── const.ts                         # Well-known Node.js versions
+│   │   ├── e2e.ts                           # Main e2e test entry point
+│   │   ├── image-lifecycle.ts               # Docker image build/run utilities
+│   │   ├── index.ts                         # Public exports
+│   │   ├── runner.ts                        # Docker test runner
+│   │   ├── sanitize.ts                      # Output sanitization utilities
 │   │   └── types.ts                         # TypeScript type definitions
 │   └── README.md                            # Utils documentation
 └── runtimes/
@@ -41,7 +47,7 @@ pnpm test:e2e
 pnpm test:e2e:node
 ```
 
-Runs Node.js tests in Docker with the default Node.js version (20.19.0).
+Runs Node.js tests in Docker using `bun test`. The default Node.js version is determined by the current runtime.
 
 To run with a specific Node.js version:
 
@@ -62,21 +68,31 @@ pnpm test:e2e:cloudflare
 1. Create a new directory under `runtimes/node/` (e.g., `runtimes/node/my-test`)
 2. Add a `package.json` with name `@e2e-tests/node-my-test`
 3. Add `test:e2e` and `test:e2e:node` scripts
-4. Create an `e2e.ts` file with inline configuration:
+4. Create an `e2e.test.ts` file with inline configuration:
 
 ```typescript
-import { e2e } from '@e2e-tests/utils';
+import { e2e, type E2ETestResult } from '@e2e-tests/utils';
+import { describe, it, expect, beforeAll } from 'bun:test';
 
-await e2e(import.meta.url, {
-  fixture: 'fixtures/test.mjs',
+e2e(import.meta.url, {
   nodeVersions: ['20.18.0', '22.12.0'],  // Optional: defaults to current runtime
-  setup: 'npm install',                   // Optional: setup command
   env: { MY_VAR: process.env.MY_VAR },   // Optional: env vars
-  onTest: (result) => {
-    if (result.exitCode !== 0) {
-      throw new Error(`Test failed with exit code ${result.exitCode}`);
-    }
-    // Add assertions for expected output
+  defineTests: ({ runFixture }) => {
+    let result: E2ETestResult;
+
+    beforeAll(async () => {
+      result = await runFixture('fixtures/test.mjs');
+    });
+
+    describe('output', () => {
+      it('exits successfully', () => {
+        expect(result.exitCode).toBe(0);
+      });
+
+      it('contains expected output', () => {
+        expect(result.stdout).toContain('expected text');
+      });
+    });
   },
 });
 ```
