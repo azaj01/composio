@@ -9,6 +9,7 @@ import { Card, Cards } from 'fumadocs-ui/components/card';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
 import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
+import { IntegrationTabs, IntegrationContent } from '@/components/quickstart/integration-tabs';
 import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
 import { Figure } from '@/components/figure';
 import { Video } from '@/components/video';
@@ -27,6 +28,7 @@ import {
   Play,
   Terminal,
   Palette,
+  BookOpen,
 } from 'lucide-react';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -51,6 +53,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     FrameworkSelector,
     QuickstartFlow,
     FrameworkOption,
+    IntegrationTabs,
+    IntegrationContent,
     ToolTypeFlow,
     ToolTypeOption,
     Figure,
@@ -72,6 +76,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Play,
     Terminal,
     Palette,
+    BookOpen,
     ...components,
   };
 }
