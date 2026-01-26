@@ -108,8 +108,28 @@ function mdxToCleanMarkdown(content: string): string {
   result = result.replace(/<Step>\s*###\s*(.+)/g, '### Step: $1');
   result = result.replace(/<\/?Steps?>/g, '');
 
-  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, etc.)
-  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div)[^>]*>/g, '');
+  // Convert FrameworkOption to header with framework name
+  result = result.replace(
+    /<FrameworkOption[\s\S]*?name="([^"]*)"[\s\S]*?>/g,
+    '\n## $1\n'
+  );
+  result = result.replace(/<\/FrameworkOption>/g, '');
+
+  // Convert IntegrationContent to labeled section (Native Tools / MCP)
+  result = result.replace(
+    /<IntegrationContent[\s\S]*?value="([^"]*)"[\s\S]*?>/g,
+    (_, value) => `\n### ${value === 'native' ? 'Native Tools' : 'MCP'}\n`
+  );
+  result = result.replace(/<\/IntegrationContent>/g, '');
+
+  // Convert Accordion to collapsible-style text
+  result = result.replace(
+    /<Accordion[\s\S]*?title="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Accordion>/g,
+    '\n**$1**\n$2'
+  );
+
+  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, etc.)
+  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions)[^>]*>/g, '');
 
   // Remove remaining self-closing JSX tags (including those with JSX expressions)
   result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
