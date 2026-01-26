@@ -4,13 +4,22 @@ These tests ensure that the FileHelper class correctly handles JSON schemas
 that use anyOf, oneOf, allOf, or $ref instead of direct 'type' properties.
 """
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 
 from composio.client.types import Tool, tool_list_response
-from composio.core.models._files import FileHelper
+from composio.core.models._files import (
+    FileHelper,
+    FileUploadable,
+    _is_url,
+    _get_extension_from_mimetype,
+    _generate_timestamped_filename,
+    _fetch_file_from_url,
+    _upload_bytes_to_s3,
+)
 from composio.core.models.base import allow_tracking
+from composio.exceptions import ErrorUploadingFile
 
 
 @pytest.fixture(autouse=True)
@@ -954,3 +963,377 @@ class TestFileUploadWithMixedSchemas:
         # Both values should be preserved unchanged
         assert result["metadata"] == "test data"
         assert result["count"] == 42
+
+
+class TestUrlHelperFunctions:
+    """Test cases for URL-related helper functions."""
+
+    def test_is_url_with_http(self):
+        """Test _is_url correctly identifies HTTP URLs."""
+        assert _is_url("http://example.com/file.jpg") is True
+        assert _is_url("http://localhost:8080/api/file") is True
+
+    def test_is_url_with_https(self):
+        """Test _is_url correctly identifies HTTPS URLs."""
+        assert _is_url("https://example.com/file.jpg") is True
+        assert _is_url("https://images.pexels.com/photos/123.jpg") is True
+
+    def test_is_url_with_local_paths(self):
+        """Test _is_url correctly rejects local file paths."""
+        assert _is_url("/path/to/file.jpg") is False
+        assert _is_url("./relative/path.txt") is False
+        assert _is_url("file.txt") is False
+        assert _is_url("C:\\Windows\\file.txt") is False
+
+    def test_is_url_with_other_schemes(self):
+        """Test _is_url rejects non-HTTP schemes."""
+        assert _is_url("ftp://ftp.example.com/file.txt") is False
+        assert _is_url("file:///local/file.txt") is False
+        assert _is_url("mailto:test@example.com") is False
+
+    def test_is_url_with_invalid_inputs(self):
+        """Test _is_url handles invalid inputs gracefully."""
+        assert _is_url("") is False
+        assert _is_url("not a url") is False
+        assert _is_url("http://") is False
+
+    def test_get_extension_from_mimetype_common_types(self):
+        """Test _get_extension_from_mimetype for common types."""
+        assert _get_extension_from_mimetype("image/jpeg") == ".jpg"
+        assert _get_extension_from_mimetype("image/png") == ".png"
+        assert _get_extension_from_mimetype("application/pdf") == ".pdf"
+        assert _get_extension_from_mimetype("text/plain") == ".txt"
+        assert _get_extension_from_mimetype("application/json") == ".json"
+
+    def test_get_extension_from_mimetype_unknown_type(self):
+        """Test _get_extension_from_mimetype returns empty for unknown types."""
+        assert _get_extension_from_mimetype("application/unknown") == ""
+        assert _get_extension_from_mimetype("custom/type") == ""
+
+    def test_generate_timestamped_filename(self):
+        """Test _generate_timestamped_filename generates valid filenames."""
+        filename = _generate_timestamped_filename(".jpg")
+        assert filename.startswith("file_")
+        assert filename.endswith(".jpg")
+        assert len(filename) > 15  # Should have timestamp and unique ID
+
+    def test_generate_timestamped_filename_no_extension(self):
+        """Test _generate_timestamped_filename works without extension."""
+        filename = _generate_timestamped_filename("")
+        assert filename.startswith("file_")
+        assert not filename.endswith(".")
+
+
+class TestFetchFileFromUrl:
+    """Test cases for _fetch_file_from_url function."""
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_success(self, mock_get):
+        """Test successful file fetch from URL."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"test file content"
+        mock_response.headers = {"content-type": "image/jpeg"}
+        mock_get.return_value = mock_response
+
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/image.jpg"
+        )
+
+        assert content == b"test file content"
+        assert mimetype == "image/jpeg"
+        assert filename == "image.jpg"
+        mock_get.assert_called_once_with("https://example.com/image.jpg", timeout=30)
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_with_charset_in_content_type(self, mock_get):
+        """Test that charset is stripped from content-type."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"<html></html>"
+        mock_response.headers = {"content-type": "text/html; charset=utf-8"}
+        mock_get.return_value = mock_response
+
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/page.html"
+        )
+
+        assert mimetype == "text/html"
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_generates_filename_when_missing(self, mock_get):
+        """Test filename generation when URL has no filename."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"image data"
+        mock_response.headers = {"content-type": "image/png"}
+        mock_get.return_value = mock_response
+
+        filename, content, mimetype = _fetch_file_from_url("https://example.com/")
+
+        assert filename.startswith("file_")
+        assert filename.endswith(".png")
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_generates_filename_when_no_extension(self, mock_get):
+        """Test filename generation when URL filename has no extension."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"pdf data"
+        mock_response.headers = {"content-type": "application/pdf"}
+        mock_get.return_value = mock_response
+
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/document"
+        )
+
+        assert filename.startswith("file_")
+        assert filename.endswith(".pdf")
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_failure(self, mock_get):
+        """Test error handling when URL fetch fails."""
+        mock_response = MagicMock()
+        mock_response.ok = False
+        mock_response.status_code = 404
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ErrorUploadingFile) as exc_info:
+            _fetch_file_from_url("https://example.com/notfound.jpg")
+
+        assert "Failed to fetch file from URL" in str(exc_info.value)
+        assert "404" in str(exc_info.value)
+
+
+class TestUploadBytesToS3:
+    """Test cases for _upload_bytes_to_s3 function."""
+
+    @patch("composio.core.models._files.requests.put")
+    def test_upload_bytes_to_s3_success(self, mock_put):
+        """Test successful upload to S3."""
+        mock_client = MagicMock()
+        mock_s3_response = MagicMock()
+        mock_s3_response.key = "s3-key-123"
+        mock_s3_response.new_presigned_url = "https://s3.example.com/upload"
+        mock_client.post.return_value = mock_s3_response
+
+        mock_put_response = MagicMock()
+        mock_put_response.status_code = 200
+        mock_put.return_value = mock_put_response
+
+        result = _upload_bytes_to_s3(
+            client=mock_client,
+            filename="test.jpg",
+            content=b"file content",
+            mimetype="image/jpeg",
+            tool="TEST_TOOL",
+            toolkit="test_toolkit",
+        )
+
+        assert result == "s3-key-123"
+        mock_client.post.assert_called_once()
+        mock_put.assert_called_once()
+
+    @patch("composio.core.models._files.requests.put")
+    def test_upload_bytes_to_s3_failure(self, mock_put):
+        """Test error handling when S3 upload fails."""
+        mock_client = MagicMock()
+        mock_s3_response = MagicMock()
+        mock_s3_response.key = "s3-key-123"
+        mock_s3_response.new_presigned_url = "https://s3.example.com/upload"
+        mock_client.post.return_value = mock_s3_response
+
+        mock_put_response = MagicMock()
+        mock_put_response.status_code = 500
+        mock_put.return_value = mock_put_response
+
+        with pytest.raises(ErrorUploadingFile) as exc_info:
+            _upload_bytes_to_s3(
+                client=mock_client,
+                filename="test.jpg",
+                content=b"file content",
+                mimetype="image/jpeg",
+                tool="TEST_TOOL",
+                toolkit="test_toolkit",
+            )
+
+        assert "Failed to upload to S3" in str(exc_info.value)
+
+
+class TestFileUploadableFromUrl:
+    """Test cases for FileUploadable.from_url and from_path with URLs."""
+
+    @patch("composio.core.models._files._upload_bytes_to_s3")
+    @patch("composio.core.models._files._fetch_file_from_url")
+    def test_from_url_success(self, mock_fetch, mock_upload):
+        """Test successful FileUploadable creation from URL."""
+        mock_fetch.return_value = ("image.jpg", b"image data", "image/jpeg")
+        mock_upload.return_value = "s3-key-abc"
+        mock_client = MagicMock()
+
+        result = FileUploadable.from_url(
+            client=mock_client,
+            url="https://example.com/image.jpg",
+            tool="TEST_TOOL",
+            toolkit="test_toolkit",
+        )
+
+        assert result.name == "image.jpg"
+        assert result.mimetype == "image/jpeg"
+        assert result.s3key == "s3-key-abc"
+        mock_fetch.assert_called_once_with("https://example.com/image.jpg")
+        mock_upload.assert_called_once()
+
+    @patch("composio.core.models._files._upload_bytes_to_s3")
+    @patch("composio.core.models._files._fetch_file_from_url")
+    def test_from_path_detects_url(self, mock_fetch, mock_upload):
+        """Test that from_path correctly detects and handles URLs."""
+        mock_fetch.return_value = ("photo.png", b"photo data", "image/png")
+        mock_upload.return_value = "s3-key-xyz"
+        mock_client = MagicMock()
+
+        result = FileUploadable.from_path(
+            client=mock_client,
+            file="https://images.example.com/photo.png",
+            tool="SEND_EMAIL",
+            toolkit="gmail",
+        )
+
+        assert result.name == "photo.png"
+        assert result.mimetype == "image/png"
+        assert result.s3key == "s3-key-xyz"
+        mock_fetch.assert_called_once_with("https://images.example.com/photo.png")
+
+    @patch("composio.core.models._files._fetch_file_from_url")
+    def test_from_url_propagates_fetch_error(self, mock_fetch):
+        """Test that fetch errors are propagated correctly."""
+        mock_fetch.side_effect = ErrorUploadingFile("Fetch failed")
+        mock_client = MagicMock()
+
+        with pytest.raises(ErrorUploadingFile) as exc_info:
+            FileUploadable.from_url(
+                client=mock_client,
+                url="https://example.com/missing.jpg",
+                tool="TEST_TOOL",
+                toolkit="test_toolkit",
+            )
+
+        assert "Fetch failed" in str(exc_info.value)
+
+
+class TestFileHelperWithUrls:
+    """Test cases for FileHelper handling URLs in file uploads."""
+
+    @patch("composio.core.models._files.FileUploadable.from_path")
+    def test_substitute_file_uploads_with_url(
+        self, mock_from_path, file_helper, mock_tool
+    ):
+        """Test that URLs are correctly processed in substitute_file_uploads."""
+        mock_tool.input_parameters = {
+            "type": "object",
+            "properties": {
+                "attachment": {"type": "string", "file_uploadable": True},
+            },
+        }
+
+        mock_uploadable = MagicMock()
+        mock_uploadable.model_dump.return_value = {
+            "name": "image.jpg",
+            "mimetype": "image/jpeg",
+            "s3key": "s3-key-123",
+        }
+        mock_from_path.return_value = mock_uploadable
+
+        result = file_helper._substitute_file_uploads_recursively(
+            tool=mock_tool,
+            schema=mock_tool.input_parameters,
+            request={"attachment": "https://example.com/image.jpg"},
+        )
+
+        assert result["attachment"] == {
+            "name": "image.jpg",
+            "mimetype": "image/jpeg",
+            "s3key": "s3-key-123",
+        }
+        mock_from_path.assert_called_once()
+
+    @patch("composio.core.models._files.FileUploadable.from_path")
+    def test_substitute_file_uploads_with_url_in_anyof(
+        self, mock_from_path, file_helper, mock_tool
+    ):
+        """Test URL handling in anyOf schema variants."""
+        mock_tool.input_parameters = {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "anyOf": [
+                        {"type": "string", "file_uploadable": True},
+                        {"type": "null"},
+                    ]
+                },
+            },
+        }
+
+        mock_uploadable = MagicMock()
+        mock_uploadable.model_dump.return_value = {
+            "name": "doc.pdf",
+            "mimetype": "application/pdf",
+            "s3key": "s3-key-456",
+        }
+        mock_from_path.return_value = mock_uploadable
+
+        result = file_helper._substitute_file_uploads_recursively(
+            tool=mock_tool,
+            schema=mock_tool.input_parameters,
+            request={"file": "https://docs.example.com/doc.pdf"},
+        )
+
+        assert result["file"] == {
+            "name": "doc.pdf",
+            "mimetype": "application/pdf",
+            "s3key": "s3-key-456",
+        }
+
+    @patch("composio.core.models._files.FileUploadable.from_path")
+    def test_substitute_file_uploads_array_with_urls(
+        self, mock_from_path, file_helper, mock_tool
+    ):
+        """Test URL handling in arrays with file_uploadable items."""
+        mock_tool.input_parameters = {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {"type": "string", "file_uploadable": True},
+                },
+            },
+        }
+
+        mock_uploadable1 = MagicMock()
+        mock_uploadable1.model_dump.return_value = {
+            "name": "file1.jpg",
+            "mimetype": "image/jpeg",
+            "s3key": "key1",
+        }
+        mock_uploadable2 = MagicMock()
+        mock_uploadable2.model_dump.return_value = {
+            "name": "file2.png",
+            "mimetype": "image/png",
+            "s3key": "key2",
+        }
+        mock_from_path.side_effect = [mock_uploadable1, mock_uploadable2]
+
+        result = file_helper._substitute_file_uploads_recursively(
+            tool=mock_tool,
+            schema=mock_tool.input_parameters,
+            request={
+                "attachments": [
+                    "https://example.com/file1.jpg",
+                    "https://example.com/file2.png",
+                ]
+            },
+        )
+
+        assert len(result["attachments"]) == 2
+        assert result["attachments"][0]["s3key"] == "key1"
+        assert result["attachments"][1]["s3key"] == "key2"
