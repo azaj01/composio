@@ -1075,8 +1075,8 @@ class TestFetchFileFromUrl:
         assert filename.endswith(".png")
 
     @patch("composio.core.models._files.requests.get")
-    def test_fetch_file_from_url_generates_filename_when_no_extension(self, mock_get):
-        """Test filename generation when URL filename has no extension."""
+    def test_fetch_file_from_url_appends_extension_when_missing(self, mock_get):
+        """Test extension is appended to original filename when missing."""
         mock_response = MagicMock()
         mock_response.ok = True
         mock_response.content = b"pdf data"
@@ -1087,8 +1087,8 @@ class TestFetchFileFromUrl:
             "https://example.com/document"
         )
 
-        assert filename.startswith("file_")
-        assert filename.endswith(".pdf")
+        # Should preserve original filename and append extension
+        assert filename == "document.pdf"
 
     @patch("composio.core.models._files.requests.get")
     def test_fetch_file_from_url_failure(self, mock_get):

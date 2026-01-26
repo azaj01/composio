@@ -163,7 +163,7 @@ def _fetch_file_from_url(url: str) -> t.Tuple[str, bytes, str]:
         # If filename has no extension, try to add one from mimetype
         if "." not in filename:
             extension = _get_extension_from_mimetype(mimetype)
-            filename = _generate_timestamped_filename(extension)
+            filename = f"{filename}{extension}"
 
     return filename, content, mimetype
 
