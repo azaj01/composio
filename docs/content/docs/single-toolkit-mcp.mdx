@@ -192,6 +192,7 @@ const client = new MCPClient({
 const agent = new Agent({
   id: "assistant",
   name: "Assistant",
+  instructions: "You are a helpful assistant that can read and manage emails.",
   model: openai("gpt-4-turbo"),
   tools: await client.getTools()
 });
@@ -223,11 +224,21 @@ gmail_servers = composio.mcp.list(toolkits="gmail", limit=20)
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 // ---cut---
-const servers = await composio.mcp.list({ limit: 10, page: 1 });
+const servers = await composio.mcp.list({
+  toolkits: [],
+  authConfigs: [],
+  limit: 10,
+  page: 1
+});
 console.log(`Found ${servers.items.length} servers`);
 
 // Filter by toolkit
-const gmailServers = await composio.mcp.list({ toolkits: ["gmail"] });
+const gmailServers = await composio.mcp.list({
+  toolkits: ["gmail"],
+  authConfigs: [],
+  limit: 20,
+  page: 1
+});
 ```
   </Tab>
 </Tabs>
