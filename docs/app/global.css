@@ -328,8 +328,12 @@ textarea:focus-visible {
   outline: none;
 }
 
-[data-card]:hover {
-  border-color: color-mix(in srgb, var(--composio-orange) 50%, transparent);
+[data-card="true"] {
+  background: var(--color-fd-muted);
+}
+
+[data-card="true"]:hover {
+  border-color: var(--composio-orange);
 }
 
 [data-fumadocs-tabs] [data-state="active"] {

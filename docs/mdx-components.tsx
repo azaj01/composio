@@ -28,6 +28,7 @@ import {
   Play,
   Terminal,
   Palette,
+  BookOpen,
 } from 'lucide-react';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -75,6 +76,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Play,
     Terminal,
     Palette,
+    BookOpen,
     ...components,
   };
 }
