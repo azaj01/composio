@@ -14,6 +14,7 @@ import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
 import { Figure } from '@/components/figure';
 import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
+import { GuideLink } from '@/components/guide-link';
 import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
 import { ShieldCheck, Route as RouteIcon } from 'lucide-react';
 import {
@@ -28,6 +29,7 @@ import {
   Play,
   Terminal,
   Palette,
+  BookOpen,
 } from 'lucide-react';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -60,6 +62,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Video,
     CapabilityCard,
     CapabilityList,
+    GuideLink,
     ToolkitsLanding,
     // Lucide icons - available globally in MDX without imports
     ShieldCheck,
@@ -75,6 +78,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Play,
     Terminal,
     Palette,
+    BookOpen,
     ...components,
   };
 }

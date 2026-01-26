@@ -4,7 +4,9 @@ description: Understand how Tool Router handles user authentication to toolkits
 keywords: [connect link, oauth]
 ---
 
-Tool Router handles authentication through [Connect Links](/docs/authenticating-tools#hosted-authentication-connect-link), hosted pages where users complete OAuth or enter credentials.
+Tool Router handles authentication through Connect Links, hosted pages where users complete OAuth or enter credentials.
+
+<video src="/images/connect-link-auth-flow-recording.mp4" autoPlay loop muted playsInline className="rounded-lg border" />
 
 ## In-chat authentication
 
@@ -12,45 +14,27 @@ By default, when a tool requires authentication, the agent prompts the user with
 
 Here's what this looks like in a conversation:
 
-```
-You: Star the composio repo on GitHub
+> **You:** Summarize my emails from today
+>
+> **Agent:** I need you to connect your Gmail account first. Please click here to authorize: https://connect.composio.dev/link/ln_abc123
+>
+> **You:** Done
+>
+> **Agent:** Here's a summary of your emails from today...
 
-Agent: I need you to connect your GitHub account first.
-       Please click here to authorize: https://connect.composio.dev/link/ln_abc123
+This flow works well for chat applications where users interact directly with the agent.
 
-You: Done
-
-Agent: Done! I've starred ComposioHQ/composio.
-```
-
-This flow works well for chat applications where users interact directly with the agent. See [In-chat authentication](/docs/authenticating-users/in-chat-authentication).
+<Card icon={<BookOpen />} title="In-chat authentication" href="/docs/authenticating-users/in-chat-authentication">
+  Let the agent handle authentication prompts automatically during conversation
+</Card>
 
 ## Manual authentication
 
-For apps that manage auth outside of chat, use `session.authorize()` to generate Connect Links programmatically:
+For apps that manage auth outside of chat, use `session.authorize()` to generate Connect Links programmatically. This is useful when you want users to connect accounts during onboarding, or when building a custom connections page.
 
-<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
-<Tab value="Python">
-```python
-connection_request = session.authorize("github")
-print(connection_request.redirect_url)
-# https://connect.composio.dev/link/ln_abc123
-```
-</Tab>
-<Tab value="TypeScript">
-```typescript
-import { Composio } from '@composio/core';
-const composio = new Composio({ apiKey: 'your_api_key' });
-const session = await composio.toolRouter.create('user_123', { toolkits: ['github'] });
-// ---cut---
-const connectionRequest = await session.authorize("github");
-console.log(connectionRequest.redirectUrl);
-// https://connect.composio.dev/link/ln_abc123
-```
-</Tab>
-</Tabs>
-
-Use this when you want users to connect accounts during onboarding, or when building a custom connections page. See [Manually authenticating users](/docs/authenticating-users/manually-authenticating) for a detailed guide.
+<Card icon={<BookOpen />} title="Manual authentication" href="/docs/authenticating-users/manually-authenticating">
+  Generate Connect Links and manage authentication flows in your application
+</Card>
 
 ## How Tool Router manages auth configs
 
@@ -72,4 +56,21 @@ Toolkits without Composio managed auth require a custom auth config. See [Using 
 
 ## White-labeling
 
-Show your own branding on OAuth consent screens by creating your own OAuth app. See [White-labeling authentication](/docs/guides/white-labeling-authentication).
+Show your own branding on OAuth consent screens by creating your own OAuth app.
+
+## Next steps
+
+<Cards>
+  <Card title="In-chat authentication" href="/docs/authenticating-users/in-chat-authentication">
+    Let the agent prompt users to authenticate during conversation
+  </Card>
+  <Card title="Manual authentication" href="/docs/authenticating-users/manually-authenticating">
+    Generate Connect Links programmatically in your app
+  </Card>
+  <Card title="White-labeling" href="/docs/white-labeling-authentication">
+    Customize OAuth screens with your branding
+  </Card>
+  <Card title="Custom auth configs" href="/docs/using-custom-auth-configuration">
+    Use your own OAuth apps with Tool Router
+  </Card>
+</Cards>
