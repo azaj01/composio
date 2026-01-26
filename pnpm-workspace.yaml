@@ -6,7 +6,6 @@ packages:
   - ts/packages/cli
   - ts/packages/core
   - ts/packages/json-schema-to-zod
-  - ts/packages/json-schema-to-zod/test/e2e/*
   - ts/packages/providers/*
   - ts/packages/ts-builders
   - ts/packages/wrappers/*

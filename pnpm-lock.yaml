@@ -390,6 +390,35 @@ importers:
         specifier: workspace:*
         version: link:../../../_utils
 
+  ts/e2e-tests/runtimes/node/json-schema-to-zod-v3:
+    dependencies:
+      '@composio/json-schema-to-zod':
+        specifier: workspace:*
+        version: link:../../../../packages/json-schema-to-zod
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+      zod-to-json-schema:
+        specifier: ^3.25.1
+        version: 3.25.1(zod@3.25.76)
+    devDependencies:
+      '@e2e-tests/utils':
+        specifier: workspace:*
+        version: link:../../../_utils
+
+  ts/e2e-tests/runtimes/node/json-schema-to-zod-v4:
+    dependencies:
+      '@composio/json-schema-to-zod':
+        specifier: workspace:*
+        version: link:../../../../packages/json-schema-to-zod
+      zod:
+        specifier: ^4.1.0
+        version: 4.3.6
+    devDependencies:
+      '@e2e-tests/utils':
+        specifier: workspace:*
+        version: link:../../../_utils
+
   ts/e2e-tests/runtimes/node/openai-zod4-compat:
     devDependencies:
       '@e2e-tests/utils':
@@ -1148,35 +1177,6 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.3.6
-
-  ts/packages/json-schema-to-zod/test/e2e/zod-v3:
-    dependencies:
-      '@composio/json-schema-to-zod':
-        specifier: workspace:*
-        version: link:../../..
-      zod:
-        specifier: 3.25.76
-        version: 3.25.76
-      zod-to-json-schema:
-        specifier: 'catalog:'
-        version: 3.25.1(zod@3.25.76)
-    devDependencies:
-      vitest:
-        specifier: 'catalog:'
-        version: 3.2.4(@types/node@24.10.9)(@vitest/ui@3.2.4)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
-
-  ts/packages/json-schema-to-zod/test/e2e/zod-v4:
-    dependencies:
-      '@composio/json-schema-to-zod':
-        specifier: workspace:*
-        version: link:../../..
-      zod:
-        specifier: ^4.1.0
-        version: 4.3.6
-    devDependencies:
-      vitest:
-        specifier: 'catalog:'
-        version: 3.2.4(@types/node@24.10.9)(@vitest/ui@3.2.4)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
 
   ts/packages/providers/anthropic:
     dependencies:
@@ -10232,7 +10232,7 @@ snapshots:
 
   '@openrouter/sdk@0.1.27':
     dependencies:
-      zod: 4.3.6
+      zod: 3.25.76
 
   '@opentelemetry/api-logs@0.203.0':
     dependencies:

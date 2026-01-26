@@ -25,6 +25,8 @@ ts/e2e-tests/
     ├── node/                                # Node.js runtime tests
     │   ├── cjs-basic/                       # CommonJS compatibility tests
     │   ├── esm-basic/                       # ESM compatibility tests
+    │   ├── json-schema-to-zod-v3/           # @composio/json-schema-to-zod + Zod v3 tests
+    │   ├── json-schema-to-zod-v4/           # @composio/json-schema-to-zod + Zod v4 tests
     │   ├── openai-zod4-compat/              # OpenAI + Zod v4 compatibility tests
     │   └── typescript-mjs-import-nodenext/  # TypeScript moduleResolution: nodenext tests
     └── cloudflare/                          # Cloudflare runtime tests
