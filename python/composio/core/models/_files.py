@@ -4,6 +4,9 @@ import hashlib
 import os
 import typing as t
 from pathlib import Path
+from urllib.parse import urlparse
+import uuid
+import datetime
 
 import requests
 import typing_extensions as te
@@ -87,12 +90,159 @@ class _FileUploadResponse(_ComposioBaseModel):
     new_presigned_url: str
 
 
+def _is_url(value: str) -> bool:
+    """Check if a string is a valid HTTP/HTTPS URL."""
+    try:
+        parsed = urlparse(value)
+        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+    except Exception:
+        return False
+
+
+def _get_extension_from_mimetype(mimetype: str) -> str:
+    """Get file extension from mimetype."""
+    mime_to_ext = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+        "image/webp": ".webp",
+        "image/svg+xml": ".svg",
+        "image/bmp": ".bmp",
+        "image/tiff": ".tiff",
+        "application/pdf": ".pdf",
+        "application/json": ".json",
+        "application/xml": ".xml",
+        "text/plain": ".txt",
+        "text/html": ".html",
+        "text/css": ".css",
+        "text/javascript": ".js",
+        "application/zip": ".zip",
+        "application/gzip": ".gz",
+        "audio/mpeg": ".mp3",
+        "audio/wav": ".wav",
+        "video/mp4": ".mp4",
+        "video/webm": ".webm",
+    }
+    return mime_to_ext.get(mimetype, "")
+
+
+def _generate_timestamped_filename(extension: str) -> str:
+    """Generate a unique filename with timestamp."""
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid.uuid4().hex[:8]
+    return f"file_{timestamp}_{unique_id}{extension}"
+
+
+def _fetch_file_from_url(url: str) -> t.Tuple[str, bytes, str]:
+    """Fetch file content from a URL.
+
+    Returns:
+        Tuple of (filename, content_bytes, mimetype)
+    """
+    response = requests.get(url, timeout=30)
+    if not response.ok:
+        raise ErrorUploadingFile(
+            f"Failed to fetch file from URL: {url}. Status: {response.status_code}"
+        )
+
+    content = response.content
+    mimetype = response.headers.get("content-type", "application/octet-stream")
+    # Handle mimetypes with charset or other parameters (e.g., "text/html; charset=utf-8")
+    mimetype = mimetype.split(";")[0].strip()
+
+    # Extract filename from URL
+    parsed_url = urlparse(url)
+    pathname = parsed_url.path
+    filename = os.path.basename(pathname) if pathname else ""
+
+    # If no filename from URL or no extension, generate one
+    if not filename or filename == "/":
+        extension = _get_extension_from_mimetype(mimetype)
+        filename = _generate_timestamped_filename(extension)
+    else:
+        # If filename has no extension, try to add one from mimetype
+        if "." not in filename:
+            extension = _get_extension_from_mimetype(mimetype)
+            filename = _generate_timestamped_filename(extension)
+
+    return filename, content, mimetype
+
+
+def _upload_bytes_to_s3(
+    client: HttpClient,
+    filename: str,
+    content: bytes,
+    mimetype: str,
+    tool: str,
+    toolkit: str,
+) -> str:
+    """Upload bytes content to S3 and return the S3 key."""
+    md5_hash = hashlib.md5(content).hexdigest()
+
+    s3meta = client.post(
+        path=_FILE_UPLOAD,
+        body={
+            "md5": md5_hash,
+            "filename": filename,
+            "mimetype": mimetype,
+            "tool_slug": tool,
+            "toolkit_slug": toolkit,
+        },
+        cast_to=_FileUploadResponse,
+    )
+
+    # Upload the content directly to S3
+    upload_response = requests.put(
+        url=s3meta.new_presigned_url,
+        data=content,
+        headers={"Content-Type": mimetype},
+    )
+
+    if upload_response.status_code not in (200, 403):
+        raise ErrorUploadingFile(
+            f"Failed to upload to S3. Status: {upload_response.status_code}"
+        )
+
+    return s3meta.key
+
+
 class FileUploadable(BaseModel):
     model_config = ConfigDict(json_schema_extra={"file_uploadable": True})
 
     name: str
     mimetype: str
     s3key: str
+
+    @classmethod
+    def from_url(
+        cls,
+        client: HttpClient,
+        url: str,
+        tool: str,
+        toolkit: str,
+    ) -> te.Self:
+        """Create a FileUploadable from a public URL.
+
+        Fetches the file content from the URL and uploads it to S3.
+
+        :param client: The HTTP client for API calls
+        :param url: The public URL to fetch the file from
+        :param tool: The tool slug
+        :param toolkit: The toolkit slug
+        :return: FileUploadable instance with S3 key
+        """
+        filename, content, mimetype = _fetch_file_from_url(url)
+
+        s3key = _upload_bytes_to_s3(
+            client=client,
+            filename=filename,
+            content=content,
+            mimetype=mimetype,
+            tool=tool,
+            toolkit=toolkit,
+        )
+
+        return cls(name=filename, mimetype=mimetype, s3key=s3key)
 
     @classmethod
     def from_path(
@@ -102,6 +252,23 @@ class FileUploadable(BaseModel):
         tool: str,
         toolkit: str,
     ) -> te.Self:
+        """Create a FileUploadable from a local file path or public URL.
+
+        If the file parameter is a URL (starts with http:// or https://),
+        it will fetch the file content from the URL and upload it to S3.
+        Otherwise, it treats it as a local file path.
+
+        :param client: The HTTP client for API calls
+        :param file: Local file path or public URL
+        :param tool: The tool slug
+        :param toolkit: The toolkit slug
+        :return: FileUploadable instance with S3 key
+        """
+        # Check if it's a URL
+        if isinstance(file, str) and _is_url(file):
+            return cls.from_url(client=client, url=file, tool=tool, toolkit=toolkit)
+
+        # Handle as local file path
         file = Path(file)
         if not file.exists():
             raise SDKFileNotFoundError(
