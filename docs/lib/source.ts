@@ -128,8 +128,26 @@ function mdxToCleanMarkdown(content: string): string {
     '\n**$1**\n$2'
   );
 
-  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, etc.)
-  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions)[^>]*>/g, '');
+  // Convert Figure to markdown image with caption
+  result = result.replace(
+    /<Figure[\s\S]*?src="([^"]*)"[\s\S]*?alt="([^"]*)"[\s\S]*?caption="([^"]*)"[\s\S]*?\/>/g,
+    '![$2]($1)\n*$3*'
+  );
+  // Figure without caption
+  result = result.replace(
+    /<Figure[\s\S]*?src="([^"]*)"[\s\S]*?alt="([^"]*)"[\s\S]*?\/>/g,
+    '![$2]($1)'
+  );
+
+  // Convert ToolTypeOption to labeled section (similar to IntegrationContent)
+  result = result.replace(
+    /<ToolTypeOption[\s\S]*?name="([^"]*)"[\s\S]*?>/g,
+    '\n### $1\n'
+  );
+  result = result.replace(/<\/ToolTypeOption>/g, '');
+
+  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, etc.)
+  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding)[^>]*>/g, '');
 
   // Remove remaining self-closing JSX tags (including those with JSX expressions)
   result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
