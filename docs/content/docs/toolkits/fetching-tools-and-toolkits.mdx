@@ -1,5 +1,175 @@
 ---
 title: Fetching tools and toolkits
-description: How to fetch and filter tools and toolkits for your AI agents
+description: How to browse Composio's catalog and fetch tools for your sessions
 ---
 
+There are two ways to explore tools and toolkits:
+
+1. **Browse the catalog** - Discover what toolkits Composio offers
+2. **Fetch for a session** - Get tools enabled for a session
+
+## Browsing Composio's catalog
+
+Composio offers 800+ toolkits. You can explore the full catalog to discover what's available.
+
+### Using the platform
+
+Browse all toolkits at [platform.composio.dev](https://platform.composio.dev). Each toolkit page shows:
+- Available tools with input/output parameters
+- Supported authentication methods
+- Required OAuth scopes
+
+You can also browse toolkits directly in these docs:
+
+<Card icon={<Blocks />} title="Browse all toolkits" href="/toolkits">
+  Explore 800+ available toolkits with their tools and authentication methods
+</Card>
+
+### Using the SDK
+
+List available toolkits programmatically:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio()
+
+# List available toolkits (top 20 by default)
+toolkits = composio.toolkits.get()
+
+for toolkit in toolkits:
+    print(f"{toolkit.name} - {toolkit.meta.tools_count} tools")
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+// List available toolkits (top 20 by default)
+const toolkits = await composio.toolkits.get();
+
+for (const toolkit of toolkits) {
+  console.log(`${toolkit.name} - ${toolkit.meta.toolsCount} tools`);
+}
+```
+</Tab>
+</Tabs>
+
+Get a specific toolkit's details:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# Get details for a specific toolkit
+github = composio.toolkits.get_by_slug("github")
+print(github.meta.description)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+// Get details for a specific toolkit
+const github = await composio.toolkits.getBySlug("github");
+console.log(github.meta.description);
+```
+</Tab>
+</Tabs>
+
+Get a specific tool's schema:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# Get schema for a specific tool
+tool = composio.tools.get_raw_composio_tool_by_slug("GMAIL_SEND_EMAIL")
+print(tool.input_parameters)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+// Get schema for a specific tool
+const tool = await composio.tools.getRawComposioToolBySlug("GMAIL_SEND_EMAIL");
+console.log(tool.inputParameters);
+```
+</Tab>
+</Tabs>
+
+## Fetching tools for a session
+
+Once you create a session for a user, you can fetch tools and check which toolkits are enabled.
+
+### List enabled toolkits
+
+`session.toolkits()` returns toolkits enabled for the session along with their connection status:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+session = composio.create(user_id="user_123")
+
+# List toolkits enabled for this session
+toolkits = session.toolkits()
+
+for toolkit in toolkits:
+    print(f"{toolkit.name}: {toolkit.connection_status}")
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
+const session = await composio.create("user_123");
+
+// List toolkits enabled for this session
+const toolkits = await session.toolkits();
+
+for (const toolkit of toolkits) {
+  console.log(`${toolkit.name}: ${toolkit.connectionStatus}`);
+}
+```
+</Tab>
+</Tabs>
+
+The connection status tells you if the user has authenticated with that toolkit.
+
+### Get tools for your AI framework
+
+`session.tools()` returns tools formatted for your AI provider:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+# Get tools from specific toolkits
+tools = session.tools(toolkits=["github", "gmail"])
+
+# Or get specific tools by name
+tools = session.tools(tools=["GITHUB_CREATE_ISSUE", "GMAIL_SEND_EMAIL"])
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+const session = await composio.create("user_123");
+// ---cut---
+// Get tools from specific toolkits
+const tools = await session.tools({ toolkits: ["github", "gmail"] });
+
+// Or get specific tools by name
+const specificTools = await session.tools({
+  tools: ["GITHUB_CREATE_ISSUE", "GMAIL_SEND_EMAIL"]
+});
+```
+</Tab>
+</Tabs>
+
+Tools are automatically formatted for your configured provider (OpenAI, Anthropic, etc.).
