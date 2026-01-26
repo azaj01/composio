@@ -42,7 +42,7 @@ const config = {
       },
       {
         source: '/tool-router/quickstart',
-        destination: '/docs/quickstart-tool-router',
+        destination: '/docs/quickstart',
         permanent: true,
       },
       // Core concepts moved from tool-router to docs
