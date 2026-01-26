@@ -6,15 +6,25 @@ End-to-end tests for `@composio/core` across different JavaScript runtimes.
 
 ```
 ts/e2e-tests/
-├── _utils/                           # Shared test infrastructure
-│   ├── Dockerfile.node               # Docker image for Node.js tests
-│   └── run-docker-test.sh            # Generic Docker test runner
+├── _utils/                                  # Shared test infrastructure
+│   ├── Dockerfile.node                      # Docker image for Node.js tests
+│   ├── src/                                 # TypeScript runner utilities
+│   │   ├── e2e.ts                           # Main e2e test entry point
+│   │   ├── runner.ts                        # Docker test runner
+│   │   ├── image-lifecycle.ts               # Docker image build/run utilities
+│   │   ├── config.ts                        # Configuration utilities
+│   │   └── types.ts                         # TypeScript type definitions
+│   └── README.md                            # Utils documentation
 └── runtimes/
-    ├── node/                         # Node.js runtime tests
-    │   ├── cjs-basic/                # CommonJS compatibility tests
-    │   └── esm-basic/                # ESM compatibility tests
-    └── cloudflare/                   # Cloudflare runtime tests
-        └── cf-workers-basic/         # Cloudflare Workers tests
+    ├── node/                                # Node.js runtime tests
+    │   ├── cjs-basic/                       # CommonJS compatibility tests
+    │   ├── esm-basic/                       # ESM compatibility tests
+    │   ├── openai-zod4-compat/              # OpenAI + Zod v4 compatibility tests
+    │   └── typescript-mjs-import-nodenext/  # TypeScript moduleResolution: nodenext tests
+    └── cloudflare/                          # Cloudflare runtime tests
+        ├── cf-workers-basic/                # Basic Cloudflare Workers tests
+        ├── cf-workers-files/                # Cloudflare Workers file handling tests
+        └── cf-workers-tool-router-ai/       # Cloudflare Workers AI SDK tool router tests
 ```
 
 ## Running Tests
@@ -52,7 +62,26 @@ pnpm test:e2e:cloudflare
 1. Create a new directory under `runtimes/node/` (e.g., `runtimes/node/my-test`)
 2. Add a `package.json` with name `@test-e2e/node-my-test`
 3. Add `test:e2e` and `test:e2e:node` scripts
-4. Create a `run-docker-test.sh` that uses the shared `_utils/run-docker-test.sh`
+4. Create an `e2e.ts` file with inline configuration:
+
+```typescript
+import { e2e } from '@e2e-tests/utils';
+
+await e2e(import.meta.url, {
+  fixture: 'fixtures/test.mjs',
+  nodeVersions: ['20.18.0', '22.12.0'],  // Optional: defaults to current runtime
+  setup: 'npm install',                   // Optional: setup command
+  env: { MY_VAR: process.env.MY_VAR },   // Optional: env vars
+  onTest: (result) => {
+    if (result.exitCode !== 0) {
+      throw new Error(`Test failed with exit code ${result.exitCode}`);
+    }
+    // Add assertions for expected output
+  },
+});
+```
+
+5. Add fixture files in a `fixtures/` directory
 
 ### Cloudflare Runtime Tests
 

@@ -59,12 +59,15 @@ RUN bun build ./src/bin.ts \
   --production \
   --outfile /usr/local/bin/composio
 
-# Test directory (relative to /app)
-ARG TEST_DIR
-WORKDIR /app/${TEST_DIR}
+WORKDIR /app
 
-# Command to run the test (e.g., "node test.cjs", "node test.mjs", "pnpm test", "bun test")
-ARG TEST_CMD="echo 'No TEST_CMD specified'"
-ENV TEST_CMD=${TEST_CMD}
+RUN chown -R node:node /app
 
-CMD ["sh", "-c", "${TEST_CMD}"]
+# Pre-create Composio CLI cache directory to work around Bun issue #7967
+# (Bun-compiled binaries may silently fail to create directories in Docker)
+# See: https://github.com/oven-sh/bun/issues/7967
+RUN mkdir -p /home/node/.composio && chown node:node /home/node/.composio
+
+USER node
+
+CMD ["sh"]
