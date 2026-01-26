@@ -300,49 +300,6 @@ if (result.deleted) {
   </Tab>
 </Tabs>
 
-### Multi-toolkit servers
-
-Combine multiple services in a single MCP server:
-
-<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
-  <Tab value="Python">
-```python
-server = composio.mcp.create(
-    name="productivity-suite",
-    toolkits=[
-        {"toolkit": "gmail", "auth_config": "ac_gmail"},
-        {"toolkit": "slack", "auth_config": "ac_slack"},
-        {"toolkit": "github", "auth_config": "ac_github"}
-    ],
-    allowed_tools=[
-        "GMAIL_FETCH_EMAILS",
-        "SLACK_SEND_MESSAGE",
-        "GITHUB_CREATE_ISSUE"
-    ]
-)
-```
-  </Tab>
-  <Tab value="TypeScript">
-```typescript
-import { Composio } from '@composio/core';
-const composio = new Composio({ apiKey: 'your_api_key' });
-// ---cut---
-const server = await composio.mcp.create("productivity-suite", {
-  toolkits: [
-    { authConfigId: "ac_gmail", toolkit: "gmail" },
-    { authConfigId: "ac_slack", toolkit: "slack" },
-    { authConfigId: "ac_github", toolkit: "github" }
-  ],
-  allowedTools: [
-    "GMAIL_FETCH_EMAILS",
-    "SLACK_SEND_MESSAGE",
-    "GITHUB_CREATE_ISSUE"
-  ]
-});
-```
-  </Tab>
-</Tabs>
-
 ## Next steps
 
 <Cards>

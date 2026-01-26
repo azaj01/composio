@@ -187,12 +187,17 @@ const config = {
       },
       {
         source: '/docs/mcp-quickstart',
-        destination: '/docs/mcp/mcp-quickstart',
+        destination: '/docs/single-toolkit-mcp',
         permanent: true,
       },
       {
         source: '/docs/mcp-server-management',
-        destination: '/docs/mcp/mcp-server-management',
+        destination: '/docs/single-toolkit-mcp',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp/:path*',
+        destination: '/docs/single-toolkit-mcp',
         permanent: true,
       },
       // Tools section moved to tools-direct folder
