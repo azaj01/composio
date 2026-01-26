@@ -1,7 +1,12 @@
 #!/usr/bin/env bun
 /**
- * Builds Docker images for all well-known Node.js versions used by e2e tests.
- * This includes versions from WELL_KNOWN_NODE_VERSIONS and the current runtime version.
+ * Builds Docker images for Node.js e2e tests.
+ *
+ * In CI mode (COMPOSIO_E2E_NODE_VERSION set):
+ *   Only builds the image for the specified version.
+ *
+ * In local mode:
+ *   Builds images for all versions in WELL_KNOWN_NODE_VERSIONS.
  */
 
 import { $ } from 'bun';
@@ -55,24 +60,31 @@ async function buildImage(nodeVersion: string, repoRoot: string): Promise<boolea
 async function main() {
   const repoRoot = getRepoRoot();
   const currentNodeVersion = process.versions.node;
+  const envVersion = Bun.env.COMPOSIO_E2E_NODE_VERSION;
 
-  // Collect all unique Node versions to build
+  // In CI mode with COMPOSIO_E2E_NODE_VERSION set, only build that specific version
+  // Otherwise, build all well-known versions (for local development)
   const versions = new Set<string>();
 
-  for (const version of WELL_KNOWN_NODE_VERSIONS) {
-    if (version === 'current') {
-      versions.add(currentNodeVersion);
-    } else {
-      versions.add(version);
+  if (envVersion) {
+    versions.add(envVersion);
+    console.log(`Building Docker image for CI matrix version: ${envVersion}`);
+  } else {
+    for (const version of WELL_KNOWN_NODE_VERSIONS) {
+      if (version === 'current') {
+        versions.add(currentNodeVersion);
+      } else {
+        versions.add(version);
+      }
+    }
+    console.log('Building Docker images for Node.js versions:');
+    for (const v of versions) {
+      const isCurrent = v === currentNodeVersion ? ' (current)' : '';
+      console.log(`  - ${v}${isCurrent}`);
     }
   }
 
   const versionList = Array.from(versions);
-  console.log('Building Docker images for Node.js versions:');
-  for (const v of versionList) {
-    const isCurrent = v === currentNodeVersion ? ' (current)' : '';
-    console.log(`  - ${v}${isCurrent}`);
-  }
 
   let failed = 0;
   for (const version of versionList) {
