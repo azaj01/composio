@@ -38,13 +38,12 @@ for (const toolkit of result.items) {
 </Tab>
 </Tabs>
 
-You can filter to only connected toolkits or search by name:
+You can filter to only show connected toolkits:
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```python
 connected = session.toolkits(is_connected=True)  # Only connected
-searched = session.toolkits(search="github")    # Search by name
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -54,7 +53,6 @@ const composio = new Composio({ apiKey: 'your_api_key' });
 const session = await composio.create("user_123");
 // ---cut---
 const connected = await session.toolkits({ isConnected: true });  // Only connected
-const searched = await session.toolkits({ search: "github" });    // Search by name
 ```
 </Tab>
 </Tabs>
