@@ -10,7 +10,10 @@
     "postinstall": "fumadocs-mdx",
     "lint": "eslint",
     "lint:links": "bun scripts/validate-links.ts",
-    "generate:toolkits": "bun scripts/generate-toolkits.ts"
+    "generate:toolkits": "bun scripts/generate-toolkits.ts",
+    "generate:sdk-reference:ts": "bun scripts/sdk-reference/generate-typescript.ts",
+    "generate:sdk-reference:py": "uv run --with griffe python scripts/sdk-reference/generate-python.py",
+    "generate:sdk-reference": "bun run generate:sdk-reference:ts && bun run generate:sdk-reference:py"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
@@ -30,6 +33,7 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "typedoc": "^0.28.5",
     "@ai-sdk/anthropic": "^3.0.11",
     "@ai-sdk/mcp": "^1.0.6",
     "@ai-sdk/openai": "^3.0.9",

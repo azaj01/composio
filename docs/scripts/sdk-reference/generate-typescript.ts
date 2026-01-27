@@ -4,7 +4,7 @@
  * Generates MDX documentation from TypeScript source code using TypeDoc.
  * Output is written to the docs content directory.
  *
- * Run: pnpm --filter @composio/core generate:docs
+ * Run from docs/: bun scripts/sdk-reference/generate-typescript.ts
  */
 
 import { mkdir, writeFile, rm, readdir, readFile } from 'fs/promises';
@@ -12,15 +12,13 @@ import { join, dirname } from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
-// Paths (relative to ts/packages/core)
+// Paths (relative to docs/scripts/sdk-reference/)
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const PACKAGE_DIR = join(SCRIPT_DIR, '..');
-const MODELS_DIR = join(PACKAGE_DIR, 'src/models');
-const OUTPUT_DIR = join(
-  PACKAGE_DIR,
-  '../../../docs/content/reference/sdk-reference/typescript'
-);
-const TEMP_JSON = join(PACKAGE_DIR, '.typedoc-output.json');
+const DOCS_DIR = join(SCRIPT_DIR, '../..');
+const TS_SDK_DIR = join(DOCS_DIR, '../ts/packages/core');
+const MODELS_DIR = join(TS_SDK_DIR, 'src/models');
+const OUTPUT_DIR = join(DOCS_DIR, 'content/reference/sdk-reference/typescript');
+const TEMP_JSON = join(TS_SDK_DIR, '.typedoc-output.json');
 
 // Internal classes that should NOT be documented (accessed via other APIs)
 const INTERNAL_CLASSES = new Set([
@@ -28,7 +26,6 @@ const INTERNAL_CLASSES = new Set([
   'AuthScheme', // Utility class
   'ConnectionRequest', // Utility
   'Files', // Not yet stable API
-  'MCP', // Experimental
   'ToolRouter', // Experimental
 ]);
 
@@ -543,7 +540,11 @@ function generateClassMdx(classDoc: ClassDoc): string {
     lines.push(generateMethodMdx(classDoc.constructor));
   } else if (!USER_INSTANTIATED_CLASSES.has(classDoc.name)) {
     // Show usage hint for non-instantiated classes
-    const accessorName = classDoc.name.charAt(0).toLowerCase() + classDoc.name.slice(1);
+    // Handle acronyms (e.g., "MCP" -> "mcp") vs PascalCase (e.g., "AuthConfigs" -> "authConfigs")
+    const accessorName =
+      classDoc.name === classDoc.name.toUpperCase()
+        ? classDoc.name.toLowerCase()
+        : classDoc.name.charAt(0).toLowerCase() + classDoc.name.slice(1);
     lines.push('## Usage');
     lines.push('');
     lines.push(`Access this class through the \`composio.${accessorName}\` property:`);
@@ -722,7 +723,7 @@ async function runTypeDoc(): Promise<TypeDocProject> {
   ].join(' ');
 
   try {
-    execSync(cmd, { stdio: 'pipe', cwd: PACKAGE_DIR });
+    execSync(cmd, { stdio: 'pipe', cwd: TS_SDK_DIR });
   } catch (error) {
     console.error('TypeDoc failed:', error);
     throw error;
@@ -734,7 +735,7 @@ async function runTypeDoc(): Promise<TypeDocProject> {
 
 async function main() {
   console.log('Starting TypeScript SDK documentation generation...\n');
-  console.log(`Package dir: ${PACKAGE_DIR}`);
+  console.log(`Package dir: ${TS_SDK_DIR}`);
   console.log(`Output dir: ${OUTPUT_DIR}\n`);
 
   // Clean output directory
