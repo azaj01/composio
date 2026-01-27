@@ -21,26 +21,8 @@ session = composio.create(
     user_id="user_123",
     toolkits=["github", "gmail"]
 )
-```
-</Tab>
-<Tab value="TypeScript">
-```typescript
-import { Composio } from '@composio/core';
-const composio = new Composio({ apiKey: 'your_api_key' });
-// ---cut---
-// Only GitHub and Gmail will be available
-const session = await composio.create("user_123", {
-  toolkits: ["github", "gmail"]
-});
-```
-</Tab>
-</Tabs>
 
-You can also use the explicit `enable` syntax:
-
-<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
-<Tab value="Python">
-```python
+# Or use the explicit enable syntax
 session = composio.create(
     user_id="user_123",
     toolkits={"enable": ["github", "gmail"]}
@@ -52,7 +34,13 @@ session = composio.create(
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 // ---cut---
+// Only GitHub and Gmail will be available
 const session = await composio.create("user_123", {
+  toolkits: ["github", "gmail"]
+});
+
+// Or use the explicit enable syntax
+const session2 = await composio.create("user_123", {
   toolkits: { enable: ["github", "gmail"] }
 });
 ```
