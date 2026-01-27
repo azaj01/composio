@@ -10,7 +10,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 2,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -102,7 +102,7 @@
     ],
     "toolCount": 823,
     "triggerCount": 6,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -165,7 +165,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 7,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -229,7 +229,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 5,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -315,7 +315,7 @@
     ],
     "toolCount": 36,
     "triggerCount": 2,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -378,7 +378,7 @@
     ],
     "toolCount": 133,
     "triggerCount": 9,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -450,7 +450,7 @@
     ],
     "toolCount": 79,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -553,7 +553,7 @@
     ],
     "toolCount": 43,
     "triggerCount": 5,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -654,7 +654,7 @@
     ],
     "toolCount": 72,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -733,7 +733,7 @@
     ],
     "toolCount": 51,
     "triggerCount": 7,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -796,7 +796,7 @@
     ],
     "toolCount": 32,
     "triggerCount": 4,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -860,7 +860,7 @@
     ],
     "toolCount": 304,
     "triggerCount": 2,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -955,7 +955,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 3,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1042,7 +1042,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1119,7 +1119,7 @@
   },
   {
     "slug": "codeinterpreter",
-    "name": "Codeinterpreter",
+    "name": "Code Interpreter",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//code-interpreter.webp",
     "description": "CodeInterpreter extends Python-based coding environments with integrated data analysis, enabling developers to run scripts, visualize results, and prototype solutions inside supported platforms",
     "category": "developer tools & devops",
@@ -1128,7 +1128,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -1157,7 +1157,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -1196,7 +1196,7 @@
     ],
     "toolCount": 46,
     "triggerCount": 3,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1316,7 +1316,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -1400,7 +1400,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 4,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1471,7 +1471,7 @@
     ],
     "toolCount": 133,
     "triggerCount": 9,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1543,7 +1543,7 @@
     ],
     "toolCount": 87,
     "triggerCount": 6,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1645,7 +1645,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1843,7 +1843,7 @@
     ],
     "toolCount": 49,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1945,7 +1945,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -2046,7 +2046,7 @@
     ],
     "toolCount": 141,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "CALCOM_AUTH",
@@ -2141,7 +2141,7 @@
     ],
     "toolCount": 38,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2212,7 +2212,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260111_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -2251,7 +2251,7 @@
     ],
     "toolCount": 176,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2400,7 +2400,7 @@
   },
   {
     "slug": "hackernews",
-    "name": "Hackernews",
+    "name": "Hacker News",
     "logo": "https://logos.composio.dev/api/hackernews",
     "description": "Hacker News is a tech-focused news aggregator by Y Combinator, featuring user-submitted stories and discussions on startups, programming, and emerging trends",
     "category": "other / miscellaneous",
@@ -2409,7 +2409,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -2438,7 +2438,7 @@
     ],
     "toolCount": 61,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -2476,7 +2476,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2539,7 +2539,7 @@
     ],
     "toolCount": 84,
     "triggerCount": 1,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2593,7 +2593,7 @@
   },
   {
     "slug": "peopledatalabs",
-    "name": "Peopledatalabs",
+    "name": "People Data Labs",
     "logo": "https://logos.composio.dev/api/peopledatalabs",
     "description": "PeopleDataLabs provides B2B data enrichment and identity resolution, empowering organizations to build enriched user profiles and validate customer information",
     "category": "analytics & data",
@@ -2602,7 +2602,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -2817,7 +2817,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2957,7 +2957,7 @@
   },
   {
     "slug": "docusign",
-    "name": "Docusign",
+    "name": "DocuSign",
     "logo": "https://logos.composio.dev/api/docusign",
     "description": "DocuSign provides eSignature and digital agreement solutions, enabling businesses to send, sign, track, and manage documents electronically",
     "category": "document & file management",
@@ -2966,7 +2966,7 @@
     ],
     "toolCount": 342,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3028,7 +3028,7 @@
   },
   {
     "slug": "discordbot",
-    "name": "Discordbot",
+    "name": "Discord Bot",
     "logo": "https://logos.composio.dev/api/discordbot",
     "description": "Discordbot refers to automated programs on Discord servers, performing tasks like moderation, music playback, and user engagement to enhance community interactions",
     "category": "collaboration & communication",
@@ -3037,7 +3037,7 @@
     ],
     "toolCount": 164,
     "triggerCount": 0,
-    "version": "20260111_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3116,7 +3116,7 @@
     ],
     "toolCount": 97,
     "triggerCount": 7,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3196,7 +3196,7 @@
     ],
     "toolCount": 42,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3267,7 +3267,7 @@
     ],
     "toolCount": 345,
     "triggerCount": 5,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH1",
@@ -3330,7 +3330,7 @@
     ],
     "toolCount": 31,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3406,7 +3406,7 @@
     ],
     "toolCount": 43,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3511,7 +3511,7 @@
     ],
     "toolCount": 358,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3559,7 +3559,7 @@
     ],
     "toolCount": 144,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3646,7 +3646,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3733,7 +3733,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 7,
-    "version": "20260115_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3820,7 +3820,7 @@
     ],
     "toolCount": 231,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3897,7 +3897,7 @@
   },
   {
     "slug": "browserbase_tool",
-    "name": "Browserbase tool",
+    "name": "Browserbase",
     "logo": "https://logos.composio.dev/api/browserbase",
     "description": "Browserbase is a serverless platform that enables developers to run, manage, and monitor headless browsers at scale, offering seamless integration with tools like Playwright, Puppeteer, and Selenium.",
     "category": "developer tools",
@@ -3906,7 +3906,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3944,7 +3944,7 @@
     ],
     "toolCount": 271,
     "triggerCount": 4,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4016,7 +4016,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4087,7 +4087,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4179,7 +4179,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4251,7 +4251,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 1,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4297,7 +4297,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4368,7 +4368,7 @@
     ],
     "toolCount": 122,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4415,7 +4415,7 @@
     ],
     "toolCount": 57,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4487,7 +4487,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260111_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4645,7 +4645,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -4700,7 +4700,7 @@
     ],
     "toolCount": 101,
     "triggerCount": 4,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4776,7 +4776,7 @@
     ],
     "toolCount": 40,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4814,7 +4814,7 @@
     ],
     "toolCount": 20,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4852,7 +4852,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4906,7 +4906,7 @@
     ],
     "toolCount": 35,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4935,7 +4935,7 @@
   },
   {
     "slug": "agencyzoom",
-    "name": "Agencyzoom",
+    "name": "AgencyZoom",
     "logo": "https://logos.composio.dev/api/agencyzoom",
     "description": "AgencyZoom is for the P&C insurance agent that's looking to increase sales, boost retention and analyze agency & producer performance.",
     "category": "crm",
@@ -4945,7 +4945,7 @@
     ],
     "toolCount": 99,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "BASIC_WITH_JWT",
@@ -5015,7 +5015,7 @@
     ],
     "toolCount": 1,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5185,7 +5185,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5239,7 +5239,7 @@
   },
   {
     "slug": "semanticscholar",
-    "name": "Semanticscholar",
+    "name": "Semantic Scholar",
     "logo": "https://logos.composio.dev/api/semanticscholar",
     "description": "Semantic Scholar is an AI-powered academic search engine that helps researchers discover and understand scientific literature",
     "category": "ai & machine learning",
@@ -5248,7 +5248,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5277,7 +5277,7 @@
   },
   {
     "slug": "sendgrid",
-    "name": "Sendgrid",
+    "name": "SendGrid",
     "logo": "https://logos.composio.dev/api/sendgrid",
     "description": "SendGrid is a cloud-based email delivery platform providing transactional and marketing email services, with APIs for integration, analytics, and scalability",
     "category": "marketing & social media",
@@ -5286,7 +5286,7 @@
     ],
     "toolCount": 375,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5315,7 +5315,7 @@
   },
   {
     "slug": "junglescout",
-    "name": "Junglescout",
+    "name": "Jungle Scout",
     "logo": "https://logos.composio.dev/api/junglescout",
     "description": "Jungle Scout assists Amazon sellers with product research, sales estimates, and competitive insights to optimize inventory, pricing, and listing strategies",
     "category": "e-commerce",
@@ -5324,7 +5324,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5371,7 +5371,7 @@
     ],
     "toolCount": 275,
     "triggerCount": 3,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5465,7 +5465,7 @@
   },
   {
     "slug": "bamboohr",
-    "name": "Bamboohr",
+    "name": "BambooHR",
     "logo": "https://logos.composio.dev/api/bamboohr",
     "description": "BambooHR is a cloud-based human resources management system (HRMS) that helps businesses manage their employees, payroll, and benefits.",
     "category": "hr & recruiting",
@@ -5475,7 +5475,7 @@
     ],
     "toolCount": 159,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5569,7 +5569,7 @@
   },
   {
     "slug": "whatsapp",
-    "name": "Whatsapp",
+    "name": "WhatsApp",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/whatsapp-logo.png",
     "description": "Enables interaction with customers through the WhatsApp Business API for messaging and automation. Only supports WhatsApp Business accounts, not WhatsApp Personal accounts.",
     "category": "communication",
@@ -5579,7 +5579,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5673,7 +5673,7 @@
   },
   {
     "slug": "dynamics365",
-    "name": "Dynamics365",
+    "name": "Dynamics 365",
     "logo": "https://logos.composio.dev/api/dynamics365",
     "description": "Dynamics 365 from Microsoft combines CRM, ERP, and productivity apps to streamline sales, marketing, customer service, and operations in one integrated platform",
     "category": "crm",
@@ -5682,7 +5682,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5754,7 +5754,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 2,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5880,7 +5880,7 @@
   },
   {
     "slug": "lmnt",
-    "name": "Lmnt",
+    "name": "LMNT",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/lmnt_logo.jpeg",
     "description": "LMNT focuses on voice and audio manipulation, possibly leveraging AI to generate or transform sound for various creative and technical use cases",
     "category": "ai & machine learning",
@@ -5889,7 +5889,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5918,7 +5918,7 @@
   },
   {
     "slug": "metaads",
-    "name": "Metaads",
+    "name": "Meta Ads",
     "logo": "https://logos.composio.dev/api/metaads",
     "description": "Create, edit and get insights from ads across Meta technologies, including Facebook, Instagram, Messenger, WhatsApp and more.",
     "category": "marketing & social media",
@@ -5928,7 +5928,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -6005,7 +6005,7 @@
   },
   {
     "slug": "zenrows",
-    "name": "Zenrows",
+    "name": "ZenRows",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/zenrows.jpeg",
     "description": "ZenRows is a web scraping API allowing developers to bypass CAPTCHAs and blocks, gather structured data from dynamic websites, and quickly integrate results into applications",
     "category": "developer tools & devops",
@@ -6014,7 +6014,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6069,7 +6069,7 @@
     ],
     "toolCount": 223,
     "triggerCount": 20,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -6146,7 +6146,7 @@
   },
   {
     "slug": "browser_tool",
-    "name": "Browser tool",
+    "name": "Browser Tool",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//composio-logo.png",
     "description": "Composio enables AI Agents and LLMs to authenticate and integrate with various tools via function calling.",
     "category": "ai & machine learning",
@@ -6155,7 +6155,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -6251,7 +6251,7 @@
   },
   {
     "slug": "listennotes",
-    "name": "Listennotes",
+    "name": "Listen Notes",
     "logo": "https://logos.composio.dev/api/listennotes",
     "description": "Listen Notes is a powerful podcast search engine and database that allows you to discover, explore, and listen to millions of podcasts and episodes worldwide.",
     "category": "podcast",
@@ -6260,7 +6260,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6298,7 +6298,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6421,7 +6421,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -6588,7 +6588,7 @@
   },
   {
     "slug": "servicenow",
-    "name": "Servicenow",
+    "name": "ServiceNow",
     "logo": "https://logos.composio.dev/api/servicenow",
     "description": "ServiceNow is a cloud-based enterprise platform that helps organizations automate and manage digital workflows across IT, HR, customer service, and operations.",
     "category": "analytics & data",
@@ -6597,7 +6597,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260108_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -6722,7 +6722,7 @@
   },
   {
     "slug": "pagerduty",
-    "name": "Pagerduty",
+    "name": "PagerDuty",
     "logo": "https://logos.composio.dev/api/pagerduty",
     "description": "PagerDuty helps you proactively manage your digital operations by collecting data signals from anywhere, interpreting those signals using machine learning, automatically engaging the right people, and accelerating resolution and learning.",
     "category": "developer tools & devops",
@@ -6732,7 +6732,7 @@
     ],
     "toolCount": 353,
     "triggerCount": 0,
-    "version": "20260110_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -6959,7 +6959,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260119_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7035,7 +7035,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260108_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7136,7 +7136,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -7208,7 +7208,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260108_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7274,6 +7274,44 @@
     ]
   },
   {
+    "slug": "appdrag",
+    "name": "AppDrag",
+    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/appdrag.svg",
+    "description": "AppDrag is a cloud-based platform for building websites, APIs, and databases with drag-and-drop tools, code editing, and integrated hosting to accelerate development workflows and iteration",
+    "category": "developer tools & devops",
+    "authSchemes": [
+      "API_KEY"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260126_00",
+    "authConfigDetails": [
+      {
+        "mode": "API_KEY",
+        "name": "API_KEY",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": []
+          },
+          "connected_account_initiation": {
+            "required": [
+              {
+                "name": "generic_api_key",
+                "displayName": "API Key",
+                "type": "string",
+                "description": "API key used for authenticating requests to the AppDrag API.",
+                "required": true,
+                "default": null
+              }
+            ],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "metatextai",
     "name": "Metatextai",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//metatextai.jpeg",
@@ -7313,7 +7351,7 @@
   },
   {
     "slug": "launch_darkly",
-    "name": "Launch darkly",
+    "name": "LaunchDarkly",
     "logo": "https://logos.composio.dev/api/launch_darkly",
     "description": "A feature management platform that helps teams build better software faster using feature flags.",
     "category": "feature flags",
@@ -7322,7 +7360,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7539,7 +7577,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260108_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7770,7 +7808,7 @@
   },
   {
     "slug": "recallai",
-    "name": "Recallai",
+    "name": "Recall.ai",
     "logo": "https://logos.composio.dev/api/recallai",
     "description": "Recall AI provides a unified API to integrate meeting bots and access conversation data from major video conferencing platforms, enabling seamless automation, transcription, and analysis of virtual meetings.",
     "category": "ai",
@@ -7779,7 +7817,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260108_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7879,7 +7917,7 @@
   },
   {
     "slug": "survey_monkey",
-    "name": "Survey monkey",
+    "name": "SurveyMonkey",
     "logo": "https://logos.composio.dev/api/survey_monkey",
     "description": "SurveyMonkey is an online survey development platform that enables users to create, distribute, and analyze surveys for various purposes.",
     "category": "survey",
@@ -7889,7 +7927,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260108_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -7983,7 +8021,7 @@
   },
   {
     "slug": "zoho_books",
-    "name": "Zoho books",
+    "name": "Zoho Books",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//zoho.png",
     "description": "Zoho Books handles accounting, invoicing, and expense tracking, offering real-time collaboration and integrations within the Zoho ecosystem",
     "category": "finance & accounting",
@@ -7992,7 +8030,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8055,7 +8093,7 @@
   },
   {
     "slug": "zoho_inventory",
-    "name": "Zoho inventory",
+    "name": "Zoho Inventory",
     "logo": "https://logos.composio.dev/api/zoho_inventory",
     "description": "Zoho Inventory helps businesses track stock, manage orders, and sync inventory across multiple sales channels, streamlining supply chain operations",
     "category": "finance & accounting",
@@ -8064,7 +8102,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8145,7 +8183,7 @@
     ],
     "toolCount": 41,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8207,7 +8245,7 @@
   },
   {
     "slug": "tinypng",
-    "name": "Tinypng",
+    "name": "TinyPNG",
     "logo": "https://logos.composio.dev/api/tinypng",
     "description": "TinyPNG uses smart lossy compression techniques to reduce the file size of your WebP, JPEG, and PNG files.",
     "category": "image optimization",
@@ -8216,7 +8254,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -8604,7 +8642,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8666,7 +8704,7 @@
   },
   {
     "slug": "dropbox_sign",
-    "name": "Dropbox sign",
+    "name": "Dropbox Sign",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//hellosign-logo.png",
     "description": "Dropbox Sign (formerly HelloSign) offers electronic signature and document workflow solutions, simplifying how businesses collect legally binding signatures online",
     "category": "document & file management",
@@ -8676,7 +8714,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8842,7 +8880,7 @@
     ],
     "toolCount": 273,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8896,7 +8934,7 @@
   },
   {
     "slug": "smugmug",
-    "name": "Smugmug",
+    "name": "SmugMug",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/smugmug-logo.jpeg",
     "description": "SmugMug is a platform for photographers to showcase, share, and sell their photos and videos.",
     "category": "photography",
@@ -8905,7 +8943,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9102,7 +9140,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -9402,7 +9440,7 @@
   },
   {
     "slug": "process_street",
-    "name": "Process street",
+    "name": "Process Street",
     "logo": "https://logos.composio.dev/api/process_street",
     "description": "Process Street supports creating and running checklists, SOPs, and workflows, helping teams automate recurring processes and track compliance",
     "category": "workflow automation",
@@ -9411,7 +9449,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9504,7 +9542,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9542,7 +9580,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9580,7 +9618,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9626,7 +9664,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9655,7 +9693,7 @@
   },
   {
     "slug": "d2lbrightspace",
-    "name": "D2lbrightspace",
+    "name": "D2L Brightspace",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/d2lbrightspace.png",
     "description": "D2L Brightspace is a learning management system that provides a comprehensive suite of tools for educators to create, manage, and deliver online courses and learning experiences.",
     "category": "education & lms",
@@ -9664,7 +9702,7 @@
     ],
     "toolCount": 45,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -9918,7 +9956,7 @@
   },
   {
     "slug": "zoho_bigin",
-    "name": "Zoho bigin",
+    "name": "Zoho Bigin",
     "logo": "https://logos.composio.dev/api/zoho",
     "description": "Zoho Bigin is a simplified CRM solution from Zoho tailored for small businesses, focusing on pipeline tracking and relationship management",
     "category": "crm",
@@ -9927,7 +9965,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -9990,7 +10028,7 @@
   },
   {
     "slug": "pandadoc",
-    "name": "Pandadoc",
+    "name": "PandaDoc",
     "logo": "https://logos.composio.dev/api/pandadoc",
     "description": "PandaDoc offers document creation, e-signatures, and workflow automation, helping sales teams and businesses streamline proposals, contracts, and agreement processes",
     "category": "document & file management",
@@ -9999,7 +10037,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -10187,7 +10225,7 @@
     ],
     "toolCount": 4,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -10258,7 +10296,7 @@
     ],
     "toolCount": 31,
     "triggerCount": 1,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -10350,7 +10388,7 @@
   },
   {
     "slug": "datarobot",
-    "name": "Datarobot",
+    "name": "DataRobot",
     "logo": "https://logos.composio.dev/api/datarobot",
     "description": "DataRobot is a machine learning platform that automates model building, deployment, and monitoring, enabling organizations to derive predictive insights from large datasets",
     "category": "ai & machine learning",
@@ -10359,7 +10397,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -10435,7 +10473,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260119_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -10739,7 +10777,7 @@
   },
   {
     "slug": "ynab",
-    "name": "Ynab",
+    "name": "YNAB",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//ynab.svg",
     "description": "YNAB (You Need A Budget) is a budgeting tool helping users track expenses, plan finances, and gain control over spending to reduce debt",
     "category": "finance & accounting",
@@ -10748,7 +10786,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -11081,7 +11119,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11298,7 +11336,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -11369,7 +11407,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11406,7 +11444,7 @@
   },
   {
     "slug": "open_sea",
-    "name": "Open sea",
+    "name": "OpenSea",
     "logo": "https://logos.composio.dev/api/open_sea",
     "description": "OpenSea is the world's first and largest NFT marketplace for NFTs and crypto collectibles.",
     "category": "nft",
@@ -11415,7 +11453,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11804,7 +11842,7 @@
   },
   {
     "slug": "textrazor",
-    "name": "Textrazor",
+    "name": "TextRazor",
     "logo": "https://logos.composio.dev/api/textrazor",
     "description": "TextRazor is a natural language processing API that extracts meaning, entities, and relationships from text, powering advanced content analysis and sentiment detection",
     "category": "ai & machine learning",
@@ -11813,7 +11851,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11897,7 +11935,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11935,7 +11973,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -12043,7 +12081,7 @@
   },
   {
     "slug": "wakatime",
-    "name": "Wakatime",
+    "name": "WakaTime",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//wakatime.svg",
     "description": "WakaTime offers automatic time tracking for developers, integrating with code editors and delivering dashboards on coding activity, project progress, and productivity",
     "category": "productivity & project management",
@@ -12052,7 +12090,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12185,7 +12223,7 @@
   },
   {
     "slug": "active_campaign",
-    "name": "Active campaign",
+    "name": "ActiveCampaign",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master//activecampaign.png",
     "description": "ActiveCampaign is a marketing automation and CRM platform enabling businesses to manage email campaigns, sales pipelines, and customer segmentation to boost engagement and drive growth",
     "category": "marketing & social media",
@@ -12194,7 +12232,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -12231,7 +12269,7 @@
   },
   {
     "slug": "zoho_mail",
-    "name": "Zoho mail",
+    "name": "Zoho Mail",
     "logo": "https://logos.composio.dev/api/zoho_mail",
     "description": "Zoho Mail is a secure and ad-free email hosting platform with collaboration tools, calendar integration, and extensive administrative controls",
     "category": "collaboration & communication",
@@ -12240,7 +12278,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12495,7 +12533,7 @@
     ],
     "toolCount": 51,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12638,7 +12676,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12762,7 +12800,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -12892,7 +12930,7 @@
   },
   {
     "slug": "zoho_invoice",
-    "name": "Zoho invoice",
+    "name": "Zoho Invoice",
     "logo": "https://logos.composio.dev/api/zoho",
     "description": "Zoho Invoice simplifies billing, recurring payments, and expense management, helping freelancers and small businesses send professional invoices",
     "category": "finance & accounting",
@@ -12901,7 +12939,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -13036,7 +13074,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -13075,7 +13113,7 @@
     ],
     "toolCount": 42,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -13262,7 +13300,7 @@
   },
   {
     "slug": "_21risk",
-    "name": " 21risk",
+    "name": "21risk",
     "logo": "https://logos.composio.dev/api/_21risk",
     "description": "21RISK is a web application that simplifies working with checklists, audits, and actions, facilitating compliance and risk management processes.",
     "category": "risk management",
@@ -13271,7 +13309,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -13300,7 +13338,7 @@
   },
   {
     "slug": "_2chat",
-    "name": " 2chat",
+    "name": "2chat",
     "logo": "https://logos.composio.dev/api/_2chat",
     "description": "2Chat provides a programmable API for integrating WhatsApp and other text channels, enabling developers to send and receive messages, manage groups, and automate workflows.",
     "category": "messaging",
@@ -13309,7 +13347,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -13376,7 +13414,7 @@
   },
   {
     "slug": "abuselpdb",
-    "name": "Abuselpdb",
+    "name": "AbuseIPDB",
     "logo": "https://logos.composio.dev/api/abuseipdb",
     "description": "AbuseIPDB is a project dedicated to helping make the internet safer by providing a central repository for reporting and checking IP addresses associated with malicious activities.",
     "category": "security",
@@ -13385,7 +13423,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -13461,7 +13499,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -13886,7 +13924,7 @@
   },
   {
     "slug": "agility_cms",
-    "name": "Agility cms",
+    "name": "Agility CMS",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/agility_cms_mega_20250722.png",
     "description": "Agility CMS is a headless content management system that allows developers to build and manage digital experiences across various platforms.",
     "category": "content management system",
@@ -13895,7 +13933,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14120,7 +14158,7 @@
     ],
     "toolCount": 30,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14233,7 +14271,7 @@
   },
   {
     "slug": "alttext_ai",
-    "name": "Alttext ai",
+    "name": "AltText.ai",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/alttext_ai-logo.png",
     "description": "AltText.ai is a service that automatically generates alt text for images, enhancing accessibility and SEO.",
     "category": "accessibility",
@@ -14242,7 +14280,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14393,7 +14431,7 @@
   },
   {
     "slug": "anchor_browser",
-    "name": "Anchor browser",
+    "name": "Anchor Browser",
     "logo": "https://logos.composio.dev/api/anchor_browser",
     "description": "Anchor Browser is a developer platform that enables AI agents to interact with the web through browser automation, transforming complex web interactions into simple API endpoints.",
     "category": "ai agentic browser automation",
@@ -14402,7 +14440,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14506,44 +14544,6 @@
     ]
   },
   {
-    "slug": "api_bible",
-    "name": "Api bible",
-    "logo": "https://logos.composio.dev/api/api_bible",
-    "description": "API.Bible allows developers to integrate Scripture content into their applications or websites for non-commercial purposes.",
-    "category": "religion",
-    "authSchemes": [
-      "API_KEY"
-    ],
-    "toolCount": 6,
-    "triggerCount": 0,
-    "version": "20260122_00",
-    "authConfigDetails": [
-      {
-        "mode": "API_KEY",
-        "name": "api_bible_api_key",
-        "fields": {
-          "auth_config_creation": {
-            "required": [],
-            "optional": []
-          },
-          "connected_account_initiation": {
-            "required": [
-              {
-                "name": "generic_api_key",
-                "displayName": "API.Bible API Key",
-                "type": "string",
-                "description": "Your unique API key for authenticating requests to API.Bible.",
-                "required": true,
-                "default": null
-              }
-            ],
-            "optional": []
-          }
-        }
-      }
-    ]
-  },
-  {
     "slug": "api_labz",
     "name": "Api labz",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/api_labz-logo.svg",
@@ -14583,7 +14583,7 @@
   },
   {
     "slug": "api_ninjas",
-    "name": "Api ninjas",
+    "name": "API Ninjas",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/api_ninjas_round3_20250722.png",
     "description": "API Ninjas offers over 120 unique APIs across various categories, enabling developers to build real applications with real data.",
     "category": "finance",
@@ -14592,7 +14592,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14621,7 +14621,7 @@
   },
   {
     "slug": "api_sports",
-    "name": "Api sports",
+    "name": "API-Sports",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/api_sports-logo.png",
     "description": "API-Sports provides comprehensive sports data APIs covering over 2,000 competitions with more than 15 years of historical data, offering real-time updates and easy integration for developers.",
     "category": "sports data",
@@ -14630,7 +14630,7 @@
     ],
     "toolCount": 31,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14658,8 +14658,46 @@
     ]
   },
   {
+    "slug": "api_bible",
+    "name": "API.Bible",
+    "logo": "https://logos.composio.dev/api/api_bible",
+    "description": "API.Bible allows developers to integrate Scripture content into their applications or websites for non-commercial purposes.",
+    "category": "religion",
+    "authSchemes": [
+      "API_KEY"
+    ],
+    "toolCount": 6,
+    "triggerCount": 0,
+    "version": "20260126_00",
+    "authConfigDetails": [
+      {
+        "mode": "API_KEY",
+        "name": "api_bible_api_key",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": []
+          },
+          "connected_account_initiation": {
+            "required": [
+              {
+                "name": "generic_api_key",
+                "displayName": "API.Bible API Key",
+                "type": "string",
+                "description": "Your unique API key for authenticating requests to API.Bible.",
+                "required": true,
+                "default": null
+              }
+            ],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "api2pdf",
-    "name": "Api2pdf",
+    "name": "API2PDF",
     "logo": "https://logos.composio.dev/api/api2pdf",
     "description": "Api2Pdf is a REST API that enables developers to generate PDFs from HTML, URLs, and various document formats using engines like wkhtmltopdf, Headless Chrome, and LibreOffice.",
     "category": "pdf generation",
@@ -14668,7 +14706,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14858,7 +14896,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14972,7 +15010,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15360,7 +15398,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -15432,7 +15470,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15642,7 +15680,7 @@
   },
   {
     "slug": "benchmark_email",
-    "name": "Benchmark email",
+    "name": "Benchmark Email",
     "logo": "https://logos.composio.dev/api/benchmark_email",
     "description": "Benchmark Email is a comprehensive email marketing platform offering tools for creating, sending, and analyzing email campaigns.",
     "category": "email marketing",
@@ -15651,7 +15689,7 @@
     ],
     "toolCount": 36,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15756,7 +15794,7 @@
   },
   {
     "slug": "better_proposals",
-    "name": "Better proposals",
+    "name": "Better Proposals",
     "logo": "https://logos.composio.dev/api/better_proposals",
     "description": "Better Proposals is a web-based proposal creation tool that enables users to send professionally designed proposals.",
     "category": "proposal & invoice management",
@@ -15765,7 +15803,7 @@
     ],
     "toolCount": 22,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15794,7 +15832,7 @@
   },
   {
     "slug": "better_stack",
-    "name": "Better stack",
+    "name": "Better Stack",
     "logo": "https://logos.composio.dev/api/better_stack",
     "description": "Better Stack provides monitoring, logging, and incident management solutions to help teams ensure the reliability and performance of their applications.",
     "category": "monitoring",
@@ -15803,7 +15841,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15870,7 +15908,7 @@
   },
   {
     "slug": "big_data_cloud",
-    "name": "Big data cloud",
+    "name": "BigDataCloud",
     "logo": "https://logos.composio.dev/api/big_data_cloud",
     "description": "BigDataCloud offers a suite of APIs providing geolocation, reverse geocoding, and data validation services.",
     "category": "geolocation",
@@ -15879,7 +15917,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16048,7 +16086,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16086,7 +16124,7 @@
     ],
     "toolCount": 20,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -16338,7 +16376,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16384,7 +16422,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16498,7 +16536,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16574,7 +16612,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16611,7 +16649,7 @@
   },
   {
     "slug": "brightdata",
-    "name": "Brightdata",
+    "name": "Bright Data",
     "logo": "https://logos.composio.dev/api/brightdata",
     "description": "Bright Data provides the world's #1 web data platform with Web Unlocker for bypassing anti-bot systems, SERP API for search engine data, and pre-made scrapers for popular websites. Collect any web data at scale.",
     "category": "web scraping",
@@ -16620,7 +16658,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16649,7 +16687,7 @@
   },
   {
     "slug": "brilliant_directories",
-    "name": "Brilliant directories",
+    "name": "Brilliant Directories",
     "logo": "https://logos.composio.dev/api/brilliant_directories",
     "description": "Brilliant Directories is an all-in-one platform that enables users to create and manage online membership communities and business directories.",
     "category": "website builders",
@@ -16658,7 +16696,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16733,7 +16771,7 @@
   },
   {
     "slug": "btcpay_server",
-    "name": "Btcpay server",
+    "name": "BTCPay Server",
     "logo": "https://logos.composio.dev/api/btcpay_server",
     "description": "BTCPay Server is a free, open-source, self-hosted Bitcoin payment processor that enables merchants to accept Bitcoin payments without intermediaries.",
     "category": "payment processing",
@@ -16742,7 +16780,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16827,7 +16865,7 @@
     ],
     "toolCount": 25,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16865,7 +16903,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -16979,7 +17017,7 @@
   },
   {
     "slug": "bunnycdn",
-    "name": "Bunnycdn",
+    "name": "BunnyCDN",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/bunnycdn_mega_20250722.png",
     "description": "BunnyCDN is a powerful content delivery network (CDN) offering an API to manage and deliver content globally with ease.",
     "category": "content delivery network",
@@ -16988,7 +17026,7 @@
     ],
     "toolCount": 20,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17026,7 +17064,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17064,7 +17102,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17093,7 +17131,7 @@
   },
   {
     "slug": "calendarhero",
-    "name": "Calendarhero",
+    "name": "CalendarHero",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/calendarhero_fixed_20250722.png",
     "description": "CalendarHero is a versatile scheduling tool designed to streamline and simplify your calendar management. It integrates seamlessly with your existing calendars, allowing you to efficiently schedule, reschedule, and manage meetings with ease.",
     "category": "productivity",
@@ -17102,7 +17140,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17178,7 +17216,7 @@
     ],
     "toolCount": 27,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17292,7 +17330,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17330,7 +17368,7 @@
     ],
     "toolCount": 25,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17359,7 +17397,7 @@
   },
   {
     "slug": "capsule_crm",
-    "name": "Capsule crm",
+    "name": "Capsule CRM",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/capsule_crm-logo.png",
     "description": "Capsule CRM is a simple yet powerful CRM platform designed to help businesses manage customer relationships, sales pipelines, and tasks efficiently.",
     "category": "crm",
@@ -17369,7 +17407,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -17455,7 +17493,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17531,7 +17569,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17636,7 +17674,7 @@
   },
   {
     "slug": "census_bureau",
-    "name": "Census bureau",
+    "name": "Census Bureau",
     "logo": "https://logos.composio.dev/api/census_bureau",
     "description": "The Census Bureau Data API provides developers with access to a wide range of statistical data collected by the U.S. Census Bureau, facilitating integration into applications and data visualizations.",
     "category": "government data",
@@ -17645,7 +17683,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17674,7 +17712,7 @@
   },
   {
     "slug": "centralstationcrm",
-    "name": "Centralstationcrm",
+    "name": "CentralStationCRM",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/centralstationcrm_fixed_20250722.png",
     "description": "CentralStationCRM is an easy-to-use CRM software focusing on collaboration and long-term customer relationships.",
     "category": "crm (customer relationship management)",
@@ -17683,7 +17721,7 @@
     ],
     "toolCount": 43,
     "triggerCount": 0,
-    "version": "20260111_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17813,7 +17851,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17918,7 +17956,7 @@
   },
   {
     "slug": "circleci",
-    "name": "Circleci",
+    "name": "CircleCI",
     "logo": "https://logos.composio.dev/api/circleci",
     "description": "CircleCI is a continuous integration and delivery platform that automates build, test, and deployment pipelines for software development.",
     "category": "ci/cd",
@@ -17927,7 +17965,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17956,7 +17994,7 @@
   },
   {
     "slug": "claid_ai",
-    "name": "Claid ai",
+    "name": "Claid.ai",
     "logo": "https://logos.composio.dev/api/claid_ai",
     "description": "Claid.ai offers AI-powered image editing APIs for tasks like background removal, upscaling, and color correction.",
     "category": "image editing",
@@ -17965,7 +18003,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18049,7 +18087,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18078,7 +18116,7 @@
   },
   {
     "slug": "clickhouse",
-    "name": "Clickhouse",
+    "name": "ClickHouse",
     "logo": "https://logos.composio.dev/api/clickhouse",
     "description": "ClickHouse is a fast open-source column-oriented database management system for real-time analytics and big data processing with SQL support",
     "category": "analytics & data",
@@ -18087,7 +18125,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -18234,7 +18272,7 @@
     ],
     "toolCount": 42,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18281,7 +18319,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -18413,7 +18451,7 @@
   },
   {
     "slug": "cloudconvert",
-    "name": "Cloudconvert",
+    "name": "CloudConvert",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/cloudconvert_final_20250722.png",
     "description": "CloudConvert is a file conversion service supporting over 200 formats, including audio, video, document, ebook, archive, image, spreadsheet, and presentation formats.",
     "category": "file conversion",
@@ -18422,7 +18460,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18544,7 +18582,7 @@
     ],
     "toolCount": 34,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18855,7 +18893,7 @@
   },
   {
     "slug": "coinmarketcap",
-    "name": "Coinmarketcap",
+    "name": "CoinMarketCap",
     "logo": "https://s2.coinmarketcap.com/static/cloud/img/coinmarketcap_1.svg",
     "description": "CoinMarketCap provides a comprehensive cryptocurrency market data API, offering real-time and historical data on cryptocurrencies and exchanges.",
     "category": "cryptocurrency",
@@ -18864,7 +18902,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18931,7 +18969,7 @@
   },
   {
     "slug": "college_football_data",
-    "name": "College football data",
+    "name": "College Football Data",
     "logo": "https://collegefootballdata.com/logo.png",
     "description": "CollegeFootballData.com provides comprehensive college football data, including game scores, statistics, and recruiting information, accessible via a RESTful API.",
     "category": "sports",
@@ -18940,7 +18978,7 @@
     ],
     "toolCount": 41,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18969,16 +19007,16 @@
   },
   {
     "slug": "commcare",
-    "name": "Commcare",
+    "name": "CommCare",
     "logo": "https://logos.composio.dev/api/commcare",
-    "description": "Design Powerful Mobile and Web Apps",
-    "category": "developer tools",
+    "description": "CommCare is a mobile data collection and case management platform for health and social programs",
+    "category": "data collection",
     "authSchemes": [
       "API_KEY"
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19005,6 +19043,14 @@
                 "description": "Your CommCare account email address. Navigate to your CommCare account > \"My Account Settings\" > \"API Keys\" to retrieve your credentials.",
                 "required": true,
                 "default": null
+              },
+              {
+                "name": "generic_id_2",
+                "displayName": "Domain",
+                "type": "string",
+                "description": "Your CommCare project domain/project name. This appears in your CommCare URLs (e.g., commcarehq.org/a/{domain}/...).",
+                "required": true,
+                "default": null
               }
             ],
             "optional": []
@@ -19016,7 +19062,7 @@
   {
     "slug": "connecteam",
     "name": "Connecteam",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/connecteam-logo.jpeg",
+    "logo": "https://logos.composio.dev/api/connecteam",
     "description": "Connecteam is a comprehensive workforce management platform designed to streamline operations, enhance communication, and improve HR processes for deskless teams.",
     "category": "workforce management",
     "authSchemes": [
@@ -19024,7 +19070,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19108,7 +19154,7 @@
   },
   {
     "slug": "control_d",
-    "name": "Control d",
+    "name": "Control D",
     "logo": "https://controld.com/logo.png",
     "description": "Control D is a customizable DNS filtering and traffic redirection platform that allows users to manage internet access, enforce policies, and monitor usage across devices and networks.",
     "category": "dns filtering",
@@ -19117,7 +19163,7 @@
     ],
     "toolCount": 48,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19146,7 +19192,7 @@
   },
   {
     "slug": "conversion_tools",
-    "name": "Conversion tools",
+    "name": "Conversion Tools",
     "logo": "https://conversiontools.io/favicon.ico",
     "description": "Conversion Tools is an online service that offers a fast and easy way to convert documents between different formats, like XML, Excel, PDF, Word, Text, CSV, and others.",
     "category": "document conversion",
@@ -19155,7 +19201,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19260,7 +19306,7 @@
   },
   {
     "slug": "convolo_ai",
-    "name": "Convolo ai",
+    "name": "Convolo AI",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/convolo_ai-logo.svg",
     "description": "Convolo.ai is an AI-powered communications platform designed to enhance sales calls and improve conversion rates through rapid lead response and integration capabilities.",
     "category": "ai",
@@ -19269,7 +19315,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19299,7 +19345,7 @@
   {
     "slug": "corrently",
     "name": "Corrently",
-    "logo": "https://corrently.io/images/logo.png",
+    "logo": "https://logos.composio.dev/api/corrently",
     "description": "Corrently provides a suite of APIs offering real-time and forecasted data on renewable energy availability, CO₂ emissions, and electricity pricing, enabling users to optimize energy consumption and reduce carbon footprints.",
     "category": "energy management",
     "authSchemes": [
@@ -19307,7 +19353,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19336,8 +19382,8 @@
   },
   {
     "slug": "countdown_api",
-    "name": "Countdown api",
-    "logo": "https://countdownapi.com/logo.png",
+    "name": "Countdown API",
+    "logo": "https://logos.composio.dev/api/countdown_api",
     "description": "Countdown API provides real-time eBay product data, including product details, customer reviews, seller feedback, and search results, enabling businesses and developers to access comprehensive eBay marketplace information.",
     "category": "e-commerce",
     "authSchemes": [
@@ -19345,7 +19391,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19383,7 +19429,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -19685,7 +19731,7 @@
   },
   {
     "slug": "currents_api",
-    "name": "Currents api",
+    "name": "Currents API",
     "logo": "https://logo.clearbit.com/currentsapi.services",
     "description": "Currents News API provides access to the latest news articles from various sources worldwide, supporting multiple languages and categories.",
     "category": "news",
@@ -19694,7 +19740,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19723,7 +19769,7 @@
   },
   {
     "slug": "customerio",
-    "name": "Customerio",
+    "name": "Customer.io",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/customerio-logo.svg",
     "description": "Customer.io is a customer engagement platform that enables businesses to send targeted messages to their customers through various channels, including email, SMS, and push notifications.",
     "category": "marketing automation",
@@ -19732,7 +19778,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19884,7 +19930,7 @@
   },
   {
     "slug": "dadata_ru",
-    "name": "Dadata ru",
+    "name": "DaData.ru",
     "logo": "https://cdn.brandfetch.io/idkyi1Rtd7/w/820/h/243/theme/dark/logo.png?c=1bxidcRmy9yyscAMHr5wf",
     "description": "DaData provides APIs for data validation, standardization, and enrichment, including address parsing, company information retrieval, and more.",
     "category": "data validation",
@@ -19893,7 +19939,7 @@
     ],
     "toolCount": 42,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19973,12 +20019,61 @@
     "description": "The ultimate AI project management tool.",
     "category": "productivity",
     "authSchemes": [
+      "OAUTH2",
       "API_KEY"
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
+      {
+        "mode": "OAUTH2",
+        "name": "dart_oauth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": true,
+                "default": null
+              }
+            ],
+            "optional": [
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": "read,write"
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
+          }
+        }
+      },
       {
         "mode": "API_KEY",
         "name": "dart_api_key",
@@ -20015,7 +20110,7 @@
     ],
     "toolCount": 22,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -20186,7 +20281,7 @@
   },
   {
     "slug": "deadline_funnel",
-    "name": "Deadline funnel",
+    "name": "Deadline Funnel",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/deadline_funnel_symbol_20250722.png",
     "description": "Deadline Funnel provides tools to create authentic, personalized deadlines for marketing campaigns, enhancing urgency and conversions.",
     "category": "marketing automation",
@@ -20195,7 +20290,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -20439,7 +20534,7 @@
   },
   {
     "slug": "desktime",
-    "name": "Desktime",
+    "name": "DeskTime",
     "logo": "https://desktime.com/favicon.ico",
     "description": "DeskTime is an automatic time tracking software that helps teams and freelancers monitor productivity, manage projects, and analyze work habits.",
     "category": "time tracking",
@@ -20448,7 +20543,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -20629,7 +20724,7 @@
   },
   {
     "slug": "digital_ocean",
-    "name": "Digital ocean",
+    "name": "DigitalOcean",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/digital_ocean-logo.svg",
     "description": "DigitalOcean is a cloud infrastructure provider offering scalable compute platforms with a user-friendly interface.",
     "category": "cloud computing",
@@ -20639,7 +20734,7 @@
     ],
     "toolCount": 47,
     "triggerCount": 0,
-    "version": "20260110_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -20792,7 +20887,7 @@
   },
   {
     "slug": "docker_hub",
-    "name": "Docker hub",
+    "name": "Docker Hub",
     "logo": "https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png",
     "description": "Docker Hub is a service provided by Docker for finding and sharing container images with your team.",
     "category": "container registry",
@@ -20801,7 +20896,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -20944,7 +21039,7 @@
   },
   {
     "slug": "docsbot_ai",
-    "name": "Docsbot ai",
+    "name": "DocsBot AI",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/docsbot_ai-logo.svg",
     "description": "DocsBot AI enables the creation of custom chatbots trained on your documentation, facilitating automated customer support and content generation.",
     "category": "ai chatbots",
@@ -20953,7 +21048,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21059,7 +21154,7 @@
   {
     "slug": "documenso",
     "name": "Documenso",
-    "logo": "https://documenso.com/logo.png",
+    "logo": "https://logos.composio.dev/api/documenso",
     "description": "Documenso is an open-source electronic signature platform that allows users to create, send, and sign documents digitally.",
     "category": "electronic signature",
     "authSchemes": [
@@ -21067,7 +21162,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21097,15 +21192,15 @@
   {
     "slug": "documint",
     "name": "Documint",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/documint-logo.png",
-    "description": "Template description for documint",
-    "category": "some category",
+    "logo": "https://logos.composio.dev/api/documint",
+    "description": "Documint is a document generation platform that allows you to create dynamic documents from templates.",
+    "category": "document generation",
     "authSchemes": [
       "API_KEY"
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21218,8 +21313,8 @@
   },
   {
     "slug": "docuseal",
-    "name": "Docuseal",
-    "logo": "https://www.docuseal.com/logo.png",
+    "name": "DocuSeal",
+    "logo": "https://logos.composio.dev/api/docuseal",
     "description": "DocuSeal is a platform that provides a powerful and easy-to-use API to implement eSignature workflows, allowing users to automate document and template management processes without relying on the web interface.",
     "category": "esignature",
     "authSchemes": [
@@ -21227,7 +21322,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21239,6 +21334,14 @@
           },
           "connected_account_initiation": {
             "required": [
+              {
+                "name": "full",
+                "displayName": "API Base URL",
+                "type": "string",
+                "description": "The base URL for the DocuSeal API. Use https://api.docuseal.com for US, https://api.docuseal.eu for EU, or your self-hosted URL.",
+                "required": true,
+                "default": "https://api.docuseal.com"
+              },
               {
                 "name": "generic_api_key",
                 "displayName": "DocuSeal API Key",
@@ -21294,8 +21397,8 @@
   },
   {
     "slug": "doppler_marketing_automation",
-    "name": "Doppler marketing automation",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/doppler_marketing_automation-logo.svg",
+    "name": "Doppler Marketing Automation",
+    "logo": "https://logos.composio.dev/api/doppler_marketing_automation",
     "description": "Doppler is a marketing automation platform that enables users to create, send, and analyze email campaigns, manage subscriber lists, and integrate with various tools to enhance marketing efforts.",
     "category": "marketing automation",
     "authSchemes": [
@@ -21303,7 +21406,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21322,6 +21425,14 @@
                 "description": "The API Key associated with your Doppler account, used for authenticating API requests.",
                 "required": true,
                 "default": null
+              },
+              {
+                "name": "generic_id",
+                "displayName": "Account Name",
+                "type": "string",
+                "description": "Your Doppler account email address.",
+                "required": true,
+                "default": null
               }
             ],
             "optional": []
@@ -21332,7 +21443,7 @@
   },
   {
     "slug": "doppler_secretops",
-    "name": "Doppler secretops",
+    "name": "Doppler SecretOps",
     "logo": "https://www.doppler.com/images/logo.svg",
     "description": "Doppler is a secrets management platform that helps teams securely manage and sync environment variables across projects and environments.",
     "category": "secrets management",
@@ -21341,7 +21452,7 @@
     ],
     "toolCount": 29,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21371,7 +21482,7 @@
   {
     "slug": "dotsimple",
     "name": "Dotsimple",
-    "logo": "https://dotsimple.io/en/assets/logo.png",
+    "logo": "https://logos.composio.dev/api/dotsimple",
     "description": "DotSimple is a comprehensive social media management tool that enables users to plan, create, and publish content across multiple platforms, leveraging AI for content generation and providing analytics for performance optimization.",
     "category": "social media management",
     "authSchemes": [
@@ -21379,7 +21490,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21396,6 +21507,14 @@
                 "displayName": "Access Token",
                 "type": "string",
                 "description": "The access token generated for API authentication.",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "generic_id",
+                "displayName": "Workspace UUID",
+                "type": "string",
+                "description": "Your DotSimple workspace UUID. For example, UUID from https://app.dotsimple.io/app/{UUID}/",
                 "required": true,
                 "default": null
               }
@@ -21447,15 +21566,15 @@
   {
     "slug": "dpd2",
     "name": "Dpd2",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/dpd2-logo.png",
-    "description": "Template description for dpd2",
-    "category": "some category",
+    "logo": "https://logos.composio.dev/api/dpd2",
+    "description": "DPD is a digital product delivery platform for selling ebooks, software, music, and other digital goods.",
+    "category": "e-commerce",
     "authSchemes": [
       "API_KEY"
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -21469,9 +21588,17 @@
             "required": [
               {
                 "name": "generic_api_key",
-                "displayName": "API Key",
+                "displayName": "API Password",
                 "type": "string",
-                "description": "Your API key",
+                "description": "Your API password available on your profile",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "generic_id",
+                "displayName": "Username",
+                "type": "string",
+                "description": "Your DPD account username",
                 "required": true,
                 "default": null
               }
@@ -22007,8 +22134,8 @@
   },
   {
     "slug": "emailoctopus",
-    "name": "Emailoctopus",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/emailoctopus-logo.png",
+    "name": "EmailOctopus",
+    "logo": "https://logos.composio.dev/api/emailoctopus",
     "description": "EmailOctopus is an email marketing platform founded in 2015, offering affordable and intuitive solutions for individuals and businesses to connect with their subscribers.",
     "category": "email marketing",
     "authSchemes": [
@@ -22016,7 +22143,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -22032,7 +22159,7 @@
                 "name": "generic_api_key",
                 "displayName": "API Key",
                 "type": "string",
-                "description": "Your EmailOctopus API key.",
+                "description": "Your EmailOctopus API key. Generate one in your account settings. Legacy API keys (created before API v2) need to be regenerated.",
                 "required": true,
                 "default": null
               }
@@ -22054,7 +22181,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -22273,7 +22400,7 @@
   },
   {
     "slug": "esignatures_io",
-    "name": "Esignatures io",
+    "name": "eSignatures.io",
     "logo": "https://www.esignatures.io/favicon.ico",
     "description": "eSignatures.io provides a platform for sending and signing mobile-friendly contracts over the web.",
     "category": "signatures",
@@ -22282,7 +22409,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -22358,7 +22485,7 @@
   {
     "slug": "esputnik",
     "name": "Esputnik",
-    "logo": "https://esputnik.com/favicon.ico",
+    "logo": "https://logos.composio.dev/api/esputnik",
     "description": "eSputnik is a marketing automation platform that enables businesses to manage and automate their communication channels, including email, SMS, web push, and mobile push notifications.",
     "category": "marketing automation",
     "authSchemes": [
@@ -22366,7 +22493,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -22379,10 +22506,10 @@
           "connected_account_initiation": {
             "required": [
               {
-                "name": "basic_encoded",
-                "displayName": "eSputnik API Key (Base64 Encoded)",
+                "name": "generic_api_key",
+                "displayName": "eSputnik API Key",
                 "type": "string",
-                "description": "Your eSputnik API key, base64-encoded. Enter any username and your API key as the password to generate the credentials.",
+                "description": "Your eSputnik API key. Find it in your eSputnik account settings.",
                 "required": true,
                 "default": null
               }
@@ -22664,7 +22791,7 @@
     ],
     "toolCount": 49,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -22866,7 +22993,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -23065,7 +23192,7 @@
   },
   {
     "slug": "fidel_api",
-    "name": "Fidel api",
+    "name": "Fidel API",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/fidel_api-logo.png",
     "description": "Fidel API provides a developer-friendly, secure, and reliable API for businesses to link payment cards with mobile and web applications, enabling real-time transaction monitoring and event-based experiences.",
     "category": "payments",
@@ -23074,7 +23201,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23103,7 +23230,7 @@
   },
   {
     "slug": "files_com",
-    "name": "Files com",
+    "name": "Files.com",
     "logo": "https://www.files.com/images/logo.png",
     "description": "Files.com is a secure cloud storage and file transfer platform that enables businesses to store, share, and manage files across various cloud services and on-premises systems.",
     "category": "cloud storage",
@@ -23112,7 +23239,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23226,7 +23353,7 @@
   {
     "slug": "finerworks",
     "name": "Finerworks",
-    "logo": "https://www.finerworks.com/images/logo.png",
+    "logo": "https://logos.composio.dev/api/finerworks",
     "description": "FinerWorks is an online platform specializing in fine art and photo printing services, offering artists and photographers the ability to order prints and manage their inventory.",
     "category": "printing services",
     "authSchemes": [
@@ -23234,7 +23361,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23469,7 +23596,7 @@
   },
   {
     "slug": "fixer_io",
-    "name": "Fixer io",
+    "name": "Fixer.io",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/fixer_io-logo.png",
     "description": "Fixer.io is a simple and lightweight API for current and historical foreign exchange rates and currency conversion.",
     "category": "finance",
@@ -23478,7 +23605,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23768,7 +23895,7 @@
   {
     "slug": "formdesk",
     "name": "Formdesk",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/formdesk-logo.svg",
+    "logo": "https://logos.composio.dev/api/formdesk",
     "description": "Formdesk is an online form builder that allows users to create and manage professional online forms with flexible features and integrations.",
     "category": "forms & surveys",
     "authSchemes": [
@@ -23776,7 +23903,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23790,9 +23917,9 @@
             "required": [
               {
                 "name": "subdomain",
-                "displayName": "Formdesk Subdomain",
+                "displayName": "Formdesk Domain",
                 "type": "string",
-                "description": "The subdomain assigned to your Formdesk account, used to construct the API base URL (e.g., if your URL is https://fd7.formdesk.com, enter 'fd7').",
+                "description": "Your unique Formdesk account name (also called 'folder of forms'). Found in your account settings or as the first part of the URL path when accessing forms.",
                 "required": true,
                 "default": null
               },
@@ -23800,7 +23927,7 @@
                 "name": "generic_api_key",
                 "displayName": "Formdesk API Key",
                 "type": "string",
-                "description": "The API key assigned to you by Formdesk. Used as a Bearer token for authentication.",
+                "description": "The API key for your Formdesk account. Can be found or created within User Management in your Formdesk account.",
                 "required": true,
                 "default": null
               }
@@ -23813,7 +23940,7 @@
   },
   {
     "slug": "fraudlabs_pro",
-    "name": "Fraudlabs pro",
+    "name": "FraudLabs Pro",
     "logo": "https://www.fraudlabspro.com/images/logo.png",
     "description": "FraudLabs Pro is an online payment fraud detection service that helps merchants minimize chargebacks and maximize revenue by detecting fraud across various payment methods.",
     "category": "fraud detection",
@@ -23822,7 +23949,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23860,7 +23987,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23906,7 +24033,7 @@
     ],
     "toolCount": 4,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23936,7 +24063,7 @@
   {
     "slug": "gagelist",
     "name": "Gagelist",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/gagelist-logo.jpeg",
+    "logo": "https://logos.composio.dev/api/gagelist",
     "description": "GageList is a user-friendly calibration management platform that simplifies the integration process with intuitive interfaces and straightforward APIs, enabling seamless connection with existing tools and workflows.",
     "category": "calibration management",
     "authSchemes": [
@@ -23944,7 +24071,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23990,7 +24117,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20251208_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24019,7 +24146,7 @@
   },
   {
     "slug": "gan_ai",
-    "name": "Gan ai",
+    "name": "Gan.AI",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/gan_ai-logo.svg",
     "description": "Gan.AI provides advanced APIs for text-to-speech, voice cloning, and video personalization, enabling developers to integrate natural and expressive speech synthesis into their applications.",
     "category": "artificial intelligence",
@@ -24028,7 +24155,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24132,7 +24259,7 @@
   },
   {
     "slug": "gender_api",
-    "name": "Gender api",
+    "name": "Gender API",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/gender_api-logo.svg",
     "description": "Gender API determines the gender of a first name, email address, or username.",
     "category": "data enrichment",
@@ -24141,7 +24268,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24170,7 +24297,7 @@
   },
   {
     "slug": "genderapi_io",
-    "name": "Genderapi io",
+    "name": "GenderAPI.io",
     "logo": "https://genderapi.io/logo.png",
     "description": "GenderAPI.io provides an API to determine the gender associated with a given name, email address, or username.",
     "category": "data enrichment",
@@ -24179,7 +24306,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24255,7 +24382,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24293,7 +24420,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24398,7 +24525,7 @@
   },
   {
     "slug": "gift_up",
-    "name": "Gift up",
+    "name": "Gift Up!",
     "logo": "https://giftup.app/favicon.ico",
     "description": "Gift Up! is a digital platform that allows businesses to sell, manage, and redeem gift cards online, integrating seamlessly with websites and apps to streamline gift card transactions and promotions.",
     "category": "e-commerce",
@@ -24407,7 +24534,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24559,13 +24686,17 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
         "name": "gitea_api_key",
         "fields": {
           "auth_config_creation": {
+            "required": [],
+            "optional": []
+          },
+          "connected_account_initiation": {
             "required": [
               {
                 "name": "full",
@@ -24574,12 +24705,7 @@
                 "description": "The base URL of your Gitea instance.",
                 "required": true,
                 "default": "https://gitea.com/api/v1"
-              }
-            ],
-            "optional": []
-          },
-          "connected_account_initiation": {
-            "required": [
+              },
               {
                 "name": "generic_api_key",
                 "displayName": "API Key",
@@ -24597,7 +24723,7 @@
   },
   {
     "slug": "gitlab",
-    "name": "Gitlab",
+    "name": "GitLab",
     "logo": "https://logos.composio.dev/api/gitlab",
     "description": "A web-based DevOps lifecycle tool that provides a Git repository manager providing wiki, issue-tracking, and CI/CD pipeline features.",
     "category": "dev-tools",
@@ -24606,7 +24732,7 @@
     ],
     "toolCount": 54,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -24723,7 +24849,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25114,7 +25240,7 @@
   },
   {
     "slug": "google_cloud_vision",
-    "name": "Google cloud vision",
+    "name": "Google Cloud Vision",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/google_cloud_vision-logo.svg",
     "description": "Google Cloud Vision API enables developers to integrate vision detection features into applications, including image labeling, face and landmark detection, optical character recognition (OCR), and explicit content tagging.",
     "category": "machine learning",
@@ -25123,7 +25249,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25152,7 +25278,7 @@
   },
   {
     "slug": "google_search_console",
-    "name": "Google search console",
+    "name": "Google Search Console",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/google.svg",
     "description": "Google Search Console provides tools to monitor, maintain, and troubleshoot your site's presence in Google Search results.",
     "category": "seo & analytics",
@@ -25161,7 +25287,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -25287,7 +25413,7 @@
     ],
     "toolCount": 43,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25333,7 +25459,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25379,7 +25505,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25417,7 +25543,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25455,7 +25581,7 @@
     ],
     "toolCount": 32,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25492,7 +25618,7 @@
   },
   {
     "slug": "groqcloud",
-    "name": "Groqcloud",
+    "name": "GroqCloud",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/groqcloud-logo.svg",
     "description": "GroqCloud provides high-performance AI inference services, enabling developers to deploy and manage AI models efficiently.",
     "category": "ai inference",
@@ -25501,7 +25627,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25530,7 +25656,7 @@
   },
   {
     "slug": "gtmetrix",
-    "name": "Gtmetrix",
+    "name": "GTmetrix",
     "logo": "https://logos.composio.dev/api/gtmetrix",
     "description": "GTmetrix is a performance testing and monitoring tool that analyzes website speed, provides detailed performance reports, and helps optimize web applications for better user experience.",
     "category": "developer tools",
@@ -25539,7 +25665,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "00000000_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25577,7 +25703,7 @@
     ],
     "toolCount": 47,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25614,7 +25740,7 @@
   },
   {
     "slug": "happy_scribe",
-    "name": "Happy scribe",
+    "name": "Happy Scribe",
     "logo": "https://www.happyscribe.com/favicon.ico",
     "description": "Happy Scribe offers automatic and professional transcription services, converting audio and video files into text with high accuracy.",
     "category": "transcription",
@@ -25623,7 +25749,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25661,7 +25787,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260110_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25805,7 +25931,7 @@
   {
     "slug": "helpwise",
     "name": "Helpwise",
-    "logo": "https://helpwise.io/assets/images/logo.png",
+    "logo": "https://logos.composio.dev/api/helpwise",
     "description": "Helpwise is an easy-to-use customer service platform that helps you manage all customer communication from a single place.",
     "category": "customer service",
     "authSchemes": [
@@ -25813,7 +25939,7 @@
     ],
     "toolCount": 36,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26011,7 +26137,7 @@
   {
     "slug": "honeybadger",
     "name": "Honeybadger",
-    "logo": "https://www.honeybadger.io/images/logo.png",
+    "logo": "https://logos.composio.dev/api/honeybadger",
     "description": "Honeybadger is an error tracking and application performance monitoring service for developers.",
     "category": "error tracking",
     "authSchemes": [
@@ -26019,7 +26145,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26033,9 +26159,9 @@
             "required": [
               {
                 "name": "generic_api_key",
-                "displayName": "Honeybadger API Key",
+                "displayName": "Honeybadger Auth Token",
                 "type": "string",
-                "description": "The API key from your Honeybadger project settings page. This key is required to authenticate API requests and should be kept secret.",
+                "description": "Your personal authentication token from your Honeybadger profile page. Used for HTTP Basic Auth.",
                 "required": true,
                 "default": null
               }
@@ -26057,7 +26183,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26095,7 +26221,7 @@
     ],
     "toolCount": 39,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26125,7 +26251,7 @@
   {
     "slug": "hotspotsystem",
     "name": "Hotspotsystem",
-    "logo": "https://www.hotspotsystem.com/images/logo.png",
+    "logo": "https://logos.composio.dev/api/hotspotsystem",
     "description": "HotspotSystem provides public Wi-Fi hotspot management and billing services for businesses.",
     "category": "wi-fi management",
     "authSchemes": [
@@ -26133,7 +26259,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26146,10 +26272,10 @@
           "connected_account_initiation": {
             "required": [
               {
-                "name": "basic_encoded",
-                "displayName": "Base64 Encoded API Key",
+                "name": "generic_api_key",
+                "displayName": "HotspotSystem API Key",
                 "type": "string",
-                "description": "The Base64-encoded API key used for authenticating requests to the HotspotSystem API. The API key is encoded as the username, and the password is left empty.",
+                "description": "Your API key from Control Center > Tools & Settings > API Keys.",
                 "required": true,
                 "default": null
               }
@@ -26331,7 +26457,7 @@
     ],
     "toolCount": 25,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26369,7 +26495,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26521,7 +26647,7 @@
     ],
     "toolCount": 36,
     "triggerCount": 0,
-    "version": "20260110_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26550,7 +26676,7 @@
   },
   {
     "slug": "imagekit_io",
-    "name": "Imagekit io",
+    "name": "ImageKit",
     "logo": "https://imagekit.io/static/imagekit-logo.svg",
     "description": "ImageKit.io is a comprehensive media management solution offering real-time image and video optimization, transformation, and delivery through a global content delivery network (CDN).",
     "category": "media management",
@@ -26559,7 +26685,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26711,7 +26837,7 @@
     ],
     "toolCount": 44,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26740,7 +26866,7 @@
   },
   {
     "slug": "influxdb_cloud",
-    "name": "Influxdb cloud",
+    "name": "InfluxDB Cloud",
     "logo": "https://www.influxdata.com/wp-content/uploads/influxdata-logo.png",
     "description": "InfluxDB Cloud is a fully managed, scalable, and secure time series database service designed for real-time analytics and monitoring.",
     "category": "database",
@@ -26749,7 +26875,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26786,7 +26912,7 @@
   },
   {
     "slug": "insighto_ai",
-    "name": "Insighto ai",
+    "name": "Insighto.ai",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/insighto_ai-logo.jpeg",
     "description": "Insighto.ai is an AI-powered communication platform that enables businesses to create and deploy conversational AI chatbots and voice agents for enhanced customer engagement across multiple channels.",
     "category": "conversational ai",
@@ -26796,7 +26922,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -26911,7 +27037,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -26974,7 +27100,7 @@
     ],
     "toolCount": 47,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27012,7 +27138,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27193,7 +27319,7 @@
   },
   {
     "slug": "ipdata_co",
-    "name": "Ipdata co",
+    "name": "Ipdata.co",
     "logo": "https://ipdata.co/static/images/ipdata-logo.png",
     "description": "ipdata provides a simple HTTP-based API that allows you to look up the location, ownership, and threat profile of any IP address.",
     "category": "geolocation",
@@ -27202,7 +27328,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27231,7 +27357,7 @@
   },
   {
     "slug": "ipinfo_io",
-    "name": "Ipinfo io",
+    "name": "Ipinfo.io",
     "logo": "https://ipinfo.io/static/images/ipinfo-logo.png",
     "description": "IPinfo.io provides a comprehensive API for IP address geolocation and related data.",
     "category": "geolocation",
@@ -27240,7 +27366,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27269,7 +27395,7 @@
   },
   {
     "slug": "iqair_airvisual",
-    "name": "Iqair airvisual",
+    "name": "Iqair Airvisual",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/iqair_airvisual-logo.svg",
     "description": "IQAir AirVisual provides global air quality data through its API, offering real-time and historical information on air pollution levels.",
     "category": "environmental data",
@@ -27278,7 +27404,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27345,7 +27471,7 @@
   },
   {
     "slug": "jobnimbus",
-    "name": "Jobnimbus",
+    "name": "JobNimbus",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/jobnimbus-logo.jpeg",
     "description": "JobNimbus is a CRM and project management software designed for contractors, helping streamline scheduling, estimates, invoicing, and job tracking.",
     "category": "crm",
@@ -27354,7 +27480,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27476,7 +27602,7 @@
     ],
     "toolCount": 27,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27506,7 +27632,7 @@
   {
     "slug": "kaggle",
     "name": "Kaggle",
-    "logo": "https://www.kaggle.com/static/images/site-logo.png",
+    "logo": "https://logos.composio.dev/api/kaggle",
     "description": "Kaggle is a platform for data science and machine learning competitions, offering datasets, notebooks, and a collaborative community.",
     "category": "data science",
     "authSchemes": [
@@ -27514,7 +27640,7 @@
     ],
     "toolCount": 20,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27552,7 +27678,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27581,8 +27707,8 @@
   },
   {
     "slug": "keen_io",
-    "name": "Keen io",
-    "logo": "https://keen.io/logo.png",
+    "name": "Keen.io",
+    "logo": "https://logos.composio.dev/api/keen_io",
     "description": "Keen.io is an embedded analytics API that enables developers to collect, analyze, and visualize event data seamlessly.",
     "category": "analytics",
     "authSchemes": [
@@ -27590,7 +27716,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27603,18 +27729,34 @@
           "connected_account_initiation": {
             "required": [
               {
-                "name": "subdomain",
-                "displayName": "Keen Project ID",
+                "name": "generic_api_key",
+                "displayName": "Master Key",
                 "type": "string",
-                "description": "The unique identifier for your Keen.io project, used to construct the API request URL.",
+                "description": "The most powerful API key. Required for administrative functions like deleting data or managing project settings.",
                 "required": true,
                 "default": null
               },
               {
-                "name": "generic_api_key",
-                "displayName": "Keen API Key",
+                "name": "generic_token",
+                "displayName": "Write Key",
                 "type": "string",
-                "description": "Provide the correct Keen.io API key (Master, Read, or Write) for your intended operation.",
+                "description": "API key for data-writing operations. Required for sending events to Keen.io.",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "generic_id",
+                "displayName": "Read Key",
+                "type": "string",
+                "description": "API key for querying and analyzing data. Required for running queries and extracting data.",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "generic_id_2",
+                "displayName": "Keen Project ID",
+                "type": "string",
+                "description": "The unique identifier for your Keen.io project, used to construct the API request URL.",
                 "required": true,
                 "default": null
               }
@@ -27761,7 +27903,7 @@
     ],
     "toolCount": 29,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -27806,16 +27948,7 @@
             ]
           },
           "connected_account_initiation": {
-            "required": [
-              {
-                "name": "subdomain",
-                "displayName": "Domain",
-                "type": "string",
-                "description": "The fully qualified domain that will be used in place of {{domain}} within the OAuth2 auth URL and token URL. For example, if your domain is 'kitapp.example.com', you would use 'kitapp.example.com'.",
-                "required": true,
-                "default": null
-              }
-            ],
+            "required": [],
             "optional": []
           }
         }
@@ -27885,8 +28018,8 @@
   },
   {
     "slug": "kontent_ai",
-    "name": "Kontent ai",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/kontent_ai-logo.svg",
+    "name": "Kontent.ai",
+    "logo": "https://logos.composio.dev/api/kontent_ai",
     "description": "Kontent.ai is a headless CMS that delivers content via API, allowing developers to build websites and applications using their preferred frameworks, languages, or libraries.",
     "category": "content management system",
     "authSchemes": [
@@ -27894,7 +28027,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -27908,9 +28041,17 @@
             "required": [
               {
                 "name": "generic_api_key",
-                "displayName": "Kontent.ai Subscription API Key",
+                "displayName": "Management API Key",
                 "type": "string",
-                "description": "The Subscription API key used for authenticating requests to the Kontent.ai API.",
+                "description": "The Management API key for authenticating requests. Generate one in Project settings > API keys > Management API keys.",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "generic_id",
+                "displayName": "Environment ID",
+                "type": "string",
+                "description": "The unique identifier for your Kontent.ai environment (project). Found in Environment settings.",
                 "required": true,
                 "default": null
               }
@@ -28054,7 +28195,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -28290,7 +28431,7 @@
     ],
     "toolCount": 30,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -28319,7 +28460,7 @@
   },
   {
     "slug": "lemon_squeezy",
-    "name": "Lemon squeezy",
+    "name": "Lemon Squeezy",
     "logo": "https://logos.composio.dev/api/lemon_squeezy",
     "description": "Lemon Squeezy is a platform designed to simplify payments, taxes, and subscriptions for software companies, offering a powerful API and webhooks for seamless integration.",
     "category": "e-commerce",
@@ -28328,7 +28469,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -28547,7 +28688,7 @@
   },
   {
     "slug": "llmwhisperer",
-    "name": "Llmwhisperer",
+    "name": "LLMWhisperer",
     "logo": "https://logos.composio.dev/api/llmwhisperer",
     "description": "LLMWhisperer is a technology that presents data from complex documents to LLMs in a way that they can best understand.",
     "category": "ai",
@@ -28556,7 +28697,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "00000000_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -28803,7 +28944,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -28870,7 +29011,7 @@
   },
   {
     "slug": "mailbluster",
-    "name": "Mailbluster",
+    "name": "MailBluster",
     "logo": "https://mailbluster.com/wp-content/uploads/2020/06/mailbluster-logo.png",
     "description": "MailBluster is an advanced, reliable, and cost-effective email marketing software that enables sending personalized promotional emails to millions.",
     "category": "email marketing",
@@ -28879,7 +29020,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29030,7 +29171,7 @@
   },
   {
     "slug": "mailersend",
-    "name": "Mailersend",
+    "name": "MailerSend",
     "logo": "https://www.mailersend.com/images/logo.svg",
     "description": "MailerSend is a transactional email service designed for developers to integrate email sending capabilities into their applications.",
     "category": "email",
@@ -29039,7 +29180,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29589,7 +29730,7 @@
   {
     "slug": "minerstat",
     "name": "Minerstat",
-    "logo": "https://minerstat.com/favicon.ico",
+    "logo": "https://logos.composio.dev/api/minerstat",
     "description": "minerstat is a comprehensive crypto mining monitoring and management platform offering tools for mining operations, including APIs for coins, hardware, pools, management, and monitoring.",
     "category": "cryptocurrency mining",
     "authSchemes": [
@@ -29597,7 +29738,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29664,7 +29805,7 @@
   },
   {
     "slug": "mistral_ai",
-    "name": "Mistral ai",
+    "name": "Mistral AI",
     "logo": "https://logos.composio.dev/api/mistral_ai",
     "description": "Mistral AI is a research lab building state-of-the-art open-source language models and providing APIs for developers and enterprises to integrate these models into their applications.",
     "category": "artificial intelligence",
@@ -29673,7 +29814,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29928,7 +30069,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29995,7 +30136,7 @@
   },
   {
     "slug": "mx_technologies",
-    "name": "Mx technologies",
+    "name": "MX Technologies",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/mx_technologies-logo.svg",
     "description": "MX Technologies provides a comprehensive API platform for aggregating and enhancing financial data, enabling seamless connections to numerous financial institutions.",
     "category": "financial data aggregation",
@@ -30004,7 +30145,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30033,7 +30174,7 @@
   },
   {
     "slug": "mx_toolbox",
-    "name": "Mx toolbox",
+    "name": "MXToolbox",
     "logo": "https://cdn.brandfetch.io/idQNANPBP-/w/180/h/180/theme/light/logo.png?c=1bxidcRmy9yyscAMHr5wf",
     "description": "MxToolbox provides a suite of network diagnostic and monitoring tools, including DNS lookups, blacklist checks, and email health analysis.",
     "category": "network diagnostics",
@@ -30042,7 +30183,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30109,7 +30250,7 @@
   },
   {
     "slug": "nano_nets",
-    "name": "Nano nets",
+    "name": "Nanonets",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/nano_nets-logo.png",
     "description": "Nanonets provides an AI-driven Intelligent Document Processing API that transforms unstructured documents into structured data, enabling efficient data extraction and workflow automation.",
     "category": "ai",
@@ -30118,7 +30259,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30345,7 +30486,7 @@
   },
   {
     "slug": "neverbounce",
-    "name": "Neverbounce",
+    "name": "NeverBounce",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/neverbounce_final_20250722.png",
     "description": "NeverBounce provides email verification services to ensure the validity of email addresses, enhancing deliverability and reducing bounce rates.",
     "category": "email verification",
@@ -30354,7 +30495,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30383,7 +30524,7 @@
   },
   {
     "slug": "new_relic",
-    "name": "New relic",
+    "name": "New Relic",
     "logo": "https://newrelic.com/assets/images/logo.svg",
     "description": "New Relic is a comprehensive observability platform that helps developers and operations teams monitor, debug, and improve their entire stack, including applications, infrastructure, and customer experience.",
     "category": "application performance monitoring",
@@ -30392,7 +30533,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30543,7 +30684,7 @@
   },
   {
     "slug": "nocrm_io",
-    "name": "Nocrm io",
+    "name": "NoCRM.io",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/nocrm_io_round2_20250722.png",
     "description": "noCRM.io is a lead management software designed to help sales teams track and close deals efficiently.",
     "category": "crm",
@@ -30552,7 +30693,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30713,7 +30854,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -30828,7 +30969,7 @@
   },
   {
     "slug": "onesignal_rest_api",
-    "name": "Onesignal rest api",
+    "name": "OneSignal REST API",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/onesignal_rest_api-logo.svg",
     "description": "The OneSignal REST API enables developers to programmatically send push notifications, emails, and SMS, manage users and subscriptions, and configure apps.",
     "category": "messaging",
@@ -30837,7 +30978,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30866,7 +31007,7 @@
   },
   {
     "slug": "onesignal_user_auth",
-    "name": "Onesignal user auth",
+    "name": "OneSignal User Auth",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/onesignal_user_auth-logo.svg",
     "description": "OneSignal is a customer engagement platform offering push notifications, email, SMS, and in-app messaging services.",
     "category": "customer engagement",
@@ -30875,7 +31016,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -30913,7 +31054,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -31103,7 +31244,7 @@
   },
   {
     "slug": "openweather_api",
-    "name": "Openweather api",
+    "name": "OpenWeather API",
     "logo": "https://openweathermap.org/themes/openweathermap/assets/img/logo_white_cropped.png",
     "description": "Provides access to current weather data, forecasts, and historical weather data for any location worldwide.",
     "category": "weather",
@@ -31112,7 +31253,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -31302,7 +31443,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -31635,7 +31776,7 @@
   },
   {
     "slug": "pdf_co",
-    "name": "Pdf co",
+    "name": "PDF.co",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/pdf_co-logo.svg",
     "description": "PDF.co is a secure, cost-effective, and scalable API platform offering a suite of web APIs for tasks such as PDF extraction, generation, editing, splitting, merging, form filling, and barcode processing.",
     "category": "api services",
@@ -31644,7 +31785,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -31749,7 +31890,7 @@
   },
   {
     "slug": "pdfmonkey",
-    "name": "Pdfmonkey",
+    "name": "PDFMonkey",
     "logo": "https://pdfmonkey.io/logo.png",
     "description": "PDFMonkey is a service that automates the generation of PDF documents from templates, allowing users to create professional PDFs programmatically.",
     "category": "document management",
@@ -31758,7 +31899,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -31901,7 +32042,7 @@
   },
   {
     "slug": "phantombuster",
-    "name": "Phantombuster",
+    "name": "PhantomBuster",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/phantombuster-logo.png",
     "description": "PhantomBuster is a cloud-based data extraction and automation platform that enables users to automate actions on the web, such as scraping data, generating leads, and automating social media tasks.",
     "category": "data extraction",
@@ -31910,7 +32051,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -32025,7 +32166,7 @@
     ],
     "toolCount": 30,
     "triggerCount": 0,
-    "version": "00000000_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -32140,7 +32281,7 @@
   },
   {
     "slug": "pipeline_crm",
-    "name": "Pipeline crm",
+    "name": "Pipeline CRM",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/pipeline_crm_round3_20250722.png",
     "description": "Pipeline CRM is a sales-focused customer relationship management tool designed to help teams track leads, manage deals, and streamline workflows.",
     "category": "customer relationship management (crm)",
@@ -32149,7 +32290,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260110_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -32393,7 +32534,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -33203,7 +33344,7 @@
   },
   {
     "slug": "quickbooks",
-    "name": "Quickbooks",
+    "name": "QuickBooks",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/quickbooks.jpg",
     "description": "Quickbooks is a cloud-based accounting software that helps you manage your finances, track your income and expenses, and get insights into your business",
     "category": "finance & accounting",
@@ -33212,7 +33353,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260110_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -33309,7 +33450,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -33431,7 +33572,7 @@
     ],
     "toolCount": 22,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -33917,7 +34058,7 @@
   },
   {
     "slug": "repairshopr",
-    "name": "Repairshopr",
+    "name": "RepairShopr",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/repairshopr-logo.png",
     "description": "RepairShopr is a comprehensive repair shop management software designed to streamline operations, manage customer relationships, and enhance business efficiency.",
     "category": "business management",
@@ -33926,7 +34067,7 @@
     ],
     "toolCount": 38,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34039,7 +34180,7 @@
   },
   {
     "slug": "reply_io",
-    "name": "Reply io",
+    "name": "Reply.io",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/reply_io-logo.svg",
     "description": "Reply.io is an AI-powered sales engagement platform that automates and optimizes sales outreach across multiple channels, integrating with various business tools to enhance lead conversion rates and overall sales productivity.",
     "category": "sales engagement",
@@ -34048,7 +34189,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34115,7 +34256,7 @@
   },
   {
     "slug": "respond_io",
-    "name": "Respond io",
+    "name": "Respond.io",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/respond_io-logo.jpeg",
     "description": "AI-powered customer conversation management software.",
     "category": "customer communication",
@@ -34124,7 +34265,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34229,7 +34370,7 @@
   },
   {
     "slug": "rev_ai",
-    "name": "Rev ai",
+    "name": "Rev AI",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/rev_ai-logo.png",
     "description": "Rev AI provides advanced machine learning and speech recognition services for converting audio and video to text.",
     "category": "speech recognition",
@@ -34238,7 +34379,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34352,7 +34493,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34495,7 +34636,7 @@
   },
   {
     "slug": "safetyculture",
-    "name": "Safetyculture",
+    "name": "SafetyCulture",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/safetyculture_round2_20250722.png",
     "description": "SafetyCulture is a platform that empowers teams to improve workplace safety, quality, and efficiency through digital inspections and audits.",
     "category": "workplace safety",
@@ -34505,7 +34646,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -34688,7 +34829,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -35132,7 +35273,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -35254,7 +35395,7 @@
     ],
     "toolCount": 37,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -35291,7 +35432,7 @@
   },
   {
     "slug": "sendbird_ai_chabot",
-    "name": "Sendbird ai chabot",
+    "name": "Sendbird AI Chatbot",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/sendbird_ai_chabot-logo.svg",
     "description": "Sendbird's AI Chatbot enables businesses to integrate intelligent, automated conversational agents into their applications, enhancing customer engagement and support.",
     "category": "ai chatbot",
@@ -35300,7 +35441,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -35423,7 +35564,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -35935,7 +36076,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -36162,7 +36303,7 @@
   },
   {
     "slug": "simla_com",
-    "name": "Simla com",
+    "name": "Simla.com",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/simla_com-logo.svg",
     "description": "Simla.com is a platform offering API services for integrating delivery services, managing orders, and customer data.",
     "category": "api services",
@@ -36171,7 +36312,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -36368,7 +36509,7 @@
   },
   {
     "slug": "sms_alert",
-    "name": "Sms alert",
+    "name": "SMS Alert",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/sms_alert-logo.png",
     "description": "SMS Alert is a versatile multi-channel communication platform enabling businesses to engage with customers through SMS, RCS, Telegram, and WhatsApp via a unified REST API.",
     "category": "communication",
@@ -36377,7 +36518,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -37091,7 +37232,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -37238,7 +37379,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -37276,7 +37417,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -37360,7 +37501,7 @@
     ],
     "toolCount": 37,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38007,7 +38148,7 @@
   },
   {
     "slug": "thanks_io",
-    "name": "Thanks io",
+    "name": "Thanks.io",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/thanks_io_round3_20250722.png",
     "description": "thanks.io is a direct mail automation platform that enables users to send personalized postcards, letters, and notecards with handwritten fonts.",
     "category": "direct mail automation",
@@ -38016,7 +38157,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38045,7 +38186,7 @@
   },
   {
     "slug": "the_odds_api",
-    "name": "The odds api",
+    "name": "The Odds API",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/the_odds_api-logo.png",
     "description": "The Odds API provides real-time sports betting odds data from various bookmakers worldwide, covering multiple sports and betting markets.",
     "category": "sports data",
@@ -38054,7 +38195,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38170,7 +38311,7 @@
   },
   {
     "slug": "ticktick",
-    "name": "Ticktick",
+    "name": "TickTick",
     "logo": "https://ticktick.com/favicon.ico",
     "description": "TickTick is a cross-platform task management and to-do list application designed to help users organize their tasks and schedules efficiently.",
     "category": "productivity",
@@ -38179,7 +38320,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260111_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -38457,7 +38598,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38503,7 +38644,7 @@
     ],
     "toolCount": 19,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38684,7 +38825,7 @@
   },
   {
     "slug": "turbot_pipes",
-    "name": "Turbot pipes",
+    "name": "Turbot Pipes",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/turbot_pipes-logo.svg",
     "description": "Turbot Pipes is an intelligence, automation, and security platform built specifically for DevOps, offering hosted Steampipe database instances, shared dashboards, snapshots, and more.",
     "category": "devops",
@@ -38693,7 +38834,7 @@
     ],
     "toolCount": 12,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38760,7 +38901,7 @@
   },
   {
     "slug": "twelve_data",
-    "name": "Twelve data",
+    "name": "Twelve Data",
     "logo": "https://twelvedata.com/favicon.ico",
     "description": "Twelve Data provides a comprehensive financial data API offering real-time and historical market data for stocks, forex, cryptocurrencies, ETFs, and indices.",
     "category": "financial data",
@@ -38769,7 +38910,7 @@
     ],
     "toolCount": 22,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -38984,7 +39125,7 @@
     ],
     "toolCount": 36,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -39266,7 +39407,7 @@
     ],
     "toolCount": 35,
     "triggerCount": 0,
-    "version": "20260119_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -39313,7 +39454,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -39779,7 +39920,7 @@
   },
   {
     "slug": "wit_ai",
-    "name": "Wit ai",
+    "name": "Wit.ai",
     "logo": "https://wit.ai/logo.png",
     "description": "Wit.ai is a natural language processing platform that enables developers to build applications and devices that understand human language.",
     "category": "natural language processing",
@@ -39788,7 +39929,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -39827,7 +39968,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260114_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -39959,7 +40100,7 @@
   },
   {
     "slug": "woodpecker_co",
-    "name": "Woodpecker co",
+    "name": "Woodpecker Co",
     "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/woodpecker_co-logo.png",
     "description": "Woodpecker.co is a cold email tool that automates personalized email outreach and follow-ups for sales teams and agencies.",
     "category": "email marketing",
@@ -39968,7 +40109,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -40140,7 +40281,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -40216,7 +40357,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -40254,7 +40395,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -40275,19 +40416,68 @@
   {
     "slug": "zeplin",
     "name": "Zeplin",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/zeplin-logo.png",
-    "description": "Template description for zeplin",
-    "category": "some category",
+    "logo": "https://logos.composio.dev/api/zeplin",
+    "description": "Zeplin is a design delivery platform that connects designers and developers, enabling access to design resources like projects, screens, components, and assets.",
+    "category": "design",
     "authSchemes": [
+      "OAUTH2",
       "API_KEY"
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
+        "mode": "OAUTH2",
+        "name": "zeplin_oauth2",
+        "fields": {
+          "auth_config_creation": {
+            "required": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": true,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": true,
+                "default": null
+              }
+            ],
+            "optional": [
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": ""
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
+          }
+        }
+      },
+      {
         "mode": "API_KEY",
-        "name": "api_key",
+        "name": "zeplin_api_key",
         "fields": {
           "auth_config_creation": {
             "required": [],
@@ -40297,9 +40487,9 @@
             "required": [
               {
                 "name": "generic_api_key",
-                "displayName": "API Key",
+                "displayName": "Personal Access Token",
                 "type": "string",
-                "description": "Your API key",
+                "description": "Your Zeplin Personal Access Token. Generate it from your Zeplin profile under the Developer tab.",
                 "required": true,
                 "default": null
               }
@@ -40313,7 +40503,7 @@
   {
     "slug": "zerobounce",
     "name": "Zerobounce",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/icons/zerobounce_final_20250722.png",
+    "logo": "https://logos.composio.dev/api/zerobounce",
     "description": "ZeroBounce is an email validation and deliverability platform that helps businesses improve email marketing performance by identifying and removing invalid or risky email addresses.",
     "category": "email validation",
     "authSchemes": [
@@ -40321,7 +40511,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260122_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -40334,10 +40524,18 @@
           "connected_account_initiation": {
             "required": [
               {
+                "name": "full",
+                "displayName": "Base URL",
+                "type": "string",
+                "description": "The base URL for the ZeroBounce API.",
+                "required": true,
+                "default": "https://api.zerobounce.net/v2"
+              },
+              {
                 "name": "generic_api_key",
                 "displayName": "ZeroBounce API Key",
                 "type": "string",
-                "description": "Your API Key, found in your ZeroBounce account.",
+                "description": "Your API Key, found in your ZeroBounce account under API Keys & Info.",
                 "required": true,
                 "default": null
               }
@@ -40388,8 +40586,8 @@
   },
   {
     "slug": "zyte_api",
-    "name": "Zyte api",
-    "logo": "https://cdn.jsdelivr.net/gh/ComposioHQ/open-logos@master/zyte_api-logo.svg",
+    "name": "Zyte Api",
+    "logo": "https://logos.composio.dev/api/zyte_api",
     "description": "Zyte API is a web scraping solution that automates data extraction from websites, handling challenges like bans and dynamic content.",
     "category": "web scraping",
     "authSchemes": [
@@ -40397,7 +40595,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260107_00",
+    "version": "20260126_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -40413,7 +40611,7 @@
                 "name": "generic_api_key",
                 "displayName": "Zyte API Key",
                 "type": "string",
-                "description": "Your Zyte API key used for authentication. The key will be used as the Basic Authentication username with an empty password.",
+                "description": "Your Zyte API key used for authentication. Find it at https://app.zyte.com/o/zyte-api/api-access.",
                 "required": true,
                 "default": null
               }
