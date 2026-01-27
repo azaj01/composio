@@ -69,7 +69,7 @@ tools = session.tools()
 agent = Agent(
     name="Personal Assistant",
     instructions="You are a helpful personal assistant. Use Composio tools to take action.",
-    model="gpt-4.1",
+    model="gpt-5",
     tools=tools,
 )
 
@@ -117,7 +117,7 @@ const tools = await session.tools();
 const agent = new Agent({
   name: "Personal Assistant",
   instructions: "You are a helpful personal assistant. Use Composio tools to take action.",
-  model: "gpt-4.1",
+  model: "gpt-5",
   tools,
 });
 
@@ -213,7 +213,7 @@ session = composio.create(user_id=user_id)
 agent = Agent(
     name="Personal Assistant",
     instructions="You are a helpful personal assistant. Use Composio tools to take action.",
-    model="gpt-4.1",
+    model="gpt-5",
     tools=[
         HostedMCPTool(
             tool_config={
@@ -269,7 +269,7 @@ const session = await composio.create(userId);
 const agent = new Agent({
   name: "Personal Assistant",
   instructions: "You are a helpful personal assistant. Use Composio tools to take action.",
-  model: "gpt-4.1",
+  model: "gpt-5",
   tools: [
     hostedMcpTool({
       serverLabel: "composio",
@@ -429,8 +429,14 @@ const customServer = createSdkMcpServer({
 
 const readline = createInterface({ input: process.stdin, output: process.stdout });
 
-console.log("Assistant ready! Type 'exit' to quit.");
-
+console.log(`
+What task would you like me to help you with?
+I can use tools like Gmail, GitHub, Linear, Notion, and more.
+(Type 'exit' to exit)
+Example tasks:
+    - 'Summarize my emails from today'
+    - 'List all open issues on the composio github repository and create a Google Sheet with the issues'
+`);
 let isFirstQuery = true;
 const options = {
   mcpServers: { composio: customServer },
