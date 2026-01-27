@@ -43,8 +43,8 @@ You can filter to only connected toolkits or search by name:
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```python
-result = session.toolkits(is_connected=True)  # Only connected
-result = session.toolkits(search="github")    # Search by name
+connected = session.toolkits(is_connected=True)  # Only connected
+searched = session.toolkits(search="github")    # Search by name
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -127,15 +127,11 @@ You can explore all 800+ toolkits at [platform.composio.dev](https://platform.co
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
 ```python
-from composio import Composio
-
-composio = Composio()
-
 # List toolkits
 toolkits = composio.toolkits.get()
 
-# List tools within a toolkit
-tools = composio.tools.get(user_id, toolkits=["GITHUB"])
+# List tools within a toolkit (top 20 by default)
+tools = composio.tools.get("user_123", toolkits=["GITHUB"])
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -147,7 +143,7 @@ const userId = 'user_123';
 // List toolkits
 const toolkits = await composio.toolkits.get();
 
-// List tools within a toolkit
+// List tools within a toolkit (top 20 by default)
 const tools = await composio.tools.get(userId, { toolkits: ["GITHUB"] });
 ```
 </Tab>
