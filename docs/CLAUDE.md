@@ -21,18 +21,15 @@ Auto-generated SDK documentation from source code.
 
 ### TypeScript SDK
 - **Source**: `ts/packages/core/src/models/*.ts` (JSDoc comments)
-- **Generator**: `scripts/sdk-reference/generate-typescript.ts`
+- **Generator**: `ts/packages/core/scripts/generate-docs.ts`
 - **Output**: `content/reference/sdk-reference/typescript/`
-- **Regenerate**: `bun run generate:sdk-reference:ts`
+- **Regenerate**: `pnpm --filter @composio/core generate:docs`
 
 ### Python SDK
 - **Source**: `python/composio/**/*.py` (docstrings)
-- **Generator**: `scripts/sdk-reference/generate-python.py` (uses griffe)
+- **Generator**: `python/scripts/generate-docs.py` (uses griffe)
 - **Output**: `content/reference/sdk-reference/python/`
-- **Regenerate**: `bun run generate:sdk-reference:py`
-
-### Both SDKs
-- **Regenerate all**: `bun run generate:sdk-reference`
+- **Regenerate**: `cd python && uv run --with griffe python scripts/generate-docs.py`
 
 CI auto-generates on changes to `ts/packages/core/src/**` or `python/composio/**` via `.github/workflows/generate-sdk-docs.yml`.
 

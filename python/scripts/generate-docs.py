@@ -5,7 +5,7 @@ Python SDK Documentation Generator
 Generates MDX documentation from Python source code using griffe.
 Output is written to the docs content directory.
 
-Run from docs/: uv run --with griffe python scripts/sdk-reference/generate-python.py
+Run: cd python && uv run --with griffe python scripts/generate-docs.py
 """
 
 from __future__ import annotations
@@ -22,11 +22,17 @@ except ImportError:
     print("Error: griffe not installed. Run: pip install griffe")
     raise SystemExit(1)
 
-# Paths (relative to docs/scripts/sdk-reference/)
+# Paths
 SCRIPT_DIR = Path(__file__).parent
-DOCS_DIR = SCRIPT_DIR.parent.parent
-PY_SDK_DIR = DOCS_DIR.parent / "python"
-OUTPUT_DIR = DOCS_DIR / "content" / "reference" / "sdk-reference" / "python"
+PACKAGE_DIR = SCRIPT_DIR.parent
+OUTPUT_DIR = (
+    PACKAGE_DIR.parent
+    / "docs"
+    / "content"
+    / "reference"
+    / "sdk-reference"
+    / "python"
+)
 
 # GitHub base URL for source links
 GITHUB_BASE = "https://github.com/composiohq/composio/blob/next/python"
@@ -88,7 +94,7 @@ def get_source_link(obj: griffe.Object) -> str | None:
             resolved_path = raw_filepath
         if not resolved_path:
             return None
-        rel_path = resolved_path.relative_to(PY_SDK_DIR)
+        rel_path = resolved_path.relative_to(PACKAGE_DIR)
     except ValueError:
         return None
     line = obj.lineno if hasattr(obj, "lineno") and obj.lineno else 1
@@ -455,7 +461,7 @@ def main():
     # Load package
     print("Loading composio package...")
     try:
-        package = griffe.load("composio", search_paths=[str(PY_SDK_DIR)])
+        package = griffe.load("composio", search_paths=[str(PACKAGE_DIR)])
     except Exception as e:
         print(f"Error: {e}")
         raise SystemExit(1)

@@ -4,7 +4,7 @@
  * Generates MDX documentation from TypeScript source code using TypeDoc.
  * Output is written to the docs content directory.
  *
- * Run from docs/: bun scripts/sdk-reference/generate-typescript.ts
+ * Run: pnpm --filter @composio/core generate:docs
  */
 
 import { mkdir, writeFile, rm, readdir, readFile } from 'fs/promises';
@@ -12,13 +12,15 @@ import { join, dirname } from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
-// Paths (relative to docs/scripts/sdk-reference/)
+// Paths (relative to ts/packages/core)
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const DOCS_DIR = join(SCRIPT_DIR, '../..');
-const TS_SDK_DIR = join(DOCS_DIR, '../ts/packages/core');
-const MODELS_DIR = join(TS_SDK_DIR, 'src/models');
-const OUTPUT_DIR = join(DOCS_DIR, 'content/reference/sdk-reference/typescript');
-const TEMP_JSON = join(TS_SDK_DIR, '.typedoc-output.json');
+const PACKAGE_DIR = join(SCRIPT_DIR, '..');
+const MODELS_DIR = join(PACKAGE_DIR, 'src/models');
+const OUTPUT_DIR = join(
+  PACKAGE_DIR,
+  '../../../docs/content/reference/sdk-reference/typescript'
+);
+const TEMP_JSON = join(PACKAGE_DIR, '.typedoc-output.json');
 
 // Internal classes that should NOT be documented (accessed via other APIs)
 const INTERNAL_CLASSES = new Set([
@@ -723,7 +725,7 @@ async function runTypeDoc(): Promise<TypeDocProject> {
   ].join(' ');
 
   try {
-    execSync(cmd, { stdio: 'pipe', cwd: TS_SDK_DIR });
+    execSync(cmd, { stdio: 'pipe', cwd: PACKAGE_DIR });
   } catch (error) {
     console.error('TypeDoc failed:', error);
     throw error;
@@ -735,7 +737,7 @@ async function runTypeDoc(): Promise<TypeDocProject> {
 
 async function main() {
   console.log('Starting TypeScript SDK documentation generation...\n');
-  console.log(`Package dir: ${TS_SDK_DIR}`);
+  console.log(`Package dir: ${PACKAGE_DIR}`);
   console.log(`Output dir: ${OUTPUT_DIR}\n`);
 
   // Clean output directory
