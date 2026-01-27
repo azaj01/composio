@@ -8,7 +8,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": [
-    "e2e.test.ts"
-  ]
+  "include": ["e2e.test.ts"]
 }

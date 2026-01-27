@@ -6,9 +6,9 @@
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true
   },
-  "include": [
-    "e2e.test.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }
