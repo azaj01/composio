@@ -156,7 +156,7 @@ def _fetch_file_from_url(url: str) -> t.Tuple[str, bytes, str]:
     filename = os.path.basename(pathname) if pathname else ""
 
     # If no filename from URL or no extension, generate one
-    if not filename or filename == "/":
+    if not filename:
         extension = _get_extension_from_mimetype(mimetype)
         filename = _generate_timestamped_filename(extension)
     else:
