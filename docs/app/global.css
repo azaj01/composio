@@ -126,12 +126,6 @@
 .dark {
   --composio-sidebar: #131211;
 
-  /* Twoslash overrides - Dark */
-  --twoslash-popup-bg: #252220;
-  --twoslash-popup-shadow: rgba(0, 0, 0, 0.3) 0px 2px 8px;
-  --twoslash-border-color: #3d3935;
-  --twoslash-docs-color: #a8a29e;
-
   /* Fumadocs overrides - Dark */
   --color-fd-background: #131211;
   --color-fd-foreground: #e8e4e0;
@@ -489,4 +483,37 @@ nav a[href*="app.composio"]:focus-visible {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ==========================================================================
+   Twoslash - Type hover popups in code blocks
+   ========================================================================== */
+
+:root {
+  --twoslash-border-color: var(--color-fd-border);
+  --twoslash-popup-bg: var(--color-fd-popover);
+  --twoslash-popup-color: var(--color-fd-popover-foreground);
+  --twoslash-popup-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --twoslash-docs-color: var(--color-fd-muted-foreground);
+  --twoslash-docs-font: var(--font-sans);
+  --twoslash-code-font: var(--font-mono);
+}
+
+.dark {
+  --twoslash-popup-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.twoslash .twoslash-popup-container {
+  border-radius: var(--radius);
+  max-width: 540px;
+}
+
+.twoslash .twoslash-popup-code {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.twoslash .twoslash-popup-docs {
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
