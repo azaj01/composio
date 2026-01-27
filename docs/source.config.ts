@@ -89,7 +89,7 @@ export default defineConfig({
         light: 'github-light',
         dark: 'github-dark',
       },
-      // Twoslash disabled in dev (heap memory issues), enabled in build/CI
+      // Twoslash for type checking only - no hover UI
       transformers:
         process.env.NODE_ENV === 'production'
           ? [
@@ -98,6 +98,13 @@ export default defineConfig({
                 typesCache: createFileSystemTypesCache({
                   dir: '.next/cache/twoslash',
                 }),
+                renderer: {
+                  // Empty renderer - type checks but renders nothing
+                  nodeStaticInfo: () => ({}),
+                  nodeError: () => ({}),
+                  nodeQuery: () => ({}),
+                  nodeCompletion: () => ({}),
+                },
               }),
             ]
           : [],
