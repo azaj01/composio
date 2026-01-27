@@ -69,7 +69,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
         <Script
           src="https://app.getdecimal.ai/widget/v1/widget.js"
           data-widget-id="wgt_Ze0kCx97w7YXIydXpEAbAVWfu7FO6HG1"
-          data-public-config="eyJhbGciOiJIUzI1NiJ9.eyJ3aWQiOiJ3Z3RfWmUwa0N4OTd3N1lYSXlkWHBFQWJBVldmdTdGTzZIRzEiLCJkb21haW5zIjpbImNvbXBvc2lvLmRldiIsImNvbXBvc2lvLWRlY2ltYWwudmVyY2VsLmFwcCIsImxvY2FsaG9zdDozMDAwIiwiZG9jcy5jb21wb3Npby5kZXYiXSwiaWF0IjoxNzY3Mzc2ODkyfQ.Aflg_XVLCmd2tY9P9h4YWle2FKA_DRZFLBhp0yClJCE"
+          data-public-config="eyJhbGciOiJIUzI1NiJ9.eyJ3aWQiOiJ3Z3RfWmUwa0N4OTd3N1lYSXlkWHBFQWJBVldmdTdGTzZIRzEiLCJkb21haW5zIjpbImNvbXBvc2lvLmRldiIsImNvbXBvc2lvLWRlY2ltYWwudmVyY2VsLmFwcCIsImxvY2FsaG9zdDozMDAwIiwiZG9jcy5jb21wb3Npby5kZXYiLCJmdW1hZG9jcy1wc2kudmVyY2VsLmFwcCJdLCJpYXQiOjE3Njk1MDE3NTZ9.j7odPAOmoKSkdkFHQCs7FDpAxHfJuzUOEMb_OuHi81I"
           strategy="afterInteractive"
         />
       </body>
