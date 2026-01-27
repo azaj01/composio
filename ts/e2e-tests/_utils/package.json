@@ -11,6 +11,12 @@
         "types": "./src/index.ts",
         "default": "./src/index.ts"
       }
+    },
+    "./const": {
+      "import": {
+        "types": "./src/const.ts",
+        "default": "./src/const.ts"
+      }
     }
   },
   "scripts": {
