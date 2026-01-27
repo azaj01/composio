@@ -2,6 +2,7 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 @import 'fumadocs-openapi/css/preset.css';
+@import '@shikijs/twoslash/style-rich.css';
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -124,6 +125,12 @@
 
 .dark {
   --composio-sidebar: #131211;
+
+  /* Twoslash overrides - Dark */
+  --twoslash-popup-bg: #252220;
+  --twoslash-popup-shadow: rgba(0, 0, 0, 0.3) 0px 2px 8px;
+  --twoslash-border-color: #3d3935;
+  --twoslash-docs-color: #a8a29e;
 
   /* Fumadocs overrides - Dark */
   --color-fd-background: #131211;
