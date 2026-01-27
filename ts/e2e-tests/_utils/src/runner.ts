@@ -2,11 +2,7 @@ import { describe, beforeAll, it } from 'bun:test';
 import type { E2EConfig, E2ETestResult, NodeVersionMeta } from './types';
 import { getRepoRoot, resolveNodeVersionMetaList } from './config';
 import { ensureNodeImage, runNodeContainer } from './image-lifecycle';
-
-/**
- * Environment variables to automatically pass through to Docker containers.
- */
-const PASSTHROUGH_ENV_VARS = ['COMPOSIO_API_KEY', 'OPENAI_API_KEY'] as const;
+import { WELL_KNOWN_ENV_VARS } from './const'
 
 /**
  * Builds environment variables to pass to the container.
@@ -17,7 +13,7 @@ function buildContainerEnv(
 ): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = {};
 
-  for (const varName of PASSTHROUGH_ENV_VARS) {
+  for (const varName of WELL_KNOWN_ENV_VARS) {
     if (process.env[varName]) {
       env[varName] = process.env[varName];
     }
