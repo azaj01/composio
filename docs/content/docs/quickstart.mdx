@@ -364,7 +364,7 @@ import asyncio
 from dotenv import load_dotenv
 from composio import Composio
 from composio_claude_agent_sdk import ClaudeAgentSDKProvider
-from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, create_sdk_mcp_server
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, create_sdk_mcp_server, AssistantMessage, TextBlock
 
 load_dotenv()
 
@@ -395,8 +395,11 @@ async def main():
 
             await client.query(user_input)
             print("Claude: ", end="")
-            async for msg in client.receive_response():
-                print(msg, end="", flush=True)
+            async for message in client.receive_response():
+                if isinstance(message, AssistantMessage):
+                    for block in message.content:
+                        if isinstance(block, TextBlock):
+                            print(block.text, end="", flush=True)
             print()
 
 asyncio.run(main())
