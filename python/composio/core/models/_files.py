@@ -4,7 +4,7 @@ import hashlib
 import os
 import typing as t
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 import uuid
 import datetime
 
@@ -123,7 +123,7 @@ def _get_extension_from_mimetype(mimetype: str) -> str:
         "video/mp4": ".mp4",
         "video/webm": ".webm",
     }
-    return mime_to_ext.get(mimetype, "")
+    return mime_to_ext.get(mimetype.lower(), "")
 
 
 def _generate_timestamped_filename(extension: str) -> str:
@@ -150,9 +150,9 @@ def _fetch_file_from_url(url: str) -> t.Tuple[str, bytes, str]:
     # Handle mimetypes with charset or other parameters (e.g., "text/html; charset=utf-8")
     mimetype = mimetype.split(";")[0].strip()
 
-    # Extract filename from URL
+    # Extract filename from URL (decode percent-encoded characters)
     parsed_url = urlparse(url)
-    pathname = parsed_url.path
+    pathname = unquote(parsed_url.path)
     filename = os.path.basename(pathname) if pathname else ""
 
     # If no filename from URL or no extension, generate one

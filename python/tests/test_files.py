@@ -1010,6 +1010,19 @@ class TestUrlHelperFunctions:
         assert _get_extension_from_mimetype("application/unknown") == ""
         assert _get_extension_from_mimetype("custom/type") == ""
 
+    def test_get_extension_from_mimetype_case_insensitive(self):
+        """Test _get_extension_from_mimetype handles case-insensitive mimetypes (RFC 2045)."""
+        # Uppercase variations
+        assert _get_extension_from_mimetype("IMAGE/JPEG") == ".jpg"
+        assert _get_extension_from_mimetype("APPLICATION/PDF") == ".pdf"
+        # Mixed case variations
+        assert _get_extension_from_mimetype("Image/Jpeg") == ".jpg"
+        assert _get_extension_from_mimetype("Application/Pdf") == ".pdf"
+        assert _get_extension_from_mimetype("Text/Plain") == ".txt"
+        # Edge cases
+        assert _get_extension_from_mimetype("IMAGE/png") == ".png"
+        assert _get_extension_from_mimetype("video/MP4") == ".mp4"
+
     def test_generate_timestamped_filename(self):
         """Test _generate_timestamped_filename generates valid filenames."""
         filename = _generate_timestamped_filename(".jpg")
@@ -1103,6 +1116,58 @@ class TestFetchFileFromUrl:
 
         assert "Failed to fetch file from URL" in str(exc_info.value)
         assert "404" in str(exc_info.value)
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_decodes_percent_encoded_filename(self, mock_get):
+        """Test that percent-encoded characters in URL filenames are decoded."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"document content"
+        mock_response.headers = {"content-type": "application/pdf"}
+        mock_get.return_value = mock_response
+
+        # URL with percent-encoded spaces and special characters
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/My%20Document%20%282024%29.pdf"
+        )
+
+        # Filename should be decoded
+        assert filename == "My Document (2024).pdf"
+        assert content == b"document content"
+        assert mimetype == "application/pdf"
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_decodes_unicode_filename(self, mock_get):
+        """Test that percent-encoded unicode characters in URL filenames are decoded."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"image data"
+        mock_response.headers = {"content-type": "image/jpeg"}
+        mock_get.return_value = mock_response
+
+        # URL with percent-encoded unicode (e.g., Japanese characters)
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB.jpg"
+        )
+
+        # Filename should be decoded to unicode
+        assert filename == "ファイル.jpg"
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_file_from_url_handles_plus_sign_in_filename(self, mock_get):
+        """Test that plus signs in URL paths are preserved (not converted to spaces)."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"file content"
+        mock_response.headers = {"content-type": "text/plain"}
+        mock_get.return_value = mock_response
+
+        # Plus signs in path should remain as plus signs (unquote doesn't convert + to space)
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/file+name.txt"
+        )
+
+        assert filename == "file+name.txt"
 
 
 class TestUploadBytesToS3:
