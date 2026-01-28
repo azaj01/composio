@@ -12,18 +12,42 @@ export const source = loader({
 });
 
 // Combined reference source with MDX pages and OpenAPI-generated pages
-const openapiPages = await openapiSource(openapi, {
-  groupBy: 'tag',
-  baseDir: 'api-reference',
-});
+// Lazy initialization to avoid top-level await issues in serverless
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _referenceSource: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _openapiPagesPromise: Promise<any> | null = null;
 
+async function getOpenapiPages() {
+  if (!_openapiPagesPromise) {
+    _openapiPagesPromise = openapiSource(openapi, {
+      groupBy: 'tag',
+      baseDir: 'api-reference',
+    });
+  }
+  return _openapiPagesPromise;
+}
+
+export async function getReferenceSource() {
+  if (!_referenceSource) {
+    const openapiPages = await getOpenapiPages();
+    _referenceSource = loader({
+      baseUrl: '/reference',
+      source: multiple({
+        mdx: reference.toFumadocsSource(),
+        openapi: openapiPages,
+      }),
+      plugins: [lucideIconsPlugin(), openapiPlugin()],
+    });
+  }
+  return _referenceSource;
+}
+
+// Synchronous reference source for cases where OpenAPI isn't needed
 export const referenceSource = loader({
   baseUrl: '/reference',
-  source: multiple({
-    mdx: reference.toFumadocsSource(),
-    openapi: openapiPages,
-  }),
-  plugins: [lucideIconsPlugin(), openapiPlugin()],
+  source: reference.toFumadocsSource(),
+  plugins: [lucideIconsPlugin()],
 });
 
 export const examplesSource = loader({
@@ -190,11 +214,12 @@ ${page.data.description || ''}`;
 
   try {
     content = await page.data.getText('processed');
-  } catch {
+  } catch (e) {
+    console.error('getText(processed) failed:', e);
     try {
       content = await page.data.getText('raw');
-    } catch {
-      // Both failed, fall back to description
+    } catch (e2) {
+      console.error('getText(raw) also failed:', e2);
     }
   }
 
