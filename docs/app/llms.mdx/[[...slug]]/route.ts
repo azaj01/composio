@@ -422,6 +422,50 @@ async function getToolkit(slug: string): Promise<Toolkit | null> {
   }
 }
 
+async function getAllToolkits(): Promise<Toolkit[]> {
+  try {
+    const filePath = join(process.cwd(), 'public/data/toolkits.json');
+    const data = await readFile(filePath, 'utf-8');
+    return JSON.parse(data) as Toolkit[];
+  } catch {
+    return [];
+  }
+}
+
+// Generate a comprehensive toolkits index for /toolkits.md
+async function generateToolkitsIndex(): Promise<string> {
+  const toolkits = await getAllToolkits();
+
+  // Sort alphabetically by name
+  const sorted = [...toolkits].sort((a, b) =>
+    (a.name?.trim() || '').localeCompare(b.name?.trim() || '')
+  );
+
+  const lines: string[] = [
+    '# Toolkits',
+    '',
+    `Composio supports ${toolkits.length} toolkits for building AI agents.`,
+    '',
+    '## All Toolkits',
+    '',
+    '| Toolkit | Slug | Tools | Triggers | Auth |',
+    '|---------|------|-------|----------|------|',
+  ];
+
+  for (const toolkit of sorted) {
+    const name = toolkit.name?.trim() || toolkit.slug;
+    const auth = toolkit.authSchemes?.join(', ') || 'None';
+    lines.push(
+      `| [${name}](/toolkits/${toolkit.slug}.md) | \`${toolkit.slug.toUpperCase()}\` | ${toolkit.toolCount} | ${toolkit.triggerCount} | ${auth} |`
+    );
+  }
+
+  lines.push('', '## Toolkit Details', '');
+  lines.push('For detailed information about each toolkit including all tools and triggers, visit the individual toolkit pages listed above.');
+
+  return lines.join('\n');
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ slug?: string[] }> }
@@ -429,6 +473,16 @@ export async function GET(
   try {
     const { slug = [] } = await params;
     const [prefix, ...rest] = slug;
+
+    // Special handling for toolkits index - generate comprehensive list
+    if (prefix === 'toolkits' && rest.length === 0) {
+      const toolkitsIndex = await generateToolkitsIndex();
+      return new Response(toolkitsIndex, {
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+        },
+      });
+    }
 
     // Handle 'reference' specially - uses async getReferenceSource() for OpenAPI pages
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
