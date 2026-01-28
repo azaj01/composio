@@ -15,6 +15,30 @@ export const revalidate = false;
 
 const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
 const API_KEY = process.env.COMPOSIO_API_KEY;
+const API_FETCH_LIMIT = 1000; // Note: Toolkits with more items will be truncated
+
+/**
+ * Process raw parameter properties into typed ParameterSchema records.
+ * Adds required flag based on the requiredList from JSON Schema.
+ */
+function processParams(
+  props: unknown,
+  requiredList: string[]
+): Record<string, ParameterSchema> | undefined {
+  if (!props || typeof props !== 'object') return undefined;
+
+  const result: Record<string, ParameterSchema> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (typeof value === 'object' && value !== null) {
+      result[key] = {
+        ...(value as ParameterSchema),
+        // Explicitly set required based on JSON Schema required array
+        required: requiredList.includes(key),
+      };
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
 
 // Fetch detailed tool info from Composio API
 async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
@@ -24,7 +48,7 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
 
   try {
     const response = await fetch(
-      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&limit=1000`,
+      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&limit=${API_FETCH_LIMIT}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -35,12 +59,22 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
     );
 
     if (!response.ok) {
+      console.warn(`[LLM Markdown] Failed to fetch tools for ${toolkitSlug}: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      console.warn(`[LLM Markdown] Invalid API response format for toolkit ${toolkitSlug}`);
+      return null;
+    }
+
     const rawItems = data.items || data;
     const items = Array.isArray(rawItems) ? rawItems : [];
+
+    if (items.length >= API_FETCH_LIMIT) {
+      console.warn(`[LLM Markdown] Toolkit ${toolkitSlug} has ${items.length}+ tools, results may be truncated`);
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return items.filter((tool: any) => tool && typeof tool === 'object').map((tool: any) => {
@@ -52,30 +86,14 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
       const outputProps = outputSchema?.properties || outputSchema;
       const outputRequired = outputSchema?.required || [];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const processParams = (props: any, requiredList: string[]) => {
-        if (!props || typeof props !== 'object') return undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result: Record<string, any> = {};
-        for (const [key, value] of Object.entries(props)) {
-          if (typeof value === 'object' && value !== null) {
-            result[key] = {
-              ...(value as object),
-              required: requiredList.includes(key),
-            };
-          }
-        }
-        return Object.keys(result).length > 0 ? result : undefined;
-      };
-
       return {
         slug: tool.slug || '',
         name: tool.name || tool.display_name || tool.slug || '',
         description: tool.description || '',
         input_parameters: processParams(inputProps, inputRequired),
         output_parameters: processParams(outputProps, outputRequired),
-        scopes: tool.scopes || undefined,
-        tags: tool.tags || undefined,
+        scopes: tool.scopes,
+        tags: tool.tags,
         is_deprecated: tool.is_deprecated || false,
       };
     });
@@ -92,7 +110,7 @@ async function fetchDetailedTriggers(toolkitSlug: string): Promise<Trigger[] | n
 
   try {
     const response = await fetch(
-      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&limit=1000`,
+      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&limit=${API_FETCH_LIMIT}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -103,12 +121,22 @@ async function fetchDetailedTriggers(toolkitSlug: string): Promise<Trigger[] | n
     );
 
     if (!response.ok) {
+      console.warn(`[LLM Markdown] Failed to fetch triggers for ${toolkitSlug}: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      console.warn(`[LLM Markdown] Invalid API response format for triggers ${toolkitSlug}`);
+      return null;
+    }
+
     const rawItems = data.items || data;
     const items = Array.isArray(rawItems) ? rawItems : [];
+
+    if (items.length >= API_FETCH_LIMIT) {
+      console.warn(`[LLM Markdown] Toolkit ${toolkitSlug} has ${items.length}+ triggers, results may be truncated`);
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return items.filter((trigger: any) => trigger && typeof trigger === 'object').map((trigger: any) => {
@@ -120,30 +148,14 @@ async function fetchDetailedTriggers(toolkitSlug: string): Promise<Trigger[] | n
       const payloadProps = payloadSchema?.properties || payloadSchema;
       const payloadRequired = payloadSchema?.required || [];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const processParams = (props: any, requiredList: string[]) => {
-        if (!props || typeof props !== 'object') return undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result: Record<string, any> = {};
-        for (const [key, value] of Object.entries(props)) {
-          if (typeof value === 'object' && value !== null) {
-            result[key] = {
-              ...(value as object),
-              required: requiredList.includes(key),
-            };
-          }
-        }
-        return Object.keys(result).length > 0 ? result : undefined;
-      };
-
       return {
         slug: trigger.slug || '',
         name: trigger.name || trigger.display_name || trigger.slug || '',
         description: trigger.description || '',
-        type: trigger.type || undefined,
+        type: trigger.type,
         config: processParams(configProps, configRequired),
         payload: processParams(payloadProps, payloadRequired),
-        instructions: trigger.instructions || undefined,
+        instructions: trigger.instructions,
       };
     });
   } catch {
