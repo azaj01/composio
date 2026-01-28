@@ -88,14 +88,14 @@ function mdxToCleanMarkdown(content: string): string {
     '[Video: $2](https://youtube.com/watch?v=$1)'
   );
 
-  // Convert Callout to blockquote
+  // Convert Callout to blockquote - trim content to avoid empty lines
   result = result.replace(
     /<Callout[^>]*title="([^"]*)"[^>]*>([\s\S]*?)<\/Callout>/g,
-    '> **$1**: $2'
+    (_, title, content) => `> **${title}**: ${content.trim()}`
   );
   result = result.replace(
     /<Callout[^>]*>([\s\S]*?)<\/Callout>/g,
-    '> $1'
+    (_, content) => `> ${content.trim()}`
   );
 
   // Convert Card - handle multiline and various attribute orders
@@ -195,29 +195,35 @@ function mdxToCleanMarkdown(content: string): string {
   // Clean up leftover JSX artifacts like lone } or {
   result = result.replace(/^\s*[{}]\s*$/gm, '');
 
-  // Normalize indentation - remove leading whitespace that came from nested JSX
-  // Also normalize code block content indentation
+  // Normalize indentation while preserving markdown structure
+  // - Code blocks: normalize by stripping common indentation prefix
+  // - Nested lists/blockquotes: preserve relative indentation
+  // - Other content: remove excessive leading whitespace from JSX nesting
   const lines = result.split('\n');
   const normalizedLines: string[] = [];
   let inCodeBlock = false;
   let codeBlockLines: string[] = [];
 
+  const flushCodeBlock = () => {
+    if (codeBlockLines.length > 0) {
+      // Find minimum indentation (ignoring empty lines)
+      const nonEmptyLines = codeBlockLines.filter(l => l.trim().length > 0);
+      const minIndent = nonEmptyLines.length > 0
+        ? Math.min(...nonEmptyLines.map(l => l.match(/^(\s*)/)?.[1]?.length || 0))
+        : 0;
+      // Strip common indentation
+      for (const codeLine of codeBlockLines) {
+        normalizedLines.push(codeLine.slice(minIndent));
+      }
+      codeBlockLines = [];
+    }
+  };
+
   for (const line of lines) {
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
         // End of code block - normalize and flush
-        if (codeBlockLines.length > 0) {
-          // Find minimum indentation (ignoring empty lines)
-          const nonEmptyLines = codeBlockLines.filter(l => l.trim().length > 0);
-          const minIndent = nonEmptyLines.length > 0
-            ? Math.min(...nonEmptyLines.map(l => l.match(/^(\s*)/)?.[1]?.length || 0))
-            : 0;
-          // Strip common indentation
-          for (const codeLine of codeBlockLines) {
-            normalizedLines.push(codeLine.slice(minIndent));
-          }
-        }
-        codeBlockLines = [];
+        flushCodeBlock();
         inCodeBlock = false;
         normalizedLines.push(line.trim());
       } else {
@@ -228,9 +234,25 @@ function mdxToCleanMarkdown(content: string): string {
     } else if (inCodeBlock) {
       codeBlockLines.push(line);
     } else {
-      // Outside code blocks, remove excessive leading whitespace
-      normalizedLines.push(line.replace(/^\s+/, ''));
+      // Outside code blocks - smart whitespace handling
+      const trimmedLine = line.trimStart();
+      // Preserve indentation for markdown list items (but not blockquotes at root level)
+      if (trimmedLine.match(/^[-*+]\s/) || trimmedLine.match(/^\d+\.\s/)) {
+        // For list items, normalize to 2-space indentation levels
+        const leadingSpaces = line.length - trimmedLine.length;
+        const indentLevel = Math.floor(leadingSpaces / 2);
+        const normalizedIndent = '  '.repeat(Math.min(indentLevel, 4)); // Cap at 4 levels
+        normalizedLines.push(normalizedIndent + trimmedLine);
+      } else {
+        // For other content (including blockquotes), remove excessive leading whitespace
+        normalizedLines.push(trimmedLine);
+      }
     }
+  }
+
+  // Handle unclosed code block - flush any remaining content
+  if (inCodeBlock) {
+    flushCodeBlock();
   }
 
   result = normalizedLines.join('\n');
