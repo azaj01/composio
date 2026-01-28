@@ -16,6 +16,8 @@ interface FigureProps {
   className?: string;
   width?: number;
   height?: number;
+  /** Set to true for above-the-fold images to prioritize LCP */
+  priority?: boolean;
 }
 
 const sizeClasses: Record<FigureSize, string> = {
@@ -25,16 +27,26 @@ const sizeClasses: Record<FigureSize, string> = {
   full: 'max-w-full',    // Full-width diagrams
 };
 
-const sizesAttr: Record<FigureSize, string> = {
-  sm: '(max-width: 300px) 100vw, 300px',
-  md: '(max-width: 500px) 100vw, 500px',
-  lg: '(max-width: 700px) 100vw, 700px',
-  full: '(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 900px',
+// Default dimensions per size to minimize CLS
+const defaultDimensions: Record<FigureSize, { width: number; height: number }> = {
+  sm: { width: 300, height: 200 },
+  md: { width: 500, height: 333 },
+  lg: { width: 700, height: 467 },
+  full: { width: 900, height: 600 },
 };
 
-export function Figure({ src, alt, caption, size = 'full', className, width, height }: FigureProps) {
+// Responsive sizes for optimal image loading
+const sizesAttr: Record<FigureSize, string> = {
+  sm: '(max-width: 640px) 100vw, 300px',
+  md: '(max-width: 640px) 100vw, 500px',
+  lg: '(max-width: 640px) 100vw, (max-width: 768px) 90vw, 700px',
+  full: '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, min(900px, 70vw)',
+};
+
+export function Figure({ src, alt, caption, size = 'full', className, width, height, priority = false }: FigureProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const isConstrained = size !== 'full';
+  const dimensions = defaultDimensions[size];
 
   return (
     <figure className={cn('my-8', isConstrained && 'flex flex-col items-center', className)}>
@@ -42,9 +54,10 @@ export function Figure({ src, alt, caption, size = 'full', className, width, hei
         <Image
           src={src}
           alt={alt}
-          width={width || 1200}
-          height={height || 800}
+          width={width || dimensions.width}
+          height={height || dimensions.height}
           sizes={sizesAttr[size]}
+          priority={priority}
           onLoad={() => setIsLoaded(true)}
           className={cn(
             'rounded-lg border border-fd-border transition-opacity duration-300',
