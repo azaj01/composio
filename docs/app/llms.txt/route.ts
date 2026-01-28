@@ -25,15 +25,15 @@ export async function GET() {
     const formatPage = (page: any) =>
       `- https://composio.dev${page.url}.md`;
 
-    // Build sections
+    // Build sections based on actual folder structure
     const coreDocs = groupedDocs.get('core') || [];
     const providerDocs = groupedDocs.get('providers') || [];
-    const modifierDocs = groupedDocs.get('modify-tool-behavior') || [];
+    const toolsDirectDocs = groupedDocs.get('tools-direct') || [];
+    const authConfigDocs = groupedDocs.get('auth-configuration') || [];
+    const authenticatingUsersDocs = groupedDocs.get('authenticating-users') || [];
+    const toolkitsDocs = groupedDocs.get('toolkits') || [];
     const troubleshootingDocs = groupedDocs.get('troubleshooting') || [];
     const migrationDocs = groupedDocs.get('migration-guide') || [];
-    const nativeToolsDocs = groupedDocs.get('native-tools') || [];
-    const mcpDocs = groupedDocs.get('mcp') || [];
-    const featuresDocs = groupedDocs.get('features') || [];
 
     const index = `# Composio Documentation
 
@@ -41,28 +41,38 @@ export async function GET() {
 
 ## Getting Started
 
-${coreDocs.filter(p => ['quickstart', 'index', 'authenticating-tools', 'executing-tools', 'fetching-tools'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+${coreDocs.filter(p => ['quickstart', 'index'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+${toolsDirectDocs.filter(p => ['authenticating-tools', 'executing-tools', 'fetching-tools'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+
+## Core Concepts
+
+${coreDocs.filter(p => ['tools-and-toolkits', 'authentication', 'users-and-sessions', 'configuring-sessions'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
 
 ## Authentication & Users
 
-${coreDocs.filter(p => ['connected-accounts', 'user-management', 'custom-auth-configs', 'programmatic-auth-configs', 'custom-auth-params'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+${authenticatingUsersDocs.map(formatPage).join('\n')}
+${coreDocs.filter(p => ['managing-multiple-connected-accounts', 'using-custom-auth-configuration', 'white-labeling-authentication'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+
+## Auth Configuration
+
+${authConfigDocs.map(formatPage).join('\n')}
 
 ## Tools & Execution
 
-${coreDocs.filter(p => ['custom-tools', 'toolkit-versioning', 'capabilities'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
-${nativeToolsDocs.length > 0 ? nativeToolsDocs.map(formatPage).join('\n') : ''}
+${toolsDirectDocs.filter(p => ['custom-tools', 'toolkit-versioning'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
+${toolkitsDocs.map(formatPage).join('\n')}
+
+## Modify Tool Behavior
+
+${toolsDirectDocs.filter(p => p.slugs.includes('modify-tool-behavior')).map(formatPage).join('\n')}
 
 ## MCP (Model Context Protocol)
 
-${mcpDocs.map(formatPage).join('\n')}
+${coreDocs.filter(p => ['single-toolkit-mcp'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
 
 ## Triggers
 
 ${coreDocs.filter(p => ['triggers'].some(s => p.slugs.includes(s))).map(formatPage).join('\n')}
-
-## Modify Tool Behavior
-
-${modifierDocs.map(formatPage).join('\n')}
 
 ## Providers
 
