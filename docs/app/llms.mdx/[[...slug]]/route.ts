@@ -434,7 +434,14 @@ export async function GET(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let pageSource: any;
     if (prefix === 'reference') {
-      pageSource = await getReferenceSource();
+      try {
+        pageSource = await getReferenceSource();
+      } catch (e) {
+        console.error('Error loading reference source:', e);
+        // Fall back to MDX-only reference source if OpenAPI loading fails
+        const { referenceSource } = await import('@/lib/source');
+        pageSource = referenceSource;
+      }
     } else {
       const match = sources.find((s) => s.prefix === prefix);
       if (!match) notFound();
