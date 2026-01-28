@@ -48,6 +48,9 @@ export function Figure({ src, alt, caption, size = 'full', className, width, hei
   const isConstrained = size !== 'full';
   const dimensions = defaultDimensions[size];
 
+  // Show image on load or error (so broken images are visible for debugging)
+  const handleReady = () => setIsLoaded(true);
+
   return (
     <figure className={cn('my-8', isConstrained && 'flex flex-col items-center', className)}>
       <Zoom zoomImg={{ src }}>
@@ -58,7 +61,8 @@ export function Figure({ src, alt, caption, size = 'full', className, width, hei
           height={height || dimensions.height}
           sizes={sizesAttr[size]}
           priority={priority}
-          onLoad={() => setIsLoaded(true)}
+          onLoad={handleReady}
+          onError={handleReady}
           className={cn(
             'rounded-lg border border-fd-border transition-opacity duration-300',
             isLoaded ? 'opacity-100' : 'opacity-0',
