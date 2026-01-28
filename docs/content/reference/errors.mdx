@@ -46,13 +46,16 @@ Composio uses conventional HTTP response codes to indicate the success or failur
 
 ### Authentication errors
 
-Errors related to API key validation and permissions.
+Composio uses two types of API keys:
+- **Project API key** (`x-api-key`) — For project-level operations
+- **Organization API key** (`x-org-api-key`) — For organization-level access across projects
 
 | Error | Cause |
 |-------|-------|
-| Invalid API key | The API key provided is incorrect or has been revoked. Verify your key in [Settings](https://platform.composio.dev/settings). |
-| No authentication provided | The request is missing the `x-api-key` header. |
-| Invalid project access | The API key doesn't have access to this resource. Check that you're using the correct key scope. |
+| Invalid API key | The API key is incorrect or revoked. Verify in [Settings](https://app.composio.dev/settings). |
+| No authentication provided | The request is missing the `x-api-key` or `x-org-api-key` header. |
+| Invalid organization key | The organization API key is incorrect or revoked. Verify in Organization Settings. |
+| Insufficient permissions | The API key doesn't have access to this resource. |
 
 <Callout>
 See [Authentication Troubleshooting](/docs/troubleshooting/authentication) for more help.
