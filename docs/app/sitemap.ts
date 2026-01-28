@@ -1,7 +1,14 @@
 import type { MetadataRoute } from 'next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { source, referenceSource, examplesSource, toolkitsSource } from '@/lib/source';
+import {
+  source,
+  referenceSource,
+  examplesSource,
+  toolkitsSource,
+  changelogEntries,
+  dateToChangelogUrl,
+} from '@/lib/source';
 
 const baseUrl = 'https://docs.composio.dev';
 
@@ -42,12 +49,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}/toolkits/${toolkit.slug}`,
   }));
 
+  // Changelog pages
+  const changelogPages = [...changelogEntries].map((entry) => ({
+    url: `${baseUrl}${dateToChangelogUrl(entry.date)}`,
+  }));
+
   return [
     { url: baseUrl },
+    { url: `${baseUrl}/docs/changelog` },
     ...docsPages,
     ...referencePages,
     ...examplesPages,
     ...toolkitsMdxPages,
     ...toolkitsJsonPages,
+    ...changelogPages,
   ];
 }
