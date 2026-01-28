@@ -94,7 +94,7 @@ export async function GET() {
     ]);
 
     const results = [
-      '# Documentation\n',
+      '# Composio Documentation\n\n> Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.\n\n# Documentation\n',
       ...docsResults,
       '\n# Examples\n',
       ...examplesResults,
