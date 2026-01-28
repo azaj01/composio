@@ -12,18 +12,40 @@ export const source = loader({
 });
 
 // Combined reference source with MDX pages and OpenAPI-generated pages
-const openapiPages = await openapiSource(openapi, {
-  groupBy: 'tag',
-  baseDir: 'api-reference',
-});
+// Lazy initialization to avoid top-level await issues in serverless
+let _referenceSource: ReturnType<typeof loader> | null = null;
+let _openapiPagesPromise: Promise<Awaited<ReturnType<typeof openapiSource>>> | null = null;
 
+async function getOpenapiPages() {
+  if (!_openapiPagesPromise) {
+    _openapiPagesPromise = openapiSource(openapi, {
+      groupBy: 'tag',
+      baseDir: 'api-reference',
+    });
+  }
+  return _openapiPagesPromise;
+}
+
+export async function getReferenceSource() {
+  if (!_referenceSource) {
+    const openapiPages = await getOpenapiPages();
+    _referenceSource = loader({
+      baseUrl: '/reference',
+      source: multiple({
+        mdx: reference.toFumadocsSource(),
+        openapi: openapiPages,
+      }),
+      plugins: [lucideIconsPlugin(), openapiPlugin()],
+    });
+  }
+  return _referenceSource;
+}
+
+// Synchronous reference source for cases where OpenAPI isn't needed
 export const referenceSource = loader({
   baseUrl: '/reference',
-  source: multiple({
-    mdx: reference.toFumadocsSource(),
-    openapi: openapiPages,
-  }),
-  plugins: [lucideIconsPlugin(), openapiPlugin()],
+  source: reference.toFumadocsSource(),
+  plugins: [lucideIconsPlugin()],
 });
 
 export const examplesSource = loader({
