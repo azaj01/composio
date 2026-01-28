@@ -177,7 +177,33 @@ function mdxToCleanMarkdown(content: string): string {
 }
 
 export async function getLLMText(page: InferPageType<typeof source>) {
-  const content = await page.data.getText('raw');
+  // Fall back to description if getText is not available
+  if (typeof page.data.getText !== 'function') {
+    return `# ${page.data.title} (${page.url})
+
+${page.data.description || ''}`;
+  }
+
+  // Try 'processed' mode first (works in serverless), then 'raw' (works locally)
+  // Both can fail in different environments, so handle gracefully
+  let content: string | null = null;
+
+  try {
+    content = await page.data.getText('processed');
+  } catch {
+    try {
+      content = await page.data.getText('raw');
+    } catch {
+      // Both failed, fall back to description
+    }
+  }
+
+  if (!content) {
+    return `# ${page.data.title} (${page.url})
+
+${page.data.description || ''}`;
+  }
+
   const cleanContent = mdxToCleanMarkdown(content);
 
   return `# ${page.data.title} (${page.url})
