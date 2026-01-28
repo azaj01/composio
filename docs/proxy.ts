@@ -8,13 +8,6 @@ function kebabToCamel(str: string): string {
 }
 
 /**
- * Check if a string contains kebab-case (has hyphens between lowercase letters)
- */
-function hasKebabCase(str: string): boolean {
-  return /[a-z]-[a-z]/.test(str);
-}
-
-/**
  * Proxy handles:
  * 1. Markdown content negotiation for AI agents (Accept: text/markdown)
  * 2. Redirects for old Fern API reference URLs (kebab-case → camelCase)
@@ -33,30 +26,19 @@ export function proxy(request: NextRequest) {
   // Example: /reference/api-reference/tools/get-tools → /reference/api-reference/tools/getTools
   if (pathname.startsWith('/reference/api-reference/')) {
     const segments = pathname.split('/');
-    let hasKebab = false;
 
-    // Check if any segment after the tag has kebab-case
+    // Convert kebab-case segments to camelCase (only operation IDs after index 3)
     // Structure: /reference/api-reference/{tag}/{operationId}
-    for (let i = 4; i < segments.length; i++) {
-      if (hasKebabCase(segments[i])) {
-        hasKebab = true;
-        break;
-      }
-    }
+    const newSegments = segments.map((segment, index) => {
+      if (index <= 3) return segment; // Keep /reference/api-reference/{tag} as-is
+      return kebabToCamel(segment);
+    });
 
-    if (hasKebab) {
-      // Convert kebab-case segments to camelCase (only operation IDs, not tags)
-      const newSegments = segments.map((segment, index) => {
-        if (index <= 3) return segment; // Keep /reference/api-reference/{tag} as-is
-        return kebabToCamel(segment);
-      });
-
-      const newPathname = newSegments.join('/');
-      if (newPathname !== pathname) {
-        const url = request.nextUrl.clone();
-        url.pathname = newPathname;
-        return NextResponse.redirect(url, 301);
-      }
+    const newPathname = newSegments.join('/');
+    if (newPathname !== pathname) {
+      const url = request.nextUrl.clone();
+      url.pathname = newPathname;
+      return NextResponse.redirect(url, 301);
     }
   }
 
