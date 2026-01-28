@@ -512,10 +512,12 @@ export async function GET(
       throw e;
     }
     console.error('Unexpected error in llms.mdx route:', e);
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    const errorStack = e instanceof Error ? e.stack : '';
     return new Response(
-      '# Error\n\nAn error occurred while generating the markdown content.',
+      `# Error\n\nAn error occurred while generating the markdown content.\n\n**Error:** ${errorMessage}\n\n**Stack:**\n\`\`\`\n${errorStack}\n\`\`\``,
       {
-        status: 500,
+        status: 200, // Return 200 so we can see the error
         headers: {
           'Content-Type': 'text/markdown; charset=utf-8',
         },
