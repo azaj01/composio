@@ -9,9 +9,159 @@ import { openapi } from '@/lib/openapi';
 import { notFound } from 'next/navigation';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import type { Toolkit } from '@/types/toolkit';
+import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
 
 export const revalidate = false;
+
+const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
+const API_KEY = process.env.COMPOSIO_API_KEY;
+const API_FETCH_LIMIT = 1000; // Note: Toolkits with more items will be truncated
+
+/**
+ * Process raw parameter properties into typed ParameterSchema records.
+ * Adds required flag based on the requiredList from JSON Schema.
+ */
+function processParams(
+  props: unknown,
+  requiredList: string[]
+): Record<string, ParameterSchema> | undefined {
+  if (!props || typeof props !== 'object') return undefined;
+
+  const result: Record<string, ParameterSchema> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (typeof value === 'object' && value !== null) {
+      result[key] = {
+        ...(value as ParameterSchema),
+        // Explicitly set required based on JSON Schema required array
+        required: requiredList.includes(key),
+      };
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+// Fetch detailed tool info from Composio API
+async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
+  if (!API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&limit=${API_FETCH_LIMIT}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+        },
+        next: { revalidate: 3600 },
+      }
+    );
+
+    if (!response.ok) {
+      console.warn(`[LLM Markdown] Failed to fetch tools for ${toolkitSlug}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      console.warn(`[LLM Markdown] Invalid API response format for toolkit ${toolkitSlug}`);
+      return null;
+    }
+
+    const rawItems = data.items || data;
+    const items = Array.isArray(rawItems) ? rawItems : [];
+
+    if (items.length >= API_FETCH_LIMIT) {
+      console.warn(`[LLM Markdown] Toolkit ${toolkitSlug} has ${items.length}+ tools, results may be truncated`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return items.filter((tool: any) => tool && typeof tool === 'object').map((tool: any) => {
+      const inputSchema = tool.input_parameters || tool.parameters;
+      const outputSchema = tool.output_parameters || tool.response;
+
+      const inputProps = inputSchema?.properties || inputSchema;
+      const inputRequired = inputSchema?.required || [];
+      const outputProps = outputSchema?.properties || outputSchema;
+      const outputRequired = outputSchema?.required || [];
+
+      return {
+        slug: tool.slug || '',
+        name: tool.name || tool.display_name || tool.slug || '',
+        description: tool.description || '',
+        input_parameters: processParams(inputProps, inputRequired),
+        output_parameters: processParams(outputProps, outputRequired),
+        scopes: tool.scopes,
+        tags: tool.tags,
+        is_deprecated: tool.is_deprecated || false,
+      };
+    });
+  } catch {
+    return null;
+  }
+}
+
+// Fetch detailed trigger info from Composio API
+async function fetchDetailedTriggers(toolkitSlug: string): Promise<Trigger[] | null> {
+  if (!API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&limit=${API_FETCH_LIMIT}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+        },
+        next: { revalidate: 3600 },
+      }
+    );
+
+    if (!response.ok) {
+      console.warn(`[LLM Markdown] Failed to fetch triggers for ${toolkitSlug}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      console.warn(`[LLM Markdown] Invalid API response format for triggers ${toolkitSlug}`);
+      return null;
+    }
+
+    const rawItems = data.items || data;
+    const items = Array.isArray(rawItems) ? rawItems : [];
+
+    if (items.length >= API_FETCH_LIMIT) {
+      console.warn(`[LLM Markdown] Toolkit ${toolkitSlug} has ${items.length}+ triggers, results may be truncated`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return items.filter((trigger: any) => trigger && typeof trigger === 'object').map((trigger: any) => {
+      const configSchema = trigger.config;
+      const payloadSchema = trigger.payload;
+
+      const configProps = configSchema?.properties || configSchema;
+      const configRequired = configSchema?.required || [];
+      const payloadProps = payloadSchema?.properties || payloadSchema;
+      const payloadRequired = payloadSchema?.required || [];
+
+      return {
+        slug: trigger.slug || '',
+        name: trigger.name || trigger.display_name || trigger.slug || '',
+        description: trigger.description || '',
+        type: trigger.type,
+        config: processParams(configProps, configRequired),
+        payload: processParams(payloadProps, payloadRequired),
+        instructions: trigger.instructions,
+      };
+    });
+  } catch {
+    return null;
+  }
+}
 
 // Types for OpenAPI structures (from dereferenced document)
 interface OpenAPISchema {
@@ -381,8 +531,37 @@ const sources = [
   { prefix: 'toolkits', source: toolkitsSource },
 ];
 
-// Generate markdown from toolkit JSON data
-function toolkitToMarkdown(toolkit: Toolkit): string {
+// Format parameter type with enum values if available
+function formatParamType(param: ParameterSchema): string {
+  let typeStr = param.type || 'string';
+  if (param.enum && param.enum.length > 0) {
+    const enumValues = param.enum.map(v => `"${v}"`).join(' | ');
+    typeStr = `${typeStr} (${enumValues})`;
+  }
+  return typeStr;
+}
+
+// Render parameters as markdown table
+function renderParamsMarkdown(params: Record<string, ParameterSchema>): string[] {
+  const lines: string[] = [];
+  lines.push('| Parameter | Type | Required | Description |');
+  lines.push('|-----------|------|----------|-------------|');
+
+  for (const [name, param] of Object.entries(params)) {
+    const typeStr = formatParamType(param);
+    const required = param.required ? 'Yes' : 'No';
+    const desc = (param.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+    lines.push(`| \`${name}\` | ${typeStr} | ${required} | ${desc} |`);
+  }
+
+  return lines;
+}
+
+// Generate markdown from toolkit with detailed tools and triggers
+function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTriggers?: Trigger[]): string {
+  const tools = detailedTools || toolkit.tools;
+  const triggers = detailedTriggers || toolkit.triggers;
+
   const lines: string[] = [
     `# ${toolkit.name.trim()}`,
     '',
@@ -392,19 +571,62 @@ function toolkitToMarkdown(toolkit: Toolkit): string {
     `- **Auth:** ${toolkit.authSchemes.join(', ') || 'None'}`,
     `- **Tools:** ${toolkit.toolCount}`,
     `- **Triggers:** ${toolkit.triggerCount}`,
+    `- **Slug:** \`${toolkit.slug.toUpperCase()}\``,
   ];
 
-  if (toolkit.tools.length > 0) {
+  if (toolkit.version) {
+    lines.push(`- **Version:** ${toolkit.version}`);
+  }
+
+  if (tools.length > 0) {
     lines.push('', '## Tools', '');
-    for (const tool of toolkit.tools) {
-      lines.push(`### ${tool.name}`, '', tool.description, '');
+    for (const tool of tools) {
+      lines.push(`### ${tool.name}`, '');
+      lines.push(`**Slug:** \`${tool.slug}\``, '');
+      lines.push(tool.description, '');
+
+      // Input parameters
+      if (tool.input_parameters && Object.keys(tool.input_parameters).length > 0) {
+        lines.push('#### Input Parameters', '');
+        lines.push(...renderParamsMarkdown(tool.input_parameters));
+        lines.push('');
+      }
+
+      // Output parameters
+      if (tool.output_parameters && Object.keys(tool.output_parameters).length > 0) {
+        lines.push('#### Output', '');
+        lines.push(...renderParamsMarkdown(tool.output_parameters));
+        lines.push('');
+      }
     }
   }
 
-  if (toolkit.triggers.length > 0) {
+  if (triggers.length > 0) {
     lines.push('', '## Triggers', '');
-    for (const trigger of toolkit.triggers) {
-      lines.push(`### ${trigger.name}`, '', trigger.description, '');
+    for (const trigger of triggers) {
+      lines.push(`### ${trigger.name}`, '');
+      lines.push(`**Slug:** \`${trigger.slug}\``, '');
+
+      // Trigger type (webhook/poll)
+      if (trigger.type) {
+        lines.push(`**Type:** ${trigger.type}`, '');
+      }
+
+      lines.push(trigger.description, '');
+
+      // Config parameters
+      if (trigger.config && Object.keys(trigger.config).length > 0) {
+        lines.push('#### Configuration', '');
+        lines.push(...renderParamsMarkdown(trigger.config));
+        lines.push('');
+      }
+
+      // Payload parameters
+      if (trigger.payload && Object.keys(trigger.payload).length > 0) {
+        lines.push('#### Payload', '');
+        lines.push(...renderParamsMarkdown(trigger.payload));
+        lines.push('');
+      }
     }
   }
 
@@ -565,11 +787,24 @@ export async function GET(
     if (prefix === 'toolkits' && rest.length === 1) {
       const toolkit = await getToolkit(rest[0]);
       if (toolkit) {
-        return new Response(toolkitToMarkdown(toolkit), {
-          headers: {
-            'Content-Type': 'text/markdown; charset=utf-8',
-          },
-        });
+        // Fetch detailed tool and trigger info from API
+        const [detailedTools, detailedTriggers] = await Promise.all([
+          fetchDetailedTools(rest[0]),
+          fetchDetailedTriggers(rest[0]),
+        ]);
+
+        return new Response(
+          toolkitToMarkdown(
+            toolkit,
+            detailedTools !== null ? detailedTools : undefined,
+            detailedTriggers !== null ? detailedTriggers : undefined
+          ),
+          {
+            headers: {
+              'Content-Type': 'text/markdown; charset=utf-8',
+            },
+          }
+        );
       }
     }
 
