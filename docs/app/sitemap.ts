@@ -49,9 +49,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}/toolkits/${toolkit.slug}`,
   }));
 
-  // Changelog pages
-  const changelogPages = [...changelogEntries].map((entry) => ({
-    url: `${baseUrl}${dateToChangelogUrl(entry.date)}`,
+  // Changelog pages (deduplicate by date since multiple entries can share the same date)
+  const uniqueChangelogDates = [...new Set([...changelogEntries].map((entry) => entry.date))];
+  const changelogPages = uniqueChangelogDates.map((date) => ({
+    url: `${baseUrl}${dateToChangelogUrl(date)}`,
   }));
 
   return [
