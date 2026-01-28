@@ -17,12 +17,30 @@ interface Toolkit {
 }
 
 function getToolkitsFromJson(): Toolkit[] {
+  const filePath = join(process.cwd(), 'public/data/toolkits.json');
+
   try {
-    const filePath = join(process.cwd(), 'public/data/toolkits.json');
     const data = readFileSync(filePath, 'utf-8');
-    return JSON.parse(data) as Toolkit[];
-  } catch {
-    return [];
+    const toolkits = JSON.parse(data) as Toolkit[];
+
+    if (!Array.isArray(toolkits)) {
+      throw new Error('toolkits.json must contain an array');
+    }
+
+    if (toolkits.length === 0) {
+      console.warn('[Sitemap] Warning: toolkits.json is empty - toolkit pages will be missing from sitemap');
+    }
+
+    return toolkits;
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === 'ENOENT') {
+      throw new Error(`[Sitemap] Toolkits data file not found: ${filePath}`);
+    }
+    if (error instanceof SyntaxError) {
+      throw new Error(`[Sitemap] Invalid JSON in toolkits.json: ${error.message}`);
+    }
+    throw error;
   }
 }
 
