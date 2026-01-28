@@ -3,9 +3,9 @@ name: Claude Docs Review
 on:
   pull_request:
     types: [ opened, synchronize ]
-    # Optional: Only run on specific file changes
+    # Run on docs changes (new Fumadocs system)
     paths:
-    - "fern/pages/**/*.mdx"
+    - "docs/content/**/*.mdx"
 jobs:
   claude-review:
     # Optional: Filter by PR author
@@ -46,7 +46,7 @@ jobs:
           - Grammar and spelling
           - Clarity and readability
           - Consistency and tone
-          - Proper adherence to the documentation style guide in `fern/CLAUDE.md`
+          - Proper adherence to the documentation style guide in `docs/CLAUDE.md`
 
           Be constructive and helpful in your feedback.
         # Optional: Customize review based on file types
