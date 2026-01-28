@@ -32,7 +32,6 @@ export class InvalidToolkitVersionsValidationError extends Error {
 }
 
 const MAX_VERSIONS_TO_SHOW = 5;
-const S_CORNER_TOP_LEFT = unicodeOr('╭', '+');
 const S_CORNER_BOTTOM_LEFT = unicodeOr('╰', '+');
 const S_STEP_ERROR = unicodeOr('▲', 'x');
 
