@@ -1,7 +1,23 @@
 import type { MetadataRoute } from 'next';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { source, referenceSource, examplesSource, toolkitsSource } from '@/lib/source';
 
 const baseUrl = 'https://docs.composio.dev';
+
+interface Toolkit {
+  slug: string;
+}
+
+function getToolkitsFromJson(): Toolkit[] {
+  try {
+    const filePath = join(process.cwd(), 'public/data/toolkits.json');
+    const data = readFileSync(filePath, 'utf-8');
+    return JSON.parse(data) as Toolkit[];
+  } catch {
+    return [];
+  }
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const docsPages = source.getPages().map((page) => ({
@@ -16,8 +32,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}${page.url}`,
   }));
 
-  const toolkitsPages = toolkitsSource.getPages().map((page) => ({
+  // MDX toolkit pages
+  const toolkitsMdxPages = toolkitsSource.getPages().map((page) => ({
     url: `${baseUrl}${page.url}`,
+  }));
+
+  // JSON toolkit pages (dynamically generated from toolkits.json)
+  const toolkitsJsonPages = getToolkitsFromJson().map((toolkit) => ({
+    url: `${baseUrl}/toolkits/${toolkit.slug}`,
   }));
 
   return [
@@ -25,6 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...docsPages,
     ...referencePages,
     ...examplesPages,
-    ...toolkitsPages,
+    ...toolkitsMdxPages,
+    ...toolkitsJsonPages,
   ];
 }
