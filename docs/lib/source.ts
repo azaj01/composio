@@ -165,7 +165,15 @@ function mdxToCleanMarkdown(content: string): string {
 }
 
 export async function getLLMText(page: InferPageType<typeof source>) {
-  const content = await page.data.getText('raw');
+  // Use 'processed' mode since that's what includeProcessedMarkdown enables
+  // Fall back to description if getText is not available
+  if (typeof page.data.getText !== 'function') {
+    return `# ${page.data.title} (${page.url})
+
+${page.data.description || ''}`;
+  }
+
+  const content = await page.data.getText('processed');
   const cleanContent = mdxToCleanMarkdown(content);
 
   return `# ${page.data.title} (${page.url})
