@@ -42,13 +42,45 @@ jobs:
           REPO: ${{ github.repository }}
           PR NUMBER: ${{ github.event.pull_request.number }}
 
-          Please review this pull request for documentation changes and provide feedback on:
-          - Grammar and spelling
-          - Clarity and readability
-          - Consistency and tone
-          - Proper adherence to the documentation style guide in `docs/CLAUDE.md`
+          You are reviewing documentation for Composio, built with Fumadocs (https://fumadocs.dev/).
+          Read `docs/CLAUDE.md` and `docs/.claude/` for complete style guidelines.
 
-          Be constructive and helpful in your feedback.
+          ## Documentation Structure
+
+          - Content lives in `docs/content/**/*.mdx`
+          - Design tokens in `docs/app/global.css` (use `--composio-orange`, `--composio-sidebar`)
+          - MDX components available globally: `Tabs`, `Callout`, `Steps`, `Cards`, `Accordion`, etc.
+
+          ## Critical Technical Rules
+
+          1. **TypeScript code blocks are type-checked at build time**
+             - All TS/TSX code must compile. Invalid code fails the build.
+             - Use `// ---cut---` to hide setup code (imports, declarations) from output
+             - Use `// @noErrors` only when necessary for partial snippets
+             - Prefer SDK-exported types over inline type annotations
+
+          2. **CSS variables must use full names**
+             - ✓ `var(--composio-orange)`
+             - ✗ `var(--orange)`
+
+          3. **Changelog frontmatter**
+             - Date format: `YYYY-MM-DD` (e.g., `2025-01-28`)
+             - Required fields: `title`, `date`
+
+          4. **MDX components**
+             - Breaking changes: `<Callout type="warn">` with before/after code
+             - Code examples: Use `<Tabs>` for multi-language snippets
+             - No emojis in changelog entries
+
+          ## Review Focus
+
+          - **Code validity**: Will TypeScript examples compile?
+          - **Clarity**: Is the content clear and scannable?
+          - **Accuracy**: Are technical details correct?
+          - **Consistency**: Does tone match existing docs?
+          - **Mobile**: Avoid CSS that assumes horizontal nav layout
+
+          Be constructive. Suggest specific improvements, not vague feedback.
         # Optional: Customize review based on file types
         # direct_prompt: |
         #   Review this PR focusing on:
