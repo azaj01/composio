@@ -37,9 +37,14 @@ export function Feedback({ page }: FeedbackProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           page,
+          pageTitle: document.title,
           sentiment,
           message: message.trim(),
           email: email.trim() || undefined,
+          userAgent: navigator.userAgent,
+          referrer: document.referrer || undefined,
+          viewport: `${window.innerWidth}x${window.innerHeight}`,
+          timestamp: new Date().toISOString(),
         }),
       });
 
