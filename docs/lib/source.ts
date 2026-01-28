@@ -18,11 +18,26 @@ let _referenceSource: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _openapiPagesPromise: Promise<any> | null = null;
 
+/**
+ * Convert camelCase/PascalCase to kebab-case for URL compatibility
+ * This matches the old Fern docs URL format (e.g., getTools -> get-tools)
+ */
+function toKebabCase(name: string): string {
+  return name
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 async function getOpenapiPages() {
   if (!_openapiPagesPromise) {
     _openapiPagesPromise = openapiSource(openapi, {
       groupBy: 'tag',
       baseDir: 'api-reference',
+      slugify: toKebabCase,
     });
   }
   return _openapiPagesPromise;
@@ -140,7 +155,10 @@ function mdxToCleanMarkdown(content: string): string {
   result = result.replace(/<\/?Steps>/g, '');
   result = result.replace(/<\/?Step>/g, '');
   // Clean up step titles that fumadocs converted to "# title" format
+  // These appear as "#### # Title" after our processing, fix to "#### Title"
   result = result.replace(/^(\s*#{1,6})\s*#\s+(.+)$/gm, '$1 $2');
+  // Clean up any standalone # that fumadocs might leave
+  result = result.replace(/^\s*#\s*$/gm, '');
 
   // Convert FrameworkOption to header with framework name
   result = result.replace(
