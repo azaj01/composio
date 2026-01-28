@@ -13,8 +13,10 @@ export const source = loader({
 
 // Combined reference source with MDX pages and OpenAPI-generated pages
 // Lazy initialization to avoid top-level await issues in serverless
-let _referenceSource: ReturnType<typeof loader> | null = null;
-let _openapiPagesPromise: Promise<Awaited<ReturnType<typeof openapiSource>>> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _referenceSource: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _openapiPagesPromise: Promise<any> | null = null;
 
 async function getOpenapiPages() {
   if (!_openapiPagesPromise) {

@@ -448,7 +448,7 @@ export async function GET(
       if ('getAPIPageProps' in page.data) {
         try {
           const markdown = await openapiPageToMarkdown(
-            page as { url: string; data: OpenAPIPageData }
+            page as unknown as { url: string; data: OpenAPIPageData }
           );
           return new Response(markdown, {
             headers: {
