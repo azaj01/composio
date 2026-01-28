@@ -5,7 +5,7 @@ description: Troubleshooting SDK issues
 
 ## Debug network issues
 
-Enable debug logging to see API calls and identify if issues are SDK or API related. Look for the `x-request-id` in logs to share with support.
+Enable debug logging to see API calls and identify if issues are SDK or API related. When contacting support, share the full debug logs **along with** the `x-request-id`.
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
   <Tab value="Python">
@@ -21,6 +21,24 @@ COMPOSIO_LOG_LEVEL=debug
 ```
   </Tab>
 </Tabs>
+
+Once debug logging is enabled, you can find the `x-request-id` in your SDK logs:
+
+- **Python SDK example**
+
+  <img
+    src="/images/troubleshooting/troubleshooting-sdk-py-request-id.png"
+    alt="Example of x-request-id highlighted in Python SDK debug logs"
+    style={{ maxWidth: '720px', width: '100%', marginTop: '12px', marginLeft: '0.5rem', borderRadius: '8px', display: 'block' }}
+  />
+
+- **TypeScript SDK example**
+
+  <img
+    src="/images/troubleshooting/troubleshooting-sdk-ts-request-id.png"
+    alt="Example of x-request-id highlighted in TypeScript SDK debug logs"
+    style={{ maxWidth: '720px', width: '100%', marginTop: '12px', marginLeft: '0.5rem', borderRadius: '8px', display: 'block' }}
+  />
 
 ## Check SDK version
 
