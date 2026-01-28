@@ -92,11 +92,14 @@ export async function generateMetadata({
   const page = referenceSource.getPage(slug);
   if (!page) notFound();
 
-  const ogImage = getOgImageUrl('reference', page.slugs, page.data.title, page.data.description);
+  // Use description if available, otherwise fall back to title for SEO
+  // This handles OpenAPI pages where description may be null in the spec
+  const description = page.data.description || page.data.title;
+  const ogImage = getOgImageUrl('reference', page.slugs, page.data.title, description);
 
   return {
     title: page.data.title,
-    description: page.data.description,
+    description,
     alternates: { canonical: page.url },
     openGraph: { images: [ogImage] },
     twitter: { card: 'summary_large_image', images: [ogImage] },
