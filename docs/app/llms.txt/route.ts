@@ -1,4 +1,4 @@
-import { source, examplesSource } from '@/lib/source';
+import { source, examplesSource, referenceSource, toolkitsSource } from '@/lib/source';
 
 export const revalidate = false;
 
@@ -6,6 +6,8 @@ export async function GET() {
   try {
     const docsPages = source.getPages();
     const examplesPages = examplesSource.getPages();
+    const referencePages = referenceSource.getPages();
+    const toolkitsPages = toolkitsSource.getPages();
 
     // Group docs pages by directory
     const groupedDocs = new Map<string, typeof docsPages>();
@@ -90,6 +92,14 @@ ${migrationDocs.map(formatPage).join('\n')}
 ## Examples
 
 ${examplesPages.map(formatPage).join('\n')}
+
+## API Reference
+
+${referencePages.map(formatPage).join('\n')}
+
+## Toolkits
+
+${toolkitsPages.map(formatPage).join('\n')}
 
 ## Full Documentation
 
