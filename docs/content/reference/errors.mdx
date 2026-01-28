@@ -1,0 +1,150 @@
+---
+title: API Errors
+description: Understanding and handling Composio API errors
+---
+
+Composio uses conventional HTTP response codes to indicate the success or failure of an API request. Codes in the `2xx` range indicate success. Codes in the `4xx` range indicate an error with the information provided. Codes in the `5xx` range indicate an error with Composio's servers.
+
+## The error object
+
+```json
+{
+  "error": {
+    "message": "Tool not found",
+    "code": 1800,
+    "status": 404,
+    "request_id": "req_abc123def456",
+    "suggested_fix": "Check if the tool slug is correct"
+  }
+}
+```
+
+### Attributes
+
+<div className="[&_table]:text-sm">
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `message` | string | A human-readable message providing details about the error. Use this to understand what went wrong. |
+| `code` | integer | A Composio-specific error code for programmatic handling. See [error codes](#error-codes) below. |
+| `status` | integer | The HTTP status code. |
+| `request_id` | string | A unique identifier for this request. **Always include this when contacting support.** |
+| `suggested_fix` | string, optional | Guidance on how to resolve the error, when available. |
+| `errors` | array, optional | For validation errors, a list of specific issues with your request. |
+
+</div>
+
+## HTTP status codes
+
+<div className="[&_table]:text-sm">
+
+| Status | Description |
+|--------|-------------|
+| `200` | OK - Request succeeded |
+| `400` | Bad Request - Invalid parameters or malformed request |
+| `401` | Unauthorized - Invalid or missing API key |
+| `403` | Forbidden - Valid key but insufficient permissions |
+| `404` | Not Found - Resource doesn't exist |
+| `409` | Conflict - Resource already exists |
+| `410` | Gone - Resource was deleted |
+| `422` | Unprocessable - Valid request but can't be processed |
+| `429` | Too Many Requests - Rate limit exceeded |
+| `500` | Server Error - Something went wrong on our end |
+
+</div>
+
+## Error codes
+
+Composio uses numeric error codes grouped by domain. When handling errors programmatically, check both the HTTP status and the error code.
+
+### Authentication
+
+| Code | Status | Message | Resolution |
+|------|--------|---------|------------|
+| `801` | 401 | Invalid API Key | Verify your key in [Settings](https://platform.composio.dev/settings) |
+| `906` | 401 | No authentication provided | Include the `x-api-key` header |
+| `904` | 403 | Invalid project access | Use the correct API key scope |
+
+<Callout>
+For auth issues, see [Authentication Troubleshooting](/docs/troubleshooting/authentication).
+</Callout>
+
+### Tools
+
+| Code | Status | Message | Resolution |
+|------|--------|---------|------------|
+| `1800` | 404 | Tool not found | Check tool slug - they're case-sensitive (`SCREAMING_SNAKE_CASE`) |
+| `1801` | 500 | Tool execution failed | External service error - check parameters and permissions |
+| `1803` | 400 | No connected account | User needs to [authenticate](/docs/authenticating-users) first |
+
+<Callout>
+For tool issues, see [Tools Troubleshooting](/docs/troubleshooting/tools).
+</Callout>
+
+### Connected accounts
+
+| Code | Status | Message | Resolution |
+|------|--------|---------|------------|
+| `606` | 404 | Connected account not found | Verify the `connectedAccountId` |
+| `1205` | 422 | Auth refresh required | Prompt user to re-authenticate |
+| `1806` | 410 | Connected account deleted | Create a new connection |
+
+### Triggers
+
+| Code | Status | Message | Resolution |
+|------|--------|---------|------------|
+| `2601` | 404 | Trigger not found | Verify the trigger slug exists |
+| `1202` | 410 | Trigger instance deleted | Create a new trigger instance |
+
+<Callout>
+For trigger issues, see [Triggers Troubleshooting](/docs/troubleshooting/triggers).
+</Callout>
+
+### Rate limits
+
+| Code | Status | Message | Resolution |
+|------|--------|---------|------------|
+| `10429` | 429 | Rate limit exceeded | Implement exponential backoff |
+
+When you receive a `429`, wait before retrying:
+
+```typescript
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      if (err.status === 429 && i < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+```
+
+## Getting help
+
+When contacting support, include:
+
+- **Request ID** from the error response
+- **Error code and message**
+- **Timestamp** of when it occurred
+- **What you were doing** (endpoint, parameters)
+
+<Cards>
+  <Card title="Troubleshooting" href="/docs/troubleshooting">
+    Common issues and solutions
+  </Card>
+  <Card title="Discord" href="https://discord.com/channels/1170785031560646836/1268871288156323901">
+    Community support
+  </Card>
+  <Card title="Email" href="mailto:support@composio.dev">
+    Contact support team
+  </Card>
+  <Card title="GitHub" href="https://github.com/ComposioHQ/composio/issues/new?labels=bug">
+    Report a bug
+  </Card>
+</Cards>
