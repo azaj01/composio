@@ -23,7 +23,7 @@ export async function GET() {
     // Format page as simple URL (like Cursor's llms.txt)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatPage = (page: any) =>
-      `- https://composio.dev${page.url}.md`;
+      `- https://docs.composio.dev${page.url}.md`;
 
     // Build sections based on actual folder structure
     const coreDocs = groupedDocs.get('core') || [];
@@ -93,7 +93,7 @@ ${examplesPages.map(formatPage).join('\n')}
 
 ## Full Documentation
 
-- https://composio.dev/llms-full.txt
+- https://docs.composio.dev/llms-full.txt
 `;
 
     return new Response(index, {
