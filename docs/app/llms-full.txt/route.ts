@@ -2,11 +2,23 @@ import { getLLMText, source, examplesSource, referenceSource, toolkitsSource } f
 
 export const revalidate = false;
 
-async function getTextForPages(pages: ReturnType<typeof source.getPages>) {
+// Generic page type that works for all sources
+interface PageLike {
+  url: string;
+  slugs: string[];
+  data: {
+    title: string;
+    description?: string;
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getTextForPages(pages: PageLike[]) {
   return Promise.all(
     pages.map(async (page) => {
       try {
-        return await getLLMText(page);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await getLLMText(page as any);
       } catch {
         // Graceful fallback if getText fails
         return `# ${page.data.title} (${page.url})\n\n${page.data.description || ''}`;
@@ -16,7 +28,7 @@ async function getTextForPages(pages: ReturnType<typeof source.getPages>) {
 }
 
 // Order pages according to sidebar structure from meta.json
-function orderDocPages(pages: ReturnType<typeof source.getPages>) {
+function orderDocPages(pages: PageLike[]) {
   // Define the order based on meta.json sidebar structure
   const sidebarOrder = [
     // Get Started
@@ -84,13 +96,13 @@ function orderDocPages(pages: ReturnType<typeof source.getPages>) {
 
 export async function GET() {
   try {
-    const orderedDocsPages = orderDocPages(source.getPages());
+    const orderedDocsPages = orderDocPages(source.getPages() as PageLike[]);
 
     const [docsResults, examplesResults, referenceResults, toolkitsResults] = await Promise.all([
       getTextForPages(orderedDocsPages),
-      getTextForPages(examplesSource.getPages()),
-      getTextForPages(referenceSource.getPages()),
-      getTextForPages(toolkitsSource.getPages()),
+      getTextForPages(examplesSource.getPages() as PageLike[]),
+      getTextForPages(referenceSource.getPages() as PageLike[]),
+      getTextForPages(toolkitsSource.getPages() as PageLike[]),
     ]);
 
     const results = [
