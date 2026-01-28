@@ -127,9 +127,23 @@ function mdxToCleanMarkdown(content: string): string {
   result = result.replace(/<TabsContent[\s\S]*?value="([^"]*)"[\s\S]*?>([\s\S]*?)<\/TabsContent>/g, '\n**$1:**\n$2');
   result = result.replace(/<Tab[\s\S]*?value="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Tab>/g, '\n**$1:**\n$2');
 
-  // Convert Steps/Step
-  result = result.replace(/<Step>\s*###\s*(.+)/g, '### Step: $1');
-  result = result.replace(/<\/?Steps?>/g, '');
+  // Convert Steps/Step with StepTitle
+  // Handle StepTitle with potential whitespace and multiline content
+  result = result.replace(/<StepTitle>([\s\S]*?)<\/StepTitle>/g, (_, title) => {
+    // Clean up the title - remove extra whitespace and any # prefix fumadocs might add
+    const cleanTitle = title.replace(/^[\s#]*#\s*/, '').replace(/\s+$/, '').trim();
+    return cleanTitle ? `#### ${cleanTitle}` : '';
+  });
+  // Handle <Step> with ### header pattern (legacy)
+  result = result.replace(/<Step>\s*###\s*(.+)/g, '#### $1');
+  // Remove Steps wrapper and Step tags
+  result = result.replace(/<\/?Steps>/g, '');
+  result = result.replace(/<\/?Step>/g, '');
+  // Clean up step titles that fumadocs converted to "# title" format
+  // These appear as "#### # Title" after our processing, fix to "#### Title"
+  result = result.replace(/^(\s*#{1,6})\s*#\s+(.+)$/gm, '$1 $2');
+  // Clean up any standalone # that fumadocs might leave
+  result = result.replace(/^\s*#\s*$/gm, '');
 
   // Convert FrameworkOption to header with framework name
   result = result.replace(
@@ -180,6 +194,46 @@ function mdxToCleanMarkdown(content: string): string {
 
   // Clean up leftover JSX artifacts like lone } or {
   result = result.replace(/^\s*[{}]\s*$/gm, '');
+
+  // Normalize indentation - remove leading whitespace that came from nested JSX
+  // Also normalize code block content indentation
+  const lines = result.split('\n');
+  const normalizedLines: string[] = [];
+  let inCodeBlock = false;
+  let codeBlockLines: string[] = [];
+
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      if (inCodeBlock) {
+        // End of code block - normalize and flush
+        if (codeBlockLines.length > 0) {
+          // Find minimum indentation (ignoring empty lines)
+          const nonEmptyLines = codeBlockLines.filter(l => l.trim().length > 0);
+          const minIndent = nonEmptyLines.length > 0
+            ? Math.min(...nonEmptyLines.map(l => l.match(/^(\s*)/)?.[1]?.length || 0))
+            : 0;
+          // Strip common indentation
+          for (const codeLine of codeBlockLines) {
+            normalizedLines.push(codeLine.slice(minIndent));
+          }
+        }
+        codeBlockLines = [];
+        inCodeBlock = false;
+        normalizedLines.push(line.trim());
+      } else {
+        // Start of code block
+        inCodeBlock = true;
+        normalizedLines.push(line.trim());
+      }
+    } else if (inCodeBlock) {
+      codeBlockLines.push(line);
+    } else {
+      // Outside code blocks, remove excessive leading whitespace
+      normalizedLines.push(line.replace(/^\s+/, ''));
+    }
+  }
+
+  result = normalizedLines.join('\n');
 
   // Clean up excessive newlines
   result = result.replace(/\n{3,}/g, '\n\n');
