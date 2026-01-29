@@ -3,6 +3,9 @@ import {
   getReferenceSource,
   examplesSource,
   toolkitsSource,
+  changelogEntries,
+  slugToDate,
+  formatDate,
   getLLMText,
 } from '@/lib/source';
 import { openapi } from '@/lib/openapi';
@@ -531,6 +534,141 @@ const sources = [
   { prefix: 'toolkits', source: toolkitsSource },
 ];
 
+/**
+ * Strips MDX-specific syntax from content for clean markdown output.
+ * Converts JSX components to plain text equivalents.
+ */
+function mdxToCleanMarkdown(content: string): string {
+  let result = content;
+
+  // Remove frontmatter
+  result = result.replace(/^---[\s\S]*?---\n*/m, '');
+
+  // Convert Accordion to collapsible-style text
+  result = result.replace(
+    /<Accordion[\s\S]*?title="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Accordion>/g,
+    '\n**$1**\n$2'
+  );
+
+  // Convert Callout to blockquote
+  result = result.replace(
+    /<Callout[^>]*title="([^"]*)"[^>]*>([\s\S]*?)<\/Callout>/g,
+    (_, title, calloutContent) => `> **${title}**: ${calloutContent.trim()}`
+  );
+  result = result.replace(
+    /<Callout[^>]*>([\s\S]*?)<\/Callout>/g,
+    (_, calloutContent) => `> ${calloutContent.trim()}`
+  );
+
+  // Remove wrapper components
+  result = result.replace(/<\/?(Accordions|Cards|Tabs)[^>]*>/g, '');
+
+  // Remove remaining self-closing JSX tags
+  result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
+
+  // Remove remaining JSX opening/closing tags but keep content
+  result = result.replace(/<\/?[A-Z][a-zA-Z]*[^>]*>/g, '');
+
+  // Clean up excessive newlines
+  result = result.replace(/\n{3,}/g, '\n\n');
+
+  return result.trim();
+}
+
+/**
+ * Generate a changelog index with links to all changelog entries.
+ */
+function generateChangelogIndex(): string {
+  // Group entries by date and sort by date descending (newest first)
+  const entriesByDate = new Map<string, typeof changelogEntries>();
+
+  for (const entry of changelogEntries) {
+    const existing = entriesByDate.get(entry.date) || [];
+    entriesByDate.set(entry.date, [...existing, entry]);
+  }
+
+  const sortedDates = Array.from(entriesByDate.keys()).sort((a, b) => b.localeCompare(a));
+
+  const lines: string[] = [
+    '# Changelog',
+    '',
+    'All updates and announcements for Composio.',
+    '',
+    '| Date | Updates |',
+    '|------|---------|',
+  ];
+
+  for (const date of sortedDates) {
+    const entries = entriesByDate.get(date) || [];
+    const [year, month, day] = date.split('-');
+    const mdUrl = `/docs/changelog/${year}/${month}/${day}.md`;
+    const formattedDate = formatDate(date);
+    const titles = entries.map(e => e.title).join(', ');
+    lines.push(`| [${formattedDate}](${mdUrl}) | ${titles} |`);
+  }
+
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+  lines.push('For the full changelog with details, visit each date above.');
+
+  return lines.join('\n');
+}
+
+/**
+ * Generate markdown for changelog entries matching a specific date.
+ * Multiple entries on the same date are combined into one document.
+ */
+async function changelogToMarkdown(dateStr: string): Promise<string | null> {
+  const matchingEntries = changelogEntries.filter(
+    (entry) => entry.date === dateStr
+  );
+
+  if (matchingEntries.length === 0) {
+    return null;
+  }
+
+  const formattedDate = formatDate(dateStr);
+  const lines: string[] = [
+    `# Changelog - ${formattedDate}`,
+    '',
+    `**Documentation:** /docs/changelog/${dateStr.replace(/-/g, '/')}`,
+    '',
+  ];
+
+  for (const entry of matchingEntries) {
+    lines.push(`## ${entry.title}`, '');
+
+    if (entry.description) {
+      lines.push(entry.description, '');
+    }
+
+    // Try to get the processed text if available
+    if (typeof entry.getText === 'function') {
+      try {
+        const text = await entry.getText('processed');
+        if (text) {
+          lines.push(mdxToCleanMarkdown(text), '');
+        }
+      } catch {
+        // getText not available, try raw
+        try {
+          const text = await entry.getText('raw');
+          if (text) {
+            lines.push(mdxToCleanMarkdown(text), '');
+          }
+        } catch {
+          // No text available, just use title/description
+        }
+      }
+    }
+
+    lines.push('---', '');
+  }
+
+  return lines.join('\n').trim();
+}
+
 // Format parameter type with enum values if available
 function formatParamType(param: ParameterSchema): string {
   let typeStr = param.type || 'string';
@@ -704,6 +842,36 @@ export async function GET(
           'Content-Type': 'text/markdown; charset=utf-8',
         },
       });
+    }
+
+    // Special handling for changelog index - /docs/changelog
+    if (prefix === 'docs' && rest[0] === 'changelog' && rest.length === 1) {
+      const changelogIndex = generateChangelogIndex();
+      return new Response(changelogIndex, {
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+        },
+      });
+    }
+
+    // Special handling for changelog pages - /docs/changelog/YYYY/MM/DD
+    if (prefix === 'docs' && rest[0] === 'changelog' && rest.length === 4) {
+      // rest = ['changelog', '2026', '01', '07']
+      const [, year, month, day] = rest;
+      const dateStr = slugToDate([year, month, day]);
+
+      if (dateStr) {
+        const markdown = await changelogToMarkdown(dateStr);
+        if (markdown) {
+          return new Response(markdown, {
+            headers: {
+              'Content-Type': 'text/markdown; charset=utf-8',
+            },
+          });
+        }
+      }
+      // If no entries found, fall through to notFound
+      notFound();
     }
 
     // Handle 'reference' specially - uses async getReferenceSource() for OpenAPI pages
