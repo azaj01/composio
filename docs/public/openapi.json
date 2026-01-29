@@ -310,11 +310,6 @@
               "devops"
             ]
           },
-          "status": {
-            "type": "string",
-            "description": "Lifecycle status of the tool",
-            "example": "active"
-          },
           "is_deprecated": {
             "type": "boolean",
             "description": "Indicates if this tool is deprecated and may be removed in the future",
@@ -384,7 +379,6 @@
           "output_parameters",
           "scopes",
           "tags",
-          "status",
           "is_deprecated",
           "deprecated"
         ]
@@ -36918,11 +36912,6 @@
                             "description": "When true, this toolkit can be used without authentication",
                             "example": false
                           },
-                          "status": {
-                            "type": "string",
-                            "description": "Lifecycle status of the toolkit",
-                            "example": "active"
-                          },
                           "deprecated": {
                             "$ref": "#/components/schemas/DeprecatedToolkitInfo"
                           },
@@ -37021,7 +37010,6 @@
                           "slug",
                           "name",
                           "is_local_toolkit",
-                          "status",
                           "deprecated",
                           "meta"
                         ],
@@ -37266,11 +37254,6 @@
                       "type": "boolean",
                       "description": "Indicates if this toolkit is currently enabled and available for use",
                       "example": true
-                    },
-                    "status": {
-                      "type": "string",
-                      "description": "Lifecycle status of the toolkit",
-                      "example": "active"
                     },
                     "composio_managed_auth_schemes": {
                       "type": "array",
@@ -37663,7 +37646,6 @@
                     "slug",
                     "name",
                     "enabled",
-                    "status",
                     "is_local_toolkit",
                     "meta",
                     "deprecated"
@@ -38283,11 +38265,6 @@
                             "description": "When true, this toolkit can be used without authentication",
                             "example": false
                           },
-                          "status": {
-                            "type": "string",
-                            "description": "Lifecycle status of the toolkit",
-                            "example": "active"
-                          },
                           "deprecated": {
                             "$ref": "#/components/schemas/DeprecatedToolkitInfo"
                           },
@@ -38386,7 +38363,6 @@
                           "slug",
                           "name",
                           "is_local_toolkit",
-                          "status",
                           "deprecated",
                           "meta"
                         ],
@@ -42688,11 +42664,6 @@
                       "type": "string",
                       "description": "Version of the trigger type",
                       "example": "20250930_00"
-                    },
-                    "status": {
-                      "type": "string",
-                      "description": "Lifecycle status of the trigger",
-                      "example": "active"
                     }
                   },
                   "required": [
@@ -42704,8 +42675,7 @@
                     "toolkit",
                     "config",
                     "payload",
-                    "version",
-                    "status"
+                    "version"
                   ]
                 }
               }
@@ -42957,11 +42927,6 @@
                             "type": "string",
                             "description": "Version of the trigger type",
                             "example": "20250930_00"
-                          },
-                          "status": {
-                            "type": "string",
-                            "description": "Lifecycle status of the trigger",
-                            "example": "active"
                           }
                         },
                         "required": [
@@ -42973,8 +42938,7 @@
                           "toolkit",
                           "config",
                           "payload",
-                          "version",
-                          "status"
+                          "version"
                         ]
                       }
                     },
