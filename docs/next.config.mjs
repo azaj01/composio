@@ -38,6 +38,16 @@ const config = {
         permanent: true,
       },
       {
+        source: '/getting-started/welcome',
+        destination: '/docs',
+        permanent: true,
+      },
+      {
+        source: '/getting-started/:path*',
+        destination: '/docs',
+        permanent: true,
+      },
+      {
         source: '/tool-router',
         destination: '/docs/quickstart',
         permanent: true,
