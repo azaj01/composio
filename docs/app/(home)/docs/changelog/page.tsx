@@ -7,6 +7,7 @@ import {
   DocsTitle,
 } from 'fumadocs-ui/layouts/docs/page';
 import { CopyLink } from '@/components/copy-link';
+import { PageActions } from '@/components/page-actions';
 
 const mdxComponents = getMDXComponents();
 
@@ -19,6 +20,7 @@ export default function ChangelogPage() {
     <DocsPage toc={[]} footer={{ enabled: false }}>
       <DocsTitle>Changelog</DocsTitle>
       <DocsDescription>Latest updates and announcements</DocsDescription>
+      <PageActions path="/docs/changelog" />
       <DocsBody>
         <div className="relative">
           {/* Timeline line */}
