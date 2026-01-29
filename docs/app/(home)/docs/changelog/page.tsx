@@ -2,7 +2,6 @@ import { changelogEntries, formatDate, dateToChangelogUrl } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 import {
   DocsBody,
-  DocsDescription,
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/layouts/docs/page';
@@ -19,10 +18,9 @@ export default function ChangelogPage() {
   return (
     <DocsPage toc={[]} footer={{ enabled: false }}>
       <DocsTitle>Changelog</DocsTitle>
-      <DocsDescription>Latest updates and announcements</DocsDescription>
       <PageActions path="/docs/changelog" />
       <DocsBody>
-        <div className="relative -mt-4">
+        <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-0 top-2 bottom-0 w-px bg-border hidden md:block md:left-[7.5rem]" />
 
