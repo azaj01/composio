@@ -49,6 +49,20 @@ import { ComposioConfig } from '../composio';
 import { BaseComposioProvider } from '../provider/BaseProvider';
 import { hmacSha256Base64, timingSafeEqual } from '../utils/crypto';
 import { CONFIG_DEFAULTS } from '../utils/config-defaults';
+
+/**
+ * Safely converts a value to a string, returning the default if the value is null, undefined, or empty.
+ * This prevents runtime crashes when calling string methods like `.toLowerCase()` on non-string values.
+ * @private
+ */
+const toStringOrDefault = (value: unknown, defaultValue: string): string => {
+  if (value === null || value === undefined) {
+    return defaultValue;
+  }
+  const str = String(value);
+  return str.length > 0 ? str : defaultValue;
+};
+
 /**
  * Trigger (Instance) class
  * /api/v3/trigger_instances
@@ -452,6 +466,7 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
   /**
    * Tries to parse data as V1, V2, or V3 webhook payload format.
    * Returns the parsed result with version info, or null if no format matches.
+   * Also returns any schema validation errors for debugging purposes.
    * @private
    */
   private tryParseVersionedPayload(data: unknown):
@@ -531,19 +546,33 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
     logger.warn('Unknown Pusher payload format. Payload keys: ' + Object.keys(data).join(', '));
 
     // Return a minimal payload structure to avoid breaking the subscription
+    // Use toStringOrDefault to safely convert values and prevent crashes when
+    // non-string values are passed (e.g., numbers, objects) and .toLowerCase() is called later
+    const id = toStringOrDefault(data.id, toStringOrDefault(data.trigger_id, 'unknown'));
+    const uuid = toStringOrDefault(data.uuid, toStringOrDefault(data.id, 'unknown'));
+    const triggerSlug = toStringOrDefault(
+      data.triggerSlug,
+      toStringOrDefault(data.trigger_name, 'UNKNOWN')
+    );
+    const toolkitSlug = toStringOrDefault(
+      data.toolkitSlug,
+      toStringOrDefault(data.appName, 'UNKNOWN')
+    );
+    const userId = toStringOrDefault(data.userId, '');
+
     return {
-      id: (data.id as string) || (data.trigger_id as string) || 'unknown',
-      uuid: (data.uuid as string) || (data.id as string) || 'unknown',
-      triggerSlug: (data.triggerSlug as string) || (data.trigger_name as string) || 'UNKNOWN',
-      toolkitSlug: (data.toolkitSlug as string) || (data.appName as string) || 'UNKNOWN',
-      userId: (data.userId as string) || '',
+      id,
+      uuid,
+      triggerSlug,
+      toolkitSlug,
+      userId,
       payload: (data.payload as Record<string, unknown>) || data,
       originalPayload: (data.originalPayload as Record<string, unknown>) || data,
       metadata: {
-        id: (data.id as string) || 'unknown',
-        uuid: (data.uuid as string) || 'unknown',
-        toolkitSlug: (data.toolkitSlug as string) || 'UNKNOWN',
-        triggerSlug: (data.triggerSlug as string) || 'UNKNOWN',
+        id,
+        uuid,
+        triggerSlug,
+        toolkitSlug,
         triggerConfig: {},
         connectedAccount: {
           id: '',
