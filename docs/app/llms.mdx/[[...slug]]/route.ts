@@ -561,7 +561,7 @@ function generateChangelogIndex(): string {
   for (const date of sortedDates) {
     const entries = entriesByDate.get(date) || [];
     const [year, month, day] = date.split('-');
-    const mdUrl = `/docs/changelog/${year}/${month}/${day}.md`;
+    const mdUrl = `https://docs.composio.dev/docs/changelog/${year}/${month}/${day}.md`;
     const formattedDate = formatDate(date);
     const titles = entries.map(e => e.title).join(', ');
     lines.push(`| [${formattedDate}](${mdUrl}) | ${titles} |`);
@@ -592,7 +592,7 @@ async function changelogToMarkdown(dateStr: string): Promise<string | null> {
   const lines: string[] = [
     `# Changelog - ${formattedDate}`,
     '',
-    `**Documentation:** /docs/changelog/${dateStr.replace(/-/g, '/')}`,
+    `**Documentation:** https://docs.composio.dev/docs/changelog/${dateStr.replace(/-/g, '/')}`,
     '',
   ];
 
