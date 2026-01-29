@@ -108,10 +108,23 @@ async function fetchAndFilterSpec() {
   console.log(`Removed ${removedCount} endpoints/operations`);
   console.log(`Final spec has ${Object.keys(filteredPaths).length} paths`);
 
+  // Fix invalid OpenAPI: "nullable" without "type" is not valid in OpenAPI 3.0
+  // Transform {"nullable": true} to {} (allows any type)
+  const specString = JSON.stringify(spec);
+  const fixedSpecString = specString.replace(
+    /"additionalProperties":\s*\{\s*"nullable":\s*true\s*\}/g,
+    '"additionalProperties": {}'
+  );
+  const fixedSpec = JSON.parse(fixedSpecString);
+  const fixCount = (specString.match(/"additionalProperties":\s*\{\s*"nullable":\s*true\s*\}/g) || []).length;
+  if (fixCount > 0) {
+    console.log(`Fixed ${fixCount} invalid additionalProperties schemas (nullable without type)`);
+  }
+
   // Write to public directory for fumadocs to fetch
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const outputPath = join(__dirname, '../public/openapi.json');
-  writeFileSync(outputPath, JSON.stringify(spec, null, 2));
+  writeFileSync(outputPath, JSON.stringify(fixedSpec, null, 2));
 
   console.log(`Written to ${outputPath}`);
 }
