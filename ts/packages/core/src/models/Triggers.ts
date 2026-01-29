@@ -454,15 +454,24 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
    * Returns the parsed result with version info, or null if no format matches.
    * @private
    */
-  private tryParseVersionedPayload(data: unknown): {
-    version: WebhookVersion;
-    rawPayload: WebhookPayload;
-    normalizedPayload: IncomingTriggerPayload;
-  } | null {
+  private tryParseVersionedPayload(data: unknown):
+    | {
+        ok: true;
+        version: WebhookVersion;
+        rawPayload: WebhookPayload;
+        normalizedPayload: IncomingTriggerPayload;
+      }
+    | {
+        ok: false;
+        v1Error: string;
+        v2Error: string;
+        v3Error: string;
+      } {
     // Try V3 first (has 'composio.trigger.message' type)
     const v3Result = WebhookPayloadV3Schema.safeParse(data);
     if (v3Result.success) {
       return {
+        ok: true,
         version: WebhookVersions.V3,
         rawPayload: v3Result.data,
         normalizedPayload: this.normalizeV3Payload(v3Result.data),
@@ -473,6 +482,7 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
     const v2Result = WebhookPayloadV2Schema.safeParse(data);
     if (v2Result.success) {
       return {
+        ok: true,
         version: WebhookVersions.V2,
         rawPayload: v2Result.data,
         normalizedPayload: this.normalizeV2Payload(v2Result.data),
@@ -483,13 +493,19 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
     const v1Result = WebhookPayloadV1Schema.safeParse(data);
     if (v1Result.success) {
       return {
+        ok: true,
         version: WebhookVersions.V1,
         rawPayload: v1Result.data,
         normalizedPayload: this.normalizeV1Payload(v1Result.data),
       };
     }
 
-    return null;
+    return {
+      ok: false,
+      v1Error: v1Result.error.message,
+      v2Error: v2Result.error.message,
+      v3Error: v3Result.error.message,
+    };
   }
 
   /**
@@ -499,7 +515,7 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
   private parsePusherPayload(data: Record<string, unknown>): IncomingTriggerPayload {
     // Try V1/V2/V3 formats
     const versionedResult = this.tryParseVersionedPayload(data);
-    if (versionedResult) {
+    if (versionedResult.ok) {
       logger.debug(`Parsed Pusher payload as ${versionedResult.version} format`);
       return versionedResult.normalizedPayload;
     }
@@ -684,14 +700,24 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
 
     // Try V1/V2/V3 formats using shared parsing logic
     const result = this.tryParseVersionedPayload(jsonPayload);
-    if (result) {
-      return result;
+    if (result.ok) {
+      const { ok, ...rest } = result;
+      return rest;
     }
+
+    const { v1Error, v2Error, v3Error } = result;
 
     // None of the schemas matched
     throw new ComposioWebhookPayloadError(
       'Webhook payload does not match any known version (V1, V2, or V3). ' +
-        'Please ensure you are using a supported webhook payload format.'
+        'Please ensure you are using a supported webhook payload format.',
+      {
+        cause: {
+          v1Error,
+          v2Error,
+          v3Error,
+        },
+      }
     );
   }
 
