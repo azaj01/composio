@@ -7,6 +7,7 @@ import {
   slugToDate,
   formatDate,
   getLLMText,
+  mdxToCleanMarkdown,
 } from '@/lib/source';
 import { openapi } from '@/lib/openapi';
 import { notFound } from 'next/navigation';
@@ -533,47 +534,6 @@ const sources = [
   { prefix: 'examples', source: examplesSource },
   { prefix: 'toolkits', source: toolkitsSource },
 ];
-
-/**
- * Strips MDX-specific syntax from content for clean markdown output.
- * Converts JSX components to plain text equivalents.
- */
-function mdxToCleanMarkdown(content: string): string {
-  let result = content;
-
-  // Remove frontmatter
-  result = result.replace(/^---[\s\S]*?---\n*/m, '');
-
-  // Convert Accordion to collapsible-style text
-  result = result.replace(
-    /<Accordion[\s\S]*?title="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Accordion>/g,
-    '\n**$1**\n$2'
-  );
-
-  // Convert Callout to blockquote
-  result = result.replace(
-    /<Callout[^>]*title="([^"]*)"[^>]*>([\s\S]*?)<\/Callout>/g,
-    (_, title, calloutContent) => `> **${title}**: ${calloutContent.trim()}`
-  );
-  result = result.replace(
-    /<Callout[^>]*>([\s\S]*?)<\/Callout>/g,
-    (_, calloutContent) => `> ${calloutContent.trim()}`
-  );
-
-  // Remove wrapper components
-  result = result.replace(/<\/?(Accordions|Cards|Tabs)[^>]*>/g, '');
-
-  // Remove remaining self-closing JSX tags
-  result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
-
-  // Remove remaining JSX opening/closing tags but keep content
-  result = result.replace(/<\/?[A-Z][a-zA-Z]*[^>]*>/g, '');
-
-  // Clean up excessive newlines
-  result = result.replace(/\n{3,}/g, '\n\n');
-
-  return result.trim();
-}
 
 /**
  * Generate a changelog index with links to all changelog entries.
