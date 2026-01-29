@@ -33,7 +33,7 @@ async function log404ToDatadog(path: string, referer: string | null) {
 export default async function NotFound() {
   const headersList = await headers();
   const referer = headersList.get('referer');
-  const path = headersList.get('x-nextjs-page') || headersList.get('x-invoke-path') || 'unknown';
+  const path = headersList.get('x-pathname') || headersList.get('x-invoke-path') || 'unknown';
 
   // Fire and forget - don't block rendering
   log404ToDatadog(path, referer);
