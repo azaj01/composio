@@ -108,23 +108,51 @@ async function fetchAndFilterSpec() {
   console.log(`Removed ${removedCount} endpoints/operations`);
   console.log(`Final spec has ${Object.keys(filteredPaths).length} paths`);
 
-  // Fix invalid OpenAPI: "nullable" without "type" is not valid in OpenAPI 3.0
-  // Transform {"nullable": true} to {} (allows any type)
-  const specString = JSON.stringify(spec);
-  const fixedSpecString = specString.replace(
-    /"additionalProperties":\s*\{\s*"nullable":\s*true\s*\}/g,
-    '"additionalProperties": {}'
-  );
-  const fixedSpec = JSON.parse(fixedSpecString);
-  const fixCount = (specString.match(/"additionalProperties":\s*\{\s*"nullable":\s*true\s*\}/g) || []).length;
-  if (fixCount > 0) {
-    console.log(`Fixed ${fixCount} invalid additionalProperties schemas (nullable without type)`);
+  // Fix invalid OpenAPI 3.0: "nullable: true" without "type" is invalid
+  // See: https://swagger.io/docs/specification/data-models/data-types/#null
+  let nullableFixCount = 0;
+  const fixNullableWithoutType = (obj, parentKey = '') => {
+    if (!obj || typeof obj !== 'object') return;
+
+    // Check if this schema has nullable but no type definition
+    if (obj.nullable === true && !obj.type && !obj.$ref && !obj.oneOf && !obj.anyOf && !obj.allOf) {
+      // For additionalProperties, just remove nullable (allows any type)
+      if (parentKey === 'additionalProperties') {
+        delete obj.nullable;
+      }
+      // For schemas with an object example, infer type: object
+      else if (obj.example && typeof obj.example === 'object' && !Array.isArray(obj.example)) {
+        obj.type = 'object';
+      }
+      // For schemas with an array example, infer type: array
+      else if (obj.example && Array.isArray(obj.example)) {
+        obj.type = 'array';
+      }
+      // Default: add type: object (most common case for flexible schemas)
+      else {
+        obj.type = 'object';
+      }
+      nullableFixCount++;
+    }
+
+    // Recurse into all properties
+    for (const [key, val] of Object.entries(obj)) {
+      if (Array.isArray(val)) {
+        val.forEach((item) => fixNullableWithoutType(item, key));
+      } else {
+        fixNullableWithoutType(val, key);
+      }
+    }
+  };
+  fixNullableWithoutType(spec);
+  if (nullableFixCount > 0) {
+    console.log(`Fixed ${nullableFixCount} schemas with nullable but no type`);
   }
 
   // Write to public directory for fumadocs to fetch
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const outputPath = join(__dirname, '../public/openapi.json');
-  writeFileSync(outputPath, JSON.stringify(fixedSpec, null, 2));
+  writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 
   console.log(`Written to ${outputPath}`);
 }
