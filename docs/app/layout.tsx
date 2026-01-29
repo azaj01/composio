@@ -1,6 +1,7 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/next';
 import './global.css';
 import { IBM_Plex_Mono } from 'next/font/google';
 import { PostHogProvider } from '@/components/posthog-provider';
@@ -85,6 +86,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
         />
       </head>
       <body className="flex flex-col min-h-screen font-sans">
+        <Analytics />
         <PostHogProvider>
           <RootProvider
             theme={{

@@ -1,6 +1,43 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
-export default function NotFound() {
+async function log404ToDatadog(path: string, referer: string | null) {
+  const apiKey = process.env.DD_API_KEY;
+  if (!apiKey) return;
+
+  try {
+    await fetch('https://http-intake.logs.datadoghq.com/api/v2/logs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'DD-API-KEY': apiKey,
+      },
+      body: JSON.stringify([
+        {
+          ddsource: 'composio-docs',
+          ddtags: 'env:production,service:docs,status:404',
+          hostname: 'docs.composio.dev',
+          message: `404 Not Found: ${path}`,
+          service: 'docs',
+          status: 'warn',
+          path,
+          referer,
+        },
+      ]),
+    });
+  } catch {
+    // Silently fail - don't break the 404 page
+  }
+}
+
+export default async function NotFound() {
+  const headersList = await headers();
+  const referer = headersList.get('referer');
+  const path = headersList.get('x-nextjs-page') || headersList.get('x-invoke-path') || 'unknown';
+
+  // Fire and forget - don't block rendering
+  log404ToDatadog(path, referer);
+
   return (
     <div className="flex min-h-[85vh] flex-col items-center justify-center px-4">
       <div className="relative">
