@@ -9,6 +9,7 @@ import {
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import { PageActions } from '@/components/page-actions';
 
 const mdxComponents = getMDXComponents();
 
@@ -33,6 +34,9 @@ export default async function ChangelogEntryPage({ params }: PageProps) {
     notFound();
   }
 
+  // Build the path for PageActions (e.g., /docs/changelog/2026/01/07)
+  const path = `/docs/changelog/${slug.join('/')}`;
+
   // If there are multiple entries for the same date, show all of them
   return (
     <DocsPage toc={[]} footer={{ enabled: false }} tableOfContentPopover={{ enabled: false }}>
@@ -46,6 +50,7 @@ export default async function ChangelogEntryPage({ params }: PageProps) {
 
       <DocsTitle>{formatDate(dateStr)}</DocsTitle>
       <DocsDescription>Latest updates and announcements</DocsDescription>
+      <PageActions path={path} />
 
       <DocsBody>
         <div className="space-y-12">

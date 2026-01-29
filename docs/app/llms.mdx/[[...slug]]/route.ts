@@ -3,7 +3,11 @@ import {
   getReferenceSource,
   examplesSource,
   toolkitsSource,
+  changelogEntries,
+  slugToDate,
+  formatDate,
   getLLMText,
+  mdxToCleanMarkdown,
 } from '@/lib/source';
 import { openapi } from '@/lib/openapi';
 import { notFound } from 'next/navigation';
@@ -531,6 +535,100 @@ const sources = [
   { prefix: 'toolkits', source: toolkitsSource },
 ];
 
+/**
+ * Generate a changelog index with links to all changelog entries.
+ */
+function generateChangelogIndex(): string {
+  // Group entries by date and sort by date descending (newest first)
+  const entriesByDate = new Map<string, typeof changelogEntries>();
+
+  for (const entry of changelogEntries) {
+    const existing = entriesByDate.get(entry.date) || [];
+    entriesByDate.set(entry.date, [...existing, entry]);
+  }
+
+  const sortedDates = Array.from(entriesByDate.keys()).sort((a, b) => b.localeCompare(a));
+
+  const lines: string[] = [
+    '# Changelog',
+    '',
+    'All updates and announcements for Composio.',
+    '',
+    '| Date | Updates |',
+    '|------|---------|',
+  ];
+
+  for (const date of sortedDates) {
+    const entries = entriesByDate.get(date) || [];
+    const [year, month, day] = date.split('-');
+    const mdUrl = `https://docs.composio.dev/docs/changelog/${year}/${month}/${day}.md`;
+    const formattedDate = formatDate(date);
+    const titles = entries.map(e => e.title).join(', ');
+    lines.push(`| [${formattedDate}](${mdUrl}) | ${titles} |`);
+  }
+
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+  lines.push('For the full changelog with details, visit each date above.');
+
+  return lines.join('\n');
+}
+
+/**
+ * Generate markdown for changelog entries matching a specific date.
+ * Multiple entries on the same date are combined into one document.
+ */
+async function changelogToMarkdown(dateStr: string): Promise<string | null> {
+  const matchingEntries = changelogEntries.filter(
+    (entry) => entry.date === dateStr
+  );
+
+  if (matchingEntries.length === 0) {
+    return null;
+  }
+
+  const formattedDate = formatDate(dateStr);
+  const lines: string[] = [
+    `# Changelog - ${formattedDate}`,
+    '',
+    `**Documentation:** https://docs.composio.dev/docs/changelog/${dateStr.replace(/-/g, '/')}`,
+    '',
+  ];
+
+  for (const entry of matchingEntries) {
+    lines.push(`## ${entry.title}`, '');
+
+    if (entry.description) {
+      lines.push(entry.description, '');
+    }
+
+    // Try to get the processed text if available
+    if (typeof entry.getText === 'function') {
+      try {
+        const text = await entry.getText('processed');
+        if (text) {
+          lines.push(mdxToCleanMarkdown(text), '');
+        }
+      } catch {
+        // getText not available, try raw
+        try {
+          const text = await entry.getText('raw');
+          if (text) {
+            lines.push(mdxToCleanMarkdown(text), '');
+          }
+        } catch {
+          // No text available, just use title/description
+        }
+      }
+    }
+
+    lines.push('---', '');
+  }
+
+  return lines.join('\n').trim();
+}
+
 // Format parameter type with enum values if available
 function formatParamType(param: ParameterSchema): string {
   let typeStr = param.type || 'string';
@@ -704,6 +802,36 @@ export async function GET(
           'Content-Type': 'text/markdown; charset=utf-8',
         },
       });
+    }
+
+    // Special handling for changelog index - /docs/changelog
+    if (prefix === 'docs' && rest[0] === 'changelog' && rest.length === 1) {
+      const changelogIndex = generateChangelogIndex();
+      return new Response(changelogIndex, {
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+        },
+      });
+    }
+
+    // Special handling for changelog pages - /docs/changelog/YYYY/MM/DD
+    if (prefix === 'docs' && rest[0] === 'changelog' && rest.length === 4) {
+      // rest = ['changelog', '2026', '01', '07']
+      const [, year, month, day] = rest;
+      const dateStr = slugToDate([year, month, day]);
+
+      if (dateStr) {
+        const markdown = await changelogToMarkdown(dateStr);
+        if (markdown) {
+          return new Response(markdown, {
+            headers: {
+              'Content-Type': 'text/markdown; charset=utf-8',
+            },
+          });
+        }
+      }
+      // If no entries found, fall through to notFound
+      notFound();
     }
 
     // Handle 'reference' specially - uses async getReferenceSource() for OpenAPI pages
