@@ -1,4 +1,24 @@
-import { changelogEntries, formatDate, dateToChangelogUrl } from '@/lib/source';
+import { changelogEntries, formatDate, dateToChangelogUrl, getOgImageUrl } from '@/lib/source';
+import type { Metadata } from 'next';
+
+const description = 'Latest updates and announcements for Composio';
+
+export const metadata: Metadata = {
+  title: 'Changelog | Composio',
+  description,
+  alternates: { canonical: '/docs/changelog' },
+  openGraph: {
+    title: 'Changelog | Composio',
+    description,
+    images: [getOgImageUrl('docs', ['changelog'], 'Changelog', description)],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Changelog | Composio',
+    description,
+    images: [getOgImageUrl('docs', ['changelog'], 'Changelog', description)],
+  },
+};
 import { getMDXComponents } from '@/mdx-components';
 import {
   DocsBody,
