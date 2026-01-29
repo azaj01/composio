@@ -20,7 +20,7 @@ export default function ChangelogPage() {
     <DocsPage toc={[]} footer={{ enabled: false }}>
       <DocsTitle>Changelog</DocsTitle>
       <DocsDescription>Latest updates and announcements</DocsDescription>
-      <div className="-mb-4">
+      <div className="-mb-8">
         <PageActions path="/docs/changelog" />
       </div>
       <DocsBody>
