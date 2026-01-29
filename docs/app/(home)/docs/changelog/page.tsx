@@ -20,11 +20,9 @@ export default function ChangelogPage() {
     <DocsPage toc={[]} footer={{ enabled: false }}>
       <DocsTitle>Changelog</DocsTitle>
       <DocsDescription>Latest updates and announcements</DocsDescription>
-      <div className="-mb-8">
-        <PageActions path="/docs/changelog" />
-      </div>
+      <PageActions path="/docs/changelog" />
       <DocsBody>
-        <div className="relative">
+        <div className="relative -mt-4">
           {/* Timeline line */}
           <div className="absolute left-0 top-2 bottom-0 w-px bg-border hidden md:block md:left-[7.5rem]" />
 
