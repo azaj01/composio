@@ -281,6 +281,42 @@ const config = {
         destination: '/toolkits/:path*',
         permanent: true,
       },
+      // Old Fern documentation URLs
+      {
+        source: '/introduction/foundations/components/triggers/trigger-guide',
+        destination: '/docs/triggers',
+        permanent: true,
+      },
+      {
+        source: '/toolkits/introduction',
+        destination: '/docs/tools-and-toolkits',
+        permanent: true,
+      },
+      {
+        source: '/apps/usecases/crewai/:path*',
+        destination: '/docs/providers/crewai',
+        permanent: true,
+      },
+      {
+        source: '/js-sdk/tools/execute',
+        destination: '/docs/tools-direct/executing-tools',
+        permanent: true,
+      },
+      {
+        source: '/frameworks/others/:path*',
+        destination: '/docs/providers',
+        permanent: true,
+      },
+      {
+        source: '/guides/examples/:path*',
+        destination: '/examples',
+        permanent: true,
+      },
+      {
+        source: '/custom-tools/:path*',
+        destination: '/docs/tools-direct/custom-tools',
+        permanent: true,
+      },
       // Error handling redirect (old fern URL)
       {
         source: '/errors/error-handling',
