@@ -269,6 +269,12 @@ const config = {
         destination: '/docs/auth-configuration/connected-accounts',
         permanent: true,
       },
+      // /tools → /toolkits
+      {
+        source: '/tools',
+        destination: '/toolkits',
+        permanent: true,
+      },
       // /tools/* → /toolkits/*
       {
         source: '/tools/:path*',
