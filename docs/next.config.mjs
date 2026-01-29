@@ -269,6 +269,12 @@ const config = {
         destination: '/docs/auth-configuration/connected-accounts',
         permanent: true,
       },
+      // /tools/* → /toolkits/*
+      {
+        source: '/tools/:path*',
+        destination: '/toolkits/:path*',
+        permanent: true,
+      },
       // Error handling redirect (old fern URL)
       {
         source: '/errors/error-handling',
