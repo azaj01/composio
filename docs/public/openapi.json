@@ -1466,7 +1466,8 @@
                           "expected_input_fields": {
                             "type": "array",
                             "items": {
-                              "nullable": true
+                              "nullable": true,
+                              "type": "object"
                             },
                             "description": "Fields expected during connection initialization"
                           },
@@ -1766,7 +1767,8 @@
                     "expected_input_fields": {
                       "type": "array",
                       "items": {
-                        "nullable": true
+                        "nullable": true,
+                        "type": "object"
                       },
                       "description": "Fields expected during connection initialization"
                     },
@@ -3489,7 +3491,8 @@
                                                 "type": "string"
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -3505,7 +3508,8 @@
                                                 }
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -3637,7 +3641,8 @@
                                                 "type": "string"
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -3653,7 +3658,8 @@
                                                 }
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -8631,7 +8637,8 @@
                                                 "type": "string"
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -8647,7 +8654,8 @@
                                                 }
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -8779,7 +8787,8 @@
                                                 "type": "string"
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -8795,7 +8804,8 @@
                                                 }
                                               },
                                               {
-                                                "nullable": true
+                                                "nullable": true,
+                                                "type": "object"
                                               }
                                             ]
                                           },
@@ -10068,7 +10078,8 @@
                                             "type": "string"
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -10084,7 +10095,8 @@
                                             }
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -10216,7 +10228,8 @@
                                             "type": "string"
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -10232,7 +10245,8 @@
                                             }
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -15210,7 +15224,8 @@
                                             "type": "string"
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -15226,7 +15241,8 @@
                                             }
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -15358,7 +15374,8 @@
                                             "type": "string"
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -15374,7 +15391,8 @@
                                             }
                                           },
                                           {
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "object"
                                           }
                                         ]
                                       },
@@ -16538,7 +16556,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -16554,7 +16573,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -16686,7 +16706,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -16702,7 +16723,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -21680,7 +21702,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -21696,7 +21719,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -21828,7 +21852,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -21844,7 +21869,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -23196,7 +23222,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -23212,7 +23239,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -23344,7 +23372,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -23360,7 +23389,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -28338,7 +28368,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -28354,7 +28385,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -28486,7 +28518,8 @@
                                           "type": "string"
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -28502,7 +28535,8 @@
                                           }
                                         },
                                         {
-                                          "nullable": true
+                                          "nullable": true,
+                                          "type": "object"
                                         }
                                       ]
                                     },
@@ -30059,7 +30093,8 @@
                                 "type": "string"
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -30075,7 +30110,8 @@
                                 }
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -30200,7 +30236,8 @@
                                 "type": "string"
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -30216,7 +30253,8 @@
                                 }
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -34526,7 +34564,8 @@
                                 "type": "string"
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -34542,7 +34581,8 @@
                                 }
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -34667,7 +34707,8 @@
                                 "type": "string"
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -34683,7 +34724,8 @@
                                 }
                               },
                               {
-                                "nullable": true
+                                "nullable": true,
+                                "type": "object"
                               }
                             ]
                           },
@@ -37951,7 +37993,8 @@
                                     "type": "string"
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -37967,7 +38010,8 @@
                                     }
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -38119,7 +38163,8 @@
                                     "type": "string"
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -38135,7 +38180,8 @@
                                     }
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -39040,7 +39086,8 @@
                       "example": {
                         "session_id": "session-12345",
                         "expires_at": "2023-01-01T13:00:00Z"
-                      }
+                      },
+                      "type": "object"
                     },
                     "log_id": {
                       "type": "string",
@@ -39381,7 +39428,8 @@
                     "example": {
                       "name": "New Resource",
                       "description": "This is a new resource"
-                    }
+                    },
+                    "type": "object"
                   },
                   "binary_body": {
                     "anyOf": [
@@ -39581,7 +39629,8 @@
                                     "type": "string"
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -39597,7 +39646,8 @@
                                     }
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -39749,7 +39799,8 @@
                                     "type": "string"
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -39765,7 +39816,8 @@
                                     }
                                   },
                                   {
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "object"
                                   }
                                 ]
                               },
@@ -40623,7 +40675,8 @@
                         "id": "123",
                         "name": "Resource Name",
                         "created_at": "2023-01-01T00:00:00Z"
-                      }
+                      },
+                      "type": "object"
                     },
                     "binary_data": {
                       "type": "object",
@@ -40851,7 +40904,8 @@
                         }
                       },
                       {
-                        "nullable": true
+                        "nullable": true,
+                        "type": "object"
                       }
                     ],
                     "description": "Toolkit version specification. Supports \"latest\" string or a record mapping toolkit slugs to specific versions.",
