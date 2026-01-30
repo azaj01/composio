@@ -56,9 +56,8 @@ function generateIndexPages() {
     }
   }
 
-  // Generate MDX files for each tag
+  // Generate MDX files for each tag as index.mdx inside folders
   const outputDir = join(process.cwd(), 'content/reference/api-reference');
-  mkdirSync(outputDir, { recursive: true });
 
   for (const [tagName, operations] of Object.entries(tagOperations)) {
     if (operations.length === 0) continue;
@@ -87,9 +86,12 @@ ${tagDescription}
 ${endpointLinks}
 `;
 
-    const filePath = join(outputDir, `${tagSlug}.mdx`);
+    // Create folder and write index.mdx inside
+    const folderPath = join(outputDir, tagSlug);
+    mkdirSync(folderPath, { recursive: true });
+    const filePath = join(folderPath, 'index.mdx');
     writeFileSync(filePath, content);
-    console.log(`Generated: ${tagSlug}.mdx`);
+    console.log(`Generated: ${tagSlug}/index.mdx`);
   }
 
   console.log('Done generating API index pages');
