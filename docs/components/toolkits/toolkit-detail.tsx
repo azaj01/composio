@@ -36,6 +36,19 @@ function formatDefault(value: unknown): string | undefined {
   return String(value);
 }
 
+// Format type with enum values if available
+function formatType(param: ParameterSchema): string {
+  let typeStr = param.type || 'string';
+
+  // Include enum values in type display
+  if (param.enum && param.enum.length > 0) {
+    const enumValues = param.enum.map(v => `"${v}"`).join(' | ');
+    typeStr = `${typeStr} (${enumValues})`;
+  }
+
+  return typeStr;
+}
+
 // Convert parameter schema to TypeTable format
 function paramsToTypeTable(params: Record<string, ParameterSchema>): Record<string, {
   type: string;
@@ -52,7 +65,7 @@ function paramsToTypeTable(params: Record<string, ParameterSchema>): Record<stri
 
   for (const [name, param] of Object.entries(params)) {
     result[name] = {
-      type: param.type || 'string',
+      type: formatType(param),
       description: param.description || undefined,
       default: formatDefault(param.default),
       required: param.required,

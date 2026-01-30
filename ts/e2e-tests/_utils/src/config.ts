@@ -33,10 +33,10 @@ export function getRepoRoot(): string {
 /**
  * Resolve the Node.js versions to test against, with CI skip state.
  *
+ * The `'current'` version always resolves to the value in `.nvmrc`.
+ *
  * In CI mode (CI env var set + COMPOSIO_E2E_NODE_VERSION set):
- * - Returns all configured versions, each with skipInCI computed
  * - Versions not matching COMPOSIO_E2E_NODE_VERSION are marked to skip
- * - 'current' versions only run when COMPOSIO_E2E_NODE_VERSION matches .nvmrc
  *
  * In local mode:
  * - COMPOSIO_E2E_NODE_VERSION overrides everything (single version, no skip)
@@ -46,30 +46,23 @@ export function resolveNodeVersionMetaList(
   configNodeVersions?: readonly NodeVersionFromUser[]
 ): NonEmptyArray<NodeVersionMeta> {
   const envVersion = Bun.env.COMPOSIO_E2E_NODE_VERSION;
-  const currentNodeVersion = process.versions.node;
+  const nvmrcVersion = getNvmrcVersion();
 
   // Local mode with env override: single version, no skip
   if (!isCI() && envVersion) {
     return [{ kind: 'overridden', value: envVersion, skip: { value: false } }];
   }
 
-  // No config provided: use current Node version
+  // No config provided: use .nvmrc version
   if (configNodeVersions === undefined || configNodeVersions.length === 0) {
-    return [{ kind: 'current', value: currentNodeVersion, skip: { value: false } }];
+    return [{ kind: 'current', value: nvmrcVersion, skip: { value: false } }];
   }
 
-  // Resolve versions with skip state
-  const nvmrcVersion = getNvmrcVersion();
-
   const resolvedVersions = configNodeVersions.map((v): NodeVersionMeta => {
-    const isCurrent = v === 'current';
-    if (isCurrent) {
-      const skip = computeSkipForVersion(envVersion, currentNodeVersion, isCurrent, nvmrcVersion);
-      return { kind: 'current', value: currentNodeVersion, skip };
-    } else {
-      const skip = computeSkipForVersion(envVersion, v, isCurrent, nvmrcVersion);
-      return { kind: 'static', value: v, skip };
+    if (v === 'current') {
+      return { kind: 'current', value: nvmrcVersion, skip: computeSkipForVersion(envVersion, nvmrcVersion) };
     }
+    return { kind: 'static', value: v, skip: computeSkipForVersion(envVersion, v) };
   });
 
   return resolvedVersions as NonEmptyArray<NodeVersionMeta>;
@@ -80,27 +73,12 @@ export function resolveNodeVersionMetaList(
  */
 function computeSkipForVersion(
   envVersion: string | undefined,
-  versionValue: string,
-  isCurrent: boolean,
-  nvmrcVersion: string
+  versionValue: string
 ): SkipInCI {
-  // Not in CI or no env version: don't skip
   if (!isCI() || !envVersion) {
     return { value: false };
   }
 
-  // 'current' in CI means "run only on .nvmrc version"
-  if (isCurrent) {
-    if (envVersion !== nvmrcVersion) {
-      return {
-        value: true,
-        reason: `'current' runs only on .nvmrc version ${nvmrcVersion}`,
-      };
-    }
-    return { value: false };
-  }
-
-  // Static version: skip if doesn't match env version
   if (versionValue !== envVersion) {
     return {
       value: true,
@@ -113,7 +91,7 @@ function computeSkipForVersion(
 
 /**
  * Read the Node.js version from .nvmrc file.
- * Used in CI to determine which version 'current' tests should run on.
+ * Used to determine the version for 'current' tests.
  */
 export function getNvmrcVersion(): string {
   try {
@@ -121,7 +99,7 @@ export function getNvmrcVersion(): string {
     return nvmrc.trim();
   } catch {
     console.warn(
-      'Failed to read .nvmrc, falling back to current Node version',
+      'Failed to read .nvmrc, falling back to current Node.js version (as read by Bun, so its value is unpredictable)',
       process.versions.node
     );
     return process.versions.node;

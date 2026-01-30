@@ -76,7 +76,7 @@ export function getOgImageUrl(_section: string, _slugs: string[], title?: string
  * Converts MDX content to clean markdown for AI agents.
  * Strips JSX components and converts them to plain text equivalents.
  */
-function mdxToCleanMarkdown(content: string): string {
+export function mdxToCleanMarkdown(content: string): string {
   let result = content;
 
   // Remove frontmatter
