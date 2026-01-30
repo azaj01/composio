@@ -19,7 +19,7 @@ e2e(import.meta.url, {
     let result: E2ETestResult;
 
     beforeAll(async () => {
-      result = await runFixture('fixtures/test.cjs');
+      result = await runFixture({ filename: 'fixtures/test.cjs' });
     });
 
     describe('CommonJS compatibility', () => {
