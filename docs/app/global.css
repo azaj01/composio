@@ -471,7 +471,7 @@ span.font-mono.text-fd-primary > span.text-fd-muted-foreground:last-child {
   display: none;
 }
 
-/* Add (required) after type for required fields */
+/* Add (required) after type for required fields - simple types (span) */
 div.flex.items-center:has(> span.font-mono.text-fd-primary > span.text-red-400) > span.text-sm.font-mono::after {
   content: "(required)";
   font-size: 0.75rem;
@@ -480,8 +480,26 @@ div.flex.items-center:has(> span.font-mono.text-fd-primary > span.text-red-400) 
   color: #f87171;
 }
 
-/* Add (optional) after type for optional fields */
+/* Add (required) after type for required fields - complex types (button) */
+div.flex.items-center:has(> span.font-mono.text-fd-primary > span.text-red-400) > button.text-sm.font-mono::after {
+  content: "(required)";
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.25rem;
+  color: #f87171;
+}
+
+/* Add (optional) after type for optional fields - simple types (span) */
 div.flex.items-center:has(> span.font-mono.text-fd-primary > span.text-fd-muted-foreground:last-child):not(:has(> span.font-mono.text-fd-primary > span.text-red-400)) > span.text-sm.font-mono::after {
+  content: "(optional)";
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.25rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+/* Add (optional) after type for optional fields - complex types (button) */
+div.flex.items-center:has(> span.font-mono.text-fd-primary > span.text-fd-muted-foreground:last-child):not(:has(> span.font-mono.text-fd-primary > span.text-red-400)) > button.text-sm.font-mono::after {
   content: "(optional)";
   font-size: 0.75rem;
   font-weight: 400;
