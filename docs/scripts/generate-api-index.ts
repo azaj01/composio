@@ -65,12 +65,17 @@ function generateIndexPages() {
     const tagSlug = slugify(tagName);
     const tagDescription = tagDescriptions[tagName] || `${tagName} API endpoints`;
 
-    // Generate endpoint links
-    const endpointLinks = operations.map(op => {
+    // Generate endpoint sections with method, path, and description
+    const endpointSections = operations.map(op => {
       const endpointSlug = slugify(op.summary);
       const url = `/reference/api-reference/${tagSlug}/${endpointSlug}`;
-      return `- [${op.summary}](${url})`;
-    }).join('\n');
+      const description = op.description || '';
+
+      return `### ${op.method} \`${op.path}\`
+**[${op.summary}](${url})**
+
+${description}`;
+    }).join('\n\n---\n\n');
 
     const content = `---
 title: ${tagName}
@@ -83,7 +88,7 @@ ${tagDescription}
 
 ## Endpoints
 
-${endpointLinks}
+${endpointSections}
 `;
 
     // Create folder and write index.mdx inside

@@ -9,10 +9,49 @@ Projects API endpoints
 
 ## Endpoints
 
-- [Get project configuration](/reference/api-reference/projects/get-project-configuration)
-- [Update project configuration](/reference/api-reference/projects/update-project-configuration)
-- [Create a new project](/reference/api-reference/projects/create-a-new-project)
-- [List all projects](/reference/api-reference/projects/list-all-projects)
-- [Get project details by ID With Org Api key](/reference/api-reference/projects/get-project-details-by-id-with-org-api-key)
-- [Delete a project](/reference/api-reference/projects/delete-a-project)
-- [Delete and generate new API key for project](/reference/api-reference/projects/delete-and-generate-new-api-key-for-project)
+### GET `/api/v3/org/project/config`
+**[Get project configuration](/reference/api-reference/projects/get-project-configuration)**
+
+Retrieves the current project configuration including 2FA settings.
+
+---
+
+### PATCH `/api/v3/org/project/config`
+**[Update project configuration](/reference/api-reference/projects/update-project-configuration)**
+
+Updates the project configuration settings.
+
+---
+
+### POST `/api/v3/org/owner/project/new`
+**[Create a new project](/reference/api-reference/projects/create-a-new-project)**
+
+Creates a new project within the authenticated user's organization using the specified name. Projects are isolated environments within your organization, each with their own API keys, webhook configurations, and resources. Use this endpoint to create additional projects for different environments (e.g., development, staging, production) or for separate applications.
+
+---
+
+### GET `/api/v3/org/owner/project/list`
+**[List all projects](/reference/api-reference/projects/list-all-projects)**
+
+Retrieves all projects belonging to the authenticated organization. Projects are returned in descending order of creation date (newest first). This endpoint is useful for displaying project selection in dashboards or for integrations that need to list all available projects.
+
+---
+
+### GET `/api/v3/org/owner/project/{nano_id}`
+**[Get project details by ID With Org Api key](/reference/api-reference/projects/get-project-details-by-id-with-org-api-key)**
+
+Retrieves detailed information about a specific project using its unique identifier. This endpoint provides complete project configuration including webhook URLs, creation and update timestamps, and webhook secrets. Use this endpoint to inspect project settings or verify project configuration.
+
+---
+
+### DELETE `/api/v3/org/owner/project/{nano_id}`
+**[Delete a project](/reference/api-reference/projects/delete-a-project)**
+
+Soft-deletes a project within the organization by its unique identifier. When a project is deleted, it is marked as deleted but not immediately removed from the database. This operation affects all resources associated with the project including API keys, webhook configurations, and connected services. This action cannot be undone through the API.
+
+---
+
+### POST `/api/v3/org/owner/project/{nano_id}/regenerate_api_key`
+**[Delete and generate new API key for project](/reference/api-reference/projects/delete-and-generate-new-api-key-for-project)**
+
+Generates a new API key for the specified project, invalidating any existing API keys for that project. This operation creates a fresh API key with a new random name and key value. All existing API keys for this project will be marked as deleted.
