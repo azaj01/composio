@@ -9,49 +9,12 @@ Trigger management and execution
 
 ## Endpoints
 
-### POST `/api/v3/trigger_instances/{slug}/upsert`
-**[Create or update a trigger](/reference/api-reference/triggers/create-or-update-a-trigger)**
-
-Creates a new trigger instance or updates an existing one with the same configuration. Triggers listen for events from external services (webhooks or polling) and can invoke your workflows. If a matching trigger already exists and is disabled, it will be re-enabled. Requires a connected account ID to associate the trigger with a specific user connection.
-
----
-
-### GET `/api/v3/trigger_instances/active`
-**[List active triggers](/reference/api-reference/triggers/list-active-triggers)**
-
-Retrieves all active trigger instances for your project. Triggers listen for events from connected accounts (e.g., new emails, Slack messages, GitHub commits) and can invoke webhooks or workflows. Use filters to find triggers for specific users, connected accounts, or trigger types.
-
----
-
-### DELETE `/api/v3/trigger_instances/manage/{triggerId}`
-**[Delete a trigger](/reference/api-reference/triggers/delete-a-trigger)**
-
-Permanently deletes a trigger instance. This stops the trigger from listening for events and removes it from your project. Use the PATCH endpoint with status "disable" if you want to temporarily pause a trigger instead.
-
----
-
-### PATCH `/api/v3/trigger_instances/manage/{triggerId}`
-**[Enable or disable a trigger](/reference/api-reference/triggers/enable-or-disable-a-trigger)**
-
-Updates the status of a trigger instance to enable or disable it. Disabling a trigger pauses event listening without deleting the trigger configuration. Re-enabling restores the trigger to its active state. Use this for temporary maintenance or to control trigger execution.
-
----
-
-### GET `/api/v3/triggers_types/list/enum`
-**[List trigger type enums](/reference/api-reference/triggers/list-trigger-type-enums)**
-
-Retrieves a list of all available trigger type enum values that can be used across the API from latest versions of the toolkit only
-
----
-
-### GET `/api/v3/triggers_types/{slug}`
-**[Get trigger type by slug](/reference/api-reference/triggers/get-trigger-type-by-slug)**
-
-Retrieve detailed information about a specific trigger type using its slug identifier
-
----
-
-### GET `/api/v3/triggers_types`
-**[List trigger types](/reference/api-reference/triggers/list-trigger-types)**
-
-Retrieve a list of available trigger types with optional filtering by toolkit. Results are paginated and can be filtered by toolkit.
+| Method | Path | Name | Description |
+|--------|------|------|-------------|
+| POST | `/api/v3/trigger_instances/{slug}/upsert` | [Create or update a trigger](/reference/api-reference/triggers/create-or-update-a-trigger) | Creates a new trigger instance or updates an existing one with the same configuration. Triggers listen for events from external services (webhooks or polling) and can invoke your workflows. If a matching trigger already exists and is disabled, it will be re-enabled. Requires a connected account ID to associate the trigger with a specific user connection. |
+| GET | `/api/v3/trigger_instances/active` | [List active triggers](/reference/api-reference/triggers/list-active-triggers) | Retrieves all active trigger instances for your project. Triggers listen for events from connected accounts (e.g., new emails, Slack messages, GitHub commits) and can invoke webhooks or workflows. Use filters to find triggers for specific users, connected accounts, or trigger types. |
+| DELETE | `/api/v3/trigger_instances/manage/{triggerId}` | [Delete a trigger](/reference/api-reference/triggers/delete-a-trigger) | Permanently deletes a trigger instance. This stops the trigger from listening for events and removes it from your project. Use the PATCH endpoint with status "disable" if you want to temporarily pause a trigger instead. |
+| PATCH | `/api/v3/trigger_instances/manage/{triggerId}` | [Enable or disable a trigger](/reference/api-reference/triggers/enable-or-disable-a-trigger) | Updates the status of a trigger instance to enable or disable it. Disabling a trigger pauses event listening without deleting the trigger configuration. Re-enabling restores the trigger to its active state. Use this for temporary maintenance or to control trigger execution. |
+| GET | `/api/v3/triggers_types/list/enum` | [List trigger type enums](/reference/api-reference/triggers/list-trigger-type-enums) | Retrieves a list of all available trigger type enum values that can be used across the API from latest versions of the toolkit only |
+| GET | `/api/v3/triggers_types/{slug}` | [Get trigger type by slug](/reference/api-reference/triggers/get-trigger-type-by-slug) | Retrieve detailed information about a specific trigger type using its slug identifier |
+| GET | `/api/v3/triggers_types` | [List trigger types](/reference/api-reference/triggers/list-trigger-types) | Retrieve a list of available trigger types with optional filtering by toolkit. Results are paginated and can be filtered by toolkit. |

@@ -9,42 +9,11 @@ Authentication configuration management
 
 ## Endpoints
 
-### POST `/api/v3/auth_configs`
-**[Create new authentication configuration](/reference/api-reference/auth-configs/create-new-authentication-configuration)**
-
-Creates a new auth config for a toolkit, allowing you to use your own OAuth credentials or API keys instead of Composio-managed authentication. This is required when you want to use custom OAuth apps (bring your own client ID/secret) or configure specific authentication parameters for a toolkit.
-
----
-
-### GET `/api/v3/auth_configs`
-**[List authentication configurations with optional filters](/reference/api-reference/auth-configs/list-authentication-configurations-with-optional-filters)**
-
-Retrieves all auth configs for your project. Auth configs define how users authenticate with external services (OAuth, API keys, etc.). Use filters to find configs for specific toolkits or to distinguish between Composio-managed and custom configurations.
-
----
-
-### GET `/api/v3/auth_configs/{nanoid}`
-**[Get single authentication configuration by ID](/reference/api-reference/auth-configs/get-single-authentication-configuration-by-id)**
-
-Retrieves detailed information about a specific authentication configuration using its unique identifier.
-
----
-
-### PATCH `/api/v3/auth_configs/{nanoid}`
-**[Update an authentication configuration](/reference/api-reference/auth-configs/update-an-authentication-configuration)**
-
-Modifies an existing authentication configuration with new credentials or other settings. Only specified fields will be updated.
-
----
-
-### DELETE `/api/v3/auth_configs/{nanoid}`
-**[Delete an authentication configuration](/reference/api-reference/auth-configs/delete-an-authentication-configuration)**
-
-Soft-deletes an authentication configuration by marking it as deleted in the database. This operation cannot be undone.
-
----
-
-### PATCH `/api/v3/auth_configs/{nanoid}/{status}`
-**[Enable or disable an authentication configuration](/reference/api-reference/auth-configs/enable-or-disable-an-authentication-configuration)**
-
-Updates the status of an authentication configuration to either enabled or disabled. Disabled configurations cannot be used for new connections.
+| Method | Path | Name | Description |
+|--------|------|------|-------------|
+| POST | `/api/v3/auth_configs` | [Create new authentication configuration](/reference/api-reference/auth-configs/create-new-authentication-configuration) | Creates a new auth config for a toolkit, allowing you to use your own OAuth credentials or API keys instead of Composio-managed authentication. This is required when you want to use custom OAuth apps (bring your own client ID/secret) or configure specific authentication parameters for a toolkit. |
+| GET | `/api/v3/auth_configs` | [List authentication configurations with optional filters](/reference/api-reference/auth-configs/list-authentication-configurations-with-optional-filters) | Retrieves all auth configs for your project. Auth configs define how users authenticate with external services (OAuth, API keys, etc.). Use filters to find configs for specific toolkits or to distinguish between Composio-managed and custom configurations. |
+| GET | `/api/v3/auth_configs/{nanoid}` | [Get single authentication configuration by ID](/reference/api-reference/auth-configs/get-single-authentication-configuration-by-id) | Retrieves detailed information about a specific authentication configuration using its unique identifier. |
+| PATCH | `/api/v3/auth_configs/{nanoid}` | [Update an authentication configuration](/reference/api-reference/auth-configs/update-an-authentication-configuration) | Modifies an existing authentication configuration with new credentials or other settings. Only specified fields will be updated. |
+| DELETE | `/api/v3/auth_configs/{nanoid}` | [Delete an authentication configuration](/reference/api-reference/auth-configs/delete-an-authentication-configuration) | Soft-deletes an authentication configuration by marking it as deleted in the database. This operation cannot be undone. |
+| PATCH | `/api/v3/auth_configs/{nanoid}/{status}` | [Enable or disable an authentication configuration](/reference/api-reference/auth-configs/enable-or-disable-an-authentication-configuration) | Updates the status of an authentication configuration to either enabled or disabled. Disabled configurations cannot be used for new connections. |
