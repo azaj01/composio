@@ -1,7 +1,7 @@
 import { describe, beforeAll, afterAll, it } from 'bun:test';
 import { appendFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import type { E2EConfig, E2ETestResult, E2ETestResultWithSetup, NodeVersionMeta, RunFixtureOptions } from './types';
+import type { DefineTestsContext, E2EConfig, E2ETestResult, E2ETestResultWithSetup, NodeVersionMeta, RunFixtureOptions } from './types';
 import { getRepoRoot, resolveNodeVersionMetaList } from './config';
 import { ensureNodeImage, runNodeContainer } from './image-lifecycle';
 import { WELL_KNOWN_ENV_VARS } from './const';
@@ -352,7 +352,9 @@ function createDockerExecutors(
    * With setup: Creates a Docker volume, runs setup command with volume mounted
    * read-write, then runs the fixture with volume mounted read-only.
    */
-  const runFixture = async (options: RunFixtureOptions): Promise<E2ETestResult | E2ETestResultWithSetup> => {
+  function runFixture(options: { filename: string }): Promise<E2ETestResult>;
+  function runFixture(options: { filename: string; setup: string }): Promise<E2ETestResultWithSetup>;
+  async function runFixture(options: RunFixtureOptions): Promise<E2ETestResult | E2ETestResultWithSetup> {
     const { filename, setup } = options;
 
     // Smart mode: no setup (or empty string) = no volumes, just run directly
@@ -443,7 +445,7 @@ function createDockerExecutors(
       // 6. Always cleanup volume (best-effort, doesn't throw)
       await removeVolume(volumeName);
     }
-  };
+  }
 
   /**
    * Finalize this version's log output.
@@ -545,7 +547,7 @@ export function runE2E(config: RunE2EInternalConfig): void {
         // Call user's defineTests with bun:test functions and Docker utilities
         defineTests({
           runCmd: (cmd) => executors.runCmd(cmd),
-          runFixture: (opts) => executors.runFixture(opts),
+          runFixture: ((opts) => executors.runFixture(opts)) as DefineTestsContext['runFixture'],
         });
 
         // Write version section after all tests for this version complete

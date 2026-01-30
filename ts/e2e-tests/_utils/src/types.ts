@@ -76,10 +76,13 @@ export interface DefineTestsContext {
    * const result = await runFixture({
    *   filename: 'index.mjs',
    *   setup: 'npm install --legacy-peer-deps',
-   * }) as E2ETestResultWithSetup;
+   * });
    * expect(result.setup.exitCode).toBe(0);
    */
-  runFixture: (options: RunFixtureOptions) => Promise<E2ETestResult | E2ETestResultWithSetup>;
+  runFixture: {
+    (options: { filename: string }): Promise<E2ETestResult>;
+    (options: { filename: string; setup: string }): Promise<E2ETestResultWithSetup>;
+  };
 }
 
 /**
