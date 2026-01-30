@@ -9,6 +9,7 @@ Shared infrastructure for running `@composio/core` end-to-end tests in isolated 
 | `src/`            | TypeScript utilities (e2e runner, config, types)       |
 | `scripts/`        | Docker build and cleanup scripts                       |
 | `Dockerfile.node` | Multi-stage Dockerfile for Node.js test environments   |
+| `Dockerfile.deno` | Dockerfile for Deno test environments                  |
 
 ## API
 
@@ -21,9 +22,12 @@ import { e2e, type E2ETestResult } from '@e2e-tests/utils';
 import { describe, it, expect, beforeAll } from 'bun:test';
 
 e2e(import.meta.url, {
-  nodeVersions: ['20.18.0', '20.19.0', '22.12.0'], // optional
-  env: { MY_VAR: 'value' },                         // optional env vars
-  defineTests: ({ runCmd, runFixture }) => {
+  versions: {
+    node: ['20.18.0', '20.19.0', '22.12.0'], // optional, defaults to .nvmrc
+    deno: ['2.6.7'],                          // optional, defaults to .dvmrc
+  },
+  env: { MY_VAR: 'value' },                   // optional env vars
+  defineTests: ({ runtime, runCmd, runFixture }) => {
     let result: E2ETestResult;
 
     beforeAll(async () => {
@@ -45,17 +49,26 @@ Configuration object passed to `e2e()`:
 
 | Property       | Type                                  | Description                                                      |
 | -------------- | ------------------------------------- | ---------------------------------------------------------------- |
-| `nodeVersions` | `readonly NodeVersionFromUser[]`      | Node.js versions to test. Defaults to current runtime            |
+| `versions`     | `RuntimeVersions`                     | Runtime versions to test. See RuntimeVersions below              |
+| `nodeVersions` | `readonly NodeVersionFromUser[]`      | **Deprecated.** Use `versions.node` instead                      |
 | `env`          | `Record<string, string \| undefined>` | Environment variables for Docker. Validated at startup           |
 | `usesFixtures` | `boolean`                             | When true, sets cwd to `{testDir}/fixtures`. Default: `false`    |
 | `defineTests`  | `(ctx: DefineTestsContext) => void`   | Callback to define tests using bun:test primitives               |
+
+### `RuntimeVersions`
+
+| Property | Type                             | Description                                      |
+| -------- | -------------------------------- | ------------------------------------------------ |
+| `node`   | `readonly NodeVersionFromUser[]` | Node.js versions. Defaults to `.nvmrc`           |
+| `deno`   | `readonly DenoVersionFromUser[]` | Deno versions. Defaults to `.dvmrc`              |
 
 ### `DefineTestsContext`
 
 The context passed to the `defineTests` callback:
 
-| Function     | Signature                                                        | Description                                    |
+| Property     | Type/Signature                                                   | Description                                    |
 | ------------ | ---------------------------------------------------------------- | ---------------------------------------------- |
+| `runtime`    | `'node' \| 'deno'`                                               | Current runtime being tested                   |
 | `runCmd`     | `(command: string) => Promise<E2ETestResult>`                    | Run arbitrary command in Docker container      |
 | `runFixture` | `(options: RunFixtureOptions) => Promise<E2ETestResult \| E2ETestResultWithSetup>` | Run fixture with optional setup phase |
 
@@ -142,13 +155,15 @@ it('calls LLM', async () => {
 | `LLM_SHORT` | `15_000`  | Quick LLM calls                    |
 | `LLM_LONG`  | `60_000`  | Complex LLM operations             |
 
-## Node Version Resolution
+## Version Resolution
+
+### Node.js Version Resolution
 
 Node.js versions to test are resolved in this order:
 
 1. **`COMPOSIO_E2E_NODE_VERSION` env var** (highest priority): Use `[env_value]`
-2. **`config.nodeVersions`**: Use the provided array
-3. **Default**: Use `[process.versions.node]` (current runtime)
+2. **`config.versions.node`** or **`config.nodeVersions`**: Use the provided array
+3. **Default**: Use version from `.nvmrc` file
 
 ### Well-Known Node Versions
 
@@ -157,7 +172,22 @@ The following versions are pre-defined in `const.ts`:
 - `20.18.0`
 - `20.19.0`
 - `22.12.0`
-- `current` (resolves to current Node runtime version)
+- `current` (resolves to `.nvmrc` version)
+
+### Deno Version Resolution
+
+Deno versions to test are resolved in this order:
+
+1. **`COMPOSIO_E2E_DENO_VERSION` env var** (highest priority): Use `[env_value]`
+2. **`config.versions.deno`**: Use the provided array
+3. **Default**: Use version from `.dvmrc` file
+
+### Well-Known Deno Versions
+
+The following versions are pre-defined in `const.ts`:
+
+- `2.6.7`
+- `current` (resolves to `.dvmrc` version)
 
 ## Environment Variable Validation
 
@@ -198,16 +228,16 @@ e2e(import.meta.url, {
 ## Scripts
 
 ```bash
-# Pre-build Docker images for all well-known Node versions
+# Pre-build Docker images for all well-known Node and Deno versions
 pnpm docker:build
 
-# Remove all e2e Docker images
+# Remove all e2e Docker images (both Node.js and Deno)
 pnpm docker:clean
 ```
 
 ## DEBUG.log Output
 
-Each test suite generates a `DEBUG.log` file with structured output grouped by Node version:
+Each test suite generates a `DEBUG.log` file with structured output grouped by runtime version:
 
 ```
 ================================================================================
