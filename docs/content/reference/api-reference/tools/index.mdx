@@ -9,11 +9,11 @@ Tool execution endpoints
 
 ## Endpoints
 
-| Method | Path | Name | Description |
-|--------|------|------|-------------|
-| GET | `/api/v3/tools` | [List available tools](/reference/api-reference/tools/list-available-tools) | Retrieve a paginated list of available tools with comprehensive filtering, sorting and search capabilities. Use query parameters to narrow down results by toolkit, tags, or search terms. |
-| GET | `/api/v3/tools/enum` | [Get tool enum list](/reference/api-reference/tools/get-tool-enum-list) | Retrieve a list of all available tool enumeration values (tool slugs) from latest version of each toolkit. This endpoint returns a comma-separated string of tool slugs that can be used in other API calls. |
-| GET | `/api/v3/tools/{tool_slug}` | [Get tool by slug](/reference/api-reference/tools/get-tool-by-slug) | Retrieve detailed information about a specific tool using its slug identifier. This endpoint returns full metadata about a tool including input/output parameters, versions, and toolkit information. |
-| POST | `/api/v3/tools/execute/{tool_slug}` | [Execute tool](/reference/api-reference/tools/execute-tool) | Execute a specific tool operation with provided arguments and authentication. This is the primary endpoint for integrating with third-party services and executing tools. You can provide structured arguments or use natural language processing by providing a text description of what you want to accomplish. |
-| POST | `/api/v3/tools/execute/{tool_slug}/input` | [Generate tool inputs from natural language](/reference/api-reference/tools/generate-tool-inputs-from-natural-language) | Uses AI to translate a natural language description into structured arguments for a specific tool. This endpoint is useful when you want to let users describe what they want to do in plain language instead of providing structured parameters. |
-| POST | `/api/v3/tools/execute/proxy` | [Execute proxy request](/reference/api-reference/tools/execute-proxy-request) | Proxy an HTTP request to a third-party API using connected account credentials. This endpoint allows making authenticated API calls to external services while abstracting away authentication details. |
+| Method | Path | Name |
+|--------|------|------|
+| GET | `/api/v3/tools` | [List available tools](/reference/api-reference/tools/list-available-tools) |
+| GET | `/api/v3/tools/enum` | [Get tool enum list](/reference/api-reference/tools/get-tool-enum-list) |
+| GET | `/api/v3/tools/{tool_slug}` | [Get tool by slug](/reference/api-reference/tools/get-tool-by-slug) |
+| POST | `/api/v3/tools/execute/{tool_slug}` | [Execute tool](/reference/api-reference/tools/execute-tool) |
+| POST | `/api/v3/tools/execute/{tool_slug}/input` | [Generate tool inputs from natural language](/reference/api-reference/tools/generate-tool-inputs-from-natural-language) |
+| POST | `/api/v3/tools/execute/proxy` | [Execute proxy request](/reference/api-reference/tools/execute-proxy-request) |

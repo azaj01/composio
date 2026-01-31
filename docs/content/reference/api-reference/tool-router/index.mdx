@@ -9,12 +9,12 @@ description: "(Labs) Tool router endpoints"
 
 ## Endpoints
 
-| Method | Path | Name | Description |
-|--------|------|------|-------------|
-| POST | `/api/v3/tool_router/session` | [Create a new tool router session](/reference/api-reference/tool-router/create-a-new-tool-router-session) | Creates a new session for the tool router feature. This endpoint initializes a new session with specified toolkits and their authentication configurations. The session provides an isolated environment for testing and managing tool routing logic with scoped MCP server access. |
-| POST | `/api/v3/tool_router/session/{session_id}/execute` | [Execute a tool within a tool router session](/reference/api-reference/tool-router/execute-a-tool-within-a-tool-router-session) | Executes a specific tool within a tool router session. The toolkit is automatically inferred from the tool slug. The tool must belong to an allowed toolkit and must not be disabled in the session configuration. This endpoint validates permissions, resolves connected accounts, and executes the tool with the session context. |
-| POST | `/api/v3/tool_router/session/{session_id}/execute_meta` | [Execute a meta tool within a tool router session](/reference/api-reference/tool-router/execute-a-meta-tool-within-a-tool-router-session) | Executes a Composio meta tool (COMPOSIO_*) within a tool router session. |
-| GET | `/api/v3/tool_router/session/{session_id}` | [Get a tool router session by ID](/reference/api-reference/tool-router/get-a-tool-router-session-by-id) | Retrieves an existing tool router session by its ID. Returns the session configuration, MCP server URL, and available tools. |
-| POST | `/api/v3/tool_router/session/{session_id}/link` | [Create a link session for a toolkit in a tool router session](/reference/api-reference/tool-router/create-a-link-session-for-a-toolkit-in-a-tool-router-session) | Initiates an authentication link session for a specific toolkit within a tool router session. Returns a link token and redirect URL that users can use to complete the OAuth flow. |
-| GET | `/api/v3/tool_router/session/{session_id}/toolkits` | [Get toolkits for a tool router session](/reference/api-reference/tool-router/get-toolkits-for-a-tool-router-session) | Retrieves a cursor-paginated list of toolkits available in the tool router session. Includes toolkit metadata, composio-managed auth schemes, and connected accounts if available. Optionally filter by specific toolkit slugs. |
-| GET | `/api/v3/tool_router/session/{session_id}/tools` | [List meta tools with schemas for a tool router session](/reference/api-reference/tool-router/list-meta-tools-with-schemas-for-a-tool-router-session) | Returns the meta tools available in a tool router session with their complete schemas. This includes request and response schemas specific to the session context. |
+| Method | Path | Name |
+|--------|------|------|
+| POST | `/api/v3/tool_router/session` | [Create a new tool router session](/reference/api-reference/tool-router/create-a-new-tool-router-session) |
+| POST | `/api/v3/tool_router/session/{session_id}/execute` | [Execute a tool within a tool router session](/reference/api-reference/tool-router/execute-a-tool-within-a-tool-router-session) |
+| POST | `/api/v3/tool_router/session/{session_id}/execute_meta` | [Execute a meta tool within a tool router session](/reference/api-reference/tool-router/execute-a-meta-tool-within-a-tool-router-session) |
+| GET | `/api/v3/tool_router/session/{session_id}` | [Get a tool router session by ID](/reference/api-reference/tool-router/get-a-tool-router-session-by-id) |
+| POST | `/api/v3/tool_router/session/{session_id}/link` | [Create a link session for a toolkit in a tool router session](/reference/api-reference/tool-router/create-a-link-session-for-a-toolkit-in-a-tool-router-session) |
+| GET | `/api/v3/tool_router/session/{session_id}/toolkits` | [Get toolkits for a tool router session](/reference/api-reference/tool-router/get-toolkits-for-a-tool-router-session) |
+| GET | `/api/v3/tool_router/session/{session_id}/tools` | [List meta tools with schemas for a tool router session](/reference/api-reference/tool-router/list-meta-tools-with-schemas-for-a-tool-router-session) |

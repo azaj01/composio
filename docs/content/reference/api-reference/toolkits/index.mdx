@@ -9,10 +9,10 @@ Toolkit and tool management
 
 ## Endpoints
 
-| Method | Path | Name | Description |
-|--------|------|------|-------------|
-| GET | `/api/v3/toolkits` | [List available toolkits](/reference/api-reference/toolkits/list-available-toolkits) | Retrieves a comprehensive list of toolkits of their latest versions that are available to the authenticated project. Toolkits represent integration points with external services and applications, each containing a collection of tools and triggers. This endpoint supports filtering by category and management type, as well as different sorting options. |
-| GET | `/api/v3/toolkits/categories` | [List toolkit categories](/reference/api-reference/toolkits/list-toolkit-categories) | Retrieves a comprehensive list of all available toolkit categories from their latest versions. These categories can be used to filter toolkits by type or purpose when using the toolkit listing endpoint. Categories help organize toolkits into logical groups based on their functionality or industry focus. |
-| GET | `/api/v3/toolkits/{slug}` | [Get toolkit by slug](/reference/api-reference/toolkits/get-toolkit-by-slug) | Retrieves comprehensive information about a specific toolkit using its unique slug identifier. This endpoint provides detailed metadata, authentication configuration options, and feature counts for the requested toolkit. |
-| POST | `/api/v3/toolkits/multi` | [Fetch multiple toolkits](/reference/api-reference/toolkits/fetch-multiple-toolkits) | Retrieves a comprehensive list of toolkits of their latest versions that are available to the authenticated project. Toolkits represent integration points with external services and applications, each containing a collection of tools and triggers. This endpoint supports filtering by category and management type, as well as different sorting options. You can optionally specify a list of toolkit slugs to fetch specific toolkits. |
-| GET | `/api/v3/toolkits/changelog` | [Get toolkits changelog](/reference/api-reference/toolkits/get-toolkits-changelog) | Retrieves the last 10 versions changelog for all toolkits. This endpoint provides version history and changelog information for each toolkit. |
+| Method | Path | Name |
+|--------|------|------|
+| GET | `/api/v3/toolkits` | [List available toolkits](/reference/api-reference/toolkits/list-available-toolkits) |
+| GET | `/api/v3/toolkits/categories` | [List toolkit categories](/reference/api-reference/toolkits/list-toolkit-categories) |
+| GET | `/api/v3/toolkits/{slug}` | [Get toolkit by slug](/reference/api-reference/toolkits/get-toolkit-by-slug) |
+| POST | `/api/v3/toolkits/multi` | [Fetch multiple toolkits](/reference/api-reference/toolkits/fetch-multiple-toolkits) |
+| GET | `/api/v3/toolkits/changelog` | [Get toolkits changelog](/reference/api-reference/toolkits/get-toolkits-changelog) |

@@ -69,9 +69,8 @@ function generateIndexPages() {
     const tableRows = operations.map(op => {
       const endpointSlug = slugify(op.summary);
       const url = `/reference/api-reference/${tagSlug}/${endpointSlug}`;
-      const description = op.description || '';
 
-      return `| ${op.method} | \`${op.path}\` | [${op.summary}](${url}) | ${description} |`;
+      return `| ${op.method} | \`${op.path}\` | [${op.summary}](${url}) |`;
     }).join('\n');
 
     const content = `---
@@ -85,8 +84,8 @@ ${tagDescription}
 
 ## Endpoints
 
-| Method | Path | Name | Description |
-|--------|------|------|-------------|
+| Method | Path | Name |
+|--------|------|------|
 ${tableRows}
 `;
 

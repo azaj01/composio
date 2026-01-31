@@ -9,7 +9,7 @@ File management
 
 ## Endpoints
 
-| Method | Path | Name | Description |
-|--------|------|------|-------------|
-| GET | `/api/v3/files/list` | [List files with optional app and action filters](/reference/api-reference/files/list-files-with-optional-app-and-action-filters) | Retrieves a list of files associated with the authenticated project. Results can be filtered by toolkit and tool slugs. |
-| POST | `/api/v3/files/upload/request` | [Create presigned URL for request file upload to S3](/reference/api-reference/files/create-presigned-url-for-request-file-upload-to-s3) | Generates a presigned URL for uploading a file to S3. This endpoint handles deduplication by checking if a file with the same MD5 hash already exists. |
+| Method | Path | Name |
+|--------|------|------|
+| GET | `/api/v3/files/list` | [List files with optional app and action filters](/reference/api-reference/files/list-files-with-optional-app-and-action-filters) |
+| POST | `/api/v3/files/upload/request` | [Create presigned URL for request file upload to S3](/reference/api-reference/files/create-presigned-url-for-request-file-upload-to-s3) |
