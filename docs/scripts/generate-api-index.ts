@@ -70,7 +70,7 @@ function generateIndexPages() {
       const endpointSlug = slugify(op.summary);
       const url = `/reference/api-reference/${tagSlug}/${endpointSlug}`;
 
-      return `| ${op.method} | \`${op.path}\` | [${op.summary}](${url}) |`;
+      return `| \`${op.method} ${op.path}\` | [${op.summary}](${url}) |`;
     }).join('\n');
 
     const content = `---
@@ -84,8 +84,8 @@ ${tagDescription}
 
 ## Endpoints
 
-| Method | Path | Name |
-|--------|------|------|
+| Endpoint | Quick Link |
+|----------|------------|
 ${tableRows}
 `;
 
