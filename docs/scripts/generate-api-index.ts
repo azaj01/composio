@@ -45,12 +45,13 @@ function generateIndexPages() {
           if (!tagOperations[tag]) {
             tagOperations[tag] = [];
           }
+          const summaryFallback = operation.summary || `${method.toUpperCase()} ${path}`;
           tagOperations[tag].push({
-            summary: operation.summary || `${method.toUpperCase()} ${path}`,
+            summary: summaryFallback,
             description: operation.description,
             method: method.toUpperCase(),
             path,
-            operationId: operation.operationId || slugify(operation.summary || ''),
+            operationId: operation.operationId || slugify(summaryFallback),
           });
         }
       }
