@@ -11,10 +11,10 @@ Trigger management and execution
 
 | Endpoint | Quick Link |
 |----------|------------|
-| `POST /api/v3/trigger_instances/{slug}/upsert` | [Create or update a trigger](/reference/api-reference/triggers/create-or-update-a-trigger) |
-| `GET /api/v3/trigger_instances/active` | [List active triggers](/reference/api-reference/triggers/list-active-triggers) |
-| `DELETE /api/v3/trigger_instances/manage/{triggerId}` | [Delete a trigger](/reference/api-reference/triggers/delete-a-trigger) |
-| `PATCH /api/v3/trigger_instances/manage/{triggerId}` | [Enable or disable a trigger](/reference/api-reference/triggers/enable-or-disable-a-trigger) |
-| `GET /api/v3/triggers_types/list/enum` | [List trigger type enums](/reference/api-reference/triggers/list-trigger-type-enums) |
-| `GET /api/v3/triggers_types/{slug}` | [Get trigger type by slug](/reference/api-reference/triggers/get-trigger-type-by-slug) |
-| `GET /api/v3/triggers_types` | [List trigger types](/reference/api-reference/triggers/list-trigger-types) |
+| `POST /api/v3/trigger_instances/{slug}/upsert` | [Create or update a trigger](/reference/api-reference/triggers/postTriggerInstancesBySlugUpsert) |
+| `GET /api/v3/trigger_instances/active` | [List active triggers](/reference/api-reference/triggers/getTriggerInstancesActive) |
+| `DELETE /api/v3/trigger_instances/manage/{triggerId}` | [Delete a trigger](/reference/api-reference/triggers/deleteTriggerInstancesManageByTriggerId) |
+| `PATCH /api/v3/trigger_instances/manage/{triggerId}` | [Enable or disable a trigger](/reference/api-reference/triggers/patchTriggerInstancesManageByTriggerId) |
+| `GET /api/v3/triggers_types/list/enum` | [List trigger type enums](/reference/api-reference/triggers/getTriggersTypesListEnum) |
+| `GET /api/v3/triggers_types/{slug}` | [Get trigger type by slug](/reference/api-reference/triggers/getTriggersTypesBySlug) |
+| `GET /api/v3/triggers_types` | [List trigger types](/reference/api-reference/triggers/getTriggersTypes) |

@@ -12,7 +12,7 @@ import { join } from 'path';
 
 interface OpenAPISpec {
   tags: Array<{ name: string; description?: string }>;
-  paths: Record<string, Record<string, { summary?: string; tags?: string[]; description?: string }>>;
+  paths: Record<string, Record<string, { summary?: string; tags?: string[]; description?: string; operationId?: string }>>;
 }
 
 function slugify(text: string): string {
@@ -28,7 +28,7 @@ function generateIndexPages() {
   const spec: OpenAPISpec = JSON.parse(readFileSync(specPath, 'utf-8'));
 
   // Build tag -> operations map
-  const tagOperations: Record<string, Array<{ summary: string; description?: string; method: string; path: string }>> = {};
+  const tagOperations: Record<string, Array<{ summary: string; description?: string; method: string; path: string; operationId: string }>> = {};
   const tagDescriptions: Record<string, string> = {};
 
   // Get tag descriptions
@@ -50,6 +50,7 @@ function generateIndexPages() {
             description: operation.description,
             method: method.toUpperCase(),
             path,
+            operationId: operation.operationId || slugify(operation.summary || ''),
           });
         }
       }
@@ -67,8 +68,7 @@ function generateIndexPages() {
 
     // Generate endpoint table
     const tableRows = operations.map(op => {
-      const endpointSlug = slugify(op.summary);
-      const url = `/reference/api-reference/${tagSlug}/${endpointSlug}`;
+      const url = `/reference/api-reference/${tagSlug}/${op.operationId}`;
 
       return `| \`${op.method} ${op.path}\` | [${op.summary}](${url}) |`;
     }).join('\n');
