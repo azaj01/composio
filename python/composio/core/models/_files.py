@@ -28,6 +28,12 @@ if t.TYPE_CHECKING:
 
 _DEFAULT_CHUNK_SIZE = 1024 * 1024
 _FILE_UPLOAD = "/api/v3/files/upload/request"
+_MAX_FILENAME_LENGTH = 100
+"""
+Maximum filename length to prevent issues with long URLs from public buckets.
+Long filenames (containing hashes, UUIDs, or encoded metadata) are replaced
+with timestamped filenames to match TypeScript SDK behavior.
+"""
 
 LOCAL_CACHE_DIRECTORY_NAME = ".composio"
 """
@@ -133,6 +139,35 @@ def _generate_timestamped_filename(extension: str) -> str:
     return f"file_{timestamp}_{unique_id}{extension}"
 
 
+def _truncate_filename(filename: str, max_length: int = _MAX_FILENAME_LENGTH) -> str:
+    """Truncate filename if it exceeds max length by generating a timestamped name.
+
+    Long filenames are common with public bucket URLs containing hashes or UUIDs.
+    These can cause issues, so we replace them with timestamped filenames while
+    preserving the extension.
+
+    Args:
+        filename: The original filename
+        max_length: Maximum allowed length for the filename
+
+    Returns:
+        The original filename if within limits, or a timestamped filename
+        with the extension preserved if the original is too long
+    """
+    if len(filename) <= max_length:
+        return filename
+
+    # Extract extension
+    if "." in filename:
+        _, ext = filename.rsplit(".", 1)
+        ext = f".{ext}"
+    else:
+        ext = ""
+
+    # Generate a timestamped filename (matches TypeScript SDK behavior)
+    return _generate_timestamped_filename(ext)
+
+
 def _fetch_file_from_url(url: str) -> t.Tuple[str, bytes, str]:
     """Fetch file content from a URL.
 
@@ -163,7 +198,10 @@ def _fetch_file_from_url(url: str) -> t.Tuple[str, bytes, str]:
         # If filename has no extension, try to add one from mimetype
         if "." not in filename:
             extension = _get_extension_from_mimetype(mimetype)
-            filename = f"{filename}{extension}"
+            filename = _generate_timestamped_filename(extension)
+
+        # Truncate long filenames (common with public bucket URLs containing hashes)
+        filename = _truncate_filename(filename)
 
     return filename, content, mimetype
 

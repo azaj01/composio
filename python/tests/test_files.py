@@ -15,8 +15,10 @@ from composio.core.models._files import (
     _is_url,
     _get_extension_from_mimetype,
     _generate_timestamped_filename,
+    _truncate_filename,
     _fetch_file_from_url,
     _upload_bytes_to_s3,
+    _MAX_FILENAME_LENGTH,
 )
 from composio.core.models.base import allow_tracking
 from composio.exceptions import ErrorUploadingFile
@@ -978,6 +980,21 @@ class TestUrlHelperFunctions:
         assert _is_url("https://example.com/file.jpg") is True
         assert _is_url("https://images.pexels.com/photos/123.jpg") is True
 
+    def test_is_url_with_long_real_world_urls(self):
+        """Test _is_url handles long real-world URLs with query parameters."""
+        assert (
+            _is_url(
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQq0powzLhfi1bakZ0eNSIA_aJ_5UlPsCte1g&s"
+            )
+            is True
+        )
+        assert (
+            _is_url(
+                "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8bWFjYm9vfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=800&q=60"
+            )
+            is True
+        )
+
     def test_is_url_with_local_paths(self):
         """Test _is_url correctly rejects local file paths."""
         assert _is_url("/path/to/file.jpg") is False
@@ -1088,8 +1105,8 @@ class TestFetchFileFromUrl:
         assert filename.endswith(".png")
 
     @patch("composio.core.models._files.requests.get")
-    def test_fetch_file_from_url_appends_extension_when_missing(self, mock_get):
-        """Test extension is appended to original filename when missing."""
+    def test_fetch_file_from_url_generates_filename_when_no_extension(self, mock_get):
+        """Test filename generation when URL filename has no extension."""
         mock_response = MagicMock()
         mock_response.ok = True
         mock_response.content = b"pdf data"
@@ -1100,8 +1117,8 @@ class TestFetchFileFromUrl:
             "https://example.com/document"
         )
 
-        # Should preserve original filename and append extension
-        assert filename == "document.pdf"
+        assert filename.startswith("file_")
+        assert filename.endswith(".pdf")
 
     @patch("composio.core.models._files.requests.get")
     def test_fetch_file_from_url_failure(self, mock_get):
@@ -1402,3 +1419,217 @@ class TestFileHelperWithUrls:
         assert len(result["attachments"]) == 2
         assert result["attachments"][0]["s3key"] == "key1"
         assert result["attachments"][1]["s3key"] == "key2"
+
+
+class TestTruncateFilename:
+    """Test cases for _truncate_filename function.
+
+    Long filenames are common with public bucket URLs containing hashes or UUIDs.
+    These can cause issues, so they are replaced with timestamped filenames.
+    """
+
+    def test_truncate_filename_short_unchanged(self):
+        """Short filenames should not be modified."""
+        assert _truncate_filename("document.pdf") == "document.pdf"
+        assert _truncate_filename("image.jpg") == "image.jpg"
+        assert _truncate_filename("file.txt") == "file.txt"
+
+    def test_truncate_filename_at_limit_unchanged(self):
+        """Filenames exactly at the limit should not be modified."""
+        # Create a filename exactly at the limit (100 chars by default)
+        name = "a" * 95 + ".pdf"  # 95 + 4 = 99 chars
+        assert _truncate_filename(name) == name
+
+        name_at_limit = "a" * 96 + ".pdf"  # 96 + 4 = 100 chars
+        assert _truncate_filename(name_at_limit) == name_at_limit
+
+    def test_truncate_filename_long_generates_timestamped(self):
+        """Long filenames should be replaced with timestamped filename."""
+        long_name = "a" * 150 + ".pdf"
+        result = _truncate_filename(long_name)
+
+        assert len(result) < _MAX_FILENAME_LENGTH
+        assert result.startswith("file_")
+        assert result.endswith(".pdf")
+
+    def test_truncate_filename_preserves_extension(self):
+        """Extension should be preserved when generating timestamped filename."""
+        test_cases = [
+            ("very_long_" * 20 + ".docx", ".docx"),
+            ("hash_" * 30 + ".jpg", ".jpg"),
+            ("uuid_" * 25 + ".png", ".png"),
+            ("data_" * 40 + ".json", ".json"),
+        ]
+
+        for long_name, expected_ext in test_cases:
+            result = _truncate_filename(long_name)
+            assert result.endswith(expected_ext), (
+                f"Expected {result} to end with {expected_ext}"
+            )
+
+    def test_truncate_filename_long_hash_url(self):
+        """Hash-based filenames from URLs should be truncated."""
+        # Typical long hash filename from public bucket URLs (needs to be >100 chars)
+        hash_filename = "8f14e45fceea167a5a36dedd4bea2543_5d41402abc4b2a76b9719d911017c592_extra_hash_data_to_exceed_limit_download.jpg"
+        assert len(hash_filename) > _MAX_FILENAME_LENGTH  # Verify test setup
+
+        result = _truncate_filename(hash_filename)
+
+        assert len(result) <= _MAX_FILENAME_LENGTH
+        assert result.startswith("file_")
+        assert result.endswith(".jpg")
+
+    def test_truncate_filename_multiple_hashes(self):
+        """Multiple concatenated hashes should be truncated."""
+        # 32 char hash * 5 = 160 chars + extension
+        multi_hash = "8f14e45fceea167a5a36dedd4bea2543" * 5 + ".pdf"
+        result = _truncate_filename(multi_hash)
+
+        assert len(result) <= _MAX_FILENAME_LENGTH
+        assert result.endswith(".pdf")
+
+    def test_truncate_filename_no_extension(self):
+        """Long filenames without extension should still be truncated."""
+        long_name = "a" * 150
+        result = _truncate_filename(long_name)
+
+        assert len(result) <= _MAX_FILENAME_LENGTH
+        assert result.startswith("file_")
+        # Should not end with a dot
+        assert not result.endswith(".")
+
+    def test_truncate_filename_custom_max_length(self):
+        """Custom max_length parameter should be respected."""
+        name = "a" * 60 + ".txt"  # 64 chars total
+
+        # With default limit (100), should be unchanged
+        assert _truncate_filename(name) == name
+
+        # With custom limit (50), should be truncated
+        result = _truncate_filename(name, max_length=50)
+        assert len(result) <= 50
+        assert result.startswith("file_")
+        assert result.endswith(".txt")
+
+    def test_truncate_filename_edge_case_one_over_limit(self):
+        """Filename one character over limit should be truncated."""
+        # Create filename exactly one char over the limit
+        name = "a" * 97 + ".pdf"  # 97 + 4 = 101 chars (one over default 100)
+        result = _truncate_filename(name)
+
+        assert len(result) < _MAX_FILENAME_LENGTH
+        assert result.startswith("file_")
+        assert result.endswith(".pdf")
+
+    def test_truncate_filename_long_extension(self):
+        """Long extensions should be preserved when truncating."""
+        long_name = "file_" * 30 + ".dockerfile"
+        result = _truncate_filename(long_name)
+
+        assert result.endswith(".dockerfile")
+        assert result.startswith("file_")
+
+    def test_truncate_filename_multiple_dots_preserves_last_extension(self):
+        """Filename with multiple dots should preserve only the last extension."""
+        long_name = "archive" * 20 + ".backup.tar.gz"
+        result = _truncate_filename(long_name)
+
+        # rsplit(".", 1) takes the part after the last dot
+        assert result.endswith(".gz")
+
+
+class TestFetchFileFromUrlWithTruncation:
+    """Test cases for _fetch_file_from_url with filename truncation."""
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_truncates_long_filename(self, mock_get):
+        """Long filenames from URLs should be truncated."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"test content"
+        mock_response.headers = {"content-type": "application/pdf"}
+        mock_get.return_value = mock_response
+
+        # Create a very long filename (hash-based, common in public buckets)
+        long_filename = "8f14e45fceea167a5a36dedd4bea2543" * 5 + ".pdf"
+
+        filename, content, mimetype = _fetch_file_from_url(
+            f"https://bucket.example.com/files/{long_filename}"
+        )
+
+        assert len(filename) <= _MAX_FILENAME_LENGTH
+        assert filename.startswith("file_")
+        assert filename.endswith(".pdf")
+        assert content == b"test content"
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_preserves_short_filename(self, mock_get):
+        """Short filenames should be preserved unchanged."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"image data"
+        mock_response.headers = {"content-type": "image/jpeg"}
+        mock_get.return_value = mock_response
+
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/photo.jpg"
+        )
+
+        assert filename == "photo.jpg"
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_truncates_after_adding_extension(self, mock_get):
+        """Truncation should happen after extension is appended."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"pdf content"
+        mock_response.headers = {"content-type": "application/pdf"}
+        mock_get.return_value = mock_response
+
+        # URL without extension - extension will be added from mimetype
+        long_name_no_ext = "8f14e45fceea167a5a36dedd4bea2543" * 4
+        filename, content, mimetype = _fetch_file_from_url(
+            f"https://bucket.example.com/{long_name_no_ext}"
+        )
+
+        # Should be truncated and have .pdf extension
+        assert len(filename) <= _MAX_FILENAME_LENGTH
+        assert filename.endswith(".pdf")
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_generated_filename_not_truncated(self, mock_get):
+        """Generated timestamped filenames (when URL has no filename) should be short enough."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"data"
+        mock_response.headers = {"content-type": "image/png"}
+        mock_get.return_value = mock_response
+
+        # URL with no filename - will generate a timestamped one
+        filename, content, mimetype = _fetch_file_from_url("https://example.com/")
+
+        # Generated filename should be naturally short
+        assert filename.startswith("file_")
+        assert filename.endswith(".png")
+        assert len(filename) < 50  # Timestamped names are short
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_long_real_world_url(self, mock_get):
+        """Long real-world URLs should be handled correctly."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"test content"
+        mock_response.headers = {"content-type": "application/pdf"}
+        mock_get.return_value = mock_response
+
+        # Real-world long URL example (no extension, relies on mimetype)
+        long_url = (
+            "https://encrypted-tbn0.gstatic.com/images?q="
+            "tbn:ANd9GcQq0powzLhfi1bakZ0eNSIA_aJ_5UlPsCte1g&s"
+        )
+        filename, content, mimetype = _fetch_file_from_url(long_url)
+
+        assert len(filename) <= _MAX_FILENAME_LENGTH
+        assert filename.startswith("file_")
+        assert filename.endswith(".pdf")
+        assert content == b"test content"
