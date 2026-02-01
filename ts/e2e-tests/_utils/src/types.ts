@@ -1,5 +1,18 @@
 import { WELL_KNOWN_NODE_VERSIONS } from './const';
 
+export type NonEmptyArray<T> = [T, ...T[]];
+
+/**
+ * Enforces that a string literal type is non-empty.
+ * Used with `const` type parameters to catch empty string literals at compile time.
+ *
+ * @example
+ * function greet<const T extends string>(name: NonEmptyString<T>) { ... }
+ * greet('Alice'); // OK
+ * greet('');      // Error: Type 'string' is not assignable to type 'never'
+ */
+export type NonEmptyString<T extends string> = T extends '' ? never : T;
+
 export type NodeVersionFromUser = typeof WELL_KNOWN_NODE_VERSIONS[number];
 
 /**
@@ -80,8 +93,11 @@ export interface DefineTestsContext {
    * expect(result.setup.exitCode).toBe(0);
    */
   runFixture: {
-    (options: { filename: string }): Promise<E2ETestResult>;
-    (options: { filename: string; setup: string }): Promise<E2ETestResultWithSetup>;
+    <const F extends string>(options: { filename: NonEmptyString<F> }): Promise<E2ETestResult>;
+    <const F extends string, const S extends string>(options: {
+      filename: NonEmptyString<F>;
+      setup: NonEmptyString<S>;
+    }): Promise<E2ETestResultWithSetup>;
   };
 }
 

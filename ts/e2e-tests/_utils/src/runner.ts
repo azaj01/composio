@@ -1,7 +1,7 @@
 import { describe, beforeAll, afterAll, it } from 'bun:test';
 import { appendFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import type { DefineTestsContext, E2EConfig, E2ETestResult, E2ETestResultWithSetup, NodeVersionMeta, RunFixtureOptions } from './types';
+import type { DefineTestsContext, E2EConfig, E2ETestResult, E2ETestResultWithSetup, NodeVersionMeta, NonEmptyString, RunFixtureOptions } from './types';
 import { getRepoRoot, resolveNodeVersionMetaList } from './config';
 import { ensureNodeImage, runNodeContainer } from './image-lifecycle';
 import { WELL_KNOWN_ENV_VARS } from './const';
@@ -190,41 +190,6 @@ class DebugLogManager {
   }
 }
 
-// ============================================================================
-// Legacy debug log support (for backward compatibility with runCmd)
-// ============================================================================
-
-/**
- * Debug log entry metadata.
- * @deprecated Use DebugLogManager for new code
- */
-interface DebugLogEntry {
-  nodeVersion: string;
-  command: string;
-  containerName: string;
-  result: E2ETestResult;
-  /** Optional phase indicator for multi-step operations */
-  phase?:
-    // Setup phase before fixture is run, often used for install commands
-    | 'setup'
-    // Actual test fixture phase
-    | 'fixture';
-}
-
-/**
- * Writes Docker run output to DEBUG.log in the test directory.
- * @deprecated Use DebugLogManager for new code - this is kept for runCmd() compatibility
- */
-async function writeDebugLog(
-  _repoRoot: string,
-  _testDirRelative: string,
-  _entry: DebugLogEntry
-): Promise<void> {
-  // No-op: logging is now handled by DebugLogManager at the version level
-  // The runCmd function still calls this for API compatibility, but actual
-  // logging happens through writeVersionSection in runFixture
-}
-
 /**
  * Builds environment variables to pass to the container.
  * Merges auto-passthrough vars with explicitly provided env vars.
@@ -352,8 +317,8 @@ function createDockerExecutors(
    * With setup: Creates a Docker volume, runs setup command with volume mounted
    * read-write, then runs the fixture with volume mounted read-only.
    */
-  function runFixture(options: { filename: string }): Promise<E2ETestResult>;
-  function runFixture(options: { filename: string; setup: string }): Promise<E2ETestResultWithSetup>;
+  function runFixture<const F extends string>(options: { filename: NonEmptyString<F> }): Promise<E2ETestResult>;
+  function runFixture<const F extends string, const S extends string>(options: { filename: NonEmptyString<F>; setup: NonEmptyString<S> }): Promise<E2ETestResultWithSetup>;
   async function runFixture(options: RunFixtureOptions): Promise<E2ETestResult | E2ETestResultWithSetup> {
     const { filename, setup } = options;
 
@@ -547,7 +512,7 @@ export function runE2E(config: RunE2EInternalConfig): void {
         // Call user's defineTests with bun:test functions and Docker utilities
         defineTests({
           runCmd: (cmd) => executors.runCmd(cmd),
-          runFixture: ((opts) => executors.runFixture(opts)) as DefineTestsContext['runFixture'],
+          runFixture: ((opts: RunFixtureOptions) => executors.runFixture(opts)) as DefineTestsContext['runFixture'],
         });
 
         // Write version section after all tests for this version complete

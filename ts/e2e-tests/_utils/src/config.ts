@@ -2,7 +2,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
-import type { NodeVersionMeta, NodeVersionFromUser, SkipInCI } from './types';
+import type { NodeVersionMeta, NodeVersionFromUser, SkipInCI, NonEmptyArray } from './types';
 
 declare module 'bun' {
   interface Env {
@@ -10,8 +10,6 @@ declare module 'bun' {
     COMPOSIO_E2E_NODE_VERSION?: string;
   }
 }
-
-type NonEmptyArray<T> = [T, ...T[]];
 
 /**
  * Determine if we're running in a Continuous Integration suite.
