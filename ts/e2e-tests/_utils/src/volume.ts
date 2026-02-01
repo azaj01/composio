@@ -49,18 +49,23 @@ export async function removeVolume(name: string): Promise<void> {
 }
 
 /**
- * Initializes a Docker volume with correct ownership for the node user (UID 1000).
+ * Initializes a Docker volume with correct ownership for the container user.
  * This is necessary because Docker volumes are created with root ownership by default.
  *
  * @param volumeName - Name of the volume to initialize
  * @param imageTag - Docker image to use for the initialization container
+ * @param runtime - Runtime type ('node' or 'deno') to determine the correct user/group
  */
 export async function initializeVolumeOwnership(
   volumeName: string,
-  imageTag: string
+  imageTag: string,
+  runtime: 'node' | 'deno'
 ): Promise<void> {
+  // Node images use node:node, Deno images use deno:deno
+  const user = runtime === 'node' ? 'node:node' : 'deno:deno';
+
   // Run a quick container as root to chown the volume contents
-  const result = await $`docker run --rm --user root -v ${volumeName}:/mnt/vol ${imageTag} chown -R node:node /mnt/vol`.nothrow().quiet();
+  const result = await $`docker run --rm --user root -v ${volumeName}:/mnt/vol ${imageTag} chown -R ${user} /mnt/vol`.nothrow().quiet();
 
   if (result.exitCode !== 0) {
     const err = new Error(`Failed to initialize volume ownership for: ${volumeName}`);

@@ -160,12 +160,15 @@ export function resolveDenoVersionMetaList(
   configDenoVersions?: readonly DenoVersionFromUser[]
 ): NonEmptyArray<DenoVersionMeta> {
   const envVersion = Bun.env.COMPOSIO_E2E_DENO_VERSION;
-  const dvmrcVersion = getDvmrcVersion();
 
   // Local mode with env override: single version, no skip
+  // Check this BEFORE calling getDvmrcVersion() so env override works without .dvmrc
   if (!isCI() && envVersion) {
     return [{ kind: 'overridden', value: envVersion, skip: { value: false } }];
   }
+
+  // Only read .dvmrc after env override check (getDvmrcVersion throws if file missing)
+  const dvmrcVersion = getDvmrcVersion();
 
   // No config provided: use .dvmrc version
   if (configDenoVersions === undefined || configDenoVersions.length === 0) {

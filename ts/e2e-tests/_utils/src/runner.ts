@@ -350,7 +350,7 @@ function createNodeDockerExecutors(
 
     try {
       await createVolume(volumeName);
-      await initializeVolumeOwnership(volumeName, imageTag);
+      await initializeVolumeOwnership(volumeName, imageTag, 'node');
 
       const setupContainerName = `${containerBaseName}-setup`;
       const setupStartTime = Date.now();
@@ -481,10 +481,12 @@ function createDenoDockerExecutors(
   function runFixture(options: { filename: string; setup: string }): Promise<E2ETestResultWithSetup>;
   async function runFixture(options: RunFixtureOptions): Promise<E2ETestResult | E2ETestResultWithSetup> {
     const { filename, setup } = options;
+    // Deno scripts need explicit 'deno run' with permissions
+    const denoRunCmd = `deno run --allow-all ${filename}`;
 
     // For Deno without setup, just run the file directly
     if (!setup) {
-      return runCmd(filename);
+      return runCmd(denoRunCmd);
     }
 
     // Deno with setup: use Docker volumes for caching
@@ -495,7 +497,7 @@ function createDenoDockerExecutors(
 
     try {
       await createVolume(volumeName);
-      await initializeVolumeOwnership(volumeName, imageTag);
+      await initializeVolumeOwnership(volumeName, imageTag, 'deno');
 
       const setupContainerName = `${containerBaseName}-setup`;
       const setupStartTime = Date.now();
@@ -525,7 +527,7 @@ function createDenoDockerExecutors(
       const fixtureStartTime = Date.now();
       const fixtureResult = await runDenoContainer({
         imageTag,
-        cmd: filename,
+        cmd: denoRunCmd,
         cwd: effectiveCwd,
         env: containerEnv,
         name: fixtureContainerName,
@@ -537,7 +539,7 @@ function createDenoDockerExecutors(
         phase: 'fixture',
         phaseIndex: 2,
         totalPhases: 2,
-        command: filename,
+        command: denoRunCmd,
         containerName: fixtureContainerName,
         durationMs: fixtureDurationMs,
         exitCode: fixtureResult.exitCode,
