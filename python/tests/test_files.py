@@ -1647,8 +1647,10 @@ class TestFetchFileFromUrlWithTruncation:
         """Long real-world URLs should be handled correctly."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"test content"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/pdf"}
+        mock_response.iter_content.return_value = [b"test content"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # Real-world long URL example (no extension, relies on mimetype)
