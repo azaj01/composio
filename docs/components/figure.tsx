@@ -1,15 +1,10 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
-
-// Lazy-load zoom library - only loads when Figure component is rendered
-const ZoomWrapper = dynamic<{ children: ReactNode; zoomImg: { src: string } }>(
-  () => import('react-medium-image-zoom').then((mod) => mod.default),
-  { ssr: false }
-);
+// Static import ensures CSS is available before any zoom interaction
+import 'react-medium-image-zoom/dist/styles.css';
 
 type FigureSize = 'sm' | 'md' | 'lg' | 'full';
 
@@ -48,39 +43,57 @@ const sizesAttr: Record<FigureSize, string> = {
   full: '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, min(900px, 70vw)',
 };
 
+// Client-side zoom wrapper that renders children immediately (for SSR)
+// and wraps with zoom functionality after hydration
+function ClientZoom({ children, zoomSrc }: { children: ReactElement; zoomSrc: string }) {
+  const [Zoom, setZoom] = useState<React.ComponentType<{ children: ReactElement; zoomImg: { src: string } }> | null>(null);
+
+  useEffect(() => {
+    // Dynamically load zoom component on client (CSS is statically imported)
+    import('react-medium-image-zoom').then((mod) => {
+      setZoom(() => mod.default);
+    });
+  }, []);
+
+  // SSR and initial client render: just the image
+  // After zoom loads: wrap with zoom functionality
+  if (!Zoom) {
+    return children;
+  }
+
+  return <Zoom zoomImg={{ src: zoomSrc }}>{children}</Zoom>;
+}
+
 export function Figure({ src, alt, caption, size = 'full', className, width, height, priority = false }: FigureProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const isConstrained = size !== 'full';
   const dimensions = defaultDimensions[size];
 
-  // Load zoom CSS on mount
-  useEffect(() => {
-    import('react-medium-image-zoom/dist/styles.css');
-  }, []);
-
   // Show image on load or error (so broken images are visible for debugging)
   const handleReady = () => setIsLoaded(true);
 
+  const image = (
+    <Image
+      src={src}
+      alt={alt}
+      width={width || dimensions.width}
+      height={height || dimensions.height}
+      sizes={sizesAttr[size]}
+      priority={priority}
+      onLoad={handleReady}
+      onError={handleReady}
+      className={cn(
+        'rounded-lg border border-fd-border transition-opacity duration-300',
+        isLoaded ? 'opacity-100' : 'opacity-0',
+        sizeClasses[size],
+        isConstrained ? 'w-auto h-auto' : 'w-full h-auto'
+      )}
+    />
+  );
+
   return (
     <figure className={cn('my-8', isConstrained && 'flex flex-col items-center', className)}>
-      <ZoomWrapper zoomImg={{ src }}>
-        <Image
-          src={src}
-          alt={alt}
-          width={width || dimensions.width}
-          height={height || dimensions.height}
-          sizes={sizesAttr[size]}
-          priority={priority}
-          onLoad={handleReady}
-          onError={handleReady}
-          className={cn(
-            'rounded-lg border border-fd-border transition-opacity duration-300',
-            isLoaded ? 'opacity-100' : 'opacity-0',
-            sizeClasses[size],
-            isConstrained ? 'w-auto h-auto' : 'w-full h-auto'
-          )}
-        />
-      </ZoomWrapper>
+      <ClientZoom zoomSrc={src}>{image}</ClientZoom>
       {caption && (
         <figcaption className="mt-3 text-sm text-fd-muted-foreground text-center">
           {caption}
