@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import Image from 'next/image';
-import Zoom from 'react-medium-image-zoom';
-import 'react-medium-image-zoom/dist/styles.css';
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
+
+// Lazy-load zoom library - only loads when Figure component is rendered
+const ZoomWrapper = dynamic<{ children: ReactNode; zoomImg: { src: string } }>(
+  () => import('react-medium-image-zoom').then((mod) => mod.default),
+  { ssr: false }
+);
 
 type FigureSize = 'sm' | 'md' | 'lg' | 'full';
 
@@ -48,12 +53,17 @@ export function Figure({ src, alt, caption, size = 'full', className, width, hei
   const isConstrained = size !== 'full';
   const dimensions = defaultDimensions[size];
 
+  // Load zoom CSS on mount
+  useEffect(() => {
+    import('react-medium-image-zoom/dist/styles.css');
+  }, []);
+
   // Show image on load or error (so broken images are visible for debugging)
   const handleReady = () => setIsLoaded(true);
 
   return (
     <figure className={cn('my-8', isConstrained && 'flex flex-col items-center', className)}>
-      <Zoom zoomImg={{ src }}>
+      <ZoomWrapper zoomImg={{ src }}>
         <Image
           src={src}
           alt={alt}
@@ -70,7 +80,7 @@ export function Figure({ src, alt, caption, size = 'full', className, width, hei
             isConstrained ? 'w-auto h-auto' : 'w-full h-auto'
           )}
         />
-      </Zoom>
+      </ZoomWrapper>
       {caption && (
         <figcaption className="mt-3 text-sm text-fd-muted-foreground text-center">
           {caption}
