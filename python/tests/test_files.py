@@ -18,10 +18,11 @@ from composio.core.models._files import (
     _truncate_filename,
     _fetch_file_from_url,
     _upload_bytes_to_s3,
+    _sanitize_url_for_logging,
     _MAX_FILENAME_LENGTH,
 )
 from composio.core.models.base import allow_tracking
-from composio.exceptions import ErrorUploadingFile
+from composio.exceptions import ErrorUploadingFile, ResponseTooLargeError
 
 
 @pytest.fixture(autouse=True)
@@ -1047,8 +1048,10 @@ class TestFetchFileFromUrl:
         """Test successful file fetch from URL."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"test file content"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "image/jpeg"}
+        mock_response.iter_content.return_value = [b"test file content"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         filename, content, mimetype = _fetch_file_from_url(
@@ -1058,15 +1061,22 @@ class TestFetchFileFromUrl:
         assert content == b"test file content"
         assert mimetype == "image/jpeg"
         assert filename == "image.jpg"
-        mock_get.assert_called_once_with("https://example.com/image.jpg", timeout=30)
+        mock_get.assert_called_once_with(
+            "https://example.com/image.jpg",
+            stream=True,
+            allow_redirects=False,
+            timeout=(5, 60),
+        )
 
     @patch("composio.core.models._files.requests.get")
     def test_fetch_file_from_url_with_charset_in_content_type(self, mock_get):
         """Test that charset is stripped from content-type."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"<html></html>"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "text/html; charset=utf-8"}
+        mock_response.iter_content.return_value = [b"<html></html>"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         filename, content, mimetype = _fetch_file_from_url(
@@ -1080,8 +1090,10 @@ class TestFetchFileFromUrl:
         """Test filename generation when URL has no filename."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"image data"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "image/png"}
+        mock_response.iter_content.return_value = [b"image data"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         filename, content, mimetype = _fetch_file_from_url("https://example.com/")
@@ -1094,8 +1106,10 @@ class TestFetchFileFromUrl:
         """Test filename generation when URL filename has no extension."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"pdf data"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/pdf"}
+        mock_response.iter_content.return_value = [b"pdf data"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         filename, content, mimetype = _fetch_file_from_url(
@@ -1111,6 +1125,7 @@ class TestFetchFileFromUrl:
         mock_response = MagicMock()
         mock_response.ok = False
         mock_response.status_code = 404
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         with pytest.raises(ErrorUploadingFile) as exc_info:
@@ -1124,8 +1139,10 @@ class TestFetchFileFromUrl:
         """Test that percent-encoded characters in URL filenames are decoded."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"document content"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/pdf"}
+        mock_response.iter_content.return_value = [b"document content"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # URL with percent-encoded spaces and special characters
@@ -1143,8 +1160,10 @@ class TestFetchFileFromUrl:
         """Test that percent-encoded unicode characters in URL filenames are decoded."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"image data"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "image/jpeg"}
+        mock_response.iter_content.return_value = [b"image data"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # URL with percent-encoded unicode (e.g., Japanese characters)
@@ -1160,8 +1179,10 @@ class TestFetchFileFromUrl:
         """Test that plus signs in URL paths are preserved (not converted to spaces)."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"file content"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "text/plain"}
+        mock_response.iter_content.return_value = [b"file content"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # Plus signs in path should remain as plus signs (unquote doesn't convert + to space)
@@ -1531,8 +1552,10 @@ class TestFetchFileFromUrlWithTruncation:
         """Long filenames from URLs should be truncated."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"test content"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/pdf"}
+        mock_response.iter_content.return_value = [b"test content"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # Create a very long filename (hash-based, common in public buckets)
@@ -1552,8 +1575,10 @@ class TestFetchFileFromUrlWithTruncation:
         """Short filenames should be preserved unchanged."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"image data"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "image/jpeg"}
+        mock_response.iter_content.return_value = [b"image data"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         filename, content, mimetype = _fetch_file_from_url(
@@ -1567,8 +1592,10 @@ class TestFetchFileFromUrlWithTruncation:
         """Truncation should happen after extension is appended."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"pdf content"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/pdf"}
+        mock_response.iter_content.return_value = [b"pdf content"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # URL without extension - extension will be added from mimetype
@@ -1586,8 +1613,10 @@ class TestFetchFileFromUrlWithTruncation:
         """Generated timestamped filenames (when URL has no filename) should be short enough."""
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.content = b"data"
+        mock_response.status_code = 200
         mock_response.headers = {"content-type": "image/png"}
+        mock_response.iter_content.return_value = [b"data"]
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         # URL with no filename - will generate a timestamped one
@@ -1597,3 +1626,215 @@ class TestFetchFileFromUrlWithTruncation:
         assert filename.startswith("file_")
         assert filename.endswith(".png")
         assert len(filename) < 50  # Timestamped names are short
+
+
+class TestResponseSizeLimit:
+    """Test response size limiting."""
+
+    @patch("composio.core.models._files.requests.get")
+    def test_rejects_oversized_content_length(self, mock_get):
+        """Files with Content-Length > max_size should be rejected early."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Length": "200000000"}  # 200MB
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ResponseTooLargeError):
+            _fetch_file_from_url(
+                "https://example.com/large.zip", max_size=100 * 1024 * 1024
+            )
+
+    @patch("composio.core.models._files.requests.get")
+    def test_rejects_oversized_during_streaming(self, mock_get):
+        """Files that exceed max_size during download should be rejected."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.status_code = 200
+        mock_response.headers = {}  # No Content-Length
+        # Return 20MB of data in chunks
+        mock_response.iter_content.return_value = [
+            b"x" * 1024 * 1024 for _ in range(20)
+        ]
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ResponseTooLargeError):
+            _fetch_file_from_url(
+                "https://example.com/large.zip", max_size=10 * 1024 * 1024
+            )
+
+    @patch("composio.core.models._files.requests.get")
+    def test_accepts_file_within_limit(self, mock_get):
+        """Files within size limit should be accepted."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.status_code = 200
+        mock_response.headers = {"content-type": "image/jpeg", "Content-Length": "1000"}
+        mock_response.iter_content.return_value = [b"x" * 1000]
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        filename, content, mimetype = _fetch_file_from_url(
+            "https://example.com/image.jpg", max_size=10 * 1024 * 1024
+        )
+
+        assert len(content) == 1000
+        assert mimetype == "image/jpeg"
+
+
+class TestRedirectHandling:
+    """Test redirect handling (redirects should be rejected)."""
+
+    @patch("composio.core.models._files.requests.get")
+    def test_rejects_redirect_302(self, mock_get):
+        """302 redirects should be rejected with clear error message."""
+        mock_response = MagicMock()
+        mock_response.status_code = 302
+        mock_response.headers = {"Location": "https://example.com/final.jpg"}
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ErrorUploadingFile, match="redirect"):
+            _fetch_file_from_url("https://example.com/redirect")
+
+    @patch("composio.core.models._files.requests.get")
+    def test_rejects_redirect_301(self, mock_get):
+        """301 redirects should be rejected."""
+        mock_response = MagicMock()
+        mock_response.status_code = 301
+        mock_response.headers = {"Location": "https://example.com/"}
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ErrorUploadingFile, match="redirect"):
+            _fetch_file_from_url("https://example.com/test")
+
+    @patch("composio.core.models._files.requests.get")
+    def test_rejects_redirect_307(self, mock_get):
+        """307 redirects should be rejected."""
+        mock_response = MagicMock()
+        mock_response.status_code = 307
+        mock_response.headers = {"Location": "https://example.com/"}
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ErrorUploadingFile, match="redirect"):
+            _fetch_file_from_url("https://example.com/test")
+
+    @patch("composio.core.models._files.requests.get")
+    def test_rejects_redirect_308(self, mock_get):
+        """308 redirects should be rejected."""
+        mock_response = MagicMock()
+        mock_response.status_code = 308
+        mock_response.headers = {"Location": "https://example.com/"}
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ErrorUploadingFile, match="redirect"):
+            _fetch_file_from_url("https://example.com/test")
+
+
+class TestS3UploadErrorHandling:
+    """Test S3 upload error handling."""
+
+    @patch("composio.core.models._files.requests.put")
+    def test_403_is_treated_as_error(self, mock_put):
+        """HTTP 403 should be treated as upload failure."""
+        mock_client = MagicMock()
+        mock_s3_response = MagicMock()
+        mock_s3_response.key = "s3-key"
+        mock_s3_response.new_presigned_url = "https://s3.example.com/upload"
+        mock_client.post.return_value = mock_s3_response
+
+        mock_put_response = MagicMock()
+        mock_put_response.status_code = 403
+        mock_put.return_value = mock_put_response
+
+        with pytest.raises(ErrorUploadingFile, match="403"):
+            _upload_bytes_to_s3(
+                client=mock_client,
+                filename="test.jpg",
+                content=b"data",
+                mimetype="image/jpeg",
+                tool="TEST",
+                toolkit="test",
+            )
+
+    @patch("composio.core.models._files.requests.put")
+    def test_200_is_success(self, mock_put):
+        """HTTP 200 should be treated as success."""
+        mock_client = MagicMock()
+        mock_s3_response = MagicMock()
+        mock_s3_response.key = "s3-key"
+        mock_s3_response.new_presigned_url = "https://s3.example.com/upload"
+        mock_client.post.return_value = mock_s3_response
+
+        mock_put_response = MagicMock()
+        mock_put_response.status_code = 200
+        mock_put.return_value = mock_put_response
+
+        result = _upload_bytes_to_s3(
+            client=mock_client,
+            filename="test.jpg",
+            content=b"data",
+            mimetype="image/jpeg",
+            tool="TEST",
+            toolkit="test",
+        )
+        assert result == "s3-key"
+
+    @patch("composio.core.models._files.requests.put")
+    def test_500_is_treated_as_error(self, mock_put):
+        """HTTP 500 should be treated as upload failure."""
+        mock_client = MagicMock()
+        mock_s3_response = MagicMock()
+        mock_s3_response.key = "s3-key"
+        mock_s3_response.new_presigned_url = "https://s3.example.com/upload"
+        mock_client.post.return_value = mock_s3_response
+
+        mock_put_response = MagicMock()
+        mock_put_response.status_code = 500
+        mock_put.return_value = mock_put_response
+
+        with pytest.raises(ErrorUploadingFile, match="500"):
+            _upload_bytes_to_s3(
+                client=mock_client,
+                filename="test.jpg",
+                content=b"data",
+                mimetype="image/jpeg",
+                tool="TEST",
+                toolkit="test",
+            )
+
+
+class TestUrlSanitization:
+    """Test URL sanitization for logging."""
+
+    def test_sanitizes_query_params(self):
+        """Query parameters should be redacted in logs."""
+        url = "https://example.com/file?token=secret123&key=abc"
+        sanitized = _sanitize_url_for_logging(url)
+        assert "secret123" not in sanitized
+        assert "abc" not in sanitized
+        assert "[REDACTED]" in sanitized
+
+    def test_preserves_url_without_query(self):
+        """URLs without query params should be unchanged."""
+        url = "https://example.com/path/to/file.jpg"
+        sanitized = _sanitize_url_for_logging(url)
+        assert sanitized == url
+
+    def test_preserves_path(self):
+        """Path should be preserved when redacting query params."""
+        url = "https://example.com/path/to/file.jpg?token=secret"
+        sanitized = _sanitize_url_for_logging(url)
+        assert "/path/to/file.jpg" in sanitized
+        assert "example.com" in sanitized
+
+    def test_handles_empty_query(self):
+        """URLs with empty query string should not have [REDACTED]."""
+        url = "https://example.com/file.jpg"
+        sanitized = _sanitize_url_for_logging(url)
+        assert "[REDACTED]" not in sanitized
