@@ -1,4 +1,4 @@
-import { WELL_KNOWN_NODE_VERSIONS } from './const';
+import { WELL_KNOWN_NODE_VERSIONS, WELL_KNOWN_DENO_VERSIONS } from './const';
 
 export type NonEmptyArray<T> = [T, ...T[]];
 
@@ -14,6 +14,7 @@ export type NonEmptyArray<T> = [T, ...T[]];
 export type NonEmptyString<T extends string> = T extends '' ? never : T;
 
 export type NodeVersionFromUser = typeof WELL_KNOWN_NODE_VERSIONS[number];
+export type DenoVersionFromUser = typeof WELL_KNOWN_DENO_VERSIONS[number];
 
 /**
  * Result of CI skip check for a specific Node version.
@@ -31,6 +32,26 @@ export type NodeVersionMeta =
   | { kind: 'static'; value: Exclude<typeof WELL_KNOWN_NODE_VERSIONS[number], 'current'>; skip: SkipInCI }
   | { kind: 'overridden'; value: string; skip: SkipInCI }
   | { kind: 'current'; value: string; skip: SkipInCI };
+
+/**
+ * Metadata for a resolved Deno version to test against.
+ * Includes skip state for CI mode.
+ */
+export type DenoVersionMeta =
+  | { kind: 'static'; value: Exclude<typeof WELL_KNOWN_DENO_VERSIONS[number], 'current'>; skip: SkipInCI }
+  | { kind: 'overridden'; value: string; skip: SkipInCI }
+  | { kind: 'current'; value: string; skip: SkipInCI };
+
+/**
+ * Runtime versions to test against.
+ * Supports both Node.js and Deno runtimes.
+ */
+export interface RuntimeVersions {
+  /** Node.js versions to test */
+  node?: readonly NodeVersionFromUser[];
+  /** Deno versions to test */
+  deno?: readonly DenoVersionFromUser[];
+}
 
 /**
  * Result of executing a command in a Docker container.
@@ -64,9 +85,16 @@ export interface RunFixtureOptions {
 }
 
 /**
+ * Supported runtime environments for e2e tests.
+ */
+export type RuntimeKind = 'node' | 'deno';
+
+/**
  * Context passed to defineTests callback.
  */
 export interface DefineTestsContext {
+  /** The runtime environment for this test execution */
+  runtime: RuntimeKind;
   /** Run an arbitrary command in the Docker container */
   runCmd: (command: string) => Promise<E2ETestResult>;
   /**
@@ -109,8 +137,25 @@ export interface E2EConfig {
    * Node.js versions to test against.
    * Each version creates a separate describe block.
    * If not provided, defaults to the current Node runtime version.
+   *
+   * @deprecated Use `versions.node` instead. This property will be removed in a future version.
    */
   nodeVersions?: readonly NodeVersionFromUser[];
+
+  /**
+   * Runtime versions to test against.
+   * Supports Node.js and Deno runtimes.
+   * Takes precedence over the deprecated `nodeVersions` property.
+   *
+   * @example
+   * ```typescript
+   * versions: {
+   *   node: ['20.19.0', '22.12.0'],
+   *   deno: ['2.6.7'],
+   * }
+   * ```
+   */
+  versions?: RuntimeVersions;
 
   /**
    * Environment variables to pass to the Docker container.
