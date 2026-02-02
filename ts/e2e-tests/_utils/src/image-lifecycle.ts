@@ -20,11 +20,23 @@ interface ExecOptions {
 }
 
 /**
- * Docker mount configuration.
+ * Docker bind mount configuration.
  */
 export interface DockerMount {
   source: string;
   target: string;
+  readonly?: boolean;
+}
+
+/**
+ * Docker named volume mount configuration.
+ */
+export interface DockerVolumeMount {
+  /** Named volume name (must be created with `docker volume create` first) */
+  volume: string;
+  /** Container path to mount the volume at */
+  target: string;
+  /** Whether to mount read-only */
   readonly?: boolean;
 }
 
@@ -36,6 +48,8 @@ export interface RunNodeContainerOptions {
   cmd: string | string[];
   cwd?: string;
   mounts?: DockerMount[];
+  /** Named volume mounts (volumes must be created beforehand with `docker volume create`) */
+  volumes?: DockerVolumeMount[];
   env?: Record<string, string | undefined>;
   labels?: Record<string, string>;
   name?: string;
@@ -186,7 +200,7 @@ export async function ensureNodeImage(
  * Runs a command in a Node Docker container.
  */
 export async function runNodeContainer(options: RunNodeContainerOptions): Promise<ExecResult> {
-  const { imageTag, cmd, cwd, mounts, env, labels, name } = options;
+  const { imageTag, cmd, cwd, mounts, volumes, env, labels, name } = options;
 
   // Validate imageTag is provided, as it determines which Docker image to run.
   if (!imageTag || typeof imageTag !== 'string') {
@@ -229,6 +243,20 @@ export async function runNodeContainer(options: RunNodeContainerOptions): Promis
       const parts = [`type=bind`, `src=${m.source}`, `dst=${m.target}`];
       // Mark mount as read-only to prevent container from modifying host files.
       if (m.readonly) parts.push('readonly');
+      dockerArgs.push('--mount', parts.join(','));
+    }
+  }
+
+  // Configure named volume mounts for sharing state between container runs.
+  if (volumes) {
+    for (const v of volumes) {
+      // Ensure each volume mount has required volume name and target path.
+      if (!v?.volume || !v?.target) {
+        throw new Error('runNodeContainer(...): each volume must have { volume, target }');
+      }
+      const parts = [`type=volume`, `src=${v.volume}`, `dst=${v.target}`];
+      // Mark mount as read-only if specified.
+      if (v.readonly) parts.push('readonly');
       dockerArgs.push('--mount', parts.join(','));
     }
   }
