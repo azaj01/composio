@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, Sparkles, ArrowRight, Wrench, Zap, Copy, Check, ExternalLink, Grip } from 'lucide-react';
 import toolkitsData from '@/public/data/toolkits-list.json';
 import type { ToolkitSummary } from '@/types/toolkit';
+import { PageActions } from '@/components/page-actions';
 
 const toolkits = toolkitsData as ToolkitSummary[];
 
@@ -143,6 +144,7 @@ export function ToolkitsLanding() {
           <p className="mt-1.5 text-sm text-fd-muted-foreground sm:mt-2 sm:text-base">
             Browse {toolkits.length} toolkits supported by Composio
           </p>
+          <PageActions path="/toolkits" />
         </div>
         <div className="flex items-center gap-2">
           <a
