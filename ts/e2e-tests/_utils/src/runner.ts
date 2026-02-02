@@ -582,8 +582,8 @@ function normalizeVersionConfig(config: E2EConfig): RuntimeVersions {
   if (config.versions) {
     return config.versions;
   }
-  // Default: use current Node.js version
-  return { node: ['current'] };
+  // Default: use current version for Node.js and Deno
+  return { node: ['current'], deno: ['current'] };
 }
 
 /**
