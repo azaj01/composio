@@ -981,6 +981,21 @@ class TestUrlHelperFunctions:
         assert _is_url("https://example.com/file.jpg") is True
         assert _is_url("https://images.pexels.com/photos/123.jpg") is True
 
+    def test_is_url_with_long_real_world_urls(self):
+        """Test _is_url handles long real-world URLs with query parameters."""
+        assert (
+            _is_url(
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQq0powzLhfi1bakZ0eNSIA_aJ_5UlPsCte1g&s"
+            )
+            is True
+        )
+        assert (
+            _is_url(
+                "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8bWFjYm9vfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=800&q=60"
+            )
+            is True
+        )
+
     def test_is_url_with_local_paths(self):
         """Test _is_url correctly rejects local file paths."""
         assert _is_url("/path/to/file.jpg") is False
@@ -1626,6 +1641,27 @@ class TestFetchFileFromUrlWithTruncation:
         assert filename.startswith("file_")
         assert filename.endswith(".png")
         assert len(filename) < 50  # Timestamped names are short
+
+    @patch("composio.core.models._files.requests.get")
+    def test_fetch_long_real_world_url(self, mock_get):
+        """Long real-world URLs should be handled correctly."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.content = b"test content"
+        mock_response.headers = {"content-type": "application/pdf"}
+        mock_get.return_value = mock_response
+
+        # Real-world long URL example (no extension, relies on mimetype)
+        long_url = (
+            "https://encrypted-tbn0.gstatic.com/images?q="
+            "tbn:ANd9GcQq0powzLhfi1bakZ0eNSIA_aJ_5UlPsCte1g&s"
+        )
+        filename, content, mimetype = _fetch_file_from_url(long_url)
+
+        assert len(filename) <= _MAX_FILENAME_LENGTH
+        assert filename.startswith("file_")
+        assert filename.endswith(".pdf")
+        assert content == b"test content"
 
 
 class TestResponseSizeLimit:
