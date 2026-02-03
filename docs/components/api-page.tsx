@@ -19,12 +19,14 @@ export const APIPage = createAPIPage(openapi, {
           schema: { getRawRef: ctx.schema.getRawRef },
         }
       );
+      const isResponse = options.readOnly === true && !options.writeOnly;
       return (
         <CustomSchemaUI
           name={options.client.name}
           required={options.client.required}
           as={options.client.as}
           generated={generated}
+          isResponse={isResponse}
         />
       );
     },

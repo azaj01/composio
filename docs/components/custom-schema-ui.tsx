@@ -4,7 +4,6 @@ import {
   createContext,
   Fragment,
   use,
-  useMemo,
   useState,
   type ReactNode,
 } from 'react';
@@ -48,9 +47,11 @@ interface SchemaUIProps {
   required?: boolean;
   as?: 'property' | 'body';
   generated: SchemaUIGeneratedData;
+  isResponse?: boolean;
 }
 
 const DataContext = createContext<SchemaUIGeneratedData | null>(null);
+const ResponseContext = createContext(false);
 
 function useData() {
   const ctx = use(DataContext);
@@ -58,27 +59,34 @@ function useData() {
   return ctx;
 }
 
+function useIsResponse() {
+  return use(ResponseContext);
+}
+
 export function CustomSchemaUI({
   name,
   required = false,
   as = 'property',
   generated,
+  isResponse = false,
 }: SchemaUIProps) {
   const schema = generated.refs[generated.$root];
-  const isProperty = as === 'property' || !isExpandable(schema);
+  const isProperty = as === 'property' || !isExpandable(schema, generated.refs);
 
   return (
     <DataContext value={generated}>
-      {isProperty ? (
-        <SchemaProperty
-          name={name}
-          $type={generated.$root}
-          required={required}
-          isRoot
-        />
-      ) : (
-        <SchemaContent $type={generated.$root} />
-      )}
+      <ResponseContext value={isResponse}>
+        {isProperty ? (
+          <SchemaProperty
+            name={name}
+            $type={generated.$root}
+            required={required}
+            isRoot
+          />
+        ) : (
+          <SchemaContent $type={generated.$root} />
+        )}
+      </ResponseContext>
     </DataContext>
   );
 }
@@ -120,7 +128,7 @@ function SchemaContent({
         {schema.items.map((item, i) => (
           <div key={item.$type} className="pl-3 border-l-2 border-fd-border">
             <span className="text-sm font-medium">{item.name}</span>
-            {isExpandable(refs[item.$type]) && (
+            {isExpandable(refs[item.$type], refs) && (
               <ExpandableContent $type={item.$type} parentPath={parentPath} />
             )}
           </div>
@@ -146,10 +154,11 @@ function SchemaProperty({
   isRoot?: boolean;
 }) {
   const { refs } = useData();
+  const isResponse = useIsResponse();
   const schema = refs[$type];
   const fullPath = parentPath ? `${parentPath}.${name}` : name;
 
-  const hasChildren = isExpandable(schema);
+  const hasChildren = isExpandable(schema, refs);
   const typeDisplay = getTypeDisplay(schema);
 
   return (
@@ -162,7 +171,7 @@ function SchemaProperty({
         <span className="text-sm font-mono text-fd-muted-foreground">
           {typeDisplay}
         </span>
-        {required && (
+        {required && !isResponse && (
           <span className="text-xs text-red-400 font-medium">Required</span>
         )}
         {schema.deprecated && (
@@ -235,21 +244,21 @@ function ExpandableContent({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-3">
-      <CollapsibleTrigger className="group flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-fd-border bg-fd-card hover:bg-fd-accent/50 transition-colors">
+      <CollapsibleTrigger className="group flex items-center gap-1 px-2 py-1 text-xs text-fd-muted-foreground hover:text-fd-foreground font-medium rounded border border-fd-border hover:bg-fd-accent/30 transition-colors">
         {isOpen ? (
           <>
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3" />
             Hide {label}
           </>
         ) : (
           <>
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3 w-3" />
             Show {childCount > 0 ? `${childCount} ` : ''}{label}
           </>
         )}
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-2 pl-4 border-l-2 border-fd-border">
+        <div className="mt-2 pl-3 border-l border-fd-border">
           <SchemaContent $type={$type} parentPath={parentPath} />
         </div>
       </CollapsibleContent>
@@ -257,10 +266,24 @@ function ExpandableContent({
   );
 }
 
-function isExpandable(schema: SchemaData): boolean {
+function isExpandable(schema: SchemaData, refs?: Record<string, SchemaData>): boolean {
   if (schema.type === 'object' && schema.props.length > 0) return true;
-  if (schema.type === 'array') return true;
-  if ((schema.type === 'or' || schema.type === 'and') && schema.items.length > 0) return true;
+  if (schema.type === 'array') {
+    // Only expandable if items have structure (object/nested)
+    if (!refs) return true;
+    const itemSchema = refs[schema.item.$type];
+    if (!itemSchema) return true;
+    return itemSchema.type !== 'primitive';
+  }
+  if ((schema.type === 'or' || schema.type === 'and') && schema.items.length > 0) {
+    // Only expandable if at least one variant has nested structure
+    if (!refs) return true;
+    return schema.items.some((item) => {
+      const itemSchema = refs[item.$type];
+      if (!itemSchema) return false;
+      return isExpandable(itemSchema, refs);
+    });
+  }
   return false;
 }
 

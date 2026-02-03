@@ -207,20 +207,22 @@ export function generateSchemaData(
     const tags: ReactNode[] = [];
 
     if (schema.default !== undefined) {
-      tags.push(
-        <div key="default" className="bg-fd-secondary border rounded-lg text-xs p-1.5 shadow-md">
-          <span className="font-medium me-2">Default</span>
-          <code className="text-fd-muted-foreground">{JSON.stringify(schema.default)}</code>
-        </div>
-      );
+      const defaultStr = JSON.stringify(schema.default);
+      // Skip empty objects/arrays as defaults - they're noise
+      if (defaultStr !== '{}' && defaultStr !== '[]') {
+        tags.push(
+          <span key="default" className="text-xs text-fd-muted-foreground">
+            Default: <code className="rounded border border-fd-border px-1 py-0.5 font-mono">{defaultStr}</code>
+          </span>
+        );
+      }
     }
 
     if (schema.format) {
       tags.push(
-        <div key="format" className="bg-fd-secondary border rounded-lg text-xs p-1.5 shadow-md">
-          <span className="font-medium me-2">Format</span>
-          <code className="text-fd-muted-foreground">{schema.format}</code>
-        </div>
+        <span key="format" className="text-xs text-fd-muted-foreground">
+          Format: <code className="rounded border border-fd-border px-1 py-0.5 font-mono">{schema.format}</code>
+        </span>
       );
     }
 
