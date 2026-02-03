@@ -1,0 +1,278 @@
+'use client';
+
+import {
+  createContext,
+  Fragment,
+  use,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from 'fumadocs-ui/components/ui/collapsible';
+import { cn } from '@/lib/utils';
+import { Plus, X } from 'lucide-react';
+
+// Types from fumadocs-openapi
+interface FieldBase {
+  description?: ReactNode;
+  infoTags?: ReactNode[];
+  typeName: string;
+  aliasName: string;
+  deprecated?: boolean;
+  enumValues?: string[];
+}
+
+type SchemaData = FieldBase &
+  (
+    | { type: 'primitive' }
+    | {
+        type: 'object';
+        props: { name: string; $type: string; required: boolean }[];
+      }
+    | { type: 'array'; item: { $type: string } }
+    | { type: 'or'; items: { name: string; $type: string }[] }
+    | { type: 'and'; items: { name: string; $type: string }[] }
+  );
+
+interface SchemaUIGeneratedData {
+  $root: string;
+  refs: Record<string, SchemaData>;
+}
+
+interface SchemaUIProps {
+  name: string;
+  required?: boolean;
+  as?: 'property' | 'body';
+  generated: SchemaUIGeneratedData;
+}
+
+const DataContext = createContext<SchemaUIGeneratedData | null>(null);
+
+function useData() {
+  const ctx = use(DataContext);
+  if (!ctx) throw new Error('Missing DataContext');
+  return ctx;
+}
+
+export function CustomSchemaUI({
+  name,
+  required = false,
+  as = 'property',
+  generated,
+}: SchemaUIProps) {
+  const schema = generated.refs[generated.$root];
+  const isProperty = as === 'property' || !isExpandable(schema);
+
+  return (
+    <DataContext value={generated}>
+      {isProperty ? (
+        <SchemaProperty
+          name={name}
+          $type={generated.$root}
+          required={required}
+          isRoot
+        />
+      ) : (
+        <SchemaContent $type={generated.$root} />
+      )}
+    </DataContext>
+  );
+}
+
+function SchemaContent({
+  $type,
+  parentPath = '',
+}: {
+  $type: string;
+  parentPath?: string;
+}) {
+  const { refs } = useData();
+  const schema = refs[$type];
+
+  if (schema.type === 'object' && schema.props.length > 0) {
+    return (
+      <div className="divide-y divide-fd-border">
+        {schema.props.map((prop) => (
+          <SchemaProperty
+            key={prop.name}
+            name={prop.name}
+            $type={prop.$type}
+            required={prop.required}
+            parentPath={parentPath}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (schema.type === 'array') {
+    return <SchemaContent $type={schema.item.$type} parentPath={parentPath} />;
+  }
+
+  if (schema.type === 'or' && schema.items.length > 0) {
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-fd-muted-foreground">One of:</p>
+        {schema.items.map((item, i) => (
+          <div key={item.$type} className="pl-3 border-l-2 border-fd-border">
+            <span className="text-sm font-medium">{item.name}</span>
+            {isExpandable(refs[item.$type]) && (
+              <ExpandableContent $type={item.$type} parentPath={parentPath} />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function SchemaProperty({
+  name,
+  $type,
+  required,
+  parentPath = '',
+  isRoot = false,
+}: {
+  name: string;
+  $type: string;
+  required: boolean;
+  parentPath?: string;
+  isRoot?: boolean;
+}) {
+  const { refs } = useData();
+  const schema = refs[$type];
+  const fullPath = parentPath ? `${parentPath}.${name}` : name;
+
+  const hasChildren = isExpandable(schema);
+  const typeDisplay = getTypeDisplay(schema);
+
+  return (
+    <div className={cn('py-4', !isRoot && 'first:pt-0')}>
+      {/* Property header */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-medium font-mono text-fd-foreground">
+          {name}
+        </span>
+        <span className="text-sm font-mono text-fd-muted-foreground">
+          {typeDisplay}
+        </span>
+        {required && (
+          <span className="text-xs text-red-400 font-medium">Required</span>
+        )}
+        {schema.deprecated && (
+          <span className="text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-1.5 py-0.5 rounded">
+            Deprecated
+          </span>
+        )}
+      </div>
+
+      {/* Description */}
+      {schema.description && (
+        <div className="mt-2 text-sm text-fd-muted-foreground prose-no-margin">
+          {schema.description}
+        </div>
+      )}
+
+      {/* Info tags */}
+      {schema.infoTags && schema.infoTags.length > 0 && (
+        <div className="flex flex-row gap-2 flex-wrap mt-2">
+          {schema.infoTags.map((tag, i) => (
+            <Fragment key={i}>{tag}</Fragment>
+          ))}
+        </div>
+      )}
+
+      {/* Enum values */}
+      {schema.enumValues && schema.enumValues.length > 0 && (
+        <EnumValues values={schema.enumValues} />
+      )}
+
+      {/* Expandable child attributes */}
+      {hasChildren && (
+        <ExpandableContent $type={$type} parentPath={fullPath} />
+      )}
+    </div>
+  );
+}
+
+function EnumValues({ values }: { values: string[] }) {
+  return (
+    <div className="mt-2">
+      <span className="text-xs text-fd-muted-foreground">Possible values:</span>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        {values.map((value) => (
+          <code
+            key={value}
+            className="rounded border border-fd-border px-1.5 py-0.5 text-xs font-mono text-fd-muted-foreground"
+          >
+            {value}
+          </code>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExpandableContent({
+  $type,
+  parentPath,
+}: {
+  $type: string;
+  parentPath: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { refs } = useData();
+  const schema = refs[$type];
+
+  const childCount = getChildCount(schema);
+  const label = schema.type === 'array' ? 'item properties' : 'child attributes';
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-3">
+      <CollapsibleTrigger className="group flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-fd-border bg-fd-card hover:bg-fd-accent/50 transition-colors">
+        {isOpen ? (
+          <>
+            <X className="h-4 w-4" />
+            Hide {label}
+          </>
+        ) : (
+          <>
+            <Plus className="h-4 w-4" />
+            Show {childCount > 0 ? `${childCount} ` : ''}{label}
+          </>
+        )}
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-2 pl-4 border-l-2 border-fd-border">
+          <SchemaContent $type={$type} parentPath={parentPath} />
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+function isExpandable(schema: SchemaData): boolean {
+  if (schema.type === 'object' && schema.props.length > 0) return true;
+  if (schema.type === 'array') return true;
+  if ((schema.type === 'or' || schema.type === 'and') && schema.items.length > 0) return true;
+  return false;
+}
+
+function getTypeDisplay(schema: SchemaData): string {
+  if (schema.type === 'array') {
+    return `array of ${schema.aliasName}`;
+  }
+  return schema.typeName;
+}
+
+function getChildCount(schema: SchemaData): number {
+  if (schema.type === 'object') return schema.props.length;
+  if (schema.type === 'or' || schema.type === 'and') return schema.items.length;
+  return 0;
+}
