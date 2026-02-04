@@ -488,6 +488,11 @@ div.flex.items-center:has(> span.font-mono.text-fd-primary > span.text-red-400) 
   color: #f87171;
 }
 
+/* Hide empty schema wrapper divs (e.g. when Error schema is skipped) */
+div.border.rounded-lg:not(:has(*)) {
+  display: none;
+}
+
 /* Hide redundant "application/json" content type labels */
 p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
   display: none;

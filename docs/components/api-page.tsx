@@ -6,8 +6,14 @@ import { CustomSchemaUI } from './custom-schema-ui';
 
 export const APIPage = createAPIPage(openapi, {
   client,
+  generateTypeScriptSchema: false,
   schemaUI: {
     render: (options, ctx) => {
+      // Skip rendering the shared Error schema on error responses -
+      // the status code and description are shown by the accordion already
+      const ref = ctx.schema.getRawRef(options.root);
+      if (ref === '#/components/schemas/Error') return null;
+
       const generated = generateSchemaData(
         {
           root: options.root,
