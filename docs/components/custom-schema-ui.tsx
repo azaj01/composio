@@ -235,12 +235,18 @@ function ExpandableContent({
   );
 }
 
-function isExpandable(schema: SchemaData, refs?: Record<string, SchemaData>): boolean {
+function isExpandable(
+  schema: SchemaData,
+  refs?: Record<string, SchemaData>,
+  visited: Set<string> = new Set()
+): boolean {
   if (schema.type === 'object' && schema.props.length > 0) return true;
   if (schema.type === 'array') {
     // Only expandable if items have structure (object/nested)
     if (!refs) return true;
-    const itemSchema = refs[schema.item.$type];
+    const itemType = schema.item.$type;
+    if (visited.has(itemType)) return false; // Circular ref - not expandable
+    const itemSchema = refs[itemType];
     if (!itemSchema) return true;
     return itemSchema.type !== 'primitive';
   }
@@ -248,9 +254,11 @@ function isExpandable(schema: SchemaData, refs?: Record<string, SchemaData>): bo
     // Only expandable if at least one variant has nested structure
     if (!refs) return true;
     return schema.items.some((item) => {
+      if (visited.has(item.$type)) return false; // Circular ref - not expandable
       const itemSchema = refs[item.$type];
       if (!itemSchema) return false;
-      return isExpandable(itemSchema, refs);
+      visited.add(item.$type);
+      return isExpandable(itemSchema, refs, visited);
     });
   }
   return false;
