@@ -126,8 +126,8 @@ function SchemaContent({
     return (
       <div className="space-y-2">
         <p className="text-xs text-fd-muted-foreground">{label}</p>
-        {schema.items.map((item) => (
-          <div key={item.$type} className="pl-3 border-l-2 border-fd-border">
+        {schema.items.map((item, i) => (
+          <div key={`${item.$type}-${i}`} className="pl-3 border-l-2 border-fd-border">
             <span className="text-sm font-medium">{item.name}</span>
             {isExpandable(refs[item.$type], refs) && (
               <ExpandableContent $type={item.$type} parentPath={parentPath} />
