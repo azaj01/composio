@@ -12,7 +12,11 @@ export const APIPage = createAPIPage(openapi, {
     render: (options, ctx) => {
       // Skip rendering the shared Error schema on error responses -
       // the status code and description are shown by the accordion already
-      const ref = ctx.schema.getRawRef(options.root);
+      // options.root can be boolean for simple schemas, only check refs for objects
+      const ref =
+        typeof options.root === 'object'
+          ? ctx.schema.getRawRef(options.root)
+          : null;
       if (ref === '#/components/schemas/Error') return null;
 
       const generated = generateSchemaData(
