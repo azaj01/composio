@@ -121,11 +121,12 @@ function SchemaContent({
     return <SchemaContent $type={schema.item.$type} parentPath={parentPath} />;
   }
 
-  if (schema.type === 'or' && schema.items.length > 0) {
+  if ((schema.type === 'or' || schema.type === 'and') && schema.items.length > 0) {
+    const label = schema.type === 'or' ? 'One of:' : 'All of:';
     return (
       <div className="space-y-2">
-        <p className="text-xs text-fd-muted-foreground">One of:</p>
-        {schema.items.map((item, i) => (
+        <p className="text-xs text-fd-muted-foreground">{label}</p>
+        {schema.items.map((item) => (
           <div key={item.$type} className="pl-3 border-l-2 border-fd-border">
             <span className="text-sm font-medium">{item.name}</span>
             {isExpandable(refs[item.$type], refs) && (
