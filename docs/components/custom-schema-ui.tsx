@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  Fragment,
-  use,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, Fragment, use, useState } from 'react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,33 +8,7 @@ import {
 } from 'fumadocs-ui/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
-
-// Types from fumadocs-openapi
-interface FieldBase {
-  description?: ReactNode;
-  infoTags?: ReactNode[];
-  typeName: string;
-  aliasName: string;
-  deprecated?: boolean;
-  enumValues?: string[];
-}
-
-type SchemaData = FieldBase &
-  (
-    | { type: 'primitive' }
-    | {
-        type: 'object';
-        props: { name: string; $type: string; required: boolean }[];
-      }
-    | { type: 'array'; item: { $type: string } }
-    | { type: 'or'; items: { name: string; $type: string }[] }
-    | { type: 'and'; items: { name: string; $type: string }[] }
-  );
-
-interface SchemaUIGeneratedData {
-  $root: string;
-  refs: Record<string, SchemaData>;
-}
+import type { SchemaData, SchemaUIGeneratedData } from './schema-generator';
 
 interface SchemaUIProps {
   name: string;
