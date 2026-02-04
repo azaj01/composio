@@ -5,7 +5,6 @@ import { Analytics } from '@vercel/analytics/next';
 import './global.css';
 import { IBM_Plex_Mono } from 'next/font/google';
 import { PostHogProvider } from '@/components/posthog-provider';
-import { ScrollToTop } from '@/components/scroll-to-top';
 
 export const metadata: Metadata = {
   title: {
@@ -101,7 +100,6 @@ export default function Layout({ children }: LayoutProps<'/'>) {
               },
             }}
           >
-            <ScrollToTop />
             {children}
           </RootProvider>
         </PostHogProvider>
