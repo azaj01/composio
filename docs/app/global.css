@@ -498,6 +498,7 @@ p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
   display: none;
 }
 
+
 /* ==========================================================================
    Table of Contents (Right Sidebar)
    ========================================================================== */
