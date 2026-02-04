@@ -110,6 +110,9 @@ export function generateSchemaData(
     const id = getSchemaId(schema);
     if (id in refs) return id;
 
+    // Mark as processing to prevent infinite recursion on circular refs
+    refs[id] = { type: 'primitive', typeName: 'any', aliasName: 'any' };
+
     // For arrays, aliasName is the item type (used in "array of X" display)
     const aliasName =
       schema.type === 'array' && schema.items
