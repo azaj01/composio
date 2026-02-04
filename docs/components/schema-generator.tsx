@@ -110,13 +110,19 @@ export function generateSchemaData(
     const id = getSchemaId(schema);
     if (id in refs) return id;
 
+    // For arrays, aliasName is the item type (used in "array of X" display)
+    const aliasName =
+      schema.type === 'array' && schema.items
+        ? getTypeName(schema.items)
+        : getTypeName(schema);
+
     const base: FieldBase = {
       description: schema.description
         ? ctx.renderMarkdown(schema.description)
         : undefined,
       infoTags: generateInfoTags(schema),
       typeName: getTypeName(schema),
-      aliasName: getTypeName(schema),
+      aliasName,
       deprecated: schema.deprecated,
       enumValues: schema.enum
         ? schema.enum.map((v: unknown) => String(v))
