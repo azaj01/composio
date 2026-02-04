@@ -1,5 +1,24 @@
 # @composio/core
 
+## 0.6.3
+
+### Patch Changes
+
+- 087385d: Remove important tag auto apply when limit is set
+
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [eec8fd9]
+  - @composio/json-schema-to-zod@0.1.20
+
+## 0.6.1
+
+### Patch Changes
+
+- e746383: Fix issues with file upload corruption
+
 ## 0.6.0
 
 ### Minor Changes

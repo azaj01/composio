@@ -181,6 +181,14 @@ const config = {
         destination: '/reference',
         permanent: true,
       },
+      // Old Fern API endpoint URLs with kebab-case operationIds
+      // e.g. /api-reference/tools/post-tools-execute-by-tool-slug
+      // proxy.ts handles kebab-to-camelCase conversion
+      {
+        source: '/api-reference/:tag/:operationId',
+        destination: '/reference/api-reference/:tag/:operationId',
+        permanent: true,
+      },
       {
         source: '/api-reference/:path*',
         destination: '/reference/:path*',
@@ -481,6 +489,44 @@ const config = {
       {
         source: '/docs/providers/custom-providers/my-ai-provider',
         destination: '/docs/providers/custom-providers/typescript',
+        permanent: true,
+      },
+      // Old Fern v-3 paths (different hyphenation)
+      {
+        source: '/reference/v-3/:path*',
+        destination: '/reference',
+        permanent: true,
+      },
+      // Old Fern SDK reference URLs (no content exists at these paths)
+      {
+        source: '/type-script/:path*',
+        destination: '/reference',
+        permanent: true,
+      },
+      {
+        source: '/sdk-reference/:path*',
+        destination: '/reference',
+        permanent: true,
+      },
+      {
+        source: '/sdk/:path*',
+        destination: '/reference',
+        permanent: true,
+      },
+      {
+        source: '/js-sdk/:path*',
+        destination: '/reference',
+        permanent: true,
+      },
+      {
+        source: '/js/:path*',
+        destination: '/reference',
+        permanent: true,
+      },
+      // Old Fern example URLs
+      {
+        source: '/examples/combined/:path*',
+        destination: '/examples',
         permanent: true,
       },
     ];
