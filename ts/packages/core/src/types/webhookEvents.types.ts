@@ -17,9 +17,18 @@ export type WebhookEventType = (typeof WebhookEventTypes)[keyof typeof WebhookEv
 // =============================================================================
 
 /**
- * Auth config details included in the connected account response.
+ * Auth config schema for webhook payloads (raw API format, snake_case).
+ *
+ * This intentionally does NOT reuse ConnectedAccountAuthConfigSchema from
+ * connectedAccounts.types.ts because:
+ * - Webhook payloads arrive in raw snake_case (is_composio_managed, is_disabled)
+ *   while the SDK schema uses camelCase (isComposioManaged, isDisabled)
+ * - Webhook payloads include additional fields (auth_scheme, deprecated)
+ *   not present in the SDK schema
+ *
+ * @see connectedAccounts.types.ts for the camelCase SDK version
  */
-export const ConnectedAccountAuthConfigSchema = z.object({
+export const WebhookConnectedAccountAuthConfigSchema = z.object({
   /** The nano ID of the auth config */
   id: z.string(),
   /** @deprecated - use state.authScheme instead */
@@ -36,12 +45,21 @@ export const ConnectedAccountAuthConfigSchema = z.object({
     .optional(),
 });
 
-export type ConnectedAccountAuthConfig = z.infer<typeof ConnectedAccountAuthConfigSchema>;
+export type WebhookConnectedAccountAuthConfig = z.infer<
+  typeof WebhookConnectedAccountAuthConfigSchema
+>;
 
 /**
- * Simplified connection state schema for webhook payloads.
- * The full ConnectionDataSchema is too complex for webhook validation;
- * this schema accepts any auth scheme and state values.
+ * Simplified connection state schema for webhook payloads (raw API format).
+ *
+ * This intentionally does NOT reuse ConnectionDataSchema from
+ * connectedAccountAuthStates.types.ts because:
+ * - ConnectionDataSchema is a discriminated union requiring typed `val`
+ *   per auth scheme (e.g., Oauth2ConnectionDataSchema)
+ * - Webhook payloads need loose validation (z.record(z.unknown()))
+ *   since the connection state varies and isn't the focus of event handling
+ *
+ * @see connectedAccountAuthStates.types.ts for the full typed version
  */
 export const WebhookConnectionStateSchema = z.object({
   /** The auth scheme type (e.g., 'OAUTH2', 'API_KEY') */
@@ -53,8 +71,18 @@ export const WebhookConnectionStateSchema = z.object({
 export type WebhookConnectionState = z.infer<typeof WebhookConnectionStateSchema>;
 
 /**
- * Connected account data schema matching GET /api/v3/connected_accounts/{id} response.
- * Used in webhook payloads for connection lifecycle events.
+ * Connected account data schema for webhook payloads (raw API format, snake_case).
+ *
+ * This intentionally does NOT reuse ConnectedAccountRetrieveResponseSchema from
+ * connectedAccounts.types.ts because:
+ * - Webhook payloads arrive in raw snake_case (auth_config, user_id, created_at, etc.)
+ *   while the SDK schema uses camelCase (authConfig, createdAt, etc.)
+ * - The SDK applies a transformation layer (utils/transformers/connectedAccounts.ts)
+ *   before validation; webhooks are validated directly by the user
+ * - Webhook payloads include user_id, which the SDK schema omits
+ *
+ * @see connectedAccounts.types.ts for the camelCase SDK version
+ * @see utils/transformers/connectedAccounts.ts for the snake-to-camel transformation
  */
 export const SingleConnectedAccountDetailedResponseSchema = z.object({
   /** Toolkit information */
@@ -62,7 +90,7 @@ export const SingleConnectedAccountDetailedResponseSchema = z.object({
     slug: z.string().describe('The slug of the toolkit'),
   }),
   /** Auth config details */
-  auth_config: ConnectedAccountAuthConfigSchema,
+  auth_config: WebhookConnectedAccountAuthConfigSchema,
   /** The nano ID of the connected account */
   id: z.string(),
   /** @deprecated - user ID of the connection owner */
