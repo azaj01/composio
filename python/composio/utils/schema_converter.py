@@ -12,10 +12,12 @@ We handle those by pre-filtering them before passing to the library.
 import typing as t
 from functools import reduce
 
+from json_schema_to_pydantic import (
+    CombinerError,
+    SchemaError,
+)
 from json_schema_to_pydantic import (  # type: ignore[import-untyped]
     create_model as create_model_from_schema,
-    SchemaError,
-    CombinerError,
 )
 
 from composio.utils.logging import get as get_logger

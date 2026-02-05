@@ -11,10 +11,10 @@ from pydantic.fields import FieldInfo
 
 from composio.utils.logging import get as get_logger
 from composio.utils.schema_converter import (
-    json_schema_to_pydantic_type,
-    PYDANTIC_TYPE_TO_PYTHON_TYPE,
     CONTAINER_TYPE,
     FALLBACK_VALUES,
+    PYDANTIC_TYPE_TO_PYTHON_TYPE,
+    json_schema_to_pydantic_type,
 )
 
 logger = get_logger(__name__)

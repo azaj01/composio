@@ -11,9 +11,9 @@ import typing as t
 from dataclasses import dataclass
 from enum import Enum
 
+import typing_extensions as te
 from composio_client import omit
 from composio_client.types.tool_router import session_create_params
-import typing_extensions as te
 
 from composio.client import HttpClient
 from composio.core.models.base import Resource
