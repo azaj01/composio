@@ -278,6 +278,18 @@ export function mdxToCleanMarkdown(content: string): string {
   // Clean up excessive newlines
   result = result.replace(/\n{3,}/g, '\n\n');
 
+  // Strip twoslash annotations from code blocks (used for type-checking, not useful for AI)
+  // These include: // ---cut---, // @errors, // ^?, // @noErrors, etc.
+  result = result.replace(/^\/\/\s*---cut---.*$/gm, '');
+  result = result.replace(/^\/\/\s*@errors?:.*$/gm, '');
+  result = result.replace(/^\/\/\s*@noErrors.*$/gm, '');
+  result = result.replace(/^\/\/\s*@filename:.*$/gm, '');
+  result = result.replace(/^\/\/\s*@highlight.*$/gm, '');
+  result = result.replace(/^\/\/\s*\^[\?\!].*$/gm, ''); // ^? and ^! hover annotations
+
+  // Clean up any resulting empty lines in code blocks
+  result = result.replace(/\n{3,}/g, '\n\n');
+
   return result.trim();
 }
 
@@ -314,7 +326,11 @@ ${page.data.description || ''}`;
 
   return `# ${page.data.title} (${page.url})
 
-${cleanContent}`;
+${cleanContent}
+
+---
+
+📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Examples](https://docs.composio.dev/llms.mdx/examples) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`;
 }
 
 export function formatDate(dateStr: string): string {
