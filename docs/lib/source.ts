@@ -278,19 +278,32 @@ export function mdxToCleanMarkdown(content: string): string {
   // Clean up excessive newlines
   result = result.replace(/\n{3,}/g, '\n\n');
 
-  // Strip twoslash annotations from code blocks (used for type-checking, not useful for AI)
+  // Strip twoslash annotations ONLY inside code blocks (used for type-checking, not useful for AI)
   // These include: // ---cut---, // @errors, // ^?, // @noErrors, etc.
-  result = result.replace(/^\/\/\s*---cut---.*$/gm, '');
-  result = result.replace(/^\/\/\s*@errors?:.*$/gm, '');
-  result = result.replace(/^\/\/\s*@noErrors.*$/gm, '');
-  result = result.replace(/^\/\/\s*@filename:.*$/gm, '');
-  result = result.replace(/^\/\/\s*@highlight.*$/gm, '');
-  result = result.replace(/^\/\/\s*\^[\?\!].*$/gm, ''); // ^? and ^! hover annotations
-
-  // Clean up any resulting empty lines in code blocks
-  result = result.replace(/\n{3,}/g, '\n\n');
+  result = stripTwoslashFromCodeBlocks(result);
 
   return result.trim();
+}
+
+/**
+ * Strip twoslash annotations only from inside code blocks.
+ * This ensures we don't accidentally modify prose content.
+ */
+function stripTwoslashFromCodeBlocks(content: string): string {
+  // Match code blocks: ```lang ... ```
+  return content.replace(/(```[\w]*\n)([\s\S]*?)(```)/g, (match, open, code, close) => {
+    let cleanCode = code;
+    // Remove twoslash directives
+    cleanCode = cleanCode.replace(/^\/\/\s*---cut---.*\n?/gm, '');
+    cleanCode = cleanCode.replace(/^\/\/\s*@errors?:.*\n?/gm, '');
+    cleanCode = cleanCode.replace(/^\/\/\s*@noErrors.*\n?/gm, '');
+    cleanCode = cleanCode.replace(/^\/\/\s*@filename:.*\n?/gm, '');
+    cleanCode = cleanCode.replace(/^\/\/\s*@highlight.*\n?/gm, '');
+    cleanCode = cleanCode.replace(/^\/\/\s*\^[\?\!].*\n?/gm, ''); // ^? and ^! hover annotations
+    // Clean up resulting empty lines at start of code block
+    cleanCode = cleanCode.replace(/^\n+/, '');
+    return open + cleanCode + close;
+  });
 }
 
 export async function getLLMText(page: InferPageType<typeof source>) {
