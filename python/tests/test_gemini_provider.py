@@ -23,7 +23,7 @@ try:
 
     HAS_GENAI = True
 except ImportError:
-    genai_types = None
+    genai_types = None  # type: ignore[assignment]
     HAS_GENAI = False
 
 pytestmark = pytest.mark.gemini
