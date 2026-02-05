@@ -19,6 +19,13 @@ from composio.core.models.base import allow_tracking
 from composio.core.provider import AgenticProvider
 
 try:
+    import composio_gemini as _composio_gemini  # noqa: F401
+
+    HAS_COMPOSIO_GEMINI = True
+except ImportError:
+    HAS_COMPOSIO_GEMINI = False
+
+try:
     from google.genai import types as genai_types
 
     HAS_GENAI = True
@@ -26,7 +33,12 @@ except ImportError:
     genai_types = None  # type: ignore[assignment]
     HAS_GENAI = False
 
-pytestmark = pytest.mark.gemini
+pytestmark = [
+    pytest.mark.gemini,
+    pytest.mark.skipif(
+        not HAS_COMPOSIO_GEMINI, reason="composio_gemini package not installed"
+    ),
+]
 
 requires_genai = pytest.mark.skipif(
     not HAS_GENAI, reason="google-genai package not installed"
