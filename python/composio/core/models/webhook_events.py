@@ -139,14 +139,13 @@ class ConnectionExpiredEvent(te.TypedDict):
     Emitted when a connected account expires due to authentication refresh failure.
 
     Example:
-        >>> from composio.core.models.webhook_events import ConnectionExpiredEvent
+        >>> from composio.core.models.webhook_events import is_connection_expired_event
         >>>
         >>> def handle_webhook(payload: dict) -> None:
-        ...     if payload.get("type") == "composio.connected_account.expired":
-        ...         event: ConnectionExpiredEvent = payload  # type: ignore
-        ...         print(f"Connection {event['data']['id']} expired")
-        ...         print(f"Toolkit: {event['data']['toolkit']['slug']}")
-        ...         print(f"User: {event['data']['user_id']}")
+        ...     if is_connection_expired_event(payload):
+        ...         print(f"Connection {payload['data']['id']} expired")
+        ...         print(f"Toolkit: {payload['data']['toolkit']['slug']}")
+        ...         print(f"User: {payload['data']['user_id']}")
     """
 
     id: str  # Unique message ID (e.g., "msg_847cdfcd-d219-4f18-a6dd-91acd42ca94a")
@@ -160,7 +159,9 @@ class ConnectionExpiredEvent(te.TypedDict):
 WebhookEvent = t.Union[ConnectionExpiredEvent]
 
 
-def is_connection_expired_event(payload: t.Dict[str, t.Any]) -> bool:
+def is_connection_expired_event(
+    payload: t.Dict[str, t.Any],
+) -> t.TypeGuard[ConnectionExpiredEvent]:
     """
     Check if a webhook payload is a connection expired event.
 
@@ -168,14 +169,10 @@ def is_connection_expired_event(payload: t.Dict[str, t.Any]) -> bool:
     :return: True if this is a connection expired event
 
     Example:
-        >>> from composio.core.models.webhook_events import (
-        ...     is_connection_expired_event,
-        ...     ConnectionExpiredEvent,
-        ... )
+        >>> from composio.core.models.webhook_events import is_connection_expired_event
         >>>
         >>> if is_connection_expired_event(payload):
-        ...     event: ConnectionExpiredEvent = payload  # type: ignore
-        ...     handle_connection_expired(event)
+        ...     handle_connection_expired(payload)  # payload is narrowed to ConnectionExpiredEvent
     """
     return (
         isinstance(payload, dict)
