@@ -360,6 +360,62 @@ class TestWrapTool:
         assert call_args[0][1]["for"] == "test_value"
         assert call_args[0][1]["name"] == "hello"
 
+    def test_wrap_same_tool_twice_does_not_corrupt_schema(self):
+        """Wrapping the same Tool object twice must not corrupt the schema."""
+        from composio_gemini import GeminiProvider
+
+        provider = GeminiProvider()
+        tool = create_mock_tool(
+            "TOOL_RESERVED",
+            "test",
+            input_parameters={
+                "type": "object",
+                "properties": {
+                    "for": {"type": "string"},
+                    "name": {"type": "string"},
+                },
+                "required": ["for"],
+            },
+        )
+        execute_tool = create_mock_execute_tool()
+
+        func1 = provider.wrap_tool(tool, execute_tool)
+        func2 = provider.wrap_tool(tool, execute_tool)
+
+        # Both callables must have the cleaned parameter
+        sig1 = inspect.signature(func1)
+        sig2 = inspect.signature(func2)
+        assert "for_rs" in sig1.parameters
+        assert "for_rs" in sig2.parameters
+
+        # Original tool schema must be unchanged
+        assert "for" in tool.input_parameters["properties"]
+        assert "for_rs" not in tool.input_parameters["properties"]
+
+    def test_reserved_keyword_stays_required(self):
+        """A reserved keyword listed in 'required' must remain required after renaming."""
+        from composio_gemini import GeminiProvider
+
+        provider = GeminiProvider()
+        tool = create_mock_tool(
+            "TOOL_REQUIRED_RESERVED",
+            "test",
+            input_parameters={
+                "type": "object",
+                "properties": {
+                    "for": {"type": "string"},
+                    "name": {"type": "string"},
+                },
+                "required": ["for", "name"],
+            },
+        )
+        func = provider.wrap_tool(tool, create_mock_execute_tool())
+
+        sig = inspect.signature(func)
+        # Both params should be required (no default value)
+        assert sig.parameters["for_rs"].default is inspect.Parameter.empty
+        assert sig.parameters["name"].default is inspect.Parameter.empty
+
 
 # ---------------------------------------------------------------------------
 # wrap_tools

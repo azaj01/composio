@@ -5,6 +5,7 @@ Calling (AFC). The SDK can introspect the callable's signature to derive
 FunctionDeclaration schemas and auto-execute tool calls in the chat loop.
 """
 
+import copy
 import types as pytypes
 import typing as t
 from inspect import Parameter, Signature
@@ -34,6 +35,8 @@ def _substitute_reserved_python_keywords(schema: t.Dict) -> t.Tuple[dict, dict]:
     if "properties" not in schema:
         return schema, {}
 
+    schema = copy.deepcopy(schema)
+
     keywords: t.Dict[str, str] = {}
     for p_name in list(schema["properties"]):
         if p_name not in _python_reserved:
@@ -43,6 +46,12 @@ def _substitute_reserved_python_keywords(schema: t.Dict) -> t.Tuple[dict, dict]:
         p_name_clean = _clean_reserved_keyword(keyword=p_name)
         schema["properties"][p_name_clean] = p_val
         keywords[p_name_clean] = p_name
+
+    if keywords and "required" in schema:
+        reverse_map = {v: k for k, v in keywords.items()}
+        schema["required"] = [
+            reverse_map.get(name, name) for name in schema["required"]
+        ]
 
     return schema, keywords
 
