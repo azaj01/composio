@@ -19,6 +19,8 @@ A new API for managing webhook configurations with event filtering, HMAC signatu
 
 ## API Overview
 
+See the [API Reference](https://docs.composio.dev/rest-api/webhook-subscriptions) for complete details.
+
 ### Endpoints
 
 | Method | Endpoint | Description |
@@ -69,7 +71,7 @@ curl -X POST "https://backend.composio.dev/api/v3/webhook_subscriptions" \
 The `secret` is only returned once at creation time or when rotated. Store it securely for signature verification.
 </Callout>
 
-### Requirements
+### Notes
 
 - **1 subscription per project**: Currently limited to one webhook subscription per project. This will be expanded in future releases.
 - **HTTPS required**: Webhook URLs must use HTTPS in production environments.
@@ -214,8 +216,7 @@ The following legacy endpoints are deprecated and will be removed in a future re
 
 ### What We've Done For You
 
-- **Automatic migration**: We've created a webhook subscription for all existing projects that had webhook URLs configured
-- **No duplicate deliveries**: Legacy and new systems don't send duplicate webhooks
+- **Automatic migration**: We've created a webhook subscription for all existing projects that had webhook URLs configured, with `composio.trigger.message` enabled by default
 - **Same payload format**: If you were using V1, V2, or V3 triggers, they continue with the same format
 
 ### What Continues to Work
@@ -231,8 +232,6 @@ While not required, we recommend migrating to benefit from:
 
 1. **Event filtering**: Only receive events you care about
 2. **New events**: Access `composio.connected_account.expired` (V3 only)
-3. **Better secret management**: Rotate secrets without downtime
-4. **Future features**: New events will only be available via subscriptions
 
 ---
 
