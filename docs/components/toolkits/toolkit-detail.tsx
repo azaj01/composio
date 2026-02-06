@@ -65,9 +65,13 @@ function getChildren(param: ParameterSchema): Record<string, ParameterSchema> | 
   const result: Record<string, ParameterSchema> = {};
   for (const [key, value] of Object.entries(props)) {
     if (typeof value === 'object' && value !== null) {
+      const raw = value as ParameterSchema & { required?: string[] | boolean };
       result[key] = {
-        ...(value as ParameterSchema),
+        ...raw,
         required: Array.isArray(requiredList) ? requiredList.includes(key) : false,
+        // Map the child's own JSON Schema required array to requiredFields
+        // so that deeper nesting levels preserve required info
+        ...(Array.isArray(raw.required) ? { requiredFields: raw.required } : {}),
       };
     }
   }
