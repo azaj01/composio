@@ -235,44 +235,10 @@ While not required, we recommend migrating to benefit from:
 
 ---
 
-## Migration Guide
-
-Your existing webhook configuration has been automatically migrated. No action is required for your webhooks to continue working.
-
-### Using the New API
-
-Start using the new endpoints instead of the legacy ones:
-
-```bash
-# List your webhook subscriptions
-curl "https://backend.composio.dev/api/v3/webhook_subscriptions" \
-  -H "x-api-key: YOUR_API_KEY"
-```
-
-### (Optional) Enable New Events
-
-Add `composio.connected_account.expired` to receive connection expiry notifications:
-
-```bash
-curl -X PATCH "https://backend.composio.dev/api/v3/webhook_subscriptions/{id}" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "enabled_events": [
-      "composio.trigger.message",
-      "composio.connected_account.expired"
-    ]
-  }'
-```
-
----
-
 ## Payload Version Comparison
 
 | Version | Format | Recommendation |
 |---------|--------|----------------|
 | V1 | Legacy flat structure | For backward compatibility only |
 | V2 | Nested with metadata | For existing integrations |
-| **V3** | Modern envelope format | **Recommended for all new integrations** |
-
-V3 follows industry standards with a consistent envelope containing `id`, `timestamp`, `type`, `metadata`, and `data`.
+| **V3** | Structured envelope with `id`, `timestamp`, `type`, `metadata`, `data` | **Recommended for all new integrations** |
