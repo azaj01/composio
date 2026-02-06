@@ -10,6 +10,7 @@ import {
 describe('WebhookEventTypes', () => {
   it('should have correct event type constants', () => {
     expect(WebhookEventTypes.CONNECTION_EXPIRED).toBe('composio.connected_account.expired');
+    expect(WebhookEventTypes.TRIGGER_MESSAGE).toBe('composio.trigger.message');
   });
 });
 
@@ -40,6 +41,20 @@ describe('WebhookConnectionMetadataSchema', () => {
 
     const result = WebhookConnectionMetadataSchema.safeParse(invalidMetadata);
     expect(result.success).toBe(false);
+  });
+
+  it('should accept metadata with extra unknown fields (passthrough)', () => {
+    const metadata = {
+      project_id: 'pr_koucdrMIwRsf',
+      org_id: '4a4ded8f-d3ae-4dea-a229-c30234298b05',
+      some_future_field: 'new_value',
+    };
+
+    const result = WebhookConnectionMetadataSchema.safeParse(metadata);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.some_future_field).toBe('new_value');
+    }
   });
 });
 
@@ -117,6 +132,21 @@ describe('SingleConnectedAccountDetailedResponseSchema', () => {
 
     const result = SingleConnectedAccountDetailedResponseSchema.safeParse(data);
     expect(result.success).toBe(false);
+  });
+
+  it('should accept payloads with extra unknown fields (passthrough)', () => {
+    const data = {
+      ...validConnectedAccountData,
+      some_future_field: 'future_value',
+      another_new_field: 42,
+    };
+
+    const result = SingleConnectedAccountDetailedResponseSchema.safeParse(data);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.some_future_field).toBe('future_value');
+      expect(result.data.another_new_field).toBe(42);
+    }
   });
 });
 
@@ -209,6 +239,20 @@ describe('ConnectionExpiredEventSchema', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.data.status_reason).toBe('Token refresh failed due to revoked access');
+    }
+  });
+
+  it('accepts event payload with extra unknown fields (passthrough)', () => {
+    const payload = {
+      ...validPayload,
+      version: '3.1',
+      source: 'composio-webhook-system',
+    };
+    const result = ConnectionExpiredEventSchema.safeParse(payload);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.version).toBe('3.1');
+      expect(result.data.source).toBe('composio-webhook-system');
     }
   });
 });
