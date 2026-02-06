@@ -37,8 +37,7 @@ See the [API Reference](https://docs.composio.dev/rest-api/webhook-subscriptions
 
 - **Event filtering**: Subscribe only to events you need
 - **HMAC-SHA256 signatures**: Every webhook includes a cryptographic signature for verification
-- **Secret rotation**: Rotate signing secrets without downtime
-- **Version control**: Choose payload format version (V1, V2, V3)
+- **Secret rotation**: Rotate signing secrets on demand
 
 ### Creating a Subscription
 
@@ -211,13 +210,6 @@ The following legacy endpoints are deprecated and will be removed in a future re
 - Existing project webhook configurations
 - All existing trigger payload formats (V1, V2, V3)
 - Signature verification with your existing secret
-
-### Recommended Actions
-
-While not required, we recommend migrating to benefit from:
-
-1. **Event filtering**: Only receive events you care about
-2. **New events**: Access `composio.connected_account.expired` (V3 only)
 
 ---
 
