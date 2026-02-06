@@ -2,7 +2,7 @@ import type { ParameterSchema, Tool } from '@/types/toolkit';
 
 // Add required flag to each property based on the required array
 // Preserves nested properties/items for object and array types
-export function processParams(props: any, requiredList: string[]): Record<string, ParameterSchema> | undefined {
+function processParams(props: any, requiredList: string[]): Record<string, ParameterSchema> | undefined {
   if (!props || typeof props !== 'object') return undefined;
   const result: Record<string, ParameterSchema> = {};
   for (const [key, value] of Object.entries(props)) {
@@ -16,7 +16,7 @@ export function processParams(props: any, requiredList: string[]): Record<string
         enum: param.enum,
         required: requiredList.includes(key),
         ...(param.properties ? { properties: param.properties } : {}),
-        ...(param.required ? { requiredFields: param.required } : {}),
+        ...(Array.isArray(param.required) ? { requiredFields: param.required } : {}),
         ...(param.items ? { items: {
           ...param.items,
           ...(Array.isArray(param.items.required) ? { requiredFields: param.items.required } : {}),
