@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ExternalLink, Search, Copy, Check, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
+import { processSchema } from '@/lib/toolkit-schema';
 import { PageActions } from '@/components/page-actions';
 import { AuthDetailsSection } from '@/components/toolkits/auth-details-section';
 
@@ -105,32 +106,6 @@ function paramsToTypeTable(params: Record<string, ParameterSchema>): Record<stri
   return result;
 }
 
-// Process raw API schema into ParameterSchema records
-function processApiSchema(schema: any): Record<string, ParameterSchema> | undefined {
-  if (!schema) return undefined;
-  const props = schema.properties || schema;
-  const required = schema.required || [];
-  if (!props || typeof props !== 'object') return undefined;
-
-  const result: Record<string, ParameterSchema> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (typeof value === 'object' && value !== null) {
-      const param = value as any;
-      result[key] = {
-        type: param.type,
-        description: param.description,
-        default: param.default,
-        example: param.example,
-        enum: param.enum,
-        required: required.includes(key),
-        ...(param.properties ? { properties: param.properties } : {}),
-        ...(param.required ? { requiredFields: param.required } : {}),
-        ...(param.items ? { items: param.items } : {}),
-      };
-    }
-  }
-  return Object.keys(result).length > 0 ? result : undefined;
-}
 
 // Check if item is a Tool with parameters
 function isTool(item: Tool | Trigger): item is Tool {
@@ -171,8 +146,8 @@ function ToolItem({ item, toolkitVersion }: { item: Tool | Trigger; toolkitVersi
       if (res.ok) {
         const data = await res.json();
         setDetailedParams({
-          input: processApiSchema(data.input_parameters),
-          output: processApiSchema(data.output_parameters),
+          input: processSchema(data.input_parameters),
+          output: processSchema(data.output_parameters),
         });
       }
     } catch {

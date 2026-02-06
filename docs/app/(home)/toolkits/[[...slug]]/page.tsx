@@ -8,54 +8,10 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import type { Metadata } from 'next';
 import type { Toolkit, Tool, Trigger } from '@/types/toolkit';
+import { processParams, toolFromApi } from '@/lib/toolkit-schema';
 
 const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
 const API_KEY = process.env.COMPOSIO_API_KEY;
-
-// Add required flag to each property based on the required array
-// Preserves nested properties/items for object and array types
-function processParams(props: any, requiredList: string[]): Record<string, any> | undefined {
-  if (!props || typeof props !== 'object') return undefined;
-  const result: Record<string, any> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (typeof value === 'object' && value !== null) {
-      const param = value as any;
-      result[key] = {
-        type: param.type,
-        description: param.description,
-        default: param.default,
-        example: param.example,
-        enum: param.enum,
-        required: requiredList.includes(key),
-        ...(param.properties ? { properties: param.properties } : {}),
-        ...(param.required ? { requiredFields: param.required } : {}),
-        ...(param.items ? { items: param.items } : {}),
-      };
-    }
-  }
-  return Object.keys(result).length > 0 ? result : undefined;
-}
-
-function toolFromApi(tool: any): Tool {
-  const inputSchema = tool.input_parameters || tool.parameters;
-  const outputSchema = tool.output_parameters || tool.response;
-
-  const inputProps = inputSchema?.properties || inputSchema;
-  const inputRequired = inputSchema?.required || [];
-  const outputProps = outputSchema?.properties || outputSchema;
-  const outputRequired = outputSchema?.required || [];
-
-  return {
-    slug: tool.slug || '',
-    name: tool.name || tool.display_name || tool.slug || '',
-    description: tool.description || '',
-    input_parameters: processParams(inputProps, inputRequired),
-    output_parameters: processParams(outputProps, outputRequired),
-    scopes: tool.scopes || undefined,
-    tags: tool.tags || undefined,
-    is_deprecated: tool.is_deprecated || false,
-  };
-}
 
 // Fetch detailed tool info from Composio API (server-side only)
 // Returns null on failure, empty array if toolkit has no tools
