@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useMemo, useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Search, Copy, Check, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
@@ -124,7 +124,7 @@ function ToolItem({ item, toolkitVersion }: { item: Tool | Trigger; toolkitVersi
     input?: Record<string, ParameterSchema>;
     output?: Record<string, ParameterSchema>;
   } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState(false);
 
   const copySlug = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -136,32 +136,25 @@ function ToolItem({ item, toolkitVersion }: { item: Tool | Trigger; toolkitVersi
   const tool = isTool(item) ? item : null;
   const trigger = isTrigger(item) ? item : null;
 
-  // Fetch detailed schema when a tool is expanded
-  const fetchDetailedSchema = useCallback(async () => {
-    if (!tool || detailedParams || loading) return;
-    setLoading(true);
-    try {
-      const versionParam = toolkitVersion ? `?version=${encodeURIComponent(toolkitVersion)}` : '';
-      const res = await fetch(`/api/tools/${item.slug}${versionParam}`);
-      if (res.ok) {
-        const data = await res.json();
-        setDetailedParams({
-          input: processSchema(data.input_parameters),
-          output: processSchema(data.output_parameters),
-        });
-      }
-    } catch {
-      // silently fall back to basic params
-    } finally {
-      setLoading(false);
-    }
-  }, [tool, item.slug, toolkitVersion, detailedParams, loading]);
-
+  // Fetch detailed schema once when a tool is first expanded
   useEffect(() => {
-    if (expanded && tool) {
-      fetchDetailedSchema();
-    }
-  }, [expanded, tool, fetchDetailedSchema]);
+    if (!expanded || !tool || fetched) return;
+    setFetched(true);
+    const versionParam = toolkitVersion ? `?version=${encodeURIComponent(toolkitVersion)}` : '';
+    fetch(`/api/tools/${item.slug}${versionParam}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setDetailedParams({
+            input: processSchema(data.input_parameters),
+            output: processSchema(data.output_parameters),
+          });
+        }
+      })
+      .catch(() => {
+        // silently fall back to basic params
+      });
+  }, [expanded, tool, fetched, item.slug, toolkitVersion]);
 
   const inputParams = detailedParams?.input || tool?.input_parameters;
   const outputParams = detailedParams?.output || tool?.output_parameters;
