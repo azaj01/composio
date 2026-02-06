@@ -247,7 +247,7 @@ function isExpandable(
     const itemType = schema.item.$type;
     if (visited.has(itemType)) return false; // Circular ref - not expandable
     const itemSchema = refs[itemType];
-    if (!itemSchema) return true;
+    if (!itemSchema) return false;
     return itemSchema.type !== 'primitive';
   }
   if ((schema.type === 'or' || schema.type === 'and') && schema.items.length > 0) {
