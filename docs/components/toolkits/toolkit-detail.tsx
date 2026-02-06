@@ -60,7 +60,7 @@ function getChildren(param: ParameterSchema): Record<string, ParameterSchema> | 
   const props = param.properties || param.items?.properties;
   if (!props || typeof props !== 'object') return null;
 
-  const requiredList: string[] = param.requiredFields || param.items?.requiredFields || param.items?.required as string[] || [];
+  const requiredList: string[] = param.requiredFields || param.items?.requiredFields || [];
   const result: Record<string, ParameterSchema> = {};
   for (const [key, value] of Object.entries(props)) {
     if (typeof value === 'object' && value !== null) {
