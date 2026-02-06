@@ -8,7 +8,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import type { Metadata } from 'next';
 import type { Toolkit, Tool, Trigger } from '@/types/toolkit';
-import { processParams, toolFromApi } from '@/lib/toolkit-schema';
+import { processSchema, toolFromApi } from '@/lib/toolkit-schema';
 
 const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
 const API_KEY = process.env.COMPOSIO_API_KEY;
@@ -79,21 +79,13 @@ async function fetchDetailedTriggers(toolkitSlug: string, version?: string | nul
     const items = Array.isArray(rawItems) ? rawItems : [];
 
     return items.filter((trigger: any) => trigger && typeof trigger === 'object').map((trigger: any) => {
-      const configSchema = trigger.config;
-      const payloadSchema = trigger.payload;
-
-      const configProps = configSchema?.properties || configSchema;
-      const configRequired = configSchema?.required || [];
-      const payloadProps = payloadSchema?.properties || payloadSchema;
-      const payloadRequired = payloadSchema?.required || [];
-
       return {
         slug: trigger.slug || '',
         name: trigger.name || trigger.display_name || trigger.slug || '',
         description: trigger.description || '',
         type: trigger.type || undefined,
-        config: processParams(configProps, configRequired),
-        payload: processParams(payloadProps, payloadRequired),
+        config: processSchema(trigger.config),
+        payload: processSchema(trigger.payload),
         instructions: trigger.instructions || undefined,
       };
     });

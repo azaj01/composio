@@ -17,7 +17,10 @@ export function processParams(props: any, requiredList: string[]): Record<string
         required: requiredList.includes(key),
         ...(param.properties ? { properties: param.properties } : {}),
         ...(param.required ? { requiredFields: param.required } : {}),
-        ...(param.items ? { items: param.items } : {}),
+        ...(param.items ? { items: {
+          ...param.items,
+          ...(Array.isArray(param.items.required) ? { requiredFields: param.items.required } : {}),
+        } } : {}),
       };
     }
   }
