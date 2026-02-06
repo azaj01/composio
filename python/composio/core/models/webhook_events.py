@@ -17,6 +17,7 @@ class WebhookEventType(str, Enum):
     """Known webhook event types."""
 
     CONNECTION_EXPIRED = "composio.connected_account.expired"
+    TRIGGER_MESSAGE = "composio.trigger.message"
 
 
 class ConnectionStatusEnum(str, Enum):
@@ -102,6 +103,13 @@ class SingleConnectedAccountDetailedResponse(te.TypedDict, total=False):
     Connected account data matching GET /api/v3/connected_accounts/{id} response.
 
     This is used in webhook payloads for connection lifecycle events.
+    It intentionally does NOT reuse composio_client's ConnectedAccountRetrieveResponse
+    because webhook payloads arrive in raw snake_case format, while the SDK client
+    transforms responses to a different shape. This TypedDict validates the raw
+    webhook payload directly without any transformation layer.
+
+    See Also:
+        composio_client.types.connected_account_retrieve_response for the SDK version.
     """
 
     toolkit: te.Required[ConnectedAccountToolkit]
@@ -155,7 +163,9 @@ class ConnectionExpiredEvent(te.TypedDict):
     metadata: WebhookConnectionMetadata
 
 
-# Type alias for all webhook events
+# Type alias for non-trigger webhook events with specific typed schemas.
+# Trigger events (composio.trigger.message) are handled through the
+# TriggerEvent type in triggers.py via the trigger subscription system.
 WebhookEvent = t.Union[ConnectionExpiredEvent]
 
 

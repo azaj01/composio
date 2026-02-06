@@ -19,6 +19,10 @@ class TestWebhookEventType:
             == "composio.connected_account.expired"
         )
 
+    def test_trigger_message_value(self) -> None:
+        """Should have correct value for TRIGGER_MESSAGE."""
+        assert WebhookEventType.TRIGGER_MESSAGE.value == "composio.trigger.message"
+
 
 class TestIsConnectionExpiredEvent:
     """Tests for is_connection_expired_event helper function."""
