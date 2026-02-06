@@ -146,20 +146,6 @@ The `composio.connected_account.expired` event follows the V3 envelope format:
 The `data` object matches the response from [`GET /api/v3/connected_accounts/{id}`](https://docs.composio.dev/rest-api/connected-accounts/get-connected-accounts-by-nanoid), making it easy to process with existing code and SDK types.
 </Callout>
 
-### Key Fields
-
-| Field | Description |
-|-------|-------------|
-| `id` | Unique event identifier |
-| `timestamp` | ISO 8601 timestamp when the event was generated |
-| `type` | Always `composio.connected_account.expired` for this event |
-| `metadata.project_id` | Your project identifier |
-| `metadata.org_id` | Your organization identifier |
-| `data.id` | The connected account ID (use this to prompt re-authentication) |
-| `data.toolkit.slug` | The integration that expired (e.g., `gmail`, `slack`) |
-| `data.status` | Will be `EXPIRED` |
-| `data.status_reason` | Human-readable reason for expiration |
-
 ---
 
 ## Verifying Webhook Signatures
