@@ -19,7 +19,7 @@ A new API for managing webhook configurations with event filtering, HMAC signatu
 
 ## API Overview
 
-See the [API Reference](https://docs.composio.dev/reference/api-reference/webhooks) for complete details.
+See the [API Reference](/reference/api-reference/webhooks) for complete details.
 
 ### Endpoints
 
@@ -142,14 +142,14 @@ The `composio.connected_account.expired` event follows the V3 envelope format:
 ```
 
 <Callout type="info">
-The `data` object matches the response from [`GET /api/v3/connected_accounts/{id}`](https://docs.composio.dev/rest-api/connected-accounts/get-connected-accounts-by-nanoid), making it easy to process with existing code and SDK types.
+The `data` object matches the response from [`GET /api/v3/connected_accounts/{id}`](/rest-api/connected-accounts/get-connected-accounts-by-nanoid), making it easy to process with existing code and SDK types.
 </Callout>
 
 ---
 
 ## Verifying Webhook Signatures
 
-All webhooks include an HMAC signature in the `webhook-signature` header. Use the SDK's built-in verification functions or see the [Triggers documentation](https://docs.composio.dev/docs/triggers) for implementation details.
+All webhooks include an HMAC signature in the `webhook-signature` header. Use the SDK's built-in verification functions or see the [Triggers documentation](/docs/triggers) for implementation details.
 
 ---
 
