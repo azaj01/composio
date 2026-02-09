@@ -1,0 +1,258 @@
+---
+title: Managing triggers
+description: Discover, list, enable, disable, and delete trigger instances
+keywords: [manage triggers, enable, disable, delete, discover, troubleshooting]
+---
+
+## Discovering available triggers
+
+### List trigger types
+
+Browse available trigger types for a toolkit:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+# List trigger types for a toolkit
+trigger_types = composio.triggers.list(toolkit="github")
+for t in trigger_types:
+    print(f"{t.slug}: {t.description}")
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({ apiKey: 'your-api-key' });
+
+// List trigger types for a toolkit
+const triggerTypes = await composio.triggers.listTypes({ toolkits: ['github'] });
+for (const t of triggerTypes.items) {
+  console.log(`${t.slug}: ${t.description}`);
+}
+```
+  </Tab>
+</Tabs>
+
+### Inspect a trigger type
+
+Get the configuration schema and payload structure for a specific trigger type:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+trigger_type = composio.triggers.get_type("GITHUB_COMMIT_EVENT")
+print("Config schema:", trigger_type.config)   # Required fields for creation
+print("Payload schema:", trigger_type.payload)  # Shape of event data
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({ apiKey: 'your-api-key' });
+
+const triggerType = await composio.triggers.getType('GITHUB_COMMIT_EVENT');
+console.log('Config schema:', triggerType.config);   // Required fields for creation
+console.log('Payload schema:', triggerType.payload);  // Shape of event data
+```
+  </Tab>
+</Tabs>
+
+### List all trigger slugs
+
+Get a flat list of every available trigger slug:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+slugs = composio.triggers.list_enum()
+print(slugs)  # ["GITHUB_COMMIT_EVENT", "GMAIL_NEW_EMAIL", ...]
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({ apiKey: 'your-api-key' });
+
+const slugs = await composio.triggers.listEnum();
+console.log(slugs); // ["GITHUB_COMMIT_EVENT", "GMAIL_NEW_EMAIL", ...]
+```
+  </Tab>
+</Tabs>
+
+## Listing active triggers
+
+List trigger instances that have been created. Results are cursor-paginated.
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+# List active triggers with optional filters
+active = composio.triggers.list_active(
+    toolkit="github",
+    user_id="user-id-123435",
+)
+
+for trigger in active.triggers:
+    print(f"{trigger.trigger_id} ({trigger.slug}) - {trigger.status}")
+
+# Paginate with cursor
+if active.next_cursor:
+    next_page = composio.triggers.list_active(cursor=active.next_cursor)
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({ apiKey: 'your-api-key' });
+
+// List active triggers with optional filters
+const active = await composio.triggers.listActive({
+  connectedAccountIds: ['ca_def456'],
+});
+
+for (const trigger of active.items) {
+  console.log(`${trigger.id} (${trigger.triggerName}) - disabled: ${trigger.disabledAt !== null}`);
+}
+
+// Paginate with cursor
+if (active.nextCursor) {
+  const nextPage = await composio.triggers.listActive({ cursor: active.nextCursor });
+}
+```
+  </Tab>
+</Tabs>
+
+| Filter | Description |
+|--------|-------------|
+| `connectedAccountIds` | Array of connected account IDs |
+| `triggerIds` | Array of trigger instance IDs |
+| `triggerNames` | Array of trigger type slugs |
+| `authConfigIds` | Array of auth config IDs |
+| `showDisabled` | Include disabled triggers (default: `false`) |
+| `cursor` | Pagination cursor from previous response |
+
+## Enable / Disable triggers
+
+Pause a trigger temporarily without deleting it:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+# Disable a trigger
+composio.triggers.disable(trigger_id="ti_abcd123")
+
+# Re-enable when needed
+composio.triggers.enable(trigger_id="ti_abcd123")
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your-api-key' });
+// ---cut---
+// Disable a trigger
+await composio.triggers.disable('ti_abcd123');
+
+// Re-enable when needed
+await composio.triggers.enable('ti_abcd123');
+```
+  </Tab>
+</Tabs>
+
+You can also manage triggers from the dashboard:
+
+1. Go to [Auth Configs](https://platform.composio.dev?next_page=/auth-configs)
+2. Select your auth config
+3. Navigate to "Active Triggers"
+4. Toggle the trigger on or off
+
+<Figure
+  src="/images/trigger-enable-disable.png"
+  alt="Enable/disable triggers"
+  caption="Enable/disable triggers in dashboard"
+  size="sm"
+/>
+
+## Deleting triggers
+
+Permanently remove a trigger instance:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+composio.triggers.delete(trigger_id="ti_abcd123")
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your-api-key' });
+// ---cut---
+await composio.triggers.delete('ti_abcd123');
+```
+  </Tab>
+</Tabs>
+
+<Callout type="warn">
+Deleting a trigger is permanent. If you want to temporarily stop receiving events, use `disable()` instead.
+</Callout>
+
+## Troubleshooting
+
+### Unable to create trigger
+
+Check the error message — the connected account might not have sufficient permissions or the required OAuth scopes. Ensure the user has authenticated with the necessary scopes for the trigger.
+
+### Not receiving payloads
+
+- **Polling triggers** (e.g., Gmail): These check for new events at intervals (~1 min for Gmail). Expect small delays.
+- **Webhook URL**: Ensure your URL is publicly accessible and returns a `2xx` status code.
+- **Trigger status**: Verify the trigger is enabled, not disabled.
+- **Logs**: Check the [trigger logs](https://platform.composio.dev?next_page=/logs/triggers) in the dashboard for delivery attempts and errors.
+
+### Type errors with trigger payloads
+
+Use `getType()` / `get_type()` to inspect the exact payload schema for a trigger type. This shows you the fields and types you should expect.
+
+### Reporting issues
+
+When contacting support, include:
+
+- **Trigger ID** and **connected account ID** — find these under Active Triggers in the dashboard:
+
+  <Figure src="/images/troubleshooting/troubleshooting-trigger-id.png" alt="Trigger ID and connected account ID in the dashboard" size="lg" />
+
+- **Error message** and **reproduction steps**
+
+### Getting help
+
+- **Email**: support@composio.dev
+- **Discord**: [#support-form](https://discord.com/channels/1170785031560646836/1268871288156323901)

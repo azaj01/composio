@@ -1,0 +1,252 @@
+---
+title: Setting up triggers
+description: Create trigger instances and subscribe to events via webhooks or SDK
+keywords: [triggers, webhooks, subscribe, events, create trigger]
+---
+
+<Callout type="info" title="Prerequisites">
+Before setting up triggers, ensure you have:
+- An [auth config](/docs/authentication) for the toolkit you want to monitor
+- A [connected account](/docs/authenticating-users) for the user whose events you want to capture
+- A [user ID](/docs/users-and-sessions) to scope the trigger
+</Callout>
+
+## Creating a trigger
+
+You can create triggers using the Composio dashboard or programmatically via the SDK.
+
+### Using the dashboard
+
+Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs), select an auth config, and click "Add Trigger". Switch to the "Active Triggers" tab to find the trigger ID.
+
+<Video src="/videos/enabling-triggers.mp4" poster="/images/enabling-triggers-poster.png" caption="Creating a trigger from the dashboard" />
+
+Some triggers require additional configuration. The dashboard prompts you for any required fields during setup.
+
+<Figure
+  src="/images/trigger-config.png"
+  alt="Trigger configuration example"
+  caption="Example: Gmail trigger configuration"
+  size="sm"
+/>
+
+### Using the SDK
+
+Before creating a trigger, inspect the trigger type to see what configuration it requires. Then create the trigger with the required config.
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+user_id = "user-id-123435"
+
+# Check what configuration is required
+trigger_type = composio.triggers.get_type("GITHUB_COMMIT_EVENT")
+print(trigger_type.config)
+# Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
+
+# Create trigger with the required config
+trigger = composio.triggers.create(
+    slug="GITHUB_COMMIT_EVENT",
+    user_id=user_id,
+    trigger_config={"owner": "your-repo-owner", "repo": "your-repo-name"},
+)
+print(f"Trigger created: {trigger.trigger_id}")
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({apiKey: "your-api-key"});
+const userId = 'user-id-123435';
+
+// Check what configuration is required
+const triggerType = await composio.triggers.getType("GITHUB_COMMIT_EVENT");
+console.log(triggerType.config);
+// Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
+
+// Create trigger with the required config
+const trigger = await composio.triggers.create(
+    userId,
+    'GITHUB_COMMIT_EVENT',
+    {
+        triggerConfig: {
+            owner: 'your-repo-owner',
+            repo: 'your-repo-name'
+        }
+    }
+);
+console.log(`Trigger created: ${trigger.triggerId}`);
+```
+  </Tab>
+</Tabs>
+
+<Callout>
+The trigger instance uses the toolkit version configured during Composio initialization (defaults to `'latest'`). See [Toolkit Versioning](/docs/tools-direct/toolkit-versioning) for details.
+</Callout>
+
+## Subscribing via webhooks
+
+Webhooks are the recommended way to receive trigger events in production. Composio sends a POST request to your endpoint whenever an event fires.
+
+1. Set your webhook URL in [Event & Trigger settings](https://platform.composio.dev?next_page=/settings/events)
+2. Build an endpoint that accepts POST requests with JSON payloads
+
+<Callout type="info">
+**Local development:** Use [ngrok](https://ngrok.com) or [webhook.site](https://webhook.site) to expose your local server for testing.
+</Callout>
+
+### Webhook payload (V3)
+
+New organizations receive V3 payloads by default. The payload separates event metadata from the actual event data:
+
+```json
+{
+  "id": "wh_abc123",
+  "type": "github_commit_event",
+  "metadata": {
+    "triggerId": "ti_xyz789",
+    "connectedAccountId": "ca_def456",
+    "userId": "user-id-123435",
+    "toolkitSlug": "github"
+  },
+  "data": {
+    "commit_sha": "a1b2c3d",
+    "message": "fix: resolve null pointer",
+    "author": "jane"
+  },
+  "timestamp": "2026-01-15T10:30:00Z"
+}
+```
+
+<Callout>
+See [webhook payload versions](/docs/setting-up-triggers/webhook-verification#webhook-payload-versions) for V2 and V1 formats.
+</Callout>
+
+### Example handlers
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+@app.post("/webhook")
+async def webhook_handler(request: Request):
+    payload = await request.json()
+
+    trigger_type = payload.get("type")
+    event_data = payload.get("data", {})
+
+    if trigger_type == "github_commit_event":
+        commit = event_data.get("message")
+        author = event_data.get("author")
+        print(f"New commit by {author}: {commit}")
+
+    return {"status": "ok"}
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { TriggerEvent } from '@composio/core';
+type NextApiRequest = { body: any };
+type NextApiResponse = { status: (code: number) => { json: (data: any) => void }; json: (data: any) => void };
+type GitHubCommitEventData = { commit_sha: string; message: string; author: string };
+// ---cut---
+export default async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
+  const payload = req.body;
+
+  if (payload.type === 'github_commit_event') {
+    const event: TriggerEvent<GitHubCommitEventData> = {
+      type: payload.type,
+      timestamp: payload.timestamp,
+      data: payload.data
+    };
+
+    console.log(`New commit by ${event.data.author}: ${event.data.message}`);
+  }
+
+  res.status(200).json({ status: 'ok' });
+}
+```
+  </Tab>
+</Tabs>
+
+<Callout type="warn">
+Always [verify webhook signatures](/docs/setting-up-triggers/webhook-verification) in production to ensure payloads are authentic.
+</Callout>
+
+## Subscribing via SDK
+
+For quick prototyping, you can subscribe to trigger events directly through the SDK without setting up a webhook endpoint.
+
+<Callout type="warn">
+SDK subscriptions use WebSockets and are intended for development only. Use webhooks in production.
+</Callout>
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your_api_key_here")
+
+# Subscribe to trigger events
+subscription = composio.triggers.subscribe()
+
+@subscription.handle(trigger_id="your_trigger_id")
+def handle_event(data):
+    print(f"Event received: {data}")
+
+subscription.wait_forever()
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({ apiKey: "your_api_key_here" });
+
+composio.triggers.subscribe(
+    (data) => {
+        console.log('Event received:', data);
+    },
+    { triggerId: 'your_trigger_id' }
+);
+```
+  </Tab>
+</Tabs>
+
+### Subscription filters
+
+When subscribing via SDK, you can filter which events you receive. When multiple filters are specified, all must match.
+
+| Filter | Description |
+|--------|-------------|
+| `triggerId` | Specific trigger instance ID |
+| `toolkits` | Array of toolkit slugs (e.g., `["github", "slack"]`) |
+| `triggerSlug` | Trigger type slug (e.g., `GITHUB_COMMIT_EVENT`) |
+| `connectedAccountId` | Specific connected account |
+| `authConfigId` | Specific auth config |
+| `userId` | Specific user |
+
+## Type-safe trigger handling (TypeScript)
+
+Define payload types and use `TriggerEvent<T>` for type safety in your handlers:
+
+```typescript
+import { Composio, TriggerEvent } from '@composio/core';
+
+export type GitHubStarAddedEventPayload = {
+  action: "created";
+  repository_id: number;
+  repository_name: string;
+  repository_url: string;
+  starred_at: string;
+  starred_by: string;
+};
+
+function handleGitHubStarEvent(event: TriggerEvent<GitHubStarAddedEventPayload>) {
+  console.log(`${event.data.repository_name} starred by ${event.data.starred_by}`);
+}
+```

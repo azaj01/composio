@@ -8,7 +8,6 @@
     "dashboard",
     "mcp",
     "sdks",
-    "tools",
-    "triggers"
+    "tools"
   ]
 }
