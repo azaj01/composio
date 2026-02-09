@@ -604,8 +604,18 @@ function renderParamsMarkdown(params: Record<string, ParameterSchema>): string[]
   return lines;
 }
 
+// Read FAQ markdown for a toolkit (returns raw markdown or null)
+async function readToolkitFaqMarkdown(slug: string): Promise<string | null> {
+  try {
+    const filePath = join(process.cwd(), 'content/toolkit-faq', `${slug}.md`);
+    return await readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
 // Generate markdown from toolkit with detailed tools and triggers
-function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTriggers?: Trigger[]): string {
+function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTriggers?: Trigger[], faqMarkdown?: string | null): string {
   const tools = detailedTools || toolkit.tools;
   const triggers = detailedTriggers || toolkit.triggers;
 
@@ -623,6 +633,11 @@ function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTri
 
   if (toolkit.version) {
     lines.push(`- **Version:** ${toolkit.version}`);
+  }
+
+  if (faqMarkdown && faqMarkdown.trim()) {
+    lines.push('', '## Frequently Asked Questions', '');
+    lines.push(faqMarkdown.trim());
   }
 
   if (tools.length > 0) {
@@ -864,17 +879,19 @@ export async function GET(
     if (prefix === 'toolkits' && rest.length === 1) {
       const toolkit = await getToolkit(rest[0]);
       if (toolkit) {
-        // Fetch detailed tool and trigger info from API
-        const [detailedTools, detailedTriggers] = await Promise.all([
+        // Fetch detailed tool/trigger info and FAQ content in parallel
+        const [detailedTools, detailedTriggers, faqMarkdown] = await Promise.all([
           fetchDetailedTools(rest[0]),
           fetchDetailedTriggers(rest[0]),
+          readToolkitFaqMarkdown(rest[0]),
         ]);
 
         return new Response(
           toolkitToMarkdown(
             toolkit,
             detailedTools !== null ? detailedTools : undefined,
-            detailedTriggers !== null ? detailedTriggers : undefined
+            detailedTriggers !== null ? detailedTriggers : undefined,
+            faqMarkdown
           ),
           {
             headers: {
