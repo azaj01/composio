@@ -637,7 +637,8 @@ function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTri
 
   if (faqMarkdown && faqMarkdown.trim()) {
     lines.push('', '## Frequently Asked Questions', '');
-    lines.push(faqMarkdown.trim());
+    // Bump ## headings to ### so FAQ questions are children of the FAQ section
+    lines.push(faqMarkdown.trim().replace(/^## /gm, '### '));
   }
 
   if (tools.length > 0) {
