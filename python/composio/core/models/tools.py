@@ -16,14 +16,11 @@ from composio.client.types import (
 from composio.core.models._files import FileHelper
 from composio.core.models.base import Resource
 from composio.core.models.custom_tools import CustomTools
-from composio.core.provider import (
-    TProvider,
-)
+from composio.core.provider import TTool, TToolCollection
 from composio.core.provider.agentic import AgenticProvider, AgenticProviderExecuteFn
 from composio.core.provider.base import ExecuteToolFn
-from composio.core.provider.none_agentic import (
-    NonAgenticProvider,
-)
+from composio.core.provider.base import BaseProvider
+from composio.core.provider.none_agentic import NonAgenticProvider
 from composio.core.types import ToolkitVersionParam
 from composio.exceptions import InvalidParams, NotFoundError, ToolVersionRequiredError
 from composio.utils.pydantic import none_to_omit
@@ -45,20 +42,27 @@ class ToolExecutionResponse(te.TypedDict):
     successful: bool
 
 
-class Tools(Resource, t.Generic[TProvider]):
+class Tools(Resource, t.Generic[TTool, TToolCollection]):
     """
     Tools class definition
 
     This class is used to manage tools in the Composio SDK.
     It provides methods to list, get, and execute tools.
+
+    Generic Parameters:
+        TTool: The individual tool type returned by the provider (e.g., ChatCompletionToolParam for OpenAI).
+        TToolCollection: The collection type returned by get() (e.g., list[ChatCompletionToolParam]).
+
+    The return type of get() is automatically inferred from the provider's generic parameters.
+    This works for both built-in providers (OpenAI, Anthropic, etc.) and custom providers.
     """
 
-    provider: TProvider
+    provider: BaseProvider[TTool, TToolCollection]
 
     def __init__(
         self,
         client: HttpClient,
-        provider: TProvider,
+        provider: BaseProvider[TTool, TToolCollection],
         file_download_dir: t.Optional[str] = None,
         toolkit_versions: t.Optional[ToolkitVersionParam] = None,
         auto_upload_download_files: bool = True,
@@ -238,7 +242,7 @@ class Tools(Resource, t.Generic[TProvider]):
         scopes: t.Optional[t.List[str]] = None,
         modifiers: t.Optional[Modifiers] = None,
         limit: t.Optional[int] = None,
-    ):
+    ) -> TToolCollection:
         """Get a list of tools based on the provided filters."""
         tools_list = self.get_raw_composio_tools(
             tools=tools,
@@ -280,71 +284,23 @@ class Tools(Resource, t.Generic[TProvider]):
                 )
 
         if issubclass(type(self.provider), NonAgenticProvider):
-            return t.cast(NonAgenticProvider, self.provider).wrap_tools(
-                tools=tools_list
+            return t.cast(
+                TToolCollection,
+                t.cast(
+                    NonAgenticProvider[TTool, TToolCollection], self.provider
+                ).wrap_tools(tools=tools_list),
             )
 
-        return t.cast(AgenticProvider, self.provider).wrap_tools(
-            tools=tools_list,
-            execute_tool=self._wrap_execute_tool(
-                user_id=user_id,
-                modifiers=modifiers,
+        return t.cast(
+            TToolCollection,
+            t.cast(AgenticProvider[TTool, TToolCollection], self.provider).wrap_tools(
+                tools=tools_list,
+                execute_tool=self._wrap_execute_tool(
+                    user_id=user_id,
+                    modifiers=modifiers,
+                ),
             ),
         )
-
-    @t.overload
-    def get(
-        self,
-        user_id: str,
-        *,
-        slug: str,
-        modifiers: t.Optional[Modifiers] = None,
-    ):
-        """Get tool by slug"""
-
-    @t.overload
-    def get(
-        self,
-        user_id: str,
-        *,
-        tools: list[str],
-        modifiers: t.Optional[Modifiers] = None,
-    ):
-        """Get tools by tool slugs"""
-
-    @t.overload
-    def get(
-        self,
-        user_id: str,
-        *,
-        toolkits: list[str],
-        scopes: t.Optional[t.List[str]] = None,
-        limit: t.Optional[int] = None,
-        modifiers: t.Optional[Modifiers] = None,
-    ):
-        """Get tools by toolkit slugs (Only important tools are returned)"""
-
-    @t.overload
-    def get(
-        self,
-        user_id: str,
-        *,
-        search: str,
-        modifiers: t.Optional[Modifiers] = None,
-    ):
-        """Search tool by search term"""
-
-    @t.overload
-    def get(
-        self,
-        user_id: str,
-        *,
-        toolkits: list[str],
-        search: t.Optional[str] = None,
-        limit: t.Optional[int] = None,
-        modifiers: t.Optional[Modifiers] = None,
-    ):
-        """Get tool by search term and/or toolkit slugs and search term"""
 
     def get(
         self,
@@ -357,8 +313,26 @@ class Tools(Resource, t.Generic[TProvider]):
         scopes: t.Optional[t.List[str]] = None,
         modifiers: t.Optional[Modifiers] = None,
         limit: t.Optional[int] = None,
-    ):
-        """Get a tool or list of tools based on the provided arguments."""
+    ) -> TToolCollection:
+        """
+        Get a tool or list of tools based on the provided arguments.
+
+        The return type is automatically inferred based on the provider's generic parameters.
+        For example:
+        - OpenAIProvider -> list[ChatCompletionToolParam]
+        - AnthropicProvider -> list[ToolParam]
+        - CustomProvider[MyTool, list[MyTool]] -> list[MyTool]
+
+        :param user_id: The user ID to get tools for.
+        :param slug: Get a single tool by slug.
+        :param tools: Get tools by a list of tool slugs.
+        :param search: Search tools by search term.
+        :param toolkits: Get tools from specific toolkits.
+        :param scopes: Filter by scopes.
+        :param modifiers: Optional modifiers to apply.
+        :param limit: Limit the number of tools returned.
+        :return: Provider-specific tool collection (TToolCollection).
+        """
         if slug is not None:
             return self._get(user_id=user_id, tools=[slug], modifiers=modifiers)
         return self._get(
