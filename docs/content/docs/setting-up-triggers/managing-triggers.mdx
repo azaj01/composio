@@ -1,7 +1,7 @@
 ---
 title: Managing triggers
 description: Discover, list, enable, disable, and delete trigger instances
-keywords: [manage triggers, enable, disable, delete, discover, troubleshooting]
+keywords: [manage triggers, enable, disable, delete, discover]
 ---
 
 ## Discovering available triggers
@@ -225,34 +225,4 @@ await composio.triggers.delete('ti_abcd123');
 Deleting a trigger is permanent. If you want to temporarily stop receiving events, use `disable()` instead.
 </Callout>
 
-## Troubleshooting
-
-### Unable to create trigger
-
-Check the error message — the connected account might not have sufficient permissions or the required OAuth scopes. Ensure the user has authenticated with the necessary scopes for the trigger.
-
-### Not receiving payloads
-
-- **Polling triggers** (e.g., Gmail): These check for new events at intervals (~1 min for Gmail). Expect small delays.
-- **Webhook URL**: Ensure your URL is publicly accessible and returns a `2xx` status code.
-- **Trigger status**: Verify the trigger is enabled, not disabled.
-- **Logs**: Check the [trigger logs](https://platform.composio.dev?next_page=/logs/triggers) in the dashboard for delivery attempts and errors.
-
-### Type errors with trigger payloads
-
-Use `getType()` / `get_type()` to inspect the exact payload schema for a trigger type. This shows you the fields and types you should expect.
-
-### Reporting issues
-
-When contacting support, include:
-
-- **Trigger ID** and **connected account ID** — find these under Active Triggers in the dashboard:
-
-  <Figure src="/images/troubleshooting/troubleshooting-trigger-id.png" alt="Trigger ID and connected account ID in the dashboard" size="lg" />
-
-- **Error message** and **reproduction steps**
-
-### Getting help
-
-- **Email**: support@composio.dev
-- **Discord**: [#support-form](https://discord.com/channels/1170785031560646836/1268871288156323901)
+<Card icon={<Wrench />} title="Troubleshooting triggers" href="/docs/troubleshooting/triggers" description="Common issues and how to resolve them" />
