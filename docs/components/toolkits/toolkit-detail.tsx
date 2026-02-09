@@ -300,7 +300,7 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
 
       {/* Header */}
       <div className="flex gap-4">
-          <ToolkitIcon toolkit={toolkit} />
+          <ToolkitIcon key={toolkit.slug} toolkit={toolkit} />
           <div className="min-w-0 flex-1">
             {/* Title row */}
             <div className="flex flex-wrap items-center justify-between gap-2">
