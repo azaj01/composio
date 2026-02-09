@@ -18,7 +18,8 @@ from composio.core.models.base import Resource
 from composio.core.models.custom_tools import CustomTools
 from composio.core.provider import TTool, TToolCollection
 from composio.core.provider.agentic import AgenticProvider, AgenticProviderExecuteFn
-from composio.core.provider.base import BaseProvider, ExecuteToolFn
+from composio.core.provider.base import ExecuteToolFn
+from composio.core.provider.base import BaseProvider
 from composio.core.provider.none_agentic import NonAgenticProvider
 from composio.core.types import ToolkitVersionParam
 from composio.exceptions import InvalidParams, NotFoundError, ToolVersionRequiredError
