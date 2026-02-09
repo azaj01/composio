@@ -6,8 +6,13 @@ import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
 import { PageActions } from '@/components/page-actions';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import { toHtml } from 'hast-util-to-html';
 import type { Metadata } from 'next';
 import type { Toolkit, Tool, Trigger } from '@/types/toolkit';
+import type { FaqItem } from '@/components/toolkits/faq-section';
 import { processSchema, toolFromApi } from '@/lib/toolkit-schema';
 
 const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
@@ -93,6 +98,35 @@ async function fetchDetailedTriggers(toolkitSlug: string, version?: string | nul
     console.error(`[Toolkits] Error fetching detailed triggers for ${toolkitSlug}:`, error);
     return null;
   }
+}
+
+function markdownToHtml(md: string): string {
+  const tree = unified().use(remarkParse).parse(md);
+  const hast = unified().use(remarkRehype).runSync(tree);
+  return toHtml(hast);
+}
+
+async function readToolkitFaq(slug: string): Promise<FaqItem[] | null> {
+  const filePath = join(process.cwd(), 'content/toolkit-faq', `${slug}.md`);
+  let content: string;
+  try {
+    content = await readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+
+  const items: FaqItem[] = [];
+  const sections = content.split(/^## /m).filter(Boolean);
+  for (const section of sections) {
+    const newlineIdx = section.indexOf('\n');
+    if (newlineIdx === -1) continue;
+    const question = section.slice(0, newlineIdx).trim();
+    const answerMd = section.slice(newlineIdx + 1).trim();
+    if (question && answerMd) {
+      items.push({ question, answer: markdownToHtml(answerMd) });
+    }
+  }
+  return items.length > 0 ? items : null;
 }
 
 async function getToolkits(): Promise<Toolkit[]> {
@@ -215,10 +249,11 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
     const toolkit = toolkits.find((t) => t.slug === toolkitSlug);
 
     if (toolkit) {
-      // Fetch detailed tool and trigger info from API (includes input/output params)
-      const [detailedTools, detailedTriggers] = await Promise.all([
+      // Fetch detailed tool/trigger info and FAQ content in parallel
+      const [detailedTools, detailedTriggers, faq] = await Promise.all([
         fetchDetailedTools(toolkitSlug, toolkit.version),
         fetchDetailedTriggers(toolkitSlug, toolkit.version),
+        readToolkitFaq(toolkitSlug),
       ]);
 
       // Use detailed data if fetch succeeded, otherwise fall back to static data
@@ -231,6 +266,7 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
           tools={tools}
           triggers={triggers}
           path={`/toolkits/${toolkit.slug}`}
+          faq={faq}
         />
       );
     }

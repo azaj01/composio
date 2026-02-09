@@ -8,12 +8,14 @@ import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
 import { processSchema } from '@/lib/toolkit-schema';
 import { PageActions } from '@/components/page-actions';
 import { AuthDetailsSection } from '@/components/toolkits/auth-details-section';
+import { FaqSection, type FaqItem } from '@/components/toolkits/faq-section';
 
 interface ToolkitDetailProps {
   toolkit: Toolkit;
   tools: Tool[];
   triggers: Trigger[];
   path: string;
+  faq?: FaqItem[] | null;
 }
 
 function ToolkitIcon({ toolkit }: { toolkit: Toolkit }) {
@@ -245,7 +247,7 @@ function ToolItem({ item, toolkitVersion }: { item: Tool | Trigger; toolkitVersi
   );
 }
 
-export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailProps) {
+export function ToolkitDetail({ toolkit, tools, triggers, path, faq }: ToolkitDetailProps) {
   const [copied, setCopied] = useState(false);
   const [versionCopied, setVersionCopied] = useState(false);
   const [toolSearch, setToolSearch] = useState('');
@@ -350,6 +352,9 @@ export function ToolkitDetail({ toolkit, tools, triggers, path }: ToolkitDetailP
             <PageActions path={path} />
           </div>
       </div>
+
+      {/* FAQ */}
+      {faq && faq.length > 0 && <FaqSection faq={faq} />}
 
       {/* Authentication Details */}
       {toolkit.authConfigDetails && toolkit.authConfigDetails.length > 0 && (
