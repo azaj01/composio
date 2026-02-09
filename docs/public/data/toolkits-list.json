@@ -18836,6 +18836,44 @@
     ]
   },
   {
+    "slug": "context7_mcp",
+    "name": "Context7 MCP",
+    "logo": "https://logos.composio.dev/api/context7_mcp",
+    "description": "Context7 MCP pulls up-to-date, version-specific documentation and code examples straight from the source — and places them directly into your prompt",
+    "category": "developer tools & devops",
+    "authSchemes": [
+      "API_KEY"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "API_KEY",
+        "name": "context7_api_key",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": []
+          },
+          "connected_account_initiation": {
+            "required": [
+              {
+                "name": "generic_api_key",
+                "displayName": "API Key",
+                "type": "string",
+                "description": "Your Context7 API Key",
+                "required": true,
+                "default": null
+              }
+            ],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "control_d",
     "name": "Control D",
     "logo": "https://controld.com/logo.png",
@@ -25185,6 +25223,68 @@
     ]
   },
   {
+    "slug": "granola_mcp",
+    "name": "Granola MCP",
+    "logo": "https://logos.composio.dev/api/granola_mcp",
+    "description": "Granola is a meeting notes app that captures transcripts and helps teams search and share conversations. It helps turn meeting context into action items and follow-ups.",
+    "category": "productivity & project management",
+    "authSchemes": [
+      "DCR_OAUTH"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "DCR_OAUTH",
+        "name": "granola_mcp_DCR_OAuth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": "email,offline_access,openid,profile"
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "graphhopper",
     "name": "Graphhopper",
     "logo": "https://www.graphhopper.com/images/graphhopper_logo.svg",
@@ -29615,6 +29715,68 @@
                 "default": null
               }
             ],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
+    "slug": "monday_mcp",
+    "name": "Monday MCP",
+    "logo": "https://logos.composio.dev/api/monday_mcp",
+    "description": "monday.com is a work management platform for organizing projects, workflows, and customer processes in boards, docs, and dashboards. It helps teams plan work, track progress, and collaborate across functions.",
+    "category": "productivity & project management",
+    "authSchemes": [
+      "DCR_OAUTH"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "DCR_OAUTH",
+        "name": "monday_mcp_DCR_OAuth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": ""
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
             "optional": []
           }
         }
@@ -39867,6 +40029,68 @@
                 "default": null
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "slug": "wix_mcp",
+    "name": "Wix MCP",
+    "logo": "https://logos.composio.dev/api/wix_mcp",
+    "description": "Wix is a cloud-based website building platform for creating and managing sites, content, and online business experiences. It supports business features like eCommerce, bookings, blog, and CMS-driven content.",
+    "category": "e-commerce",
+    "authSchemes": [
+      "DCR_OAUTH"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "DCR_OAUTH",
+        "name": "wix_mcp_DCR_OAuth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": ""
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
           }
         }
       }

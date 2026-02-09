@@ -227,13 +227,23 @@ export const WebhookPayloadV2Schema = z.object({
 });
 export type WebhookPayloadV2 = z.infer<typeof WebhookPayloadV2Schema>;
 
-/** V3 webhook payload - current format with metadata */
+/** V3 webhook payload - generic envelope for all composio.* events */
 export const WebhookPayloadV3Schema = z.object({
   id: z.string(),
   timestamp: z.string(),
   type: z.string().refine(val => val.startsWith('composio.'), {
     message: "V3 event type must start with 'composio.'",
   }),
+  metadata: z.record(z.unknown()),
+  data: z.record(z.unknown()),
+});
+export type WebhookPayloadV3 = z.infer<typeof WebhookPayloadV3Schema>;
+
+/** V3 trigger-specific payload - has trigger metadata fields */
+export const WebhookTriggerPayloadV3Schema = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  type: z.string(),
   metadata: z
     .object({
       log_id: z.string(),
@@ -246,7 +256,7 @@ export const WebhookPayloadV3Schema = z.object({
     .passthrough(),
   data: z.record(z.unknown()),
 });
-export type WebhookPayloadV3 = z.infer<typeof WebhookPayloadV3Schema>;
+export type WebhookTriggerPayloadV3 = z.infer<typeof WebhookTriggerPayloadV3Schema>;
 
 /** Union of all webhook payload versions */
 export const WebhookPayloadSchema = z.union([
