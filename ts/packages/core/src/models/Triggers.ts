@@ -25,6 +25,7 @@ import {
   WebhookPayloadV1Schema,
   WebhookPayloadV2Schema,
   WebhookPayloadV3Schema,
+  WebhookTriggerPayloadV3Schema,
   WebhookVersion,
   WebhookVersions,
 } from '../types/triggers.types';
@@ -835,29 +836,61 @@ export class Triggers<TProvider extends BaseComposioProvider<unknown, unknown, u
   private normalizeV3Payload(
     payload: import('../types/triggers.types').WebhookPayloadV3
   ): IncomingTriggerPayload {
-    const triggerSlug = payload.metadata.trigger_slug;
-    const toolkitSlug = triggerSlug.split('_')[0]?.toUpperCase() || 'UNKNOWN';
+    // Check if this is a trigger event with trigger-specific metadata
+    const triggerResult = WebhookTriggerPayloadV3Schema.safeParse(payload);
+    if (triggerResult.success) {
+      const triggerSlug = triggerResult.data.metadata.trigger_slug;
+      const toolkitSlug = triggerSlug.split('_')[0]?.toUpperCase() || 'UNKNOWN';
 
-    return {
-      id: payload.metadata.trigger_id,
-      uuid: payload.metadata.trigger_id,
-      triggerSlug,
-      toolkitSlug,
-      userId: payload.metadata.user_id,
-      payload: payload.data,
-      originalPayload: payload.data,
-      metadata: {
-        id: payload.metadata.trigger_id,
-        uuid: payload.metadata.trigger_id,
-        toolkitSlug,
+      return {
+        id: triggerResult.data.metadata.trigger_id,
+        uuid: triggerResult.data.metadata.trigger_id,
         triggerSlug,
+        toolkitSlug,
+        userId: triggerResult.data.metadata.user_id,
+        payload: payload.data,
+        originalPayload: payload.data,
+        metadata: {
+          id: triggerResult.data.metadata.trigger_id,
+          uuid: triggerResult.data.metadata.trigger_id,
+          toolkitSlug,
+          triggerSlug,
+          triggerConfig: {},
+          connectedAccount: {
+            id: triggerResult.data.metadata.connected_account_id,
+            uuid: triggerResult.data.metadata.connected_account_id,
+            authConfigId: triggerResult.data.metadata.auth_config_id,
+            authConfigUUID: triggerResult.data.metadata.auth_config_id,
+            userId: triggerResult.data.metadata.user_id,
+            status: 'ACTIVE',
+          },
+        },
+      };
+    }
+
+    // Non-trigger V3 event (e.g., connection expired)
+    // Return a minimal payload; callers should use specific schemas
+    // (e.g., ConnectionExpiredEventSchema) on rawPayload for type-safe access
+    return {
+      id: payload.id,
+      uuid: payload.id,
+      triggerSlug: payload.type,
+      toolkitSlug: 'COMPOSIO',
+      userId: '',
+      payload: payload.data,
+      originalPayload: payload as unknown as Record<string, unknown>,
+      metadata: {
+        id: payload.id,
+        uuid: payload.id,
+        toolkitSlug: 'COMPOSIO',
+        triggerSlug: payload.type,
         triggerConfig: {},
         connectedAccount: {
-          id: payload.metadata.connected_account_id,
-          uuid: payload.metadata.connected_account_id,
-          authConfigId: payload.metadata.auth_config_id,
-          authConfigUUID: payload.metadata.auth_config_id,
-          userId: payload.metadata.user_id,
+          id: '',
+          uuid: '',
+          authConfigId: '',
+          authConfigUUID: '',
+          userId: '',
           status: 'ACTIVE',
         },
       },

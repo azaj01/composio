@@ -23,15 +23,21 @@ const POPULAR_SLUGS = [
 ];
 
 function ToolkitIcon({ toolkit }: { toolkit: ToolkitSummary }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const fallback = toolkit.name.trim().charAt(0).toUpperCase();
+
   return (
-    <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-fd-border/50 bg-fd-background bg-center bg-no-repeat text-sm font-medium text-fd-muted-foreground sm:h-10 sm:w-10"
-      style={toolkit.logo ? {
-        backgroundImage: `url(${toolkit.logo})`,
-        backgroundSize: '65%',
-      } : undefined}
-    >
-      {!toolkit.logo && toolkit.name.trim().charAt(0).toUpperCase()}
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-fd-border/50 bg-fd-background text-sm font-medium text-fd-muted-foreground sm:h-10 sm:w-10">
+      {toolkit.logo && !imgFailed ? (
+        <img
+          src={toolkit.logo}
+          alt=""
+          className="h-[65%] w-[65%] object-contain"
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        fallback
+      )}
     </div>
   );
 }
