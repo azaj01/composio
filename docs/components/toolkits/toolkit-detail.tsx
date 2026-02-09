@@ -16,15 +16,21 @@ interface ToolkitDetailProps {
 }
 
 function ToolkitIcon({ toolkit }: { toolkit: Toolkit }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const fallback = (toolkit.name?.trim() || toolkit.slug).charAt(0).toUpperCase();
+
   return (
-    <div
-      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-fd-border bg-fd-card bg-center bg-no-repeat text-xl font-semibold text-fd-muted-foreground shadow-sm"
-      style={toolkit.logo ? {
-        backgroundImage: `url(${toolkit.logo})`,
-        backgroundSize: '60%',
-      } : undefined}
-    >
-      {!toolkit.logo && (toolkit.name?.trim() || toolkit.slug).charAt(0).toUpperCase()}
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-fd-border bg-fd-card text-xl font-semibold text-fd-muted-foreground shadow-sm">
+      {toolkit.logo && !imgFailed ? (
+        <img
+          src={toolkit.logo}
+          alt=""
+          className="h-[60%] w-[60%] object-contain"
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        fallback
+      )}
     </div>
   );
 }
