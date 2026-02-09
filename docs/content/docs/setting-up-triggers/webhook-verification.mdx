@@ -46,9 +46,9 @@ type Response = { status: (code: number) => { json: (data: any) => void; send: (
 // ---cut---
 const composio = new Composio({ apiKey: 'your-api-key' });
 
-function handleWebhook(req: Request, res: Response) {
+async function handleWebhook(req: Request, res: Response) {
   try {
-    const result = composio.triggers.verifyWebhook({
+    const result = await composio.triggers.verifyWebhook({
       payload: req.body,
       signature: req.headers['webhook-signature'],
       id: req.headers['webhook-id'],
@@ -158,13 +158,14 @@ New organizations created after Feb 15 2026 receive V3 payloads. Metadata is sep
 
 ```json
 {
-  "id": "wh_abc123",
-  "type": "github_commit_event",
+  "id": "msg_abc123",
+  "type": "composio.trigger.message",
   "metadata": {
-    "triggerId": "ti_xyz789",
-    "connectedAccountId": "ca_def456",
-    "userId": "user-id-123435",
-    "toolkitSlug": "github"
+    "trigger_slug": "GITHUB_COMMIT_EVENT",
+    "trigger_id": "ti_xyz789",
+    "connected_account_id": "ca_def456",
+    "auth_config_id": "ac_xyz789",
+    "user_id": "user-id-123435"
   },
   "data": {
     "commit_sha": "a1b2c3d",
@@ -211,8 +212,14 @@ New organizations created after Feb 15 2026 receive V3 payloads. Metadata is sep
 
 ## Configuring your webhook URL and secret
 
+You can configure webhooks via the dashboard or the [Webhook Subscriptions API](/reference/api-reference/webhooks):
+
 1. Go to [Project Settings > Webhook](https://platform.composio.dev?next_page=/settings/webhook)
 2. Enter your publicly accessible webhook URL
 3. Copy the webhook secret and store it as the `COMPOSIO_WEBHOOK_SECRET` environment variable
 
 The SDK reads `COMPOSIO_WEBHOOK_SECRET` automatically when using `verifyWebhook()`.
+
+<Callout>
+The Webhook Subscriptions API also supports event filtering — subscribe only to `composio.trigger.message`, `composio.connected_account.expired`, or both. See the [API reference](/reference/api-reference/webhooks) for details.
+</Callout>
