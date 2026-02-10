@@ -4,28 +4,15 @@ description: Create trigger instances via the dashboard or SDK
 keywords: [triggers, create trigger, trigger config]
 ---
 
+Create a trigger to start receiving events. A trigger watches for a specific event (e.g., `GITHUB_COMMIT_EVENT`) on a specific user's connected account.
+
 <Callout type="info" title="Prerequisites">
 Before creating triggers, ensure you have:
 - An [auth config](/docs/authentication#how-composio-manages-authentication) for the toolkit you want to monitor
 - A connected account for the user whose events you want to capture
 </Callout>
 
-You can create triggers using the Composio dashboard or programmatically via the SDK.
-
-## Using the dashboard
-
-Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs), select an auth config, and click "Add Trigger". Switch to the "Active Triggers" tab to find the trigger ID.
-
-<Video src="/videos/enabling-triggers.mp4" poster="/images/enabling-triggers-poster.png" caption="Creating a trigger from the dashboard" />
-
-Some triggers require additional configuration. The dashboard prompts you for any required fields during setup.
-
-<Figure
-  src="/images/trigger-config.png"
-  alt="Trigger configuration example"
-  caption="Example: Gmail trigger configuration"
-  size="sm"
-/>
+You can create triggers using the [SDK](#using-the-sdk) or the Composio [dashboard](#using-the-dashboard).
 
 ## Using the SDK
 
@@ -84,3 +71,18 @@ console.log(`Trigger created: ${trigger.triggerId}`);
 <Callout>
 The trigger instance uses the toolkit version configured during Composio initialization (defaults to `'latest'`). See [Toolkit Versioning](/docs/tools-direct/toolkit-versioning) for details.
 </Callout>
+
+## Using the dashboard
+
+Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs), select an auth config, and click "Add Trigger". Switch to the "Active Triggers" tab to find the trigger ID.
+
+<Video src="/videos/enabling-triggers.mp4" poster="/images/enabling-triggers-poster.png" caption="Creating a trigger from the dashboard" />
+
+Some triggers require additional configuration. The dashboard prompts you for any required fields during setup.
+
+<Figure
+  src="/images/trigger-config.png"
+  alt="Trigger configuration example"
+  caption="Example: Gmail trigger configuration"
+  size="sm"
+/>
