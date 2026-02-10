@@ -153,22 +153,19 @@ New organizations receive V3 payloads by default. V3 separates event metadata fr
 See [webhook payload versions](/docs/setting-up-triggers/webhook-verification#webhook-payload-versions) for V2 and V1 formats.
 </Callout>
 
-## SDK subscriptions
+## Testing locally
 
-For quick prototyping, you can subscribe to trigger events directly through the SDK without setting up a webhook endpoint.
+### SDK subscriptions
 
-<Callout type="warn">
-SDK subscriptions use WebSockets and are intended for development only. Use webhooks in production.
-</Callout>
+Subscribe to trigger events directly through the SDK without setting up a webhook endpoint. Uses WebSockets under the hood.
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
   <Tab value="Python">
 ```python
 from composio import Composio
 
-composio = Composio(api_key="your_api_key_here")
+composio = Composio()
 
-# Subscribe to trigger events
 subscription = composio.triggers.subscribe()
 
 @subscription.handle(trigger_id="your_trigger_id")
@@ -182,9 +179,9 @@ subscription.wait_forever()
 ```typescript
 import { Composio } from '@composio/core';
 
-const composio = new Composio({ apiKey: "your_api_key_here" });
+const composio = new Composio();
 
-composio.triggers.subscribe(
+await composio.triggers.subscribe(
     (data) => {
         console.log('Event received:', data);
     },
@@ -194,39 +191,41 @@ composio.triggers.subscribe(
   </Tab>
 </Tabs>
 
-### Subscription filters
+### Using ngrok
 
-When subscribing via SDK, you can filter which events you receive. When multiple filters are specified, all must match.
+To test the full webhook flow locally, use [ngrok](https://ngrok.com) to expose your local server:
 
-| Filter | Description |
-|--------|-------------|
-| `triggerId` | Specific trigger instance ID |
-| `toolkits` | Array of toolkit slugs (e.g., `["github", "slack"]`) |
-| `triggerSlug` | Trigger type slug (e.g., `GITHUB_COMMIT_EVENT`) |
-| `connectedAccountId` | Specific connected account |
-| `authConfigId` | Specific auth config |
-| `userId` | Specific user |
-
-## Type-safe trigger handling (TypeScript)
-
-Define payload types and use `TriggerEvent<T>` for type safety in your handlers:
-
-```typescript
-import { Composio, TriggerEvent } from '@composio/core';
-
-export type GitHubStarAddedEventPayload = {
-  action: "created";
-  repository_id: number;
-  repository_name: string;
-  repository_url: string;
-  starred_at: string;
-  starred_by: string;
-};
-
-function handleGitHubStarEvent(event: TriggerEvent<GitHubStarAddedEventPayload>) {
-  console.log(`${event.data.repository_name} starred by ${event.data.starred_by}`);
-}
+```bash
+ngrok http 8000
 ```
+
+Then use the ngrok URL as your webhook endpoint:
+
+```bash
+curl -X POST https://backend.composio.dev/api/v3/webhook_subscriptions \
+  -H "X-API-KEY: <your-composio-api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_url": "https://your-ngrok-url.ngrok-free.app/webhook",
+    "enabled_events": ["composio.trigger.message"]
+  }'
+```
+
+Events will now be forwarded to your local server at `http://localhost:8000/webhook`.
+
+## Identifying trigger events
+
+Every webhook event includes a `metadata` object that tells you exactly where it came from:
+
+| Field | What it tells you |
+|-------|-------------------|
+| `metadata.trigger_id` | Which trigger instance fired this event |
+| `metadata.trigger_slug` | The type of trigger (e.g., `GITHUB_COMMIT_EVENT`) |
+| `metadata.connected_account_id` | Which connected account it belongs to |
+| `metadata.user_id` | Which user it's for |
+| `metadata.auth_config_id` | Which auth config was used |
+
+Use `trigger_id` to match events to a specific trigger instance, or `trigger_slug` to handle all events of a certain type. These fields can also be passed as filters when using [SDK subscriptions](#sdk-subscriptions).
 
 <Cards>
   <Card title="Troubleshooting triggers" href="/docs/troubleshooting/triggers" description="Not receiving events? Check common trigger issues and how to fix them" />
