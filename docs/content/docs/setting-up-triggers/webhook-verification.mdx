@@ -4,110 +4,67 @@ description: Verify webhook signatures to ensure payloads are authentic
 keywords: [webhook, verification, signature, HMAC, security]
 ---
 
-Composio signs every webhook request so you can verify the payload was sent by Composio and hasn't been tampered with. Always verify signatures in production.
+Composio signs every webhook request. Always verify signatures in production to ensure payloads are authentic.
 
-## Using verifyWebhook()
+## SDK verification
 
-The SDK provides a built-in method that handles signature verification and payload parsing. It auto-detects the webhook payload version (V1, V2, or V3) and throws an error if verification fails.
+The SDK handles signature verification, payload parsing, and version detection (V1, V2, V3).
+
+<Callout>
+Get your webhook secret from [Project Settings > Webhook](https://platform.composio.dev?next_page=/settings/webhook) and store it as `COMPOSIO_WEBHOOK_SECRET`.
+</Callout>
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
   <Tab value="Python">
 ```python
-from composio import Composio
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-composio = Composio(api_key="your-api-key")
-
-@app.route("/webhook", methods=["POST"])
-def webhook_handler():
-    try:
-        result = composio.triggers.verify_webhook(
-            payload=request.get_data(as_text=True),
-            signature=request.headers.get("webhook-signature", ""),
-            id=request.headers.get("webhook-id", ""),
-            timestamp=request.headers.get("webhook-timestamp", ""),
-            secret=os.getenv("COMPOSIO_WEBHOOK_SECRET", ""),
-        )
-
-        # result.version: "V3", "V2", or "V1"
-        # result.payload: parsed, version-normalized payload
-        print(f"Verified {result.version} payload: {result.payload}")
-        return jsonify({"status": "ok"})
-    except Exception as e:
-        return jsonify({"error": "Invalid signature"}), 401
+try:
+    result = composio.triggers.verify_webhook(
+        id=request.headers.get("webhook-id", ""),
+        payload=request.get_data(as_text=True),
+        signature=request.headers.get("webhook-signature", ""),
+        timestamp=request.headers.get("webhook-timestamp", ""),
+        secret=os.getenv("COMPOSIO_WEBHOOK_SECRET", ""),
+    )
+    # result.version, result.payload, result.raw_payload
+except Exception:
+    return {"error": "Invalid signature"}, 401
 ```
   </Tab>
   <Tab value="TypeScript">
 ```typescript
 import { Composio } from '@composio/core';
-type Request = { body: string; headers: Record<string, string> };
-type Response = { status: (code: number) => { json: (data: any) => void; send: (data: string) => void }; json: (data: any) => void };
+const composio = new Composio();
+const req = { headers: {} as Record<string, string>, body: '' };
 // ---cut---
-const composio = new Composio({ apiKey: 'your-api-key' });
-
-async function handleWebhook(req: Request, res: Response) {
-  try {
-    const result = await composio.triggers.verifyWebhook({
-      payload: req.body,
-      signature: req.headers['webhook-signature'],
-      id: req.headers['webhook-id'],
-      timestamp: req.headers['webhook-timestamp'],
-      secret: process.env.COMPOSIO_WEBHOOK_SECRET!,
-    });
-
-    // result.version: "V3", "V2", or "V1"
-    // result.payload: parsed, version-normalized payload
-    console.log(`Verified ${result.version} payload:`, result.payload);
-    res.status(200).json({ status: 'ok' });
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid signature' });
-  }
+try {
+  const result = await composio.triggers.verifyWebhook({
+    id: req.headers['webhook-id'],
+    payload: req.body,
+    signature: req.headers['webhook-signature'],
+    timestamp: req.headers['webhook-timestamp'],
+    secret: process.env.COMPOSIO_WEBHOOK_SECRET!,
+  });
+  // result.version, result.payload, result.rawPayload
+} catch (error) {
+  // Return 401
 }
 ```
   </Tab>
 </Tabs>
 
-### VerifyWebhookResult
-
-The method throws an error if verification fails. On success it returns:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `version` | `"V1" \| "V2" \| "V3"` | Detected payload version |
-| `payload` | `IncomingTriggerPayload` | Parsed and version-normalized event payload |
-| `rawPayload` | `WebhookPayload` | Raw parsed payload before normalization |
-
-Both methods accept an optional `tolerance` parameter (default: `300` seconds) that controls how old a webhook can be before verification fails. Set to `0` to disable timestamp validation.
+<Callout>
+An optional `tolerance` parameter (default: `300` seconds) controls how old a webhook can be before verification fails. Set to `0` to disable timestamp validation.
+</Callout>
 
 ## Manual verification
 
-If you're not using the Composio SDK (e.g., Go, Rust, or another language), verify signatures manually.
+If you are not using the Composio SDK and want to verify signatures manually.
 
-### Webhook headers
+<Callout>
+Get your webhook secret from [Project Settings > Webhook](https://platform.composio.dev?next_page=/settings/webhook) and store it as `COMPOSIO_WEBHOOK_SECRET`.
+</Callout>
 
-Every webhook request includes these headers:
-
-| Header | Description |
-|--------|-------------|
-| `webhook-signature` | HMAC signature in format `v1,<base64_signature>` |
-| `webhook-id` | Unique message identifier |
-| `webhook-timestamp` | Unix timestamp when the webhook was sent |
-
-### Verification algorithm
-
-1. Extract the three headers from the request
-2. Build the signing string: `"{webhook-id}.{webhook-timestamp}.{raw_body}"`
-3. Compute `HMAC-SHA256(signing_string, secret)` and Base64-encode the result
-4. Compare with the signature after the `v1,` prefix
-
-```
-signing_string = "{webhook-id}.{webhook-timestamp}.{raw_body}"
-expected       = base64( HMAC-SHA256( signing_string, secret ) )
-received       = webhook-signature without "v1," prefix
-```
-
-### Example (manual)
+Every webhook request includes three headers: `webhook-signature`, `webhook-id`, and `webhook-timestamp`. Use these along with the raw request body to verify the signature:
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
   <Tab value="Python">
@@ -115,48 +72,67 @@ received       = webhook-signature without "v1," prefix
 import hmac
 import hashlib
 import base64
+import json
 import os
 
-def verify_webhook_signature(webhook_id: str, webhook_timestamp: str, body: str) -> bool:
+def verify_webhook(webhook_id: str, webhook_timestamp: str, body: str, signature: str) -> dict:
     secret = os.getenv("COMPOSIO_WEBHOOK_SECRET", "")
     signing_string = f"{webhook_id}.{webhook_timestamp}.{body}"
     expected = base64.b64encode(
         hmac.new(secret.encode(), signing_string.encode(), hashlib.sha256).digest()
     ).decode()
-    return expected
+    received = signature.split(",", 1)[1] if "," in signature else signature
+    if not hmac.compare_digest(expected, received):
+        raise ValueError("Invalid webhook signature")
+
+    payload = json.loads(body)
+    # V3 payload
+    return {
+        "trigger_slug": payload["metadata"]["trigger_slug"],
+        "data": payload["data"],
+    }
 ```
   </Tab>
   <Tab value="TypeScript">
 ```typescript
 import crypto from 'crypto';
 // ---cut---
-function verifyWebhookSignature(
+function verifyWebhook(
   webhookId: string,
   webhookTimestamp: string,
-  body: string
-): string {
+  body: string,
+  signature: string
+) {
   const secret = process.env.COMPOSIO_WEBHOOK_SECRET ?? '';
   const signingString = `${webhookId}.${webhookTimestamp}.${body}`;
-  return crypto
+  const expected = crypto
     .createHmac('sha256', secret)
     .update(signingString)
     .digest('base64');
+  const received = signature.split(',')[1] ?? signature;
+  if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))) {
+    throw new Error('Invalid webhook signature');
+  }
+
+  const payload = JSON.parse(body);
+  // V3 payload
+  return {
+    triggerSlug: payload.metadata.trigger_slug,
+    data: payload.data,
+  };
 }
 ```
   </Tab>
 </Tabs>
 
-<Callout type="warn">
-Always use constant-time comparison (e.g., `hmac.compare_digest` in Python, `crypto.timingSafeEqual` in Node.js) when comparing signatures to prevent timing attacks.
-</Callout>
 
 ## Webhook payload versions
 
 `verifyWebhook()` auto-detects the version. If you process payloads manually, here are the formats:
 
-### V3 (current default)
-
-New organizations created after Feb 15 2026 receive V3 payloads. Metadata is separated from event data.
+<Tabs items={['V3 (default)', 'V2 (legacy)', 'V1 (legacy)']}>
+  <Tab value="V3 (default)">
+Metadata is separated from event data. New organizations receive V3 payloads by default.
 
 ```json
 {
@@ -178,8 +154,9 @@ New organizations created after Feb 15 2026 receive V3 payloads. Metadata is sep
   "timestamp": "2026-01-15T10:30:00Z"
 }
 ```
-
-### V2 (legacy)
+  </Tab>
+  <Tab value="V2 (legacy)">
+Metadata fields are mixed into the `data` object alongside event data.
 
 ```json
 {
@@ -188,41 +165,31 @@ New organizations created after Feb 15 2026 receive V3 payloads. Metadata is sep
     "commit_sha": "a1b2c3d",
     "message": "fix: resolve null pointer",
     "author": "jane",
-    "metadata": {
-      "triggerId": "ti_xyz789",
-      "connectedAccountId": "ca_def456"
-    }
+    "connection_id": "ca_def456",
+    "connection_nano_id": "cn_abc123",
+    "trigger_nano_id": "tn_xyz789",
+    "trigger_id": "ti_xyz789",
+    "user_id": "user-id-123435"
   },
   "timestamp": "2026-01-15T10:30:00Z",
   "log_id": "log_abc123"
 }
 ```
-
-### V1 (legacy)
-
+  </Tab>
+  <Tab value="V1 (legacy)">
 ```json
 {
   "trigger_name": "github_commit_event",
   "trigger_id": "ti_xyz789",
-  "connected_account_id": "ca_def456",
+  "connection_id": "ca_def456",
   "payload": {
     "commit_sha": "a1b2c3d",
     "message": "fix: resolve null pointer",
     "author": "jane"
-  }
+  },
+  "log_id": "log_abc123"
 }
 ```
+  </Tab>
+</Tabs>
 
-## Configuring your webhook URL and secret
-
-You can configure webhooks via the dashboard or the [Webhook Subscriptions API](/reference/api-reference/webhooks):
-
-1. Go to [Project Settings > Webhook](https://platform.composio.dev?next_page=/settings/webhook)
-2. Enter your publicly accessible webhook URL
-3. Copy the webhook secret and store it as the `COMPOSIO_WEBHOOK_SECRET` environment variable
-
-The SDK reads `COMPOSIO_WEBHOOK_SECRET` automatically when using `verifyWebhook()`.
-
-<Callout>
-The Webhook Subscriptions API also supports event filtering — subscribe only to `composio.trigger.message`, `composio.connected_account.expired`, or both. See the [API reference](/reference/api-reference/webhooks) for details.
-</Callout>
