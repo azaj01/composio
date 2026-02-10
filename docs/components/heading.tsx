@@ -29,19 +29,37 @@ export function Heading({ as, className, ...props }: HeadingProps) {
 function HeadingAnchor({ id, children }: { id: string; children: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  const copyLink = () => {
     const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${id}`;
     window.history.replaceState(null, '', `#${id}`);
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }).catch(() => {});
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    copyLink();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      copyLink();
+    }
   };
 
   return (
     <>
-      <a data-card="" href={`#${id}`} className="peer" onClick={handleClick}>
+      <a
+        data-card=""
+        href={`#${id}`}
+        className="peer"
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        aria-label={`Copy link to ${id} section`}
+      >
         {children}
       </a>
       {copied ? (
