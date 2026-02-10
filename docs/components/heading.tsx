@@ -31,7 +31,7 @@ function HeadingAnchor({ id, children }: { id: string; children: React.ReactNode
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    const url = `${window.location.origin}${window.location.pathname}#${id}`;
+    const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${id}`;
     window.history.replaceState(null, '', `#${id}`);
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
