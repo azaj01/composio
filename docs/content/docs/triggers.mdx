@@ -15,9 +15,9 @@ There are two delivery types:
 
 ## Working with triggers
 
-1. **Discover** available trigger types for a toolkit (e.g., `GITHUB_COMMIT_EVENT`)
-2. **Create** an active trigger scoped to a user's connected account
-3. **Configure** your webhook endpoint so Composio knows where to deliver events
+1. **Configure** your webhook endpoint so Composio knows where to deliver events
+2. **Discover** available trigger types for a toolkit (e.g., `GITHUB_COMMIT_EVENT`)
+3. **Create** an active trigger scoped to a user's connected account
 4. **Receive events**: Composio sends payloads to your endpoint
 5. **Manage**: enable, disable, or delete triggers as needed
 
@@ -33,7 +33,8 @@ When you create a trigger from a type, it's scoped to a specific user and connec
 ## Next steps
 
 <Cards>
-  <Card icon={<Rocket />} title="Setting up triggers" href="/docs/setting-up-triggers" description="Create triggers and subscribe to events via webhooks or SDK" />
-  <Card icon={<ShieldCheck />} title="Verifying webhooks" href="/docs/setting-up-triggers/webhook-verification" description="Verify webhook signatures and understand payload versions" />
-  <Card icon={<Wrench />} title="Managing triggers" href="/docs/setting-up-triggers/managing-triggers" description="Discover, list, enable, disable, and delete triggers" />
+  <Card title="Creating triggers" href="/docs/setting-up-triggers/creating-triggers" description="Create trigger instances via the dashboard or SDK" />
+  <Card title="Subscribing to events" href="/docs/setting-up-triggers/subscribing-to-events" description="Receive trigger events via webhooks or SDK subscriptions" />
+  <Card title="Verifying webhooks" href="/docs/setting-up-triggers/webhook-verification" description="Verify webhook signatures and understand payload versions" />
+  <Card title="Managing triggers" href="/docs/setting-up-triggers/managing-triggers" description="Discover, list, enable, disable, and delete triggers" />
 </Cards>

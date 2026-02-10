@@ -1,0 +1,86 @@
+---
+title: Creating triggers
+description: Create trigger instances via the dashboard or SDK
+keywords: [triggers, create trigger, trigger config]
+---
+
+<Callout type="info" title="Prerequisites">
+Before creating triggers, ensure you have:
+- An [auth config](/docs/authentication#how-composio-manages-authentication) for the toolkit you want to monitor
+- A connected account for the user whose events you want to capture
+</Callout>
+
+You can create triggers using the Composio dashboard or programmatically via the SDK.
+
+## Using the dashboard
+
+Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs), select an auth config, and click "Add Trigger". Switch to the "Active Triggers" tab to find the trigger ID.
+
+<Video src="/videos/enabling-triggers.mp4" poster="/images/enabling-triggers-poster.png" caption="Creating a trigger from the dashboard" />
+
+Some triggers require additional configuration. The dashboard prompts you for any required fields during setup.
+
+<Figure
+  src="/images/trigger-config.png"
+  alt="Trigger configuration example"
+  caption="Example: Gmail trigger configuration"
+  size="sm"
+/>
+
+## Using the SDK
+
+Before creating a trigger, inspect the trigger type to see what configuration it requires. Then create the trigger with the required config.
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+user_id = "user-id-123435"
+
+# Check what configuration is required
+trigger_type = composio.triggers.get_type("GITHUB_COMMIT_EVENT")
+print(trigger_type.config)
+# Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
+
+# Create trigger with the required config
+trigger = composio.triggers.create(
+    slug="GITHUB_COMMIT_EVENT",
+    user_id=user_id,
+    trigger_config={"owner": "your-repo-owner", "repo": "your-repo-name"},
+)
+print(f"Trigger created: {trigger.trigger_id}")
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({apiKey: "your-api-key"});
+const userId = 'user-id-123435';
+
+// Check what configuration is required
+const triggerType = await composio.triggers.getType("GITHUB_COMMIT_EVENT");
+console.log(triggerType.config);
+// Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
+
+// Create trigger with the required config
+const trigger = await composio.triggers.create(
+    userId,
+    'GITHUB_COMMIT_EVENT',
+    {
+        triggerConfig: {
+            owner: 'your-repo-owner',
+            repo: 'your-repo-name'
+        }
+    }
+);
+console.log(`Trigger created: ${trigger.triggerId}`);
+```
+  </Tab>
+</Tabs>
+
+<Callout>
+The trigger instance uses the toolkit version configured during Composio initialization (defaults to `'latest'`). See [Toolkit Versioning](/docs/tools-direct/toolkit-versioning) for details.
+</Callout>

@@ -1,93 +1,10 @@
 ---
-title: Setting up triggers
-description: Create trigger instances and subscribe to events via webhooks or SDK
-keywords: [triggers, webhooks, subscribe, events, create trigger]
+title: Subscribing to events
+description: Receive trigger events via webhooks or SDK subscriptions
+keywords: [webhooks, subscribe, events, webhook payload, V3]
 ---
 
-<Callout type="info" title="Prerequisites">
-Before setting up triggers, ensure you have:
-- An [auth config](/docs/authentication#how-composio-manages-authentication) for the toolkit you want to monitor
-- A connected account for the user whose events you want to capture
-</Callout>
-
-## Creating a trigger
-
-You can create triggers using the Composio dashboard or programmatically via the SDK.
-
-### Using the dashboard
-
-Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs), select an auth config, and click "Add Trigger". Switch to the "Active Triggers" tab to find the trigger ID.
-
-<Video src="/videos/enabling-triggers.mp4" poster="/images/enabling-triggers-poster.png" caption="Creating a trigger from the dashboard" />
-
-Some triggers require additional configuration. The dashboard prompts you for any required fields during setup.
-
-<Figure
-  src="/images/trigger-config.png"
-  alt="Trigger configuration example"
-  caption="Example: Gmail trigger configuration"
-  size="sm"
-/>
-
-### Using the SDK
-
-Before creating a trigger, inspect the trigger type to see what configuration it requires. Then create the trigger with the required config.
-
-<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
-  <Tab value="Python">
-```python
-from composio import Composio
-
-composio = Composio(api_key="your-api-key")
-user_id = "user-id-123435"
-
-# Check what configuration is required
-trigger_type = composio.triggers.get_type("GITHUB_COMMIT_EVENT")
-print(trigger_type.config)
-# Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
-
-# Create trigger with the required config
-trigger = composio.triggers.create(
-    slug="GITHUB_COMMIT_EVENT",
-    user_id=user_id,
-    trigger_config={"owner": "your-repo-owner", "repo": "your-repo-name"},
-)
-print(f"Trigger created: {trigger.trigger_id}")
-```
-  </Tab>
-  <Tab value="TypeScript">
-```typescript
-import { Composio } from '@composio/core';
-
-const composio = new Composio({apiKey: "your-api-key"});
-const userId = 'user-id-123435';
-
-// Check what configuration is required
-const triggerType = await composio.triggers.getType("GITHUB_COMMIT_EVENT");
-console.log(triggerType.config);
-// Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
-
-// Create trigger with the required config
-const trigger = await composio.triggers.create(
-    userId,
-    'GITHUB_COMMIT_EVENT',
-    {
-        triggerConfig: {
-            owner: 'your-repo-owner',
-            repo: 'your-repo-name'
-        }
-    }
-);
-console.log(`Trigger created: ${trigger.triggerId}`);
-```
-  </Tab>
-</Tabs>
-
-<Callout>
-The trigger instance uses the toolkit version configured during Composio initialization (defaults to `'latest'`). See [Toolkit Versioning](/docs/tools-direct/toolkit-versioning) for details.
-</Callout>
-
-## Subscribing via webhooks
+## Webhooks
 
 Webhooks are the recommended way to receive trigger events in production. Composio sends a POST request to your endpoint whenever an event fires.
 
@@ -114,6 +31,7 @@ New organizations receive V3 payloads by default. V3 uses a standardized `type` 
   "id": "msg_abc123",
   "type": "composio.trigger.message",
   "metadata": {
+    "log_id": "log_abc123",
     "trigger_slug": "GITHUB_COMMIT_EVENT",
     "trigger_id": "ti_xyz789",
     "connected_account_id": "ca_def456",
@@ -185,7 +103,41 @@ export default async function webhookHandler(req: NextApiRequest, res: NextApiRe
 Always [verify webhook signatures](/docs/setting-up-triggers/webhook-verification) in production to ensure payloads are authentic.
 </Callout>
 
-## Subscribing via SDK
+### Handling connection expiry events
+
+If you subscribe to `composio.connected_account.expired` events via the [Webhook Subscriptions API](/reference/api-reference/webhooks), Composio notifies you when an OAuth2 connection expires. The SDK provides typed schemas for these events:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import is_connection_expired_event
+
+def handle_webhook(payload: dict):
+    if is_connection_expired_event(payload):
+        account_id = payload["data"]["id"]
+        toolkit = payload["data"]["toolkit"]["slug"]
+        print(f"Connection {account_id} expired for {toolkit}")
+        # Prompt user to re-authenticate
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+// @noErrors
+import { ConnectionExpiredEventSchema } from '@composio/core';
+// ---cut---
+function handleWebhook(payload: unknown) {
+  const result = ConnectionExpiredEventSchema.safeParse(payload);
+  if (result.success) {
+    const { data, metadata } = result.data;
+    console.log(`Connection ${data.id} expired for ${data.toolkit.slug}`);
+    // Prompt user to re-authenticate
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## SDK subscriptions
 
 For quick prototyping, you can subscribe to trigger events directly through the SDK without setting up a webhook endpoint.
 

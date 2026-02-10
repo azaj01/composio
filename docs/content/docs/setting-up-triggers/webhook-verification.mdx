@@ -25,7 +25,7 @@ def webhook_handler():
         result = composio.triggers.verify_webhook(
             payload=request.get_data(as_text=True),
             signature=request.headers.get("webhook-signature", ""),
-            webhook_id=request.headers.get("webhook-id", ""),
+            id=request.headers.get("webhook-id", ""),
             timestamp=request.headers.get("webhook-timestamp", ""),
             secret=os.getenv("COMPOSIO_WEBHOOK_SECRET", ""),
         )
@@ -77,6 +77,8 @@ The method throws an error if verification fails. On success it returns:
 | `version` | `"V1" \| "V2" \| "V3"` | Detected payload version |
 | `payload` | `IncomingTriggerPayload` | Parsed and version-normalized event payload |
 | `rawPayload` | `WebhookPayload` | Raw parsed payload before normalization |
+
+Both methods accept an optional `tolerance` parameter (default: `300` seconds) that controls how old a webhook can be before verification fails. Set to `0` to disable timestamp validation.
 
 ## Manual verification
 
@@ -161,6 +163,7 @@ New organizations created after Feb 15 2026 receive V3 payloads. Metadata is sep
   "id": "msg_abc123",
   "type": "composio.trigger.message",
   "metadata": {
+    "log_id": "log_abc123",
     "trigger_slug": "GITHUB_COMMIT_EVENT",
     "trigger_id": "ti_xyz789",
     "connected_account_id": "ca_def456",
