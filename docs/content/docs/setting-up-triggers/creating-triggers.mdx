@@ -18,18 +18,22 @@ You can create triggers using the [SDK](#using-the-sdk) or the Composio [dashboa
 
 Before creating a trigger, inspect the trigger type to see what configuration it requires. Then create the trigger with the required config.
 
+<Callout>
+When you pass a `user_id`, the SDK automatically finds the user's connected account for the relevant toolkit. If the user has multiple connected accounts for the same toolkit, it uses the most recently created one. You can also pass a `connected_account_id`/`connectedAccountId` directly if you need more control.
+</Callout>
+
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
   <Tab value="Python">
 ```python
 from composio import Composio
 
-composio = Composio(api_key="your-api-key")
+composio = Composio()
 user_id = "user-id-123435"
 
 # Check what configuration is required
 trigger_type = composio.triggers.get_type("GITHUB_COMMIT_EVENT")
 print(trigger_type.config)
-# Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
+# Returns: {"properties": {"owner": {...}, "repo": {...}}, "required": ["owner", "repo"]}
 
 # Create trigger with the required config
 trigger = composio.triggers.create(
@@ -44,7 +48,7 @@ print(f"Trigger created: {trigger.trigger_id}")
 ```typescript
 import { Composio } from '@composio/core';
 
-const composio = new Composio({apiKey: "your-api-key"});
+const composio = new Composio();
 const userId = 'user-id-123435';
 
 // Check what configuration is required
@@ -74,15 +78,10 @@ The trigger instance uses the toolkit version configured during Composio initial
 
 ## Using the dashboard
 
-Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs), select an auth config, and click "Add Trigger". Switch to the "Active Triggers" tab to find the trigger ID.
+1. Navigate to [Auth Configs](https://platform.composio.dev?next_page=%2Fauth-configs) and select the auth config for the relevant toolkit
+2. Navigate to **Active Triggers** and click **Create Trigger**
+3. Select the connected account for which you want to create a trigger
+4. Choose a trigger type and fill in the required configuration
+5. Click **Create Trigger**
 
-<Video src="/videos/enabling-triggers.mp4" poster="/images/enabling-triggers-poster.png" caption="Creating a trigger from the dashboard" />
-
-Some triggers require additional configuration. The dashboard prompts you for any required fields during setup.
-
-<Figure
-  src="/images/trigger-config.png"
-  alt="Trigger configuration example"
-  caption="Example: Gmail trigger configuration"
-  size="sm"
-/>
+<Video src="/videos/triggers-creation.mp4" caption="Creating a GitHub Star Added trigger from the dashboard" />
