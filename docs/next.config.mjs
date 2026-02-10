@@ -575,7 +575,7 @@ const config = {
       },
       {
         source: '/tool-router/using-with-mcp-clients',
-        destination: '/docs/single-toolkit-mcp',
+        destination: '/docs/quickstart',
         permanent: true,
       },
       {
@@ -586,7 +586,7 @@ const config = {
       // Docs pages that moved (confirmed real 404s from Datadog)
       {
         source: '/docs/authenticating-users',
-        destination: '/docs/authenticating-users/in-chat-authentication',
+        destination: '/docs/tools-direct/authenticating-tools',
         permanent: true,
       },
       {
@@ -660,11 +660,6 @@ const config = {
         permanent: true,
       },
       {
-        source: '/docs/guides/:path*',
-        destination: '/docs',
-        permanent: true,
-      },
-      {
         source: '/docs/google-sheets',
         destination: '/toolkits/googlesheets',
         permanent: true,
@@ -676,7 +671,7 @@ const config = {
       },
       {
         source: '/docs/ai-sdk/:path*',
-        destination: '/docs/providers',
+        destination: '/docs/providers/vercel',
         permanent: true,
       },
       {
