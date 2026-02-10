@@ -2,6 +2,8 @@
   "title": "Cookbooks",
   "root": true,
   "pages": [
+    "---Tutorials---",
+    "tutorial-chat-app",
     "---Getting Started---",
     "templates",
     "chat-app",
