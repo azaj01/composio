@@ -6,25 +6,127 @@ keywords: [webhooks, subscribe, events, webhook payload, V3]
 
 ## Webhooks
 
-Webhooks are the recommended way to receive trigger events in production. Composio sends a POST request to your endpoint whenever an event fires.
-
-1. Set your webhook URL in the [dashboard settings](https://platform.composio.dev?next_page=/settings/events) or via the [Webhook Subscriptions API](/reference/api-reference/webhooks)
-2. Build an endpoint that accepts POST requests with JSON payloads
-
-<Callout type="info">
-**Local development:** Use [ngrok](https://ngrok.com) or [webhook.site](https://webhook.site) to expose your local server for testing.
-</Callout>
-
-Composio delivers two event types via webhooks:
+Webhooks are the recommended way to receive trigger events in production. To start receiving events, create a webhook subscription with your endpoint URL and select which event types you want to receive. You can subscribe to one or both:
 
 | Event type | Description |
 |------------|-------------|
-| `composio.trigger.message` | Trigger events from connected apps (all versions) |
-| `composio.connected_account.expired` | OAuth2 connection expired and needs re-authentication (V3 only) |
+| `composio.trigger.message` | Fired when a trigger receives data from an external service |
+| `composio.connected_account.expired` | Fired when a connected account expires and needs re-authentication |
+
+Set your webhook URL in the [dashboard settings](https://platform.composio.dev?next_page=/settings/webhook) or via the [Webhook Subscriptions API](/reference/api-reference/webhooks):
+
+```bash
+curl -X POST https://backend.composio.dev/api/v3/webhook_subscriptions \
+  -H "X-API-KEY: <your-composio-api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_url": "https://example.com/webhook",
+    "enabled_events": ["composio.trigger.message", "composio.connected_account.expired"]
+  }'
+```
+
+### Handling events
+
+All events arrive at the same endpoint. Route on the `type` field to handle each event type:
+
+<Callout>
+[Inspect the payload schema](#inspecting-trigger-payload-schemas) for a trigger before writing your handler. See [Webhook payload (V3)](#webhook-payload-v3) for the full event structure.
+</Callout>
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import WebhookEventType
+
+@app.post("/webhook")
+async def webhook_handler(request: Request):
+    payload = await request.json()
+    event_type = payload.get("type")
+
+    if event_type == WebhookEventType.TRIGGER_MESSAGE:
+        trigger_slug = payload["metadata"]["trigger_slug"]
+        event_data = payload["data"]
+
+        if trigger_slug == "GITHUB_COMMIT_EVENT":
+            print(f"New commit by {event_data['author']}: {event_data['message']}")
+
+    elif event_type == WebhookEventType.CONNECTION_EXPIRED:
+        account_id = payload["data"]["id"]
+        toolkit = payload["data"]["toolkit"]["slug"]
+        print(f"Connection {account_id} expired for {toolkit}")
+
+    return {"status": "ok"}
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { WebhookEventTypes, ConnectionExpiredEventSchema } from '@composio/core';
+type NextApiRequest = { body: any };
+type NextApiResponse = { status: (code: number) => { json: (data: any) => void } };
+// ---cut---
+export default async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
+  const payload = req.body;
+
+  if (payload.type === WebhookEventTypes.TRIGGER_MESSAGE) {
+    const triggerSlug = payload.metadata.trigger_slug;
+    const eventData = payload.data;
+
+    if (triggerSlug === 'GITHUB_COMMIT_EVENT') {
+      console.log(`New commit by ${eventData.author}: ${eventData.message}`);
+    }
+  } else if (payload.type === WebhookEventTypes.CONNECTION_EXPIRED) {
+    const result = ConnectionExpiredEventSchema.safeParse(payload);
+    if (result.success) {
+      const { data } = result.data;
+      console.log(`Connection ${data.id} expired for ${data.toolkit.slug}`);
+      // Prompt user to re-authenticate
+    }
+  }
+
+  res.status(200).json({ status: 'ok' });
+}
+```
+  </Tab>
+</Tabs>
+
+<Callout type="warn">
+Always [verify webhook signatures](/docs/setting-up-triggers/webhook-verification) in production to ensure payloads are authentic.
+</Callout>
+
+### Inspecting trigger payload schemas
+
+Each trigger type defines the schema of event data it sends. Use `get_type()`/`getType()` to inspect it before writing your handler:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio()
+
+trigger_type = composio.triggers.get_type("GITHUB_COMMIT_EVENT")
+print(trigger_type.payload)
+# Returns: {"properties": {"author": {...}, "id": {...}, "message": {...}, "timestamp": {...}, "url": {...}}}
+```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio();
+
+const triggerType = await composio.triggers.getType("GITHUB_COMMIT_EVENT");
+console.log(triggerType.payload);
+// Returns: {"properties": {"author": {...}, "id": {...}, "message": {...}, "timestamp": {...}, "url": {...}}}
+```
+  </Tab>
+</Tabs>
+
+The payload schema tells you what fields will be in the `data` object of the webhook event.
 
 ### Webhook payload (V3)
 
-New organizations receive V3 payloads by default. V3 uses a standardized `type` field (`composio.trigger.message`) and separates event metadata from the actual event data:
+New organizations receive V3 payloads by default. V3 separates event metadata from the actual event data:
 
 ```json
 {
@@ -50,92 +152,6 @@ New organizations receive V3 payloads by default. V3 uses a standardized `type` 
 <Callout>
 See [webhook payload versions](/docs/setting-up-triggers/webhook-verification#webhook-payload-versions) for V2 and V1 formats.
 </Callout>
-
-### Example handlers
-
-<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
-  <Tab value="Python">
-```python
-@app.post("/webhook")
-async def webhook_handler(request: Request):
-    payload = await request.json()
-
-    metadata = payload.get("metadata", {})
-    trigger_slug = metadata.get("trigger_slug")
-    event_data = payload.get("data", {})
-
-    if trigger_slug == "GITHUB_COMMIT_EVENT":
-        commit = event_data.get("message")
-        author = event_data.get("author")
-        print(f"New commit by {author}: {commit}")
-
-    return {"status": "ok"}
-```
-  </Tab>
-  <Tab value="TypeScript">
-```typescript
-import { TriggerEvent } from '@composio/core';
-type NextApiRequest = { body: any };
-type NextApiResponse = { status: (code: number) => { json: (data: any) => void }; json: (data: any) => void };
-type GitHubCommitEventData = { commit_sha: string; message: string; author: string };
-// ---cut---
-export default async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
-  const payload = req.body;
-  const triggerSlug = payload.metadata?.trigger_slug;
-
-  if (triggerSlug === 'GITHUB_COMMIT_EVENT') {
-    const event: TriggerEvent<GitHubCommitEventData> = {
-      type: payload.type,
-      timestamp: payload.timestamp,
-      data: payload.data
-    };
-
-    console.log(`New commit by ${event.data.author}: ${event.data.message}`);
-  }
-
-  res.status(200).json({ status: 'ok' });
-}
-```
-  </Tab>
-</Tabs>
-
-<Callout type="warn">
-Always [verify webhook signatures](/docs/setting-up-triggers/webhook-verification) in production to ensure payloads are authentic.
-</Callout>
-
-### Handling connection expiry events
-
-If you subscribe to `composio.connected_account.expired` events via the [Webhook Subscriptions API](/reference/api-reference/webhooks), Composio notifies you when an OAuth2 connection expires. The SDK provides typed schemas for these events:
-
-<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
-  <Tab value="Python">
-```python
-from composio import is_connection_expired_event
-
-def handle_webhook(payload: dict):
-    if is_connection_expired_event(payload):
-        account_id = payload["data"]["id"]
-        toolkit = payload["data"]["toolkit"]["slug"]
-        print(f"Connection {account_id} expired for {toolkit}")
-        # Prompt user to re-authenticate
-```
-  </Tab>
-  <Tab value="TypeScript">
-```typescript
-// @noErrors
-import { ConnectionExpiredEventSchema } from '@composio/core';
-// ---cut---
-function handleWebhook(payload: unknown) {
-  const result = ConnectionExpiredEventSchema.safeParse(payload);
-  if (result.success) {
-    const { data, metadata } = result.data;
-    console.log(`Connection ${data.id} expired for ${data.toolkit.slug}`);
-    // Prompt user to re-authenticate
-  }
-}
-```
-  </Tab>
-</Tabs>
 
 ## SDK subscriptions
 

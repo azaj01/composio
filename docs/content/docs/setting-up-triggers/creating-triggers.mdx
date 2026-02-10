@@ -54,7 +54,7 @@ const userId = 'user-id-123435';
 // Check what configuration is required
 const triggerType = await composio.triggers.getType("GITHUB_COMMIT_EVENT");
 console.log(triggerType.config);
-// Returns: {"properties": {...}, "required": ["owner", "repo"], ...}
+// Returns: {"properties": {"owner": {...}, "repo": {...}}, "required": ["owner", "repo"]}
 
 // Create trigger with the required config
 const trigger = await composio.triggers.create(
