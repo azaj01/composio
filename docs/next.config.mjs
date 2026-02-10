@@ -491,49 +491,6 @@ const config = {
         destination: '/docs/providers/custom-providers/typescript',
         permanent: true,
       },
-      // Old Fern API reference operation IDs (from Datadog 404 monitoring)
-      // Use :operationId (single segment) to redirect operation pages to section index
-      // e.g. /reference/api-reference/tool-router/postToolRouterSession → /reference/api-reference/tool-router
-      {
-        source: '/reference/api-reference/tool-router/:operationId',
-        destination: '/reference/api-reference/tool-router',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/triggers/:operationId',
-        destination: '/reference/api-reference/triggers',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/authentication/:operationId',
-        destination: '/reference/api-reference/authentication',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/mcp/:operationId',
-        destination: '/reference/api-reference/mcp',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/tools/:operationId',
-        destination: '/reference/api-reference/tools',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/toolkits/:operationId',
-        destination: '/reference/api-reference/toolkits',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/connected-accounts/:operationId',
-        destination: '/reference/api-reference/connected-accounts',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/auth-configs/:operationId',
-        destination: '/reference/api-reference/auth-configs',
-        permanent: true,
-      },
       // Old Fern v-3 paths (different hyphenation)
       {
         source: '/reference/v-3/:path*',

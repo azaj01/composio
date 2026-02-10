@@ -160,6 +160,40 @@ describe('Triggers.verifyWebhook', () => {
         status: 'ACTIVE',
       });
     });
+
+    it('should detect V3 payload with non-trigger event type (e.g., connected_account.expired)', async () => {
+      // This test uses realistic connection metadata (project_id, org_id)
+      // instead of fabricated trigger metadata, verifying that V3 detection
+      // works for events with different metadata shapes.
+      const payload = {
+        id: 'msg_abc123',
+        timestamp: new Date().toISOString(),
+        type: 'composio.connected_account.expired',
+        metadata: {
+          project_id: 'pr_koucdrMIwRsf',
+          org_id: '4a4ded8f-d3ae-4dea-a229-c30234298b05',
+        },
+        data: {
+          toolkit: { slug: 'gmail' },
+          id: 'ca__IvSeEzEBjVt',
+          user_id: 'test-user',
+          status: 'EXPIRED',
+        },
+      };
+      const payloadStr = JSON.stringify(payload);
+      const signature = createSignature(testWebhookId, testTimestamp, payloadStr, testSecret);
+
+      const result = await triggers.verifyWebhook({
+        payload: payloadStr,
+        signature,
+        secret: testSecret,
+        id: testWebhookId,
+        timestamp: testTimestamp,
+      });
+
+      expect(result.version).toBe(WebhookVersions.V3);
+      expect(result.rawPayload).toEqual(payload);
+    });
   });
 
   describe('successful verification with V2 payload', () => {

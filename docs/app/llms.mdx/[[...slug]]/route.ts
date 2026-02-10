@@ -14,35 +14,13 @@ import { notFound } from 'next/navigation';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
+import { processSchema, toolFromApi } from '@/lib/toolkit-schema';
 
 export const revalidate = false;
 
 const API_BASE = process.env.COMPOSIO_API_BASE || 'https://backend.composio.dev/api/v3';
 const API_KEY = process.env.COMPOSIO_API_KEY;
 const API_FETCH_LIMIT = 1000; // Note: Toolkits with more items will be truncated
-
-/**
- * Process raw parameter properties into typed ParameterSchema records.
- * Adds required flag based on the requiredList from JSON Schema.
- */
-function processParams(
-  props: unknown,
-  requiredList: string[]
-): Record<string, ParameterSchema> | undefined {
-  if (!props || typeof props !== 'object') return undefined;
-
-  const result: Record<string, ParameterSchema> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (typeof value === 'object' && value !== null) {
-      result[key] = {
-        ...(value as ParameterSchema),
-        // Explicitly set required based on JSON Schema required array
-        required: requiredList.includes(key),
-      };
-    }
-  }
-  return Object.keys(result).length > 0 ? result : undefined;
-}
 
 // Fetch detailed tool info from Composio API
 async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
@@ -81,26 +59,7 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return items.filter((tool: any) => tool && typeof tool === 'object').map((tool: any) => {
-      const inputSchema = tool.input_parameters || tool.parameters;
-      const outputSchema = tool.output_parameters || tool.response;
-
-      const inputProps = inputSchema?.properties || inputSchema;
-      const inputRequired = inputSchema?.required || [];
-      const outputProps = outputSchema?.properties || outputSchema;
-      const outputRequired = outputSchema?.required || [];
-
-      return {
-        slug: tool.slug || '',
-        name: tool.name || tool.display_name || tool.slug || '',
-        description: tool.description || '',
-        input_parameters: processParams(inputProps, inputRequired),
-        output_parameters: processParams(outputProps, outputRequired),
-        scopes: tool.scopes,
-        tags: tool.tags,
-        is_deprecated: tool.is_deprecated || false,
-      };
-    });
+    return items.filter((tool: any) => tool && typeof tool === 'object').map(toolFromApi);
   } catch {
     return null;
   }
@@ -143,25 +102,15 @@ async function fetchDetailedTriggers(toolkitSlug: string): Promise<Trigger[] | n
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return items.filter((trigger: any) => trigger && typeof trigger === 'object').map((trigger: any) => {
-      const configSchema = trigger.config;
-      const payloadSchema = trigger.payload;
-
-      const configProps = configSchema?.properties || configSchema;
-      const configRequired = configSchema?.required || [];
-      const payloadProps = payloadSchema?.properties || payloadSchema;
-      const payloadRequired = payloadSchema?.required || [];
-
-      return {
-        slug: trigger.slug || '',
-        name: trigger.name || trigger.display_name || trigger.slug || '',
-        description: trigger.description || '',
-        type: trigger.type,
-        config: processParams(configProps, configRequired),
-        payload: processParams(payloadProps, payloadRequired),
-        instructions: trigger.instructions,
-      };
-    });
+    return items.filter((trigger: any) => trigger && typeof trigger === 'object').map((trigger: any) => ({
+      slug: trigger.slug || '',
+      name: trigger.name || trigger.display_name || trigger.slug || '',
+      description: trigger.description || '',
+      type: trigger.type,
+      config: processSchema(trigger.config),
+      payload: processSchema(trigger.payload),
+      instructions: trigger.instructions,
+    }));
   } catch {
     return null;
   }
@@ -655,8 +604,18 @@ function renderParamsMarkdown(params: Record<string, ParameterSchema>): string[]
   return lines;
 }
 
+// Read FAQ markdown for a toolkit (returns raw markdown or null)
+async function readToolkitFaqMarkdown(slug: string): Promise<string | null> {
+  try {
+    const filePath = join(process.cwd(), 'content/toolkit-faq', `${slug}.md`);
+    return await readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
 // Generate markdown from toolkit with detailed tools and triggers
-function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTriggers?: Trigger[]): string {
+function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTriggers?: Trigger[], faqMarkdown?: string | null): string {
   const tools = detailedTools || toolkit.tools;
   const triggers = detailedTriggers || toolkit.triggers;
 
@@ -674,6 +633,12 @@ function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTri
 
   if (toolkit.version) {
     lines.push(`- **Version:** ${toolkit.version}`);
+  }
+
+  if (faqMarkdown && faqMarkdown.trim()) {
+    lines.push('', '## Frequently Asked Questions', '');
+    // Bump ## headings to ### so FAQ questions are children of the FAQ section
+    lines.push(faqMarkdown.trim().replace(/^## /gm, '### '));
   }
 
   if (tools.length > 0) {
@@ -915,17 +880,19 @@ export async function GET(
     if (prefix === 'toolkits' && rest.length === 1) {
       const toolkit = await getToolkit(rest[0]);
       if (toolkit) {
-        // Fetch detailed tool and trigger info from API
-        const [detailedTools, detailedTriggers] = await Promise.all([
+        // Fetch detailed tool/trigger info and FAQ content in parallel
+        const [detailedTools, detailedTriggers, faqMarkdown] = await Promise.all([
           fetchDetailedTools(rest[0]),
           fetchDetailedTriggers(rest[0]),
+          readToolkitFaqMarkdown(rest[0]),
         ]);
 
         return new Response(
           toolkitToMarkdown(
             toolkit,
             detailedTools !== null ? detailedTools : undefined,
-            detailedTriggers !== null ? detailedTriggers : undefined
+            detailedTriggers !== null ? detailedTriggers : undefined,
+            faqMarkdown
           ),
           {
             headers: {
