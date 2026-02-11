@@ -4,21 +4,21 @@
   text { font-family: 'Inter', system-ui, sans-serif; }
 
   svg {
-    --bg: #faf8f6;
-    --surface: #ffffff;
-    --hdr: #f5f2ef;
-    --border: #e0dbd8;
-    --text: #171414;
-    --text-sec: #5c5858;
-    --text-muted: #8a8280;
-    --accent: #ea580c;
-    --accent-bg: #fef2ec;
-    --accent-border: #f5cdb8;
-    --accent-surface: #fef8f5;
-    --muted-line: #c4bdb5;
-    --muted-bg: #f3f1ee;
-    --dot: rgba(0,0,0,0.04);
-    --shadow-color: rgba(0,0,0,0.05);
+    --bg: #141414;
+    --surface: #1c1c1c;
+    --hdr: #222222;
+    --border: #2e2e2e;
+    --text: #ece8e4;
+    --text-sec: #a09a94;
+    --text-muted: #7a7470;
+    --accent: #f97316;
+    --accent-bg: #2a1a0e;
+    --accent-border: #5c3516;
+    --accent-surface: #221a12;
+    --muted-line: #5e5954;
+    --muted-bg: #242120;
+    --dot: rgba(255,255,255,0.03);
+    --shadow-color: rgba(0,0,0,0.3);
   }
 </style>
 <defs>
