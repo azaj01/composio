@@ -216,6 +216,11 @@ const config = {
         permanent: true,
       },
       {
+        source: '/docs/how-tools-work',
+        destination: '/docs/tools-and-toolkits',
+        permanent: true,
+      },
+      {
         source: '/features/:path*',
         destination: '/docs',
         permanent: true,
