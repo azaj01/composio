@@ -387,18 +387,25 @@ Learn how to [Manage connected accounts](/docs/auth-configuration/connected-acco
 
 After creating a connection, it will have one of the following statuses that indicates its current state:
 
-| Status | Description |
-|--------|-------------|
-| **ACTIVE** | Connection is established and working. You can execute tools with this connection. |
-| **INACTIVE** | Connection is temporarily disabled. Re-enable it to use the connection again. |
-| **PENDING** | Connection is being processed. Wait for it to become active. |
-| **INITIATED** | Connection request has started but not yet completed. User may still need to complete authentication. |
-| **EXPIRED** | Connection credentials have expired. Composio automatically attempts to refresh credentials before marking as expired. Re-authenticate to restore access. |
-| **FAILED** | Connection attempt failed. Check error details and try creating a new connection. |
+| Status | What it means | What to do |
+|--------|---------------|------------|
+| **ACTIVE** | Connection is working. Tools can be executed. | Nothing — you're good. |
+| **INITIATED** | OAuth flow started but the user hasn't completed authentication yet. Auto-expires after 10 minutes. | Redirect the user to the Connect Link to finish authentication. |
+| **EXPIRED** | Credentials are no longer valid and Composio cannot refresh them automatically. See [common causes](#why-connections-expire) below. | [Subscribe to expiry events](/docs/subscribing-to-connection-expiry-events) to detect this proactively. |
+| **FAILED** | The authentication attempt did not succeed. Common causes: user denied consent during OAuth, invalid authorization code, or misconfigured auth config. | Check the `status_reason` field for details and retry the connection. |
+| **INACTIVE** | Manually disabled via the API. The connection is preserved but cannot be used to execute tools. | Re-enable it via the API or dashboard to restore access. |
 
-<Callout>
-When credentials expire for OAuth connections, Composio automatically attempts to refresh them using the refresh token. The connection is only marked as **EXPIRED** after multiple refresh attempts have failed.
-</Callout>
+### Why connections expire
+
+Composio automatically refreshes OAuth tokens before they expire. A connection is only marked as **EXPIRED** after refresh attempts have failed. Common reasons:
+
+- **User revoked access** — The user went to the provider's settings (e.g., Google Account > Security > Third-party apps) and removed your app's access.
+- **OAuth app deleted or disabled** — The OAuth application credentials were deleted or disabled in the provider's developer console.
+- **Refresh token expired** — Some providers (e.g., Google with test/unverified apps) expire refresh tokens after a set period. Once expired, a new OAuth consent flow is required.
+- **Provider-side revocation** — The provider revoked tokens due to policy changes, security events, or account-level restrictions.
+- **Repeated transient failures** — If token refresh fails multiple times consecutively (e.g., due to prolonged provider outages), Composio marks the connection as expired after a threshold of failures.
+
+In all cases, the user must [re-authenticate](/docs/subscribing-to-connection-expiry-events#re-authenticate-the-user) to restore the connection. Check the `status_reason` field on the connected account for the specific reason. You can also [subscribe to connection expiry events](/docs/subscribing-to-connection-expiry-events) to detect this proactively.
 
 ### Waiting for Connection Establishment
 

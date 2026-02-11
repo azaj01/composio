@@ -3,7 +3,6 @@
   "pages": [
     "creating-triggers",
     "subscribing-to-events",
-    "webhook-verification",
     "managing-triggers"
   ]
 }
