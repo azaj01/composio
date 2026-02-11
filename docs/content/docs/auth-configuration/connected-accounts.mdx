@@ -230,14 +230,14 @@ Instead of returning full values, the API returns the first 4 characters followe
 
 Values shorter than 4 characters are replaced with `REDACTED`.
 
-This applies to the [Get Connected Account](/rest-api/connected-accounts/get-connected-accounts-by-nanoid) and [List Connected Accounts](/rest-api/connected-accounts/get-connected-accounts) endpoints.
+This applies to the Get Connected Account and List Connected Accounts endpoints.
 
 ### Disabling masking
 
 If you need full credential values (e.g., to use tokens in your own API calls), disable masking via either:
 
 1. **Dashboard**: Go to **Settings → Project Settings → Project Configuration** and turn off "Mask Connected Account Secrets"
-2. **API**: Use the [Patch Project Config](/rest-api/projects/patch-org-project-config) endpoint:
+2. **API**:
 
 ```bash
 curl -X PATCH https://backend.composio.dev/api/v3/org/project/config \
