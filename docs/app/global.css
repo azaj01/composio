@@ -197,7 +197,7 @@ html {
 
 /* Headings */
 h1, h2, h3, h4 {
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
