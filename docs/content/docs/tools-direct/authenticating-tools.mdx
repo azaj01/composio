@@ -164,7 +164,7 @@ For complete white-labeling including OAuth consent screens (removing Composio's
 
 #### Redirecting users after authentication
 
-You can include custom query parameters in your callback URL to carry context through the auth flow, such as identifying which user or session triggered the connection. Composio preserves your parameters and appends its own after authentication completes:
+You can include custom query parameters in your callback URL to carry context through the auth flow, such as identifying which user or session triggered the connection. Composio preserves your parameters and appends its own after authentication completes.
 
 | Parameter | Description |
 |-----------|-------------|
@@ -249,7 +249,7 @@ console.log(`Connection established: ${connectedAccount.id}`);
 </Tabs>
 
 <Callout type="info">
-Your callback URL can include query parameters to carry context through the auth flow. Note that `initiate()` uses camelCase parameters (`connectedAccountId`, `appName`) in the redirect, unlike `link()` which uses snake_case (`connected_account_id`). See [Redirecting users after authentication](#redirecting-users-after-authentication) for details.
+When using callback URLs with `initiate()`, the appended query parameters use camelCase (`connectedAccountId`, `appName`) instead of snake_case. See [Redirecting users after authentication](#redirecting-users-after-authentication).
 </Callout>
 
 #### Services with Additional Parameters
