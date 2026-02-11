@@ -211,6 +211,16 @@ const config = {
         permanent: true,
       },
       {
+        source: '/triggers',
+        destination: '/docs/triggers',
+        permanent: true,
+      },
+      {
+        source: '/features/:path*',
+        destination: '/docs',
+        permanent: true,
+      },
+      {
         source: '/docs/mcp-quickstart',
         destination: '/docs/single-toolkit-mcp',
         permanent: true,
