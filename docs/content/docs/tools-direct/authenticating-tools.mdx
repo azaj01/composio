@@ -397,7 +397,7 @@ After creating a connection, it will have one of the following statuses that ind
 | **FAILED** | Connection attempt failed. Check error details and try creating a new connection. |
 
 <Callout>
-When credentials expire for OAuth connections, Composio automatically attempts to refresh them using the refresh token. The connection is only marked as **EXPIRED** after multiple refresh attempts have failed.
+When credentials expire for OAuth connections, Composio automatically attempts to refresh them using the refresh token. The connection is only marked as **EXPIRED** after multiple refresh attempts have failed. Set up [connection expiry event notifications](/docs/subscribing-to-connection-expiry-events) to detect this proactively.
 </Callout>
 
 ### Waiting for Connection Establishment

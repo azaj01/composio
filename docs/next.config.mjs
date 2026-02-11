@@ -211,6 +211,11 @@ const config = {
         permanent: true,
       },
       {
+        source: '/docs/setting-up-triggers/webhook-verification',
+        destination: '/docs/webhook-verification',
+        permanent: true,
+      },
+      {
         source: '/triggers',
         destination: '/docs/triggers',
         permanent: true,

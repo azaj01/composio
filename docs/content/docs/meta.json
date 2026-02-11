@@ -18,6 +18,8 @@
     "white-labeling-authentication",
     "managing-multiple-connected-accounts",
     "using-custom-auth-configuration",
+    "webhook-verification",
+    "subscribing-to-connection-expiry-events",
     "---Features---",
     "cli",
     "single-toolkit-mcp",
