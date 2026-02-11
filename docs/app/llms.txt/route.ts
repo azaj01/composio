@@ -1,105 +1,82 @@
 import { source, examplesSource, referenceSource, toolkitsSource } from '@/lib/source';
+import type { ReactNode } from 'react';
 
 export const revalidate = false;
 
+// Fumadocs page tree node types
+interface PageNode {
+  type: 'page';
+  name: ReactNode;
+  url: string;
+}
+
+interface SeparatorNode {
+  type: 'separator';
+  name?: ReactNode;
+}
+
+interface FolderNode {
+  type: 'folder';
+  name: ReactNode;
+  index?: PageNode;
+  children: TreeNode[];
+}
+
+type TreeNode = PageNode | SeparatorNode | FolderNode;
+
+/**
+ * Walk the fumadocs page tree and generate a markdown index.
+ * Separators become ## headings, pages become URL entries, folders recurse.
+ */
+function walkPageTree(nodes: TreeNode[], depth = 2): string {
+  const lines: string[] = [];
+
+  for (const node of nodes) {
+    switch (node.type) {
+      case 'separator':
+        if (node.name) {
+          lines.push(`${'#'.repeat(depth)} ${String(node.name)}`, '');
+        }
+        break;
+
+      case 'page':
+        lines.push(`- https://docs.composio.dev${node.url}.md`);
+        break;
+
+      case 'folder':
+        // If folder has an index page, include it
+        if (node.index) {
+          lines.push(`- https://docs.composio.dev${node.index.url}.md`);
+        }
+        // Recurse into children
+        if (node.children.length > 0) {
+          lines.push(walkPageTree(node.children, depth + 1));
+        }
+        break;
+    }
+  }
+
+  return lines.filter(Boolean).join('\n');
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatPage(page: any) {
+  return `- https://docs.composio.dev${page.url}.md`;
+}
+
 export async function GET() {
   try {
-    const docsPages = source.getPages();
+    const docsTree = walkPageTree(source.pageTree.children as TreeNode[]);
+
     const examplesPages = examplesSource.getPages();
     const referencePages = referenceSource.getPages();
     const toolkitsPages = toolkitsSource.getPages();
 
-    // Create a map for quick lookup by slug path
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pageMap = new Map<string, any>();
-    for (const page of docsPages) {
-      pageMap.set(page.slugs.join('/'), page);
-    }
-
-    // Format page as simple URL
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formatPage = (page: any) =>
-      `- https://docs.composio.dev${page.url}.md`;
-
-    // Get page by slug path, return empty string if not found
-    const getPage = (slugPath: string) => {
-      const page = pageMap.get(slugPath);
-      return page ? formatPage(page) : '';
-    };
-
-    // Get all pages in a folder
-    const getFolderPages = (folder: string) => {
-      return docsPages
-        .filter(p => p.slugs[0] === folder)
-        .map(formatPage)
-        .join('\n');
-    };
-
-    // Build the index following the exact sidebar structure from meta.json
     const index = `# Composio Documentation
 
 > Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.
 
-## Get Started
-
-${getPage('index')}
-${getPage('quickstart')}
-
-### Providers
-
-${getFolderPages('providers')}
-
-## Core Concepts
-
-${getPage('users-and-sessions')}
-${getPage('authentication')}
-${getPage('tools-and-toolkits')}
-
-## Getting Started
-
-${getPage('configuring-sessions')}
-
-### Authenticating Users
-
-${getFolderPages('authenticating-users')}
-
-### Toolkits
-
-${getFolderPages('toolkits')}
-
-## Guides
-
-${getPage('white-labeling-authentication')}
-${getPage('managing-multiple-connected-accounts')}
-${getPage('using-custom-auth-configuration')}
-
-## Features
-
-${getPage('triggers')}
-${getPage('cli')}
-${getPage('single-toolkit-mcp')}
-
-## Direct Tool Execution Guides
-
-### Tools
-
-${getFolderPages('tools-direct')}
-
-### Auth Configuration
-
-${getFolderPages('auth-configuration')}
-
-## Resources
-
-${getPage('debugging-info')}
-
-### Migration Guide
-
-${getFolderPages('migration-guide')}
-
-### Troubleshooting
-
-${getFolderPages('troubleshooting')}
+${docsTree}
 
 ## Examples
 
