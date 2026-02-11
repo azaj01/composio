@@ -1,5 +1,5 @@
 ---
-title: Subscribing to events
+title: Subscribing to triggers
 description: Receive trigger events via webhooks or SDK subscriptions
 keywords: [webhooks, subscribe, events, webhook payload, V3]
 ---
@@ -11,7 +11,7 @@ Webhooks are the recommended way to receive trigger events in production. To sta
 | Event type | Description |
 |------------|-------------|
 | `composio.trigger.message` | Fired when a trigger receives data from an external service |
-| `composio.connected_account.expired` | Fired when a connected account expires and needs re-authentication |
+| `composio.connected_account.expired` | Fired when a connected account expires and needs re-authentication. See [Subscribing to connection expiry events](/docs/subscribing-to-connection-expiry-events). |
 
 Set your webhook URL in the [dashboard settings](https://platform.composio.dev?next_page=/settings/webhook) or via the [Webhook Subscriptions API](/reference/api-reference/webhooks):
 
@@ -21,7 +21,7 @@ curl -X POST https://backend.composio.dev/api/v3/webhook_subscriptions \
   -H "Content-Type: application/json" \
   -d '{
     "webhook_url": "https://example.com/webhook",
-    "enabled_events": ["composio.trigger.message", "composio.connected_account.expired"]
+    "enabled_events": ["composio.trigger.message"]
   }'
 ```
 
@@ -50,10 +50,7 @@ async def webhook_handler(request: Request):
         if trigger_slug == "GITHUB_COMMIT_EVENT":
             print(f"New commit by {event_data['author']}: {event_data['message']}")
 
-    elif event_type == WebhookEventType.CONNECTION_EXPIRED:
-        account_id = payload["data"]["id"]
-        toolkit = payload["data"]["toolkit"]["slug"]
-        print(f"Connection {account_id} expired for {toolkit}")
+    # Handle connected account expired events
 
     return {"status": "ok"}
 ```
@@ -73,10 +70,9 @@ export default async function webhookHandler(req: NextApiRequest, res: NextApiRe
     if (triggerSlug === 'GITHUB_COMMIT_EVENT') {
       console.log(`New commit by ${eventData.author}: ${eventData.message}`);
     }
-  } else if (payload.type === 'composio.connected_account.expired') {
-    console.log(`Connection ${payload.data.id} expired for ${payload.data.toolkit.slug}`);
-    // Prompt user to re-authenticate
   }
+
+  // Handle connected account expired events
 
   res.status(200).json({ status: 'ok' });
 }
@@ -85,7 +81,7 @@ export default async function webhookHandler(req: NextApiRequest, res: NextApiRe
 </Tabs>
 
 <Callout type="warn">
-Always [verify webhook signatures](/docs/setting-up-triggers/webhook-verification) in production to ensure payloads are authentic.
+Always [verify webhook signatures](/docs/webhook-verification) in production to ensure payloads are authentic.
 </Callout>
 
 ### Inspecting trigger payload schemas
@@ -145,7 +141,7 @@ New organizations receive V3 payloads by default. V3 separates event metadata fr
 ```
 
 <Callout>
-See [webhook payload versions](/docs/setting-up-triggers/webhook-verification#webhook-payload-versions) for V2 and V1 formats.
+See [webhook payload versions](/docs/webhook-verification#webhook-payload-versions) for V2 and V1 formats.
 </Callout>
 
 ## Testing locally
