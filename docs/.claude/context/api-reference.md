@@ -24,7 +24,7 @@ We replace fumadocs-openapi's default popover-based schema rendering with Stripe
 - Returns `null` for `#/components/schemas/Error` to hide redundant error schemas
 - Passes `isResponse` flag (derived from `readOnly`/`writeOnly`) to hide "Required" labels on response fields
 - `generateTypeScriptSchema: false` disables the TypeScript Definitions copy box
-- `playground: { enabled: false }` disables the API playground (disabled because the OpenAPI spec has issues like kitchen-sink schemas that make the playground unusable)
+- `playground: { enabled: true }` enables the interactive API playground (requests are proxied through `/api/proxy`)
 
 ### `schema-generator.tsx`
 - Server component that walks OpenAPI schemas into a normalized `SchemaUIGeneratedData` structure
