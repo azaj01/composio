@@ -90,6 +90,12 @@ Every tool execution is logged in the [Composio dashboard](https://platform.comp
 See [Troubleshooting tools](/docs/troubleshooting/tools) for how to use logs to debug failed executions.
 </Accordion>
 
+<Accordion title="How do I redirect users back to my app after they connect?">
+Pass a `callbackUrl` when calling `link()`, `initiate()`, or `session.authorize()`. After authentication, Composio redirects the user to that URL with `status=success` or `status=failed` and the `connected_account_id` appended as query parameters.
+
+You can include your own query parameters in the callback URL (e.g., `?user_id=user_123&source=onboarding`) to carry context through the flow. Composio preserves them. See [sessions](/docs/authenticating-users/manually-authenticating#redirecting-users-after-authentication) or [direct tool setup](/docs/tools-direct/authenticating-tools#redirecting-users-after-authentication).
+</Accordion>
+
 <Accordion title="Can Composio be self-hosted?">
 Yes, Composio supports self-hosting on the Enterprise plan. See [pricing](https://composio.dev/pricing) for details or [talk to us](https://calendly.com/composiohq/enterprise).
 </Accordion>

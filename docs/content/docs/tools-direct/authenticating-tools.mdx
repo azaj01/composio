@@ -162,6 +162,21 @@ These settings will apply to all authentication flows using Connect Link, provid
 For complete white-labeling including OAuth consent screens (removing Composio's domain), see [Custom Auth Configs - White-labeling](/docs/auth-configuration/custom-auth-configs#white-labeling-the-oauth-consent-screen).
 </Callout>
 
+#### Redirecting users after authentication
+
+You can include custom query parameters in your callback URL to carry context through the auth flow, such as identifying which user or session triggered the connection. Composio preserves your parameters and appends its own after authentication completes.
+
+| Parameter | Description |
+|-----------|-------------|
+| `status` | `success` or `failed` |
+| `connected_account_id` | The ID of the newly created connected account |
+
+For example, if your callback URL is `https://your-app.com/callback?user_id=user_123`, the redirect after successful auth will be:
+
+```
+https://your-app.com/callback?user_id=user_123&status=success&connected_account_id=ca_abc123
+```
+
 ### Direct SDK Setup
 
 **Choose the section below that matches your toolkit's authentication method:**
@@ -232,6 +247,10 @@ console.log(`Connection established: ${connectedAccount.id}`);
 ```
   </Tab>
 </Tabs>
+
+<Callout type="info">
+When using callback URLs with `initiate()`, the appended query parameters use camelCase (`connectedAccountId`, `appName`) instead of snake_case. See [Redirecting users after authentication](#redirecting-users-after-authentication).
+</Callout>
 
 #### Services with Additional Parameters
 
