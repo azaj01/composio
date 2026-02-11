@@ -104,7 +104,9 @@ export default async function webhookHandler(req: NextApiRequest, res: NextApiRe
     // Look up the user and send them a re-auth link
     const session = await composio.create(lookupUser(accountId));
     const connectionRequest = await session.authorize(toolkit);
-    notifyUser(connectionRequest.redirectUrl);
+    if (connectionRequest.redirectUrl) {
+      notifyUser(connectionRequest.redirectUrl);
+    }
 
   } else if (payload.type === 'composio.trigger.message') {
     // Handle trigger events
