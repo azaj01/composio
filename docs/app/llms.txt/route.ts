@@ -44,11 +44,15 @@ function walkPageTree(nodes: TreeNode[], depth = 2): string {
         break;
 
       case 'folder':
+        // Emit folder name as a heading to preserve sidebar hierarchy
+        if (node.name) {
+          lines.push(`${'#'.repeat(depth)} ${String(node.name)}`, '');
+        }
         // If folder has an index page, include it
         if (node.index) {
           lines.push(`- https://docs.composio.dev${node.index.url}.md`);
         }
-        // Recurse into children
+        // Recurse into children at deeper depth for hierarchy
         if (node.children.length > 0) {
           lines.push(walkPageTree(node.children, depth + 1));
         }
