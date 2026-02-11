@@ -60,27 +60,22 @@ async def webhook_handler(request: Request):
   </Tab>
   <Tab value="TypeScript">
 ```typescript
-import { WebhookEventTypes, ConnectionExpiredEventSchema } from '@composio/core';
 type NextApiRequest = { body: any };
 type NextApiResponse = { status: (code: number) => { json: (data: any) => void } };
 // ---cut---
 export default async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
   const payload = req.body;
 
-  if (payload.type === WebhookEventTypes.TRIGGER_MESSAGE) {
+  if (payload.type === 'composio.trigger.message') {
     const triggerSlug = payload.metadata.trigger_slug;
     const eventData = payload.data;
 
     if (triggerSlug === 'GITHUB_COMMIT_EVENT') {
       console.log(`New commit by ${eventData.author}: ${eventData.message}`);
     }
-  } else if (payload.type === WebhookEventTypes.CONNECTION_EXPIRED) {
-    const result = ConnectionExpiredEventSchema.safeParse(payload);
-    if (result.success) {
-      const { data } = result.data;
-      console.log(`Connection ${data.id} expired for ${data.toolkit.slug}`);
-      // Prompt user to re-authenticate
-    }
+  } else if (payload.type === 'composio.connected_account.expired') {
+    console.log(`Connection ${payload.data.id} expired for ${payload.data.toolkit.slug}`);
+    // Prompt user to re-authenticate
   }
 
   res.status(200).json({ status: 'ok' });
