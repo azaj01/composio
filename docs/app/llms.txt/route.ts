@@ -24,6 +24,13 @@ interface FolderNode {
 
 type TreeNode = PageNode | SeparatorNode | FolderNode;
 
+/** Extract plain text from a ReactNode (handles strings, numbers, skips elements). */
+function nodeText(name: ReactNode): string | null {
+  if (typeof name === 'string') return name;
+  if (typeof name === 'number') return String(name);
+  return null;
+}
+
 /**
  * Walk the fumadocs page tree and generate a markdown index.
  * Separators become ## headings, pages become URL entries, folders recurse.
@@ -33,20 +40,23 @@ function walkPageTree(nodes: TreeNode[], depth = 2): string {
 
   for (const node of nodes) {
     switch (node.type) {
-      case 'separator':
-        if (node.name) {
-          lines.push('', `${'#'.repeat(depth)} ${String(node.name)}`, '');
+      case 'separator': {
+        const text = nodeText(node.name);
+        if (text) {
+          lines.push('', `${'#'.repeat(depth)} ${text}`, '');
         }
         break;
+      }
 
       case 'page':
         lines.push(`- https://docs.composio.dev${node.url}.md`);
         break;
 
-      case 'folder':
+      case 'folder': {
         // Folders are sub-sections within separator sections, so one level deeper
-        if (node.name) {
-          lines.push('', `${'#'.repeat(depth + 1)} ${String(node.name)}`, '');
+        const text = nodeText(node.name);
+        if (text) {
+          lines.push('', `${'#'.repeat(depth + 1)} ${text}`, '');
         }
         // If folder has an index page, include it
         if (node.index) {
@@ -57,6 +67,7 @@ function walkPageTree(nodes: TreeNode[], depth = 2): string {
           lines.push(walkPageTree(node.children, depth + 1));
         }
         break;
+      }
     }
   }
 
