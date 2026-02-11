@@ -207,7 +207,7 @@ const config = {
       },
             {
         source: '/docs/using-triggers',
-        destination: '/docs/triggers',
+        destination: '/docs/setting-up-triggers/creating-triggers',
         permanent: true,
       },
       {
