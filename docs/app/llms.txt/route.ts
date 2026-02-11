@@ -35,7 +35,7 @@ function walkPageTree(nodes: TreeNode[], depth = 2): string {
     switch (node.type) {
       case 'separator':
         if (node.name) {
-          lines.push(`${'#'.repeat(depth)} ${String(node.name)}`, '');
+          lines.push('', `${'#'.repeat(depth)} ${String(node.name)}`, '');
         }
         break;
 
@@ -46,7 +46,7 @@ function walkPageTree(nodes: TreeNode[], depth = 2): string {
       case 'folder':
         // Folders are sub-sections within separator sections, so one level deeper
         if (node.name) {
-          lines.push(`${'#'.repeat(depth + 1)} ${String(node.name)}`, '');
+          lines.push('', `${'#'.repeat(depth + 1)} ${String(node.name)}`, '');
         }
         // If folder has an index page, include it
         if (node.index) {
@@ -60,7 +60,7 @@ function walkPageTree(nodes: TreeNode[], depth = 2): string {
     }
   }
 
-  return lines.filter(Boolean).join('\n');
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
