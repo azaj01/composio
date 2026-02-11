@@ -221,8 +221,13 @@ const config = {
         permanent: true,
       },
       {
-        source: '/features/:path*',
-        destination: '/docs',
+        source: '/features/authentication',
+        destination: '/docs/authentication',
+        permanent: true,
+      },
+      {
+        source: '/features/triggers',
+        destination: '/docs/triggers',
         permanent: true,
       },
       {
