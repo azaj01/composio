@@ -41,7 +41,7 @@ However, getting OAuth approvals takes time, so Composio provides a default deve
 
 <Steps>
 <Step>
-### Generate the OAuth Client ID and Client Secret
+<StepTitle>Generate the OAuth Client ID and Client Secret</StepTitle>
 
 To set up a custom OAuth config, you'll need the OAuth Client ID and Client Secret.
 
@@ -60,7 +60,7 @@ Examples for Google and GitHub:
 </Step>
 
 <Step>
-### Set the Authorized Redirect URI
+<StepTitle>Set the Authorized Redirect URI</StepTitle>
 
 When creating your OAuth app, make sure to configure the Authorized Redirect URI to point to the Composio callback URL below:
 
@@ -70,7 +70,7 @@ https://backend.composio.dev/api/v3/toolkits/auth/callback
 </Step>
 
 <Step>
-### Create the auth config
+<StepTitle>Create the auth config</StepTitle>
 
 Once you have the OAuth credentials, you can add them to the auth config in the dashboard.
 
@@ -131,7 +131,7 @@ To remediate this:
 
 <Steps>
 <Step>
-### Set the Authorized Redirect URI
+<StepTitle>Set the Authorized Redirect URI</StepTitle>
 
 Specify the Authorized Redirect URI to your own domain in the OAuth configuration.
 For example:
@@ -141,7 +141,7 @@ https://yourdomain.com/api/composio-redirect
 </Step>
 
 <Step>
-### Create a redirect logic
+<StepTitle>Create a redirect logic</StepTitle>
 
 Create a redirect logic, either through your DNS or in your application to redirect that endpoint to `https://backend.composio.dev/api/v3/toolkits/auth/callback`
 
@@ -204,7 +204,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 </Step>
 
 <Step>
-### Create the auth config
+<StepTitle>Create the auth config</StepTitle>
 
 Specify your custom redirect URI in the auth config settings!
 

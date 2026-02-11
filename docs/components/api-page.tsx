@@ -7,7 +7,7 @@ import { CustomSchemaUI } from './custom-schema-ui';
 export const APIPage = createAPIPage(openapi, {
   client,
   generateTypeScriptSchema: false,
-  playground: { enabled: false },
+  playground: { enabled: true },
   schemaUI: {
     render: (options, ctx) => {
       // Skip rendering the shared Error schema on error responses -

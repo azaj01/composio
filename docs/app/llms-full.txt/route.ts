@@ -1,6 +1,28 @@
 import { getLLMText, source, examplesSource, referenceSource, toolkitsSource } from '@/lib/source';
+import type { ReactNode } from 'react';
 
 export const revalidate = false;
+
+// Fumadocs page tree node types
+interface PageNode {
+  type: 'page';
+  name: ReactNode;
+  url: string;
+}
+
+interface SeparatorNode {
+  type: 'separator';
+  name?: ReactNode;
+}
+
+interface FolderNode {
+  type: 'folder';
+  name: ReactNode;
+  index?: PageNode;
+  children: TreeNode[];
+}
+
+type TreeNode = PageNode | SeparatorNode | FolderNode;
 
 // Generic page type that works for all sources
 interface PageLike {
@@ -12,13 +34,55 @@ interface PageLike {
   };
 }
 
+/**
+ * Collect page URLs from the page tree in sidebar order.
+ * This ensures pages appear in the same order as the docs sidebar.
+ */
+function collectPageUrls(nodes: TreeNode[]): string[] {
+  const urls: string[] = [];
+
+  for (const node of nodes) {
+    switch (node.type) {
+      case 'page':
+        urls.push(node.url);
+        break;
+
+      case 'folder':
+        if (node.index) {
+          urls.push(node.index.url);
+        }
+        urls.push(...collectPageUrls(node.children));
+        break;
+
+      // separators don't have URLs
+    }
+  }
+
+  return urls;
+}
+
+/**
+ * Order pages according to the page tree structure from meta.json.
+ * Pages not in the tree are appended at the end.
+ */
+function orderDocPages(pages: PageLike[], treeNodes: TreeNode[]): PageLike[] {
+  const orderedUrls = collectPageUrls(treeNodes);
+  const urlOrder = new Map(orderedUrls.map((url, i) => [url, i]));
+
+  return [...pages].sort((a, b) => {
+    const orderA = urlOrder.get(a.url) ?? 999;
+    const orderB = urlOrder.get(b.url) ?? 999;
+    return orderA - orderB;
+  });
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getTextForPages(pages: PageLike[]) {
   return Promise.all(
     pages.map(async (page) => {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return await getLLMText(page as any);
+        return await getLLMText(page as any, { includeFooter: false });
       } catch {
         // Graceful fallback if getText fails
         return `# ${page.data.title} (${page.url})\n\n${page.data.description || ''}`;
@@ -27,76 +91,12 @@ async function getTextForPages(pages: PageLike[]) {
   );
 }
 
-// Order pages according to sidebar structure from meta.json
-function orderDocPages(pages: PageLike[]) {
-  // Define the order based on meta.json sidebar structure
-  const sidebarOrder = [
-    // Get Started
-    'index',
-    'quickstart',
-    // Providers folder
-    'providers/openai-agents',
-    'providers/anthropic',
-    'providers/vercel',
-    'providers/langchain',
-    'providers/mastra',
-    'providers/openai',
-    'providers/google',
-    'providers/llamaindex',
-    'providers/crewai',
-    'providers/custom-providers',
-    // Core Concepts
-    'users-and-sessions',
-    'authentication',
-    'tools-and-toolkits',
-    // Getting Started
-    'configuring-sessions',
-    'authenticating-users/in-chat-authentication',
-    'authenticating-users/manually-authenticating',
-    // Toolkits folder (from docs/toolkits)
-    'toolkits',
-    // Guides
-    'white-labeling-authentication',
-    'managing-multiple-connected-accounts',
-    'using-custom-auth-configuration',
-    // Features
-    'triggers',
-    'cli',
-    'single-toolkit-mcp',
-    // Direct Tool Execution - Tools
-    'tools-direct/fetching-tools',
-    'tools-direct/authenticating-tools',
-    'tools-direct/executing-tools',
-    'tools-direct/modify-tool-behavior',
-    'tools-direct/custom-tools',
-    'tools-direct/toolkit-versioning',
-    // Direct Tool Execution - Auth Configuration
-    'auth-configuration',
-    // Resources
-    'debugging-info',
-    'migration-guide',
-    'troubleshooting',
-  ];
-
-  // Create a map for ordering
-  const orderMap = new Map<string, number>();
-  sidebarOrder.forEach((slug, index) => {
-    orderMap.set(slug, index);
-  });
-
-  // Sort pages based on sidebar order, unmatched pages go to end
-  return [...pages].sort((a, b) => {
-    const slugA = a.slugs.join('/');
-    const slugB = b.slugs.join('/');
-    const orderA = orderMap.get(slugA) ?? 999;
-    const orderB = orderMap.get(slugB) ?? 999;
-    return orderA - orderB;
-  });
-}
-
 export async function GET() {
   try {
-    const orderedDocsPages = orderDocPages(source.getPages() as PageLike[]);
+    const orderedDocsPages = orderDocPages(
+      source.getPages() as PageLike[],
+      source.pageTree.children as TreeNode[]
+    );
 
     const [docsResults, examplesResults, referenceResults, toolkitsResults] = await Promise.all([
       getTextForPages(orderedDocsPages),

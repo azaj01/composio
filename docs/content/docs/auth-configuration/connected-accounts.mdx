@@ -110,12 +110,6 @@ if (account.state) {
   </Tab>
 </Tabs>
 
-<Callout type="warn">
-If credentials return as `REDACTED` instead of actual values, the **Mask Connected Account Secrets** setting is enabled on your account. This setting redacts all sensitive credential data (tokens, secrets, API keys) for security purposes.
-
-To view actual credentials, navigate to **Settings → Project Settings → Project Configuration** and disable "Mask Connected Account Secrets".
-</Callout>
-
 ## Refresh credentials
 
 Manually refresh credentials for a connected account:
@@ -218,6 +212,42 @@ console.log('Account deleted successfully');
 
 <Callout type="warn">
 Deletion is permanent. Users must re-authenticate to reconnect.
+</Callout>
+
+## Credential masking
+
+By default, sensitive fields in connected account responses are partially masked for security. This affects fields like `access_token`, `refresh_token`, `api_key`, `bearer_token`, `password`, and other secrets.
+
+Instead of returning full values, the API returns the first 4 characters followed by `...`:
+
+```json
+{
+  "access_token": "gho_...",
+  "refresh_token": "ghr_...",
+  "api_key": "sk-l..."
+}
+```
+
+Values shorter than 4 characters are replaced with `REDACTED`.
+
+This applies to the Get Connected Account and List Connected Accounts endpoints.
+
+### Disabling masking
+
+If you need full credential values (e.g., to use tokens in your own API calls), disable masking via either:
+
+1. **Dashboard**: Go to **Settings → Project Settings → Project Configuration** and turn off "Mask Connected Account Secrets"
+2. **API**:
+
+```bash
+curl -X PATCH https://backend.composio.dev/api/v3/org/project/config \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"mask_secret_keys_in_connected_account": false}'
+```
+
+<Callout type="warn">
+Disabling masking exposes full credentials in API responses. Only disable this if your application needs direct access to tokens and you have appropriate security measures in place.
 </Callout>
 
 ## Multiple accounts

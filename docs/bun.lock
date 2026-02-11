@@ -29,7 +29,7 @@
         "@anthropic-ai/sdk": "^0.71.2",
         "@composio/anthropic": "^0.5.5",
         "@composio/claude-agent-sdk": "^0.5.5",
-        "@composio/core": "^0.5.5",
+        "@composio/core": "^0.6.3",
         "@composio/google": "^0.5.5",
         "@composio/langchain": "^0.5.5",
         "@composio/llamaindex": "^0.5.5",
@@ -146,11 +146,11 @@
 
     "@composio/client": ["@composio/client@0.1.0-alpha.56", "", {}, "sha512-hNgChB5uhdvT4QXNzzfUuvtG6vrfanQQFY2hPyKwbeR4x6mEmIGFiZ4y2qynErdUWldAZiB/7pY/MBMg6Q9E0g=="],
 
-    "@composio/core": ["@composio/core@0.5.5", "", { "dependencies": { "@composio/client": "0.1.0-alpha.56", "@composio/json-schema-to-zod": "0.1.19", "@types/json-schema": "^7.0.15", "chalk": "^4.1.2", "openai": "^6.16.0", "pusher-js": "^8.4.0", "semver": "^7.7.2", "zod-to-json-schema": "^3.25.1" }, "peerDependencies": { "zod": "^3.25 || ^4" } }, "sha512-W5G+3yrP6MyHICwHkBvWI9EQwYxALGy/xpTW8zwgvcz1tE5sncTbOI6XZJTOMjmpCEIYgI4OjGR2WVHrn/vWHQ=="],
+    "@composio/core": ["@composio/core@0.6.3", "", { "dependencies": { "@composio/client": "0.1.0-alpha.56", "@composio/json-schema-to-zod": "0.1.20", "@types/json-schema": "^7.0.15", "chalk": "^4.1.2", "openai": "^6.16.0", "pusher-js": "^8.4.0", "semver": "^7.7.2", "zod-to-json-schema": "^3.25.1" }, "peerDependencies": { "zod": "^3.25 || ^4" } }, "sha512-PZm4LQGMaaDFHWUouMHqKPg5fNfgjM2l0zF0Vw/vfWJ34KYyo1ne6YjhGvBDmOIKPByT6Dal4/ff7AHpjedL/w=="],
 
     "@composio/google": ["@composio/google@0.5.5", "", { "peerDependencies": { "@composio/core": "0.5.5", "@google/genai": "^1.1.0" } }, "sha512-0W+WZANsVSVAkhaRxbUUpuHJ52O3BbknAEV/C38/1yZq3mmvzx/DlRjGf/tiDRaS7Pxr8WhYwGUKgeyzYR4qAw=="],
 
-    "@composio/json-schema-to-zod": ["@composio/json-schema-to-zod@0.1.19", "", { "peerDependencies": { "zod": ">=3.25.76 <4 || >=4.1 <5" } }, "sha512-OynnORVWjsqDv13EvFa4Bb+B1SzBqpkWGi6qXm4vpB3EG65o3T9FbhDCqWB3ZufnMmH1T/NYS526O0lnn2LoCQ=="],
+    "@composio/json-schema-to-zod": ["@composio/json-schema-to-zod@0.1.20", "", { "peerDependencies": { "zod": ">=3.25.76 <5" } }, "sha512-d4V34itLrUWG/VBh7ciznKcxF/T22MBLHmuEzHoX0zsBOHsUmjYz5qtDh20S2p3FE+HHvLZxpXiv8yfdd4yI+Q=="],
 
     "@composio/langchain": ["@composio/langchain@0.5.5", "", { "peerDependencies": { "@composio/core": "0.5.5", "@langchain/core": "^1.1.4" } }, "sha512-y8t7x4Z/VtAZEfSxEFrl8Uf3jIAT6NmrrcFq3AcmMlJELHF/vNOeydDsBKcc3lfQZ+PAXbjRg7pF6PC6SnPAwA=="],
 
