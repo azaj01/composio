@@ -1031,7 +1031,8 @@
                               "CALCOM_AUTH",
                               "SERVICE_ACCOUNT",
                               "SAML",
-                              "DCR_OAUTH"
+                              "DCR_OAUTH",
+                              "S2S_OAUTH2"
                             ]
                           },
                           "credentials": {
@@ -1408,7 +1409,8 @@
                               "CALCOM_AUTH",
                               "SERVICE_ACCOUNT",
                               "SAML",
-                              "DCR_OAUTH"
+                              "DCR_OAUTH",
+                              "S2S_OAUTH2"
                             ],
                             "description": "The authentication scheme used (e.g., OAuth2, API Key, etc.)"
                           },
@@ -1709,7 +1711,8 @@
                         "CALCOM_AUTH",
                         "SERVICE_ACCOUNT",
                         "SAML",
-                        "DCR_OAUTH"
+                        "DCR_OAUTH",
+                        "S2S_OAUTH2"
                       ],
                       "description": "The authentication scheme used (e.g., OAuth2, API Key, etc.)"
                     },
@@ -2538,7 +2541,8 @@
                                   "CALCOM_AUTH",
                                   "SERVICE_ACCOUNT",
                                   "SAML",
-                                  "DCR_OAUTH"
+                                  "DCR_OAUTH",
+                                  "S2S_OAUTH2"
                                 ],
                                 "description": "the authScheme is part of the connection state use it there",
                                 "deprecated": true
@@ -3453,7 +3457,8 @@
                             "CALCOM_AUTH",
                             "SERVICE_ACCOUNT",
                             "SAML",
-                            "DCR_OAUTH"
+                            "DCR_OAUTH",
+                            "S2S_OAUTH2"
                           ],
                           "description": "the authScheme is part of the connection state use it there",
                           "deprecated": true
@@ -5063,21 +5068,24 @@
                             "type": "string",
                             "nullable": true,
                             "format": "uri",
-                            "description": "URL where webhook events will be sent (can be null)",
-                            "example": "https://example.com/webhook"
+                            "description": "DEPRECATED: Use GET /api/v3/webhook_subscriptions instead. Legacy project-level webhook URL.",
+                            "example": "https://example.com/webhook",
+                            "deprecated": true
                           },
                           "event_webhook_url": {
                             "type": "string",
                             "nullable": true,
                             "format": "uri",
-                            "description": "URL where event webhook notifications will be sent (can be null)",
-                            "example": "https://example.com/events"
+                            "description": "DEPRECATED: No longer used.",
+                            "example": "https://example.com/events",
+                            "deprecated": true
                           },
                           "webhook_secret": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Secret key used to sign webhook payloads for verification",
-                            "example": "whsec_abcdef123456789"
+                            "description": "DEPRECATED: Use GET /api/v3/webhook_subscriptions instead. Legacy project-level webhook secret.",
+                            "example": "whsec_abcdef123456789",
+                            "deprecated": true
                           },
                           "triggers_enabled": {
                             "type": "boolean",
@@ -5104,7 +5112,7 @@
                               "V2",
                               "V3"
                             ],
-                            "description": "Version of the webhook configuration",
+                            "description": "Payload format version for Pusher real-time events only. For webhook configuration, use GET /api/v3/webhook_subscriptions.",
                             "example": "V2"
                           },
                           "deleted": {
@@ -5256,21 +5264,24 @@
                       "type": "string",
                       "nullable": true,
                       "format": "uri",
-                      "description": "URL where webhook events will be sent (can be null)",
-                      "example": "https://example.com/webhook"
+                      "description": "DEPRECATED: Use GET /api/v3/webhook_subscriptions instead. Legacy project-level webhook URL.",
+                      "example": "https://example.com/webhook",
+                      "deprecated": true
                     },
                     "event_webhook_url": {
                       "type": "string",
                       "nullable": true,
                       "format": "uri",
-                      "description": "URL where event webhook notifications will be sent (can be null)",
-                      "example": "https://example.com/events"
+                      "description": "DEPRECATED: No longer used.",
+                      "example": "https://example.com/events",
+                      "deprecated": true
                     },
                     "webhook_secret": {
                       "type": "string",
                       "nullable": true,
-                      "description": "Secret key used to sign webhook payloads for verification",
-                      "example": "whsec_abcdef123456789"
+                      "description": "DEPRECATED: Use GET /api/v3/webhook_subscriptions instead. Legacy project-level webhook secret.",
+                      "example": "whsec_abcdef123456789",
+                      "deprecated": true
                     },
                     "triggers_enabled": {
                       "type": "boolean",
@@ -5297,7 +5308,7 @@
                         "V2",
                         "V3"
                       ],
-                      "description": "Version of the webhook configuration",
+                      "description": "Payload format version for Pusher real-time events only. For webhook configuration, use GET /api/v3/webhook_subscriptions.",
                       "example": "V2"
                     },
                     "deleted": {
@@ -5619,6 +5630,835 @@
           },
           "500": {
             "description": "Internal server error. An unexpected error occurred while processing the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/webhook_subscriptions": {
+      "post": {
+        "summary": "Create webhook subscription",
+        "description": "Creates a webhook subscription for the authenticated project. Only one subscription is allowed per project. The signing secret is returned only on creation.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "postWebhookSubscriptions",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "webhook_url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "format": "uri",
+                    "description": "HTTPS URL to receive webhook events"
+                  },
+                  "enabled_events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "description": "Array of event types to subscribe to"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "V1",
+                      "V2",
+                      "V3"
+                    ],
+                    "default": "V3",
+                    "description": "Webhook payload version"
+                  }
+                },
+                "required": [
+                  "webhook_url",
+                  "enabled_events"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook subscription created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "webhookSubscriptionId",
+                      "description": "Unique subscription ID"
+                    },
+                    "webhook_url": {
+                      "type": "string",
+                      "description": "Webhook destination URL"
+                    },
+                    "version": {
+                      "type": "string",
+                      "enum": [
+                        "V1",
+                        "V2",
+                        "V3"
+                      ],
+                      "description": "Webhook payload version"
+                    },
+                    "enabled_events": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Subscribed event types"
+                    },
+                    "secret": {
+                      "type": "string",
+                      "description": "Signing secret for HMAC verification"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "webhook_url",
+                    "version",
+                    "enabled_events",
+                    "secret",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Subscription already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List webhook subscriptions",
+        "description": "Lists all webhook subscriptions for the authenticated project with pagination. Currently limited to one subscription per project.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "getWebhookSubscriptions",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true
+            },
+            "required": false,
+            "description": "Number of items per page, max allowed is 1000",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Cursor for pagination. The cursor is a base64 encoded string of the page and limit. The page is the page number and the limit is the number of items per page. The cursor is used to paginate through the items. The cursor is not required for the first page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook subscriptions retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "webhookSubscriptionId",
+                            "description": "Unique subscription ID"
+                          },
+                          "webhook_url": {
+                            "type": "string",
+                            "description": "Webhook destination URL"
+                          },
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "V1",
+                              "V2",
+                              "V3"
+                            ],
+                            "description": "Webhook payload version"
+                          },
+                          "enabled_events": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Subscribed event types"
+                          },
+                          "secret": {
+                            "type": "string",
+                            "description": "Masked signing secret (full secret only on create/rotate)"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "description": "ISO 8601 timestamp"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "description": "ISO 8601 timestamp"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "webhook_url",
+                          "version",
+                          "enabled_events",
+                          "secret",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "total_pages": {
+                      "type": "number"
+                    },
+                    "current_page": {
+                      "type": "number"
+                    },
+                    "total_items": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total_pages",
+                    "current_page",
+                    "total_items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/webhook_subscriptions/{id}": {
+      "get": {
+        "summary": "Get webhook subscription",
+        "description": "Retrieves a webhook subscription by ID.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "getWebhookSubscriptionsById",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "webhookSubscriptionId",
+              "description": "Webhook subscription ID"
+            },
+            "required": true,
+            "description": "Webhook subscription ID",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook subscription retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "webhookSubscriptionId",
+                      "description": "Unique subscription ID"
+                    },
+                    "webhook_url": {
+                      "type": "string",
+                      "description": "Webhook destination URL"
+                    },
+                    "version": {
+                      "type": "string",
+                      "enum": [
+                        "V1",
+                        "V2",
+                        "V3"
+                      ],
+                      "description": "Webhook payload version"
+                    },
+                    "enabled_events": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Subscribed event types"
+                    },
+                    "secret": {
+                      "type": "string",
+                      "description": "Masked signing secret (full secret only on create/rotate)"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "webhook_url",
+                    "version",
+                    "enabled_events",
+                    "secret",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update webhook subscription",
+        "description": "Updates a webhook subscription. At least one field must be provided.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "patchWebhookSubscriptionsById",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "webhookSubscriptionId",
+              "description": "Webhook subscription ID"
+            },
+            "required": true,
+            "description": "Webhook subscription ID",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "webhook_url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "format": "uri",
+                    "description": "HTTPS URL to receive webhook events"
+                  },
+                  "enabled_events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "description": "Array of event types to subscribe to"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "V1",
+                      "V2",
+                      "V3"
+                    ],
+                    "description": "Webhook payload version"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook subscription updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "webhookSubscriptionId",
+                      "description": "Unique subscription ID"
+                    },
+                    "webhook_url": {
+                      "type": "string",
+                      "description": "Webhook destination URL"
+                    },
+                    "version": {
+                      "type": "string",
+                      "enum": [
+                        "V1",
+                        "V2",
+                        "V3"
+                      ],
+                      "description": "Webhook payload version"
+                    },
+                    "enabled_events": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Subscribed event types"
+                    },
+                    "secret": {
+                      "type": "string",
+                      "description": "Masked signing secret (full secret only on create/rotate)"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "webhook_url",
+                    "version",
+                    "enabled_events",
+                    "secret",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete webhook subscription",
+        "description": "Permanently deletes a webhook subscription. This action cannot be undone.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "deleteWebhookSubscriptionsById",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "webhookSubscriptionId",
+              "description": "Webhook subscription ID"
+            },
+            "required": true,
+            "description": "Webhook subscription ID",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook subscription deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/webhook_subscriptions/{id}/rotate_secret": {
+      "post": {
+        "summary": "Rotate webhook secret",
+        "description": "Generates a new signing secret for the webhook subscription. The new secret is returned only in this response.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "postWebhookSubscriptionsByIdRotateSecret",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "webhookSubscriptionId",
+              "description": "Webhook subscription ID"
+            },
+            "required": true,
+            "description": "Webhook subscription ID",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook secret rotated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "webhookSubscriptionId",
+                      "description": "Subscription ID"
+                    },
+                    "secret": {
+                      "type": "string",
+                      "description": "New signing secret"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "secret"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/webhook_subscriptions/event_types": {
+      "get": {
+        "summary": "List available event types",
+        "description": "Returns all event types that can be subscribed to, along with their supported webhook versions.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "getWebhookSubscriptionsEventTypes",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event types retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event_type": {
+                            "type": "string",
+                            "description": "Event type identifier"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Human-readable description of the event"
+                          },
+                          "supported_versions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "V1",
+                                "V2",
+                                "V3"
+                              ]
+                            },
+                            "description": "Webhook versions that support this event"
+                          }
+                        },
+                        "required": [
+                          "event_type",
+                          "description",
+                          "supported_versions"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {

@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect, type ReactElement } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
-// Static import ensures CSS is available before any zoom interaction
+import Zoom from 'react-medium-image-zoom';
 import 'react-medium-image-zoom/dist/styles.css';
+import { cn } from '@/lib/utils';
 
 type FigureSize = 'sm' | 'md' | 'lg' | 'full';
 
 interface FigureProps {
   src: string;
+  /** Dark-mode variant of the image. Shown when the site theme is dark. */
+  srcDark?: string;
   alt: string;
   caption?: string;
   size?: FigureSize;
@@ -43,28 +45,7 @@ const sizesAttr: Record<FigureSize, string> = {
   full: '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, min(900px, 70vw)',
 };
 
-// Client-side zoom wrapper that renders children immediately (for SSR)
-// and wraps with zoom functionality after hydration
-function ClientZoom({ children, zoomSrc }: { children: ReactElement; zoomSrc: string }) {
-  const [Zoom, setZoom] = useState<React.ComponentType<{ children: ReactElement; zoomImg: { src: string } }> | null>(null);
-
-  useEffect(() => {
-    // Dynamically load zoom component on client (CSS is statically imported)
-    import('react-medium-image-zoom').then((mod) => {
-      setZoom(() => mod.default);
-    });
-  }, []);
-
-  // SSR and initial client render: just the image
-  // After zoom loads: wrap with zoom functionality
-  if (!Zoom) {
-    return children;
-  }
-
-  return <Zoom zoomImg={{ src: zoomSrc }}>{children}</Zoom>;
-}
-
-export function Figure({ src, alt, caption, size = 'full', className, width, height, priority = false }: FigureProps) {
+export function Figure({ src, srcDark, alt, caption, size = 'full', className, width, height, priority = false }: FigureProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const isConstrained = size !== 'full';
   const dimensions = defaultDimensions[size];
@@ -72,28 +53,53 @@ export function Figure({ src, alt, caption, size = 'full', className, width, hei
   // Show image on load or error (so broken images are visible for debugging)
   const handleReady = () => setIsLoaded(true);
 
-  const image = (
-    <Image
-      src={src}
-      alt={alt}
-      width={width || dimensions.width}
-      height={height || dimensions.height}
-      sizes={sizesAttr[size]}
-      priority={priority}
-      onLoad={handleReady}
-      onError={handleReady}
-      className={cn(
-        'rounded-lg border border-fd-border transition-opacity duration-300',
-        isLoaded ? 'opacity-100' : 'opacity-0',
-        sizeClasses[size],
-        isConstrained ? 'w-auto h-auto' : 'w-full h-auto'
-      )}
-    />
+  const imgClasses = cn(
+    'rounded-lg border border-fd-border transition-opacity duration-300',
+    isLoaded ? 'opacity-100' : 'opacity-0',
+    sizeClasses[size],
+    isConstrained ? 'w-auto h-auto' : 'w-full h-auto'
   );
+
+  const sharedProps = {
+    alt,
+    width: width || dimensions.width,
+    height: height || dimensions.height,
+    sizes: sizesAttr[size],
+    priority,
+    onError: handleReady,
+  };
 
   return (
     <figure className={cn('my-8', isConstrained && 'flex flex-col items-center', className)}>
-      <ClientZoom zoomSrc={src}>{image}</ClientZoom>
+      {srcDark ? (
+        <>
+          <Zoom zoomImg={{ src }}>
+            <Image
+              src={src}
+              {...sharedProps}
+              onLoad={handleReady}
+              className={cn(imgClasses, 'dark:hidden')}
+            />
+          </Zoom>
+          <Zoom zoomImg={{ src: srcDark }}>
+            <Image
+              src={srcDark}
+              {...sharedProps}
+              onLoad={handleReady}
+              className={cn(imgClasses, 'hidden dark:block')}
+            />
+          </Zoom>
+        </>
+      ) : (
+        <Zoom zoomImg={{ src }}>
+          <Image
+            src={src}
+            {...sharedProps}
+            onLoad={handleReady}
+            className={imgClasses}
+          />
+        </Zoom>
+      )}
       {caption && (
         <figcaption className="mt-3 text-sm text-fd-muted-foreground text-center">
           {caption}

@@ -10,7 +10,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 2,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -102,7 +102,7 @@
     ],
     "toolCount": 823,
     "triggerCount": 6,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -165,7 +165,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 7,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -229,7 +229,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 5,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -315,7 +315,7 @@
     ],
     "toolCount": 36,
     "triggerCount": 2,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -378,7 +378,7 @@
     ],
     "toolCount": 133,
     "triggerCount": 9,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -450,7 +450,7 @@
     ],
     "toolCount": 79,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -553,7 +553,7 @@
     ],
     "toolCount": 43,
     "triggerCount": 5,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -654,7 +654,7 @@
     ],
     "toolCount": 72,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -725,7 +725,7 @@
     ],
     "toolCount": 51,
     "triggerCount": 7,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -788,7 +788,7 @@
     ],
     "toolCount": 32,
     "triggerCount": 4,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -852,7 +852,7 @@
     ],
     "toolCount": 304,
     "triggerCount": 2,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -947,7 +947,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 3,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1188,7 +1188,7 @@
     ],
     "toolCount": 46,
     "triggerCount": 3,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1308,7 +1308,7 @@
     ],
     "toolCount": 7,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -1455,7 +1455,7 @@
     ],
     "toolCount": 133,
     "triggerCount": 9,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1527,7 +1527,7 @@
     ],
     "toolCount": 87,
     "triggerCount": 6,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1819,7 +1819,7 @@
     ],
     "toolCount": 49,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -1921,7 +1921,7 @@
     ],
     "toolCount": 13,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -1950,7 +1950,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2014,7 +2014,7 @@
     ],
     "toolCount": 141,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2117,7 +2117,7 @@
     ],
     "toolCount": 38,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2227,7 +2227,7 @@
     ],
     "toolCount": 176,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2414,7 +2414,7 @@
     ],
     "toolCount": 61,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -2452,7 +2452,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2515,7 +2515,7 @@
     ],
     "toolCount": 84,
     "triggerCount": 1,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2578,7 +2578,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -2617,7 +2617,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2870,7 +2870,7 @@
     ],
     "toolCount": 35,
     "triggerCount": 9,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -2933,7 +2933,7 @@
     ],
     "toolCount": 342,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3004,7 +3004,7 @@
     ],
     "toolCount": 164,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3083,7 +3083,7 @@
     ],
     "toolCount": 97,
     "triggerCount": 7,
-    "version": "20260203_01",
+    "version": "20260204_01",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3163,7 +3163,7 @@
     ],
     "toolCount": 42,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3226,7 +3226,7 @@
     ],
     "toolCount": 345,
     "triggerCount": 5,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH1",
@@ -3365,7 +3365,7 @@
     ],
     "toolCount": 43,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3403,7 +3403,7 @@
     ],
     "toolCount": 69,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3470,7 +3470,7 @@
     ],
     "toolCount": 358,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -3518,7 +3518,7 @@
     ],
     "toolCount": 144,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3779,7 +3779,7 @@
     ],
     "toolCount": 231,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -3903,7 +3903,7 @@
     ],
     "toolCount": 271,
     "triggerCount": 4,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4038,7 +4038,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4101,7 +4101,7 @@
     ],
     "toolCount": 1,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -4130,7 +4130,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4180,7 +4180,7 @@
                 "name": "region",
                 "displayName": "Region",
                 "type": "string",
-                "description": "The Zoho domain region (e.g., com, eu, in, cn, au).",
+                "description": "The Zoho domain region (e.g., com, eu, in, au, jp, ca, cn, sa).",
                 "required": true,
                 "default": "com"
               }
@@ -4240,7 +4240,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4303,7 +4303,7 @@
     ],
     "toolCount": 122,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4341,7 +4341,7 @@
     ],
     "toolCount": 57,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4460,7 +4460,7 @@
     ],
     "toolCount": 153,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -4571,7 +4571,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -4626,7 +4626,7 @@
     ],
     "toolCount": 101,
     "triggerCount": 4,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4664,7 +4664,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4702,7 +4702,7 @@
     ],
     "toolCount": 40,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4778,7 +4778,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4832,7 +4832,7 @@
     ],
     "toolCount": 35,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -4871,7 +4871,7 @@
     ],
     "toolCount": 99,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "BASIC_WITH_JWT",
@@ -5111,7 +5111,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5174,7 +5174,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5212,7 +5212,7 @@
     ],
     "toolCount": 375,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5250,7 +5250,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5297,7 +5297,7 @@
     ],
     "toolCount": 275,
     "triggerCount": 3,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5401,7 +5401,7 @@
     ],
     "toolCount": 159,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -5479,7 +5479,7 @@
                 "default": null
               },
               {
-                "name": "basic_encoded",
+                "name": "generic_api_key",
                 "displayName": "API Key",
                 "type": "string",
                 "description": "Your BambooHR API key",
@@ -5940,7 +5940,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -5979,7 +5979,7 @@
     ],
     "toolCount": 223,
     "triggerCount": 20,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -6170,7 +6170,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6208,7 +6208,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6246,7 +6246,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6322,7 +6322,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -6385,7 +6385,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "BEARER_TOKEN",
@@ -6423,7 +6423,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "NO_AUTH",
@@ -6452,7 +6452,7 @@
     ],
     "toolCount": 10,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -6490,7 +6490,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -6625,7 +6625,7 @@
     ],
     "toolCount": 353,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -7275,7 +7275,7 @@
     ],
     "toolCount": 38,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -7740,7 +7740,7 @@
     ],
     "toolCount": 29,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -7907,7 +7907,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -7957,7 +7957,7 @@
                 "name": "suffix.one",
                 "displayName": "Domain Extension",
                 "type": "string",
-                "description": "The Zoho domain extension (com, eu, in, com.au, jp, ca, com.cn, sa).",
+                "description": "The Zoho domain extension (com, eu, in, au, jp, ca, cn, sa).",
                 "required": true,
                 "default": "com"
               }
@@ -7979,7 +7979,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8216,7 +8216,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -8355,7 +8355,7 @@
     ],
     "toolCount": 32,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8456,7 +8456,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -8724,7 +8724,7 @@
     ],
     "toolCount": 273,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -8834,7 +8834,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -9408,7 +9408,7 @@
     ],
     "toolCount": 11,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -9530,7 +9530,7 @@
     ],
     "toolCount": 45,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -9610,7 +9610,7 @@
     ],
     "toolCount": 314,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -9683,7 +9683,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -10053,7 +10053,7 @@
     ],
     "toolCount": 4,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -10116,7 +10116,7 @@
     ],
     "toolCount": 31,
     "triggerCount": 1,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -10458,7 +10458,7 @@
     ],
     "toolCount": 192,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -11138,7 +11138,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11176,7 +11176,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11316,7 +11316,7 @@
     ],
     "toolCount": 53,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -11465,7 +11465,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -11797,7 +11797,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -11969,7 +11969,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12216,7 +12216,7 @@
     ],
     "toolCount": 51,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12614,7 +12614,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -12664,7 +12664,7 @@
                 "name": "suffix.one",
                 "displayName": "Domain Extension",
                 "type": "string",
-                "description": "The Zoho domain extension (com, eu, in, com.au, jp, ca, com.cn, sa).",
+                "description": "The Zoho domain extension (com, eu, in, au, jp, ca, cn, sa).",
                 "required": true,
                 "default": "com"
               }
@@ -13409,7 +13409,7 @@
     ],
     "toolCount": 39,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -13493,7 +13493,7 @@
     ],
     "toolCount": 3,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14066,7 +14066,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -14592,7 +14592,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15584,7 +15584,7 @@
     ],
     "toolCount": 17,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -15753,7 +15753,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -17800,7 +17800,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -18089,7 +18089,7 @@
     ],
     "toolCount": 34,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18791,7 +18791,7 @@
     ],
     "toolCount": 3,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -18830,6 +18830,44 @@
                 "default": "master"
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "slug": "context7_mcp",
+    "name": "Context7 MCP",
+    "logo": "https://logos.composio.dev/api/context7_mcp",
+    "description": "Context7 MCP pulls up-to-date, version-specific documentation and code examples straight from the source — and places them directly into your prompt",
+    "category": "developer tools & devops",
+    "authSchemes": [
+      "API_KEY"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "API_KEY",
+        "name": "context7_api_key",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": []
+          },
+          "connected_account_initiation": {
+            "required": [
+              {
+                "name": "generic_api_key",
+                "displayName": "API Key",
+                "type": "string",
+                "description": "Your Context7 API Key",
+                "required": true,
+                "default": null
+              }
+            ],
+            "optional": []
           }
         }
       }
@@ -19074,7 +19112,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -19112,7 +19150,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -20301,7 +20339,7 @@
     ],
     "toolCount": 26,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -20377,7 +20415,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -22221,7 +22259,7 @@
     ],
     "toolCount": 28,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -22435,7 +22473,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23493,7 +23531,7 @@
     ],
     "toolCount": 20,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23555,7 +23593,7 @@
     ],
     "toolCount": 31,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23593,7 +23631,7 @@
     ],
     "toolCount": 24,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -23807,7 +23845,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260204_01",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24300,7 +24338,7 @@
     ],
     "toolCount": 22,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24577,7 +24615,7 @@
     ],
     "toolCount": 29,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -24813,7 +24851,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -25040,7 +25078,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 1,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -25185,6 +25223,68 @@
     ]
   },
   {
+    "slug": "granola_mcp",
+    "name": "Granola MCP",
+    "logo": "https://logos.composio.dev/api/granola_mcp",
+    "description": "Granola is a meeting notes app that captures transcripts and helps teams search and share conversations. It helps turn meeting context into action items and follow-ups.",
+    "category": "productivity & project management",
+    "authSchemes": [
+      "DCR_OAUTH"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "DCR_OAUTH",
+        "name": "granola_mcp_DCR_OAuth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": "email,offline_access,openid,profile"
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "graphhopper",
     "name": "Graphhopper",
     "logo": "https://www.graphhopper.com/images/graphhopper_logo.svg",
@@ -25195,7 +25295,7 @@
     ],
     "toolCount": 8,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25393,7 +25493,7 @@
     ],
     "toolCount": 47,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25919,7 +26019,7 @@
     ],
     "toolCount": 39,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -25957,7 +26057,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -26735,7 +26835,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -27300,7 +27400,7 @@
     ],
     "toolCount": 27,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -28129,7 +28229,7 @@
     ],
     "toolCount": 30,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29312,7 +29412,7 @@
     ],
     "toolCount": 266,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -29622,6 +29722,68 @@
     ]
   },
   {
+    "slug": "monday_mcp",
+    "name": "Monday MCP",
+    "logo": "https://logos.composio.dev/api/monday_mcp",
+    "description": "monday.com is a work management platform for organizing projects, workflows, and customer processes in boards, docs, and dashboards. It helps teams plan work, track progress, and collaborate across functions.",
+    "category": "productivity & project management",
+    "authSchemes": [
+      "DCR_OAUTH"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "DCR_OAUTH",
+        "name": "monday_mcp_DCR_OAuth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": ""
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "moneybird",
     "name": "Moneybird",
     "logo": "https://logos.composio.dev/api/moneybird",
@@ -29633,7 +29795,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -29841,7 +30003,7 @@
     ],
     "toolCount": 33,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "BASIC",
@@ -30766,7 +30928,7 @@
     ],
     "toolCount": 14,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -31318,7 +31480,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -32135,7 +32297,7 @@
     ],
     "toolCount": 23,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -32257,7 +32419,7 @@
     ],
     "toolCount": 6,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -32371,7 +32533,7 @@
     ],
     "toolCount": 22,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -32930,7 +33092,7 @@
     ],
     "toolCount": 4,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -33679,7 +33841,7 @@
     ],
     "toolCount": 5,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34037,7 +34199,7 @@
     ],
     "toolCount": 18,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -34151,7 +34313,7 @@
     ],
     "toolCount": 15,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -35668,7 +35830,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -36346,7 +36508,7 @@
     ],
     "toolCount": 32,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -36655,7 +36817,7 @@
     ],
     "toolCount": 109,
     "triggerCount": 3,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -36718,7 +36880,7 @@
     ],
     "toolCount": 2,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "API_KEY",
@@ -37030,7 +37192,7 @@
     ],
     "toolCount": 0,
     "triggerCount": 0,
-    "version": "20260203_01",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -37490,7 +37652,7 @@
     ],
     "toolCount": 16,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -38173,7 +38335,7 @@
     ],
     "toolCount": 9,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -39873,6 +40035,68 @@
     ]
   },
   {
+    "slug": "wix_mcp",
+    "name": "Wix MCP",
+    "logo": "https://logos.composio.dev/api/wix_mcp",
+    "description": "Wix is a cloud-based website building platform for creating and managing sites, content, and online business experiences. It supports business features like eCommerce, bookings, blog, and CMS-driven content.",
+    "category": "e-commerce",
+    "authSchemes": [
+      "DCR_OAUTH"
+    ],
+    "toolCount": 0,
+    "triggerCount": 0,
+    "version": "20260206_00",
+    "authConfigDetails": [
+      {
+        "mode": "DCR_OAUTH",
+        "name": "wix_mcp_DCR_OAuth",
+        "fields": {
+          "auth_config_creation": {
+            "required": [],
+            "optional": [
+              {
+                "name": "client_id",
+                "displayName": "Client id",
+                "type": "string",
+                "description": "Client id of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "client_secret",
+                "displayName": "Client secret",
+                "type": "string",
+                "description": "Client secret of the app",
+                "required": false,
+                "default": null
+              },
+              {
+                "name": "oauth_redirect_uri",
+                "displayName": "Redirect URI",
+                "type": "string",
+                "description": "Add this Redirect URL to your app's OAuth allow list.",
+                "required": false,
+                "default": "https://backend.composio.dev/api/v1/auth-apps/add"
+              },
+              {
+                "name": "scopes",
+                "displayName": "Scopes",
+                "type": "string",
+                "description": "Scopes to request from the user, comma separated",
+                "required": false,
+                "default": ""
+              }
+            ]
+          },
+          "connected_account_initiation": {
+            "required": [],
+            "optional": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "slug": "wolfram_alpha_api",
     "name": "Wolfram Alpha Api",
     "logo": "https://logos.composio.dev/api/wolfram_alpha_api",
@@ -39960,7 +40184,7 @@
     ],
     "toolCount": 21,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260204_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",
@@ -40063,7 +40287,7 @@
     ],
     "toolCount": 25,
     "triggerCount": 0,
-    "version": "20260203_00",
+    "version": "20260209_00",
     "authConfigDetails": [
       {
         "mode": "OAUTH2",

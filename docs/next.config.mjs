@@ -207,6 +207,26 @@ const config = {
       },
             {
         source: '/docs/using-triggers',
+        destination: '/docs/setting-up-triggers/creating-triggers',
+        permanent: true,
+      },
+      {
+        source: '/triggers',
+        destination: '/docs/triggers',
+        permanent: true,
+      },
+      {
+        source: '/docs/how-tools-work',
+        destination: '/docs/tools-and-toolkits',
+        permanent: true,
+      },
+      {
+        source: '/features/authentication',
+        destination: '/docs/authentication',
+        permanent: true,
+      },
+      {
+        source: '/features/triggers',
         destination: '/docs/triggers',
         permanent: true,
       },
@@ -527,6 +547,315 @@ const config = {
       {
         source: '/examples/combined/:path*',
         destination: '/examples',
+        permanent: true,
+      },
+      // Old /docs/frameworks/* paths (now /docs/providers/*)
+      // e.g. /docs/frameworks/claude-code → /docs/providers/anthropic
+      {
+        source: '/docs/frameworks/claude-code',
+        destination: '/docs/providers/anthropic',
+        permanent: true,
+      },
+      {
+        source: '/docs/frameworks/claude',
+        destination: '/docs/providers/anthropic',
+        permanent: true,
+      },
+      {
+        source: '/docs/frameworks/:path*',
+        destination: '/docs/providers',
+        permanent: true,
+      },
+      {
+        source: '/frameworks/:path*',
+        destination: '/docs/providers',
+        permanent: true,
+      },
+      // Old /apps/* paths (now /toolkits/*)
+      {
+        source: '/apps',
+        destination: '/toolkits',
+        permanent: true,
+      },
+      {
+        source: '/apps/usecases/:path*',
+        destination: '/examples',
+        permanent: true,
+      },
+      {
+        source: '/apps/:path*',
+        destination: '/toolkits/:path*',
+        permanent: true,
+      },
+      // Tool router pages that still 404
+      {
+        source: '/tool-router/using-as-a-native-tool',
+        destination: '/docs/quickstart',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/using-with-mcp-clients',
+        destination: '/docs/quickstart',
+        permanent: true,
+      },
+      {
+        source: '/tool-router/:path*',
+        destination: '/docs/quickstart',
+        permanent: true,
+      },
+      // Docs pages that moved (confirmed real 404s from Datadog)
+      {
+        source: '/docs/authenticating-users',
+        destination: '/docs/tools-direct/authenticating-tools',
+        permanent: true,
+      },
+      {
+        source: '/docs/introduction/intro',
+        destination: '/docs',
+        permanent: true,
+      },
+      {
+        source: '/docs/introduction/:path*',
+        destination: '/docs',
+        permanent: true,
+      },
+      {
+        source: '/docs/tools/modify/:path*',
+        destination: '/docs/tools-direct/modify-tool-behavior',
+        permanent: true,
+      },
+      {
+        source: '/docs/troubleshooting/overview',
+        destination: '/docs/troubleshooting',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp-overview',
+        destination: '/docs/single-toolkit-mcp',
+        permanent: true,
+      },
+      {
+        source: '/docs/what-is-mcp',
+        destination: '/docs/single-toolkit-mcp',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp-authentication',
+        destination: '/docs/authentication',
+        permanent: true,
+      },
+      {
+        source: '/docs/mcp-partner-api',
+        destination: '/docs/single-toolkit-mcp',
+        permanent: true,
+      },
+      {
+        source: '/docs/migration-guide/overview',
+        destination: '/docs/migration-guide',
+        permanent: true,
+      },
+      {
+        source: '/docs/modifiers/:path*',
+        destination: '/docs/tools-direct/modify-tool-behavior',
+        permanent: true,
+      },
+      {
+        source: '/docs/toolkit-versions',
+        destination: '/docs/tools-direct/toolkit-versioning',
+        permanent: true,
+      },
+      {
+        source: '/docs/guides/managing-multiple-connected-accounts',
+        destination: '/docs/managing-multiple-connected-accounts',
+        permanent: true,
+      },
+      {
+        source: '/docs/guides/white-labeling-authentication',
+        destination: '/docs/white-labeling-authentication',
+        permanent: true,
+      },
+      {
+        source: '/docs/guides/using-custom-auth-configuration',
+        destination: '/docs/using-custom-auth-configuration',
+        permanent: true,
+      },
+      {
+        source: '/docs/google-sheets',
+        destination: '/toolkits/googlesheets',
+        permanent: true,
+      },
+      {
+        source: '/docs/asana',
+        destination: '/toolkits/asana',
+        permanent: true,
+      },
+      {
+        source: '/docs/ai-sdk/:path*',
+        destination: '/docs/providers/vercel',
+        permanent: true,
+      },
+      {
+        source: '/docs/tool-router/quick-start-deprecated',
+        destination: '/docs/quickstart',
+        permanent: true,
+      },
+      // Old concept/auth paths (v1 docs)
+      {
+        source: '/concepts/:path*',
+        destination: '/docs',
+        permanent: true,
+      },
+      {
+        source: '/auth/:path*',
+        destination: '/docs/authentication',
+        permanent: true,
+      },
+      {
+        source: '/cryptokit/:path*',
+        destination: '/examples',
+        permanent: true,
+      },
+      {
+        source: '/browser-automation/:path*',
+        destination: '/toolkits/browserless',
+        permanent: true,
+      },
+      {
+        source: '/model-providers/:path*',
+        destination: '/docs/providers',
+        permanent: true,
+      },
+      {
+        source: '/providers',
+        destination: '/docs/providers',
+        permanent: true,
+      },
+      // Old API reference paths that still 404
+      {
+        source: '/reference/api-reference/apps/:operationId',
+        destination: '/reference/api-reference/apps',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/connections/:operationId',
+        destination: '/reference/api-reference/connections',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/api-keys/:operationId',
+        destination: '/reference/api-reference/api-keys',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/integrations/:operationId',
+        destination: '/reference/api-reference/integrations',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/projects/:operationId',
+        destination: '/reference/api-reference/projects',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/team/:operationId',
+        destination: '/reference/api-reference/team',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/logs/:operationId',
+        destination: '/reference/api-reference/logs',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/actions/:operationId',
+        destination: '/reference/api-reference/actions',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/files/:operationId',
+        destination: '/reference/api-reference/files',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/client/:operationId',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/client-auth/:operationId',
+        destination: '/reference/api-reference/authentication',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/auth/:operationId',
+        destination: '/reference/api-reference/authentication',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/health/:operationId',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/analytics/:operationId',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/action-v-2-logs/:operationId',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      // Old versioned API paths (v1, v-1, v3, v-3)
+      {
+        source: '/reference/api-reference/v1/:path*',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/v-1/:path*',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/v3/:path*',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/api-reference/connectedaccounts/:path*',
+        destination: '/reference/api-reference/connected-accounts',
+        permanent: true,
+      },
+      // Old reference section paths
+      {
+        source: '/reference/introduction',
+        destination: '/reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/triggers',
+        destination: '/reference/api-reference/triggers',
+        permanent: true,
+      },
+      {
+        source: '/reference/connected-accounts/:path*',
+        destination: '/reference/api-reference/connected-accounts',
+        permanent: true,
+      },
+      {
+        source: '/reference/auth-configs/:path*',
+        destination: '/reference/api-reference/auth-configs',
+        permanent: true,
+      },
+      {
+        source: '/reference/app-connector/:path*',
+        destination: '/reference/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/reference/v-1/:path*',
+        destination: '/reference/api-reference',
         permanent: true,
       },
     ];
