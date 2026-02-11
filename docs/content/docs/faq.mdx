@@ -1,0 +1,17 @@
+---
+title: FAQ
+description: Frequently asked questions about Composio
+keywords: [faq, questions, help, common questions]
+---
+
+<Accordions>
+
+<Accordion title="Why are my connected account secrets showing `abcd...` or `REDACTED`?">
+Connected account secrets are masked by default for security. The API returns the first 4 characters followed by `...` (e.g., `gho_...`). Values shorter than 4 characters show as `REDACTED`.
+
+To disable masking, go to **Settings → Project Settings → Project Configuration** and turn off "Mask Connected Account Secrets", or use the [Patch Project Config](/rest-api/projects/patch-org-project-config) API.
+
+See [Credential masking](/docs/auth-configuration/connected-accounts#credential-masking) for full details.
+</Accordion>
+
+</Accordions>
