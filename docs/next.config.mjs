@@ -211,6 +211,26 @@ const config = {
         permanent: true,
       },
       {
+        source: '/triggers',
+        destination: '/docs/triggers',
+        permanent: true,
+      },
+      {
+        source: '/docs/how-tools-work',
+        destination: '/docs/tools-and-toolkits',
+        permanent: true,
+      },
+      {
+        source: '/features/authentication',
+        destination: '/docs/authentication',
+        permanent: true,
+      },
+      {
+        source: '/features/triggers',
+        destination: '/docs/triggers',
+        permanent: true,
+      },
+      {
         source: '/docs/mcp-quickstart',
         destination: '/docs/single-toolkit-mcp',
         permanent: true,
