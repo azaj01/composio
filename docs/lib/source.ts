@@ -306,7 +306,8 @@ function stripTwoslashFromCodeBlocks(content: string): string {
   });
 }
 
-export async function getLLMText(page: InferPageType<typeof source>) {
+export async function getLLMText(page: InferPageType<typeof source>, options?: { includeFooter?: boolean }) {
+  const includeFooter = options?.includeFooter ?? true;
   // Fall back to description if getText is not available
   if (typeof page.data.getText !== 'function') {
     return `# ${page.data.title} (${page.url})
@@ -337,13 +338,13 @@ ${page.data.description || ''}`;
 
   const cleanContent = mdxToCleanMarkdown(content);
 
+  const footer = includeFooter
+    ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Examples](https://docs.composio.dev/llms.mdx/examples) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
+    : '';
+
   return `# ${page.data.title} (${page.url})
 
-${cleanContent}
-
----
-
-📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Examples](https://docs.composio.dev/llms.mdx/examples) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`;
+${cleanContent}${footer}`;
 }
 
 export function formatDate(dateStr: string): string {
