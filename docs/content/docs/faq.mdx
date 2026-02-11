@@ -81,7 +81,13 @@ Connected account secrets are masked by default for security. The API returns th
 
 To disable masking, go to **Settings → Project Settings → Project Configuration** and turn off "Mask Connected Account Secrets", or use the Patch Project Config API.
 
-See [Credential masking](/docs/auth-configuration/connected-accounts#credential-masking) for full details.
+See [Connected accounts](/docs/auth-configuration/connected-accounts#get-account-credentials) for full details.
+</Accordion>
+
+<Accordion title="Where can I find execution logs?">
+Every tool execution is logged in the [Composio dashboard](https://platform.composio.dev) under **Logs > Tools**. Each execution response includes a `log_id` you can use to look up detailed request and response data. Trigger delivery attempts are logged separately under **Logs > Triggers**.
+
+See [Troubleshooting tools](/docs/troubleshooting/tools) for how to use logs to debug failed executions.
 </Accordion>
 
 <Accordion title="Can Composio be self-hosted?">
