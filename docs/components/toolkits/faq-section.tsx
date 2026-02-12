@@ -23,7 +23,7 @@ export function FaqSection({ faq }: FaqSectionProps) {
       </h2>
       <Accordions type="single">
         {faq.map((item) => (
-          <Accordion key={item.question} title={item.question}>
+          <Accordion key={item.question} title={item.question} id={item.question.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}>
             <div
               className="prose prose-sm prose-fd max-w-none text-fd-muted-foreground"
               dangerouslySetInnerHTML={{ __html: item.answer }}
