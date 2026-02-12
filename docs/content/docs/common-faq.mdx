@@ -101,6 +101,8 @@ For toolkits that require API keys (like Tavily, Perplexity, or ImgBB), you can 
 
 Create an auth config for the toolkit, then call `initiate()` with your API key and each user's ID:
 
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+  <Tab value="Python">
 ```python
 connection = composio.connected_accounts.initiate(
   user_id="user_123",
@@ -110,6 +112,19 @@ connection = composio.connected_accounts.initiate(
   }
 )
 ```
+  </Tab>
+  <Tab value="TypeScript">
+```typescript
+import { AuthScheme } from '@composio/core';
+
+const connection = await composio.connectedAccounts.initiate('user_123', 'your_auth_config_id', {
+  config: AuthScheme.APIKey({
+    api_key: 'your_own_api_key',
+  }),
+});
+```
+  </Tab>
+</Tabs>
 
 Each user gets their own connected account scoped to their `user_id`, but they all share your API key under the hood. See [API key connections](/docs/tools-direct/authenticating-tools#api-key-connections) for the full setup.
 </Accordion>
