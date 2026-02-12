@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useDeferredValue } from 'react';
 import Link from 'next/link';
 import { Search, Sparkles, ArrowRight, Wrench, Zap, Copy, Check, ExternalLink, Grip } from 'lucide-react';
 import toolkitsData from '@/public/data/toolkits-list.json';
@@ -22,7 +22,7 @@ const POPULAR_SLUGS = [
   'hubspot',
 ];
 
-function ToolkitIcon({ toolkit }: { toolkit: ToolkitSummary }) {
+function ToolkitIcon({ toolkit, lazy = true }: { toolkit: ToolkitSummary; lazy?: boolean }) {
   const [imgFailed, setImgFailed] = useState(false);
   const fallback = toolkit.name.trim().charAt(0).toUpperCase();
 
@@ -32,6 +32,8 @@ function ToolkitIcon({ toolkit }: { toolkit: ToolkitSummary }) {
         <img
           src={toolkit.logo}
           alt=""
+          loading={lazy ? 'lazy' : 'eager'}
+          decoding="async"
           className="h-[65%] w-[65%] object-contain"
           onError={() => setImgFailed(true)}
         />
@@ -64,7 +66,7 @@ function CopySlugButton({ slug }: { slug: string }) {
   );
 }
 
-function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
+function ToolkitRow({ toolkit, lazy = true }: { toolkit: ToolkitSummary; lazy?: boolean }) {
   return (
     <Link
       href={`/toolkits/${toolkit.slug}`}
@@ -72,7 +74,7 @@ function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
     >
       {/* Left side: Icon, Name, Slug */}
       <div className="flex items-center gap-3">
-        <ToolkitIcon toolkit={toolkit} />
+        <ToolkitIcon toolkit={toolkit} lazy={lazy} />
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <span className="truncate text-sm font-medium text-fd-foreground">{toolkit.name.trim()}</span>
           <CopySlugButton slug={toolkit.slug} />
@@ -95,6 +97,7 @@ function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
 
 export function ToolkitsLanding() {
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
 
   // Get popular toolkits
   const popularToolkits = useMemo(() => {
@@ -104,15 +107,15 @@ export function ToolkitsLanding() {
   }, []);
 
   const filteredToolkits = useMemo(() => {
-    if (!search) return toolkits;
+    if (!deferredSearch) return toolkits;
 
-    const searchLower = search.toLowerCase();
+    const searchLower = deferredSearch.toLowerCase();
     return toolkits.filter(
       (toolkit) =>
         toolkit.name.toLowerCase().includes(searchLower) ||
         toolkit.slug.toLowerCase().includes(searchLower)
     );
-  }, [search]);
+  }, [deferredSearch]);
 
   // Group by first letter (numbers at end)
   const groupedToolkits = useMemo(() => {
@@ -206,16 +209,16 @@ export function ToolkitsLanding() {
       {/* Results count */}
       <p className="text-sm text-fd-muted-foreground">
         {filteredToolkits.length} toolkit{filteredToolkits.length !== 1 ? 's' : ''}
-        {search && ` matching "${search}"`}
+        {deferredSearch && ` matching "${deferredSearch}"`}
       </p>
 
       {/* Popular Toolkits - only show when no search */}
-      {!search && popularToolkits.length > 0 && (
+      {!deferredSearch && popularToolkits.length > 0 && (
         <div>
           <h2 className="mb-2 text-sm font-semibold text-fd-muted-foreground">Popular</h2>
           <div className="divide-y divide-fd-border">
             {popularToolkits.map((toolkit) => (
-              <ToolkitRow key={toolkit.slug} toolkit={toolkit} />
+              <ToolkitRow key={toolkit.slug} toolkit={toolkit} lazy={false} />
             ))}
           </div>
         </div>

@@ -6,12 +6,13 @@ import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
 import { PageActions } from '@/components/page-actions';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getAllToolkits, getToolkitBySlug } from '@/lib/toolkit-data';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { toHtml } from 'hast-util-to-html';
 import type { Metadata } from 'next';
-import type { Toolkit, Tool, Trigger } from '@/types/toolkit';
+import type { Tool, Trigger } from '@/types/toolkit';
 import type { FaqItem } from '@/components/toolkits/faq-section';
 import { processSchema, toolFromApi } from '@/lib/toolkit-schema';
 
@@ -129,34 +130,6 @@ async function readToolkitFaq(slug: string): Promise<FaqItem[] | null> {
   return items.length > 0 ? items : null;
 }
 
-async function getToolkits(): Promise<Toolkit[]> {
-  const filePath = join(process.cwd(), 'public/data/toolkits.json');
-
-  try {
-    const data = await readFile(filePath, 'utf-8');
-    const toolkits = JSON.parse(data) as Toolkit[];
-
-    if (!Array.isArray(toolkits)) {
-      throw new Error('toolkits.json must contain an array');
-    }
-
-    if (toolkits.length === 0) {
-      console.warn('[Toolkits] Warning: toolkits.json is empty');
-    }
-
-    return toolkits;
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    if (err.code === 'ENOENT') {
-      throw new Error(`Toolkits data file not found: ${filePath}`);
-    }
-    if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in toolkits.json: ${error.message}`);
-    }
-    throw error;
-  }
-}
-
 export async function generateStaticParams() {
   // Index page
   const indexParam = { slug: [] };
@@ -165,7 +138,7 @@ export async function generateStaticParams() {
   const mdxParams = toolkitsSource.generateParams();
 
   // JSON toolkit pages
-  const toolkits = await getToolkits();
+  const toolkits = await getAllToolkits();
   const jsonParams = toolkits.map((toolkit) => ({
     slug: [toolkit.slug],
   }));
@@ -203,8 +176,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug?: st
 
   // Check JSON toolkit
   if (slug.length === 1) {
-    const toolkits = await getToolkits();
-    const toolkit = toolkits.find((t) => t.slug === slug[0]);
+    const toolkit = await getToolkitBySlug(slug[0]);
     if (toolkit) {
       const title = `${toolkit.name?.trim() || toolkit.slug} - Composio Toolkit`;
       const description = `Build an AI agent that connects to ${toolkit.name?.trim() || toolkit.slug} using Composio. ${toolkit.description}`;
@@ -245,8 +217,7 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
   // Check JSON toolkit
   if (slug.length === 1) {
     const toolkitSlug = slug[0];
-    const toolkits = await getToolkits();
-    const toolkit = toolkits.find((t) => t.slug === toolkitSlug);
+    const toolkit = await getToolkitBySlug(toolkitSlug);
 
     if (toolkit) {
       // Fetch detailed tool/trigger info and FAQ content in parallel

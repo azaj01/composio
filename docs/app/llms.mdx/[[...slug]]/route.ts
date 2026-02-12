@@ -13,6 +13,7 @@ import { openapi } from '@/lib/openapi';
 import { notFound } from 'next/navigation';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getAllToolkits, getToolkitBySlug } from '@/lib/toolkit-data';
 import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
 import { processSchema, toolFromApi } from '@/lib/toolkit-schema';
 
@@ -696,27 +697,6 @@ function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTri
   return lines.join('\n');
 }
 
-async function getToolkit(slug: string): Promise<Toolkit | null> {
-  try {
-    const filePath = join(process.cwd(), 'public/data/toolkits.json');
-    const data = await readFile(filePath, 'utf-8');
-    const toolkits = JSON.parse(data) as Toolkit[];
-    return toolkits.find((t) => t.slug === slug) || null;
-  } catch {
-    return null;
-  }
-}
-
-async function getAllToolkits(): Promise<Toolkit[]> {
-  try {
-    const filePath = join(process.cwd(), 'public/data/toolkits.json');
-    const data = await readFile(filePath, 'utf-8');
-    return JSON.parse(data) as Toolkit[];
-  } catch {
-    return [];
-  }
-}
-
 // Generate a comprehensive toolkits index for /toolkits.md
 async function generateToolkitsIndex(): Promise<string> {
   const toolkits = await getAllToolkits();
@@ -878,7 +858,7 @@ export async function GET(
 
     // Special handling for JSON toolkit pages
     if (prefix === 'toolkits' && rest.length === 1) {
-      const toolkit = await getToolkit(rest[0]);
+      const toolkit = await getToolkitBySlug(rest[0]);
       if (toolkit) {
         // Fetch detailed tool/trigger info and FAQ content in parallel
         const [detailedTools, detailedTriggers, faqMarkdown] = await Promise.all([

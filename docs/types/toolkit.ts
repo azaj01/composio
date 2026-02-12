@@ -63,21 +63,21 @@ export interface AuthConfigDetail {
   };
 }
 
-// Light version for landing page (no tools/triggers arrays)
+// Light version for landing page (only fields needed for listing)
 export interface ToolkitSummary {
   slug: string;
   name: string;
   logo: string | null;
-  description: string;
   category: string | null;
-  authSchemes: string[];
   toolCount: number;
   triggerCount: number;
-  version: string | null;
 }
 
 // Full version with tools, triggers, and auth config details
 export interface Toolkit extends ToolkitSummary {
+  description: string;
+  authSchemes: string[];
+  version: string | null;
   tools: Tool[];
   triggers: Trigger[];
   authConfigDetails?: AuthConfigDetail[];
