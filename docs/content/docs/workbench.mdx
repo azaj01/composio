@@ -43,15 +43,13 @@ These functions are pre-initialized in every sandbox:
 | `web_search` | Search the web and return results for research or data enrichment |
 | `smart_file_extract` | Extract text from PDFs, images, and other file formats in the sandbox |
 
-### Pre-installed libraries
+### Libraries
 
-The sandbox has these libraries pre-installed:
+Common packages like pandas, numpy, matplotlib, Pillow, PyTorch, and reportlab are pre-installed. Beyond these, the workbench maintains a list of supported packages and their dependencies. If the agent uses a package that isn't already installed, the workbench attempts to install it automatically.
 
-- **Data analysis**: pandas, numpy, matplotlib
-- **Image processing**: Pillow, OpenCV, scikit-image
-- **Machine learning**: PyTorch
-- **Document handling**: python-docx, pdfplumber, reportlab, pandoc
-- **Standard tools**: requests, json, csv, and the Python standard library
+### Error correction
+
+The workbench corrects common mistakes in the code your agent generates. For example, if a script accesses `result["apiKey"]` but the actual field name is `api_key`, the workbench resolves the mismatch instead of failing.
 
 ### Persistent state
 
