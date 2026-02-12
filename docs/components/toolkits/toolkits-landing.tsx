@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useDeferredValue } from 'react';
 import Link from 'next/link';
 import { Search, Sparkles, ArrowRight, Wrench, Zap, Copy, Check, ExternalLink, Grip } from 'lucide-react';
 import toolkitsData from '@/public/data/toolkits-list.json';
@@ -97,13 +97,7 @@ function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
 
 export function ToolkitsLanding() {
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => {
-    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 150);
-    return () => clearTimeout(debounceRef.current);
-  }, [search]);
+  const deferredSearch = useDeferredValue(search);
 
   // Get popular toolkits
   const popularToolkits = useMemo(() => {
@@ -113,15 +107,15 @@ export function ToolkitsLanding() {
   }, []);
 
   const filteredToolkits = useMemo(() => {
-    if (!debouncedSearch) return toolkits;
+    if (!deferredSearch) return toolkits;
 
-    const searchLower = debouncedSearch.toLowerCase();
+    const searchLower = deferredSearch.toLowerCase();
     return toolkits.filter(
       (toolkit) =>
         toolkit.name.toLowerCase().includes(searchLower) ||
         toolkit.slug.toLowerCase().includes(searchLower)
     );
-  }, [debouncedSearch]);
+  }, [deferredSearch]);
 
   // Group by first letter (numbers at end)
   const groupedToolkits = useMemo(() => {
@@ -215,11 +209,11 @@ export function ToolkitsLanding() {
       {/* Results count */}
       <p className="text-sm text-fd-muted-foreground">
         {filteredToolkits.length} toolkit{filteredToolkits.length !== 1 ? 's' : ''}
-        {debouncedSearch && ` matching "${debouncedSearch}"`}
+        {deferredSearch && ` matching "${deferredSearch}"`}
       </p>
 
       {/* Popular Toolkits - only show when no search */}
-      {!debouncedSearch && popularToolkits.length > 0 && (
+      {!deferredSearch && popularToolkits.length > 0 && (
         <div>
           <h2 className="mb-2 text-sm font-semibold text-fd-muted-foreground">Popular</h2>
           <div className="divide-y divide-fd-border">
