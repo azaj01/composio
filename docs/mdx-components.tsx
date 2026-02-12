@@ -3,7 +3,8 @@ import type { MDXComponents } from 'mdx/types';
 import { Heading } from '@/components/heading';
 import { YouTube } from '@/components/youtube';
 import { Tabs, Tab, TabsList, TabsTrigger, TabsContent } from 'fumadocs-ui/components/tabs';
-import { Accordion as BaseAccordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Accordion as BaseAccordion, Accordions as BaseAccordions } from 'fumadocs-ui/components/accordion';
+export { BaseAccordions as Accordions };
 import type { ComponentProps } from 'react';
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -56,7 +57,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     TabsTrigger,
     TabsContent,
     Accordion,
-    Accordions,
+    Accordions: BaseAccordions,
     Callout,
     Step,
     Steps,

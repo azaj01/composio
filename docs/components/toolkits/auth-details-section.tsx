@@ -2,8 +2,7 @@
 
 import { Key } from 'lucide-react';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
-import { Accordions } from 'fumadocs-ui/components/accordion';
-import { Accordion } from '@/mdx-components';
+import { Accordion, Accordions } from '@/mdx-components';
 import type { AuthConfigDetail, AuthConfigField } from '@/types/toolkit';
 
 interface AuthDetailsSectionProps {
