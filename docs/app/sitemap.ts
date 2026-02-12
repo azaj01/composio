@@ -1,6 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import {
   source,
   getReferenceSource,
@@ -9,40 +7,9 @@ import {
   changelogEntries,
   dateToChangelogUrl,
 } from '@/lib/source';
+import { getAllToolkitsSync } from '@/lib/toolkit-data';
 
 const baseUrl = 'https://docs.composio.dev';
-
-interface Toolkit {
-  slug: string;
-}
-
-function getToolkitsFromJson(): Toolkit[] {
-  const filePath = join(process.cwd(), 'public/data/toolkits.json');
-
-  try {
-    const data = readFileSync(filePath, 'utf-8');
-    const toolkits = JSON.parse(data) as Toolkit[];
-
-    if (!Array.isArray(toolkits)) {
-      throw new Error('toolkits.json must contain an array');
-    }
-
-    if (toolkits.length === 0) {
-      console.warn('[Sitemap] Warning: toolkits.json is empty - toolkit pages will be missing from sitemap');
-    }
-
-    return toolkits;
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    if (err.code === 'ENOENT') {
-      throw new Error(`[Sitemap] Toolkits data file not found: ${filePath}`);
-    }
-    if (error instanceof SyntaxError) {
-      throw new Error(`[Sitemap] Invalid JSON in toolkits.json: ${error.message}`);
-    }
-    throw error;
-  }
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const docsPages = source.getPages().map((page) => ({
@@ -65,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // JSON toolkit pages (dynamically generated from toolkits.json)
-  const toolkitsJsonPages = getToolkitsFromJson().map((toolkit) => ({
+  const toolkitsJsonPages = getAllToolkitsSync().map((toolkit) => ({
     url: `${baseUrl}/toolkits/${toolkit.slug}`,
   }));
 
