@@ -8,6 +8,7 @@ import {
 } from 'fumadocs-mdx/config';
 import { transformerTwoslash } from '@shikijs/twoslash';
 import { createFileSystemTypesCache } from '@shikijs/vitepress-twoslash/cache-fs';
+import { remarkMdxMermaid } from 'fumadocs-core/mdx-plugins';
 import { z } from 'zod';
 
 // You can customise Zod schemas for frontmatter and `meta.json` here
@@ -93,6 +94,7 @@ export const changelog = defineCollections({
 
 export default defineConfig({
   mdxOptions: {
+    remarkPlugins: [remarkMdxMermaid],
     rehypeCodeOptions: {
       themes: {
         light: 'github-light',
