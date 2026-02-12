@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
   source,
-  referenceSource,
+  getReferenceSource,
   examplesSource,
   toolkitsSource,
   changelogEntries,
@@ -44,47 +44,45 @@ function getToolkitsFromJson(): Toolkit[] {
   }
 }
 
-function byUrl(a: { url: string }, b: { url: string }) {
-  return a.url.localeCompare(b.url);
-}
-
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const docsPages = source.getPages().map((page) => ({
     url: `${baseUrl}${page.url}`,
-  })).sort(byUrl);
+  }));
 
-  const referencePages = referenceSource.getPages().map((page) => ({
+  // Use async reference source to include OpenAPI-generated API reference pages
+  const referenceSource = await getReferenceSource();
+  const referencePages = referenceSource.getPages().map((page: { url: string }) => ({
     url: `${baseUrl}${page.url}`,
-  })).sort(byUrl);
+  }));
 
   const examplesPages = examplesSource.getPages().map((page) => ({
     url: `${baseUrl}${page.url}`,
-  })).sort(byUrl);
+  }));
 
   // MDX toolkit pages
   const toolkitsMdxPages = toolkitsSource.getPages().map((page) => ({
     url: `${baseUrl}${page.url}`,
-  })).sort(byUrl);
+  }));
 
   // JSON toolkit pages (dynamically generated from toolkits.json)
   const toolkitsJsonPages = getToolkitsFromJson().map((toolkit) => ({
     url: `${baseUrl}/toolkits/${toolkit.slug}`,
-  })).sort(byUrl);
+  }));
 
-  // Changelog pages (deduplicate by date, sorted newest first)
-  const uniqueChangelogDates = [...new Set([...changelogEntries].map((entry) => entry.date))].sort().reverse();
+  // Changelog pages (deduplicate by date since multiple entries can share the same date)
+  const uniqueChangelogDates = [...new Set([...changelogEntries].map((entry) => entry.date))];
   const changelogPages = uniqueChangelogDates.map((date) => ({
     url: `${baseUrl}${dateToChangelogUrl(date)}`,
   }));
 
   return [
     { url: baseUrl },
+    { url: `${baseUrl}/docs/changelog` },
     ...docsPages,
     ...referencePages,
     ...examplesPages,
     ...toolkitsMdxPages,
     ...toolkitsJsonPages,
-    { url: `${baseUrl}/docs/changelog` },
     ...changelogPages,
   ];
 }
