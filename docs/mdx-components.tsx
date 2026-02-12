@@ -1,18 +1,14 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
-import { Heading } from '@/components/heading';
-import { YouTube } from '@/components/youtube';
-import { Tabs, Tab, TabsList, TabsTrigger, TabsContent } from 'fumadocs-ui/components/tabs';
-import { Accordion as BaseAccordion, Accordions as BaseAccordions } from 'fumadocs-ui/components/accordion';
-export { BaseAccordions as Accordions };
 import type { ComponentProps } from 'react';
-function slugify(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-}
+import { Accordion as BaseAccordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Tabs, Tab, TabsList, TabsTrigger, TabsContent } from 'fumadocs-ui/components/tabs';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
+import { Heading } from '@/components/heading';
+import { YouTube } from '@/components/youtube';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
 import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
 import { IntegrationTabs, IntegrationContent } from '@/components/quickstart/integration-tabs';
@@ -23,8 +19,9 @@ import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
 import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
 import { Mermaid } from '@/components/mermaid';
-import { ShieldCheck, Route as RouteIcon } from 'lucide-react';
 import {
+  ShieldCheck,
+  Route as RouteIcon,
   Key,
   Wrench,
   Database,
@@ -39,9 +36,15 @@ import {
   BookOpen,
 } from 'lucide-react';
 
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
 export function Accordion({ id, title, ...props }: ComponentProps<typeof BaseAccordion>) {
   return <BaseAccordion id={id ?? (typeof title === 'string' ? slugify(title) : undefined)} title={title} {...props} />;
 }
+
+export { Accordions };
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
@@ -57,7 +60,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     TabsTrigger,
     TabsContent,
     Accordion,
-    Accordions: BaseAccordions,
+    Accordions,
     Callout,
     Step,
     Steps,
@@ -79,7 +82,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ToolkitsLanding,
     Mermaid,
     StepTitle,
-    // Lucide icons - available globally in MDX without imports
+    // Lucide icons
     ShieldCheck,
     RouteIcon,
     Key,
