@@ -32,6 +32,8 @@ function ToolkitIcon({ toolkit }: { toolkit: ToolkitSummary }) {
         <img
           src={toolkit.logo}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="h-[65%] w-[65%] object-contain"
           onError={() => setImgFailed(true)}
         />
