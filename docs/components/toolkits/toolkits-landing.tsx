@@ -22,7 +22,7 @@ const POPULAR_SLUGS = [
   'hubspot',
 ];
 
-function ToolkitIcon({ toolkit }: { toolkit: ToolkitSummary }) {
+function ToolkitIcon({ toolkit, lazy = true }: { toolkit: ToolkitSummary; lazy?: boolean }) {
   const [imgFailed, setImgFailed] = useState(false);
   const fallback = toolkit.name.trim().charAt(0).toUpperCase();
 
@@ -32,7 +32,7 @@ function ToolkitIcon({ toolkit }: { toolkit: ToolkitSummary }) {
         <img
           src={toolkit.logo}
           alt=""
-          loading="lazy"
+          loading={lazy ? 'lazy' : 'eager'}
           decoding="async"
           className="h-[65%] w-[65%] object-contain"
           onError={() => setImgFailed(true)}
@@ -66,7 +66,7 @@ function CopySlugButton({ slug }: { slug: string }) {
   );
 }
 
-function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
+function ToolkitRow({ toolkit, lazy = true }: { toolkit: ToolkitSummary; lazy?: boolean }) {
   return (
     <Link
       href={`/toolkits/${toolkit.slug}`}
@@ -74,7 +74,7 @@ function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
     >
       {/* Left side: Icon, Name, Slug */}
       <div className="flex items-center gap-3">
-        <ToolkitIcon toolkit={toolkit} />
+        <ToolkitIcon toolkit={toolkit} lazy={lazy} />
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <span className="truncate text-sm font-medium text-fd-foreground">{toolkit.name.trim()}</span>
           <CopySlugButton slug={toolkit.slug} />
@@ -218,7 +218,7 @@ export function ToolkitsLanding() {
           <h2 className="mb-2 text-sm font-semibold text-fd-muted-foreground">Popular</h2>
           <div className="divide-y divide-fd-border">
             {popularToolkits.map((toolkit) => (
-              <ToolkitRow key={toolkit.slug} toolkit={toolkit} />
+              <ToolkitRow key={toolkit.slug} toolkit={toolkit} lazy={false} />
             ))}
           </div>
         </div>
