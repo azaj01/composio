@@ -123,7 +123,7 @@ async function fetchToolkitChangelog(): Promise<Map<string, string>> {
 }
 
 async function fetchToolsForToolkit(slug: string): Promise<Tool[]> {
-  const response = await fetch(`${API_BASE}/tools?toolkit_slug=${slug}&limit=1000`, {
+  const response = await fetch(`${API_BASE}/tools?toolkit_slug=${slug}&toolkit_versions=latest&limit=1000`, {
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': API_KEY!,
@@ -144,7 +144,7 @@ async function fetchToolsForToolkit(slug: string): Promise<Tool[]> {
 }
 
 async function fetchTriggersForToolkit(slug: string): Promise<Trigger[]> {
-  const response = await fetch(`${API_BASE}/triggers_types?toolkit_slugs=${slug}`, {
+  const response = await fetch(`${API_BASE}/triggers_types?toolkit_slugs=${slug}&toolkit_versions=latest`, {
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': API_KEY!,
