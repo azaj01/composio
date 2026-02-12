@@ -1,7 +1,7 @@
 'use client';
 
 import { HelpCircle } from 'lucide-react';
-import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Accordion, Accordions } from '@/mdx-components';
 
 export interface FaqItem {
   question: string;
