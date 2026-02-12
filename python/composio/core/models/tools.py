@@ -4,6 +4,7 @@ import functools
 import typing as t
 
 import typing_extensions as te
+from pydantic import BaseModel as PydanticBaseModel
 from composio_client import omit
 
 from composio.client import HttpClient
@@ -34,6 +35,40 @@ from ._modifiers import (
     before_execute,
     schema_modifier,
 )
+
+
+def _needs_serialization(obj: t.Any) -> bool:
+    """Check if an object contains any Pydantic model instances."""
+    if isinstance(obj, PydanticBaseModel):
+        return True
+    if isinstance(obj, dict):
+        return any(_needs_serialization(v) for v in obj.values())
+    if isinstance(obj, list):
+        return any(_needs_serialization(item) for item in obj)
+    return False
+
+
+def _serialize_value(obj: t.Any) -> t.Any:
+    """Recursively convert Pydantic models to JSON-safe primitives."""
+    if isinstance(obj, PydanticBaseModel):
+        return obj.model_dump(mode="json")
+    if isinstance(obj, dict):
+        return {k: _serialize_value(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_serialize_value(item) for item in obj]
+    return obj
+
+
+def _serialize_arguments(arguments: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
+    """Serialize any Pydantic model instances in tool arguments to JSON-safe dicts.
+
+    Prevents JSON serialization errors when arguments contain complex types
+    (e.g., RootModel from discriminated union schemas). Returns the original
+    dict unchanged when no Pydantic models are present.
+    """
+    if not _needs_serialization(arguments):
+        return arguments
+    return {k: _serialize_value(v) for k, v in arguments.items()}
 
 
 class ToolExecutionResponse(te.TypedDict):
@@ -410,6 +445,9 @@ class Tools(Resource, t.Generic[TTool, TToolCollection]):
                 )
                 processed_arguments = modified_params.get("arguments", arguments)
 
+            # Serialize any Pydantic model instances before sending to the API
+            processed_arguments = _serialize_arguments(processed_arguments)
+
             # Execute the tool via the session's execute_meta endpoint
             # Note: execute_meta accepts regular tool slugs at runtime, not just meta tool slugs
             # The type signature expects Literal meta tool slugs, but runtime accepts any str
@@ -481,6 +519,10 @@ class Tools(Resource, t.Generic[TTool, TToolCollection]):
         dangerously_skip_version_check: t.Optional[bool] = None,
     ) -> ToolExecutionResponse:
         """Execute a tool"""
+        # Serialize any Pydantic model instances in arguments to plain dicts
+        # before sending to the API (fixes PLEN-1514: RootModel not JSON serializable)
+        arguments = _serialize_arguments(arguments)
+
         # Get the tool to determine its toolkit
         tool = self.get_raw_composio_tool_by_slug(slug)
 
