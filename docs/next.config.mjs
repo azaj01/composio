@@ -735,82 +735,6 @@ const config = {
         destination: '/docs/providers',
         permanent: true,
       },
-      // Old API reference paths that still 404
-      {
-        source: '/reference/api-reference/apps/:operationId',
-        destination: '/reference/api-reference/apps',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/connections/:operationId',
-        destination: '/reference/api-reference/connections',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/api-keys/:operationId',
-        destination: '/reference/api-reference/api-keys',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/integrations/:operationId',
-        destination: '/reference/api-reference/integrations',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/projects/:operationId',
-        destination: '/reference/api-reference/projects',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/team/:operationId',
-        destination: '/reference/api-reference/team',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/logs/:operationId',
-        destination: '/reference/api-reference/logs',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/actions/:operationId',
-        destination: '/reference/api-reference/actions',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/files/:operationId',
-        destination: '/reference/api-reference/files',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/client/:operationId',
-        destination: '/reference/api-reference',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/client-auth/:operationId',
-        destination: '/reference/api-reference/authentication',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/auth/:operationId',
-        destination: '/reference/api-reference/authentication',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/health/:operationId',
-        destination: '/reference/api-reference',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/analytics/:operationId',
-        destination: '/reference/api-reference',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/action-v-2-logs/:operationId',
-        destination: '/reference/api-reference',
-        permanent: true,
-      },
       // Old versioned API paths (v1, v-1, v3, v-3)
       {
         source: '/reference/api-reference/v1/:path*',
@@ -822,16 +746,6 @@ const config = {
         destination: '/reference/api-reference',
         permanent: true,
       },
-      {
-        source: '/reference/api-reference/v3/:path*',
-        destination: '/reference/api-reference',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/connectedaccounts/:path*',
-        destination: '/reference/api-reference/connected-accounts',
-        permanent: true,
-      },
       // Old reference section paths
       {
         source: '/reference/introduction',
@@ -841,21 +755,6 @@ const config = {
       {
         source: '/reference/triggers',
         destination: '/reference/api-reference/triggers',
-        permanent: true,
-      },
-      {
-        source: '/reference/connected-accounts/:path*',
-        destination: '/reference/api-reference/connected-accounts',
-        permanent: true,
-      },
-      {
-        source: '/reference/auth-configs/:path*',
-        destination: '/reference/api-reference/auth-configs',
-        permanent: true,
-      },
-      {
-        source: '/reference/app-connector/:path*',
-        destination: '/reference/api-reference',
         permanent: true,
       },
       {

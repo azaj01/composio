@@ -17,6 +17,7 @@ import { StepTitle } from '@/components/step-title';
 import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
 import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
+import { Mermaid } from '@/components/mermaid';
 import { ShieldCheck, Route as RouteIcon } from 'lucide-react';
 import {
   Key,
@@ -67,6 +68,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     CapabilityCard,
     CapabilityList,
     ToolkitsLanding,
+    Mermaid,
     StepTitle,
     // Lucide icons - available globally in MDX without imports
     ShieldCheck,
