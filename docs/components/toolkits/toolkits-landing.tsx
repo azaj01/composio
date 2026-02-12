@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Search, Sparkles, ArrowRight, Wrench, Zap, Copy, Check, ExternalLink, Grip } from 'lucide-react';
 import toolkitsData from '@/public/data/toolkits-list.json';
@@ -97,6 +97,13 @@ function ToolkitRow({ toolkit }: { toolkit: ToolkitSummary }) {
 
 export function ToolkitsLanding() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 150);
+    return () => clearTimeout(debounceRef.current);
+  }, [search]);
 
   // Get popular toolkits
   const popularToolkits = useMemo(() => {
@@ -106,15 +113,15 @@ export function ToolkitsLanding() {
   }, []);
 
   const filteredToolkits = useMemo(() => {
-    if (!search) return toolkits;
+    if (!debouncedSearch) return toolkits;
 
-    const searchLower = search.toLowerCase();
+    const searchLower = debouncedSearch.toLowerCase();
     return toolkits.filter(
       (toolkit) =>
         toolkit.name.toLowerCase().includes(searchLower) ||
         toolkit.slug.toLowerCase().includes(searchLower)
     );
-  }, [search]);
+  }, [debouncedSearch]);
 
   // Group by first letter (numbers at end)
   const groupedToolkits = useMemo(() => {
@@ -208,11 +215,11 @@ export function ToolkitsLanding() {
       {/* Results count */}
       <p className="text-sm text-fd-muted-foreground">
         {filteredToolkits.length} toolkit{filteredToolkits.length !== 1 ? 's' : ''}
-        {search && ` matching "${search}"`}
+        {debouncedSearch && ` matching "${debouncedSearch}"`}
       </p>
 
       {/* Popular Toolkits - only show when no search */}
-      {!search && popularToolkits.length > 0 && (
+      {!debouncedSearch && popularToolkits.length > 0 && (
         <div>
           <h2 className="mb-2 text-sm font-semibold text-fd-muted-foreground">Popular</h2>
           <div className="divide-y divide-fd-border">
