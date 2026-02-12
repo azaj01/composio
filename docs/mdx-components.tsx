@@ -1,10 +1,13 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
-import type { ComponentProps } from 'react';
 import { Heading } from '@/components/heading';
 import { YouTube } from '@/components/youtube';
 import { Tabs, Tab, TabsList, TabsTrigger, TabsContent } from 'fumadocs-ui/components/tabs';
 import { Accordion as BaseAccordion, Accordions } from 'fumadocs-ui/components/accordion';
+import type { ComponentProps } from 'react';
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Card, Cards } from 'fumadocs-ui/components/card';
@@ -19,7 +22,6 @@ import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
 import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
 import { Mermaid } from '@/components/mermaid';
-import { slugify } from '@/lib/utils';
 import { ShieldCheck, Route as RouteIcon } from 'lucide-react';
 import {
   Key,
@@ -36,7 +38,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 
-function Accordion({ id, title, ...props }: ComponentProps<typeof BaseAccordion>) {
+export function Accordion({ id, title, ...props }: ComponentProps<typeof BaseAccordion>) {
   return <BaseAccordion id={id ?? (typeof title === 'string' ? slugify(title) : undefined)} title={title} {...props} />;
 }
 

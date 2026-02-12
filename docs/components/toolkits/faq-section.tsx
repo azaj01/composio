@@ -1,8 +1,8 @@
 'use client';
 
 import { HelpCircle } from 'lucide-react';
-import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
-import { slugify } from '@/lib/utils';
+import { Accordions } from 'fumadocs-ui/components/accordion';
+import { Accordion } from '@/mdx-components';
 
 export interface FaqItem {
   question: string;
@@ -24,7 +24,7 @@ export function FaqSection({ faq }: FaqSectionProps) {
       </h2>
       <Accordions type="single">
         {faq.map((item) => (
-          <Accordion key={item.question} title={item.question} id={slugify(item.question)}>
+          <Accordion key={item.question} title={item.question}>
             <div
               className="prose prose-sm prose-fd max-w-none text-fd-muted-foreground"
               dangerouslySetInnerHTML={{ __html: item.answer }}
