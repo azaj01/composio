@@ -115,8 +115,10 @@ connection = composio.connected_accounts.initiate(
   </Tab>
   <Tab value="TypeScript">
 ```typescript
-import { AuthScheme } from '@composio/core';
+import { Composio, AuthScheme } from '@composio/core';
 
+declare const composio: Composio;
+// ---cut---
 const connection = await composio.connectedAccounts.initiate('user_123', 'your_auth_config_id', {
   config: AuthScheme.APIKey({
     api_key: 'your_own_api_key',
