@@ -296,7 +296,9 @@ async function main() {
 
   // Write light file (for landing page - imported in client component)
   // Excludes tools and triggers arrays to keep bundle size small
-  const toolkitsLight = toolkits.map(({ tools, triggers, ...rest }) => rest);
+  const toolkitsLight = toolkits.map(({ slug, name, logo, category, toolCount, triggerCount }) => ({
+    slug, name, logo, category, toolCount, triggerCount,
+  }));
   await writeFile(
     join(OUTPUT_DIR, 'toolkits-list.json'),
     JSON.stringify(toolkitsLight, null, 2)
