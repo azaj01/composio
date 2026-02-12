@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
   source,
-  referenceSource,
+  getReferenceSource,
   examplesSource,
   toolkitsSource,
   changelogEntries,
@@ -44,12 +44,14 @@ function getToolkitsFromJson(): Toolkit[] {
   }
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const docsPages = source.getPages().map((page) => ({
     url: `${baseUrl}${page.url}`,
   }));
 
-  const referencePages = referenceSource.getPages().map((page) => ({
+  // Use async reference source to include OpenAPI-generated API reference pages
+  const referenceSource = await getReferenceSource();
+  const referencePages = referenceSource.getPages().map((page: { url: string }) => ({
     url: `${baseUrl}${page.url}`,
   }));
 
