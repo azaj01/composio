@@ -530,6 +530,11 @@ p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
 [data-accordion-value]:focus-within button[aria-label="Copy Link"] {
   opacity: 1;
 }
+/* Green check feedback on copy (matches heading anchor style) */
+[data-accordion-value] button[aria-label="Copy Link"]:has(.lucide-check) {
+  opacity: 1;
+  color: var(--color-green-500);
+}
 
 @layer base {
   * {
