@@ -29,7 +29,7 @@ async function fetchDetailedTools(toolkitSlug: string, version?: string | null):
 
   try {
     const response = await fetch(
-      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&limit=10000${version ? `&version=${encodeURIComponent(version)}` : ''}`,
+      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&toolkit_versions=latest&limit=10000${version ? `&version=${encodeURIComponent(version)}` : ''}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ async function fetchDetailedTriggers(toolkitSlug: string, version?: string | nul
 
   try {
     const response = await fetch(
-      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&limit=10000${version ? `&version=${encodeURIComponent(version)}` : ''}`,
+      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&toolkit_versions=latest&limit=10000${version ? `&version=${encodeURIComponent(version)}` : ''}`,
       {
         headers: {
           'Content-Type': 'application/json',

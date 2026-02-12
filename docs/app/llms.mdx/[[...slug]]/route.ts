@@ -31,7 +31,7 @@ async function fetchDetailedTools(toolkitSlug: string): Promise<Tool[] | null> {
 
   try {
     const response = await fetch(
-      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&limit=${API_FETCH_LIMIT}`,
+      `${API_BASE}/tools?toolkit_slug=${toolkitSlug.toUpperCase()}&toolkit_versions=latest&limit=${API_FETCH_LIMIT}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ async function fetchDetailedTriggers(toolkitSlug: string): Promise<Trigger[] | n
 
   try {
     const response = await fetch(
-      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&limit=${API_FETCH_LIMIT}`,
+      `${API_BASE}/triggers_types?toolkit_slugs=${toolkitSlug.toUpperCase()}&toolkit_versions=latest&limit=${API_FETCH_LIMIT}`,
       {
         headers: {
           'Content-Type': 'application/json',
