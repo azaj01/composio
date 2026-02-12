@@ -526,7 +526,8 @@ p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
   opacity: 0;
   transition: opacity 150ms;
 }
-[data-accordion-value]:hover button[aria-label="Copy Link"] {
+[data-accordion-value]:hover button[aria-label="Copy Link"],
+[data-accordion-value]:focus-within button[aria-label="Copy Link"] {
   opacity: 1;
 }
 
