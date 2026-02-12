@@ -746,16 +746,6 @@ const config = {
         destination: '/reference/api-reference',
         permanent: true,
       },
-      {
-        source: '/reference/api-reference/v3/:path*',
-        destination: '/reference/api-reference',
-        permanent: true,
-      },
-      {
-        source: '/reference/api-reference/connectedaccounts/:path*',
-        destination: '/reference/api-reference/connected-accounts',
-        permanent: true,
-      },
       // Old reference section paths
       {
         source: '/reference/introduction',
@@ -765,21 +755,6 @@ const config = {
       {
         source: '/reference/triggers',
         destination: '/reference/api-reference/triggers',
-        permanent: true,
-      },
-      {
-        source: '/reference/connected-accounts/:path*',
-        destination: '/reference/api-reference/connected-accounts',
-        permanent: true,
-      },
-      {
-        source: '/reference/auth-configs/:path*',
-        destination: '/reference/api-reference/auth-configs',
-        permanent: true,
-      },
-      {
-        source: '/reference/app-connector/:path*',
-        destination: '/reference/api-reference',
         permanent: true,
       },
       {
