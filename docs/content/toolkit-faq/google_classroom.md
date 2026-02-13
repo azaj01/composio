@@ -1,4 +1,4 @@
-## How do I set up custom Google OAuth credentials for Gmail?
+# Google Toolkits — FAQ
 
 For a step-by-step guide on creating and configuring your own Google OAuth credentials with Composio, see [How to create OAuth2 credentials for Google Apps](https://composio.dev/auth/googleapps).
 
@@ -19,12 +19,3 @@ To white‑label the consent screen, create and use your own OAuth app and set a
 
 ## 401 errors for tool calls
 Common causes: user revoked access, password/2FA change, Workspace admin policy, or refresh‑token limits (~50 tokens). Reauthorization typically resolves 401s.
-
-## Gmail trigger is slow
-Gmail triggers poll every ~1 minute by default (configurable); expect up to ~1 minute delay. If you need lower latency consider webhooks or Google pub/sub integrations.
-
-## Why am I getting "Quota Exhausted" or "rate limit exhausted" on the service <SERVICE>.googleapis.com?
-Google enforces request quotas (per‑minute and daily) to protect its APIs. If many clients share the same OAuth app, the shared quota can be exhausted and you may see quota errors.  
-Fixes: implement exponential backoff and retries, batch/cache requests to reduce rate, or use your own OAuth app credentials to avoid shared limits.
-
----
