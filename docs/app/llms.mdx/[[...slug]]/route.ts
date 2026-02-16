@@ -1,7 +1,7 @@
 import {
   source,
   getReferenceSource,
-  examplesSource,
+  cookbooksSource,
   toolkitsSource,
   changelogEntries,
   slugToDate,
@@ -481,7 +481,7 @@ async function openapiPageToMarkdown(
 // Note: 'reference' is handled specially below with async getReferenceSource()
 const sources = [
   { prefix: 'docs', source },
-  { prefix: 'examples', source: examplesSource },
+  { prefix: 'cookbooks', source: cookbooksSource },
   { prefix: 'toolkits', source: toolkitsSource },
 ];
 

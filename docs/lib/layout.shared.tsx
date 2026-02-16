@@ -51,8 +51,8 @@ export function baseOptions(): BaseLayoutProps {
         active: 'nested-url',
       },
       {
-        text: 'Examples',
-        url: '/examples',
+        text: 'Cookbooks',
+        url: '/cookbooks',
         active: 'nested-url',
       },
       {

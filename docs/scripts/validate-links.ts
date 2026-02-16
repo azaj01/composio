@@ -8,14 +8,14 @@ import type { InferPageType } from 'fumadocs-core/source';
 import {
   source,
   referenceSource,
-  examplesSource,
+  cookbooksSource,
   toolkitsSource,
 } from '../lib/source';
 
 type AnySource =
   | typeof source
   | typeof referenceSource
-  | typeof examplesSource
+  | typeof cookbooksSource
   | typeof toolkitsSource;
 
 async function checkLinks() {
@@ -31,7 +31,7 @@ async function checkLinks() {
         value: { slug: page.slugs },
         hashes: getHeadings(page),
       })),
-      'examples/[[...slug]]': examplesSource.getPages().map((page) => ({
+      'cookbooks/[[...slug]]': cookbooksSource.getPages().map((page) => ({
         value: { slug: page.slugs },
         hashes: getHeadings(page),
       })),
@@ -74,7 +74,7 @@ function getHeadings({ data }: InferPageType<AnySource>): string[] {
 }
 
 async function getFiles(): Promise<FileObject[]> {
-  const sources = [source, referenceSource, examplesSource, toolkitsSource];
+  const sources = [source, referenceSource, cookbooksSource, toolkitsSource];
   const allFiles: FileObject[] = [];
 
   for (const src of sources) {

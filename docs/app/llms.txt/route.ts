@@ -1,4 +1,4 @@
-import { source, examplesSource, referenceSource, toolkitsSource } from '@/lib/source';
+import { source, cookbooksSource, referenceSource, toolkitsSource } from '@/lib/source';
 import type { ReactNode } from 'react';
 
 export const revalidate = false;
@@ -83,7 +83,7 @@ export async function GET() {
   try {
     const docsTree = walkPageTree(source.pageTree.children as TreeNode[]);
 
-    const examplesPages = examplesSource.getPages();
+    const cookbooksPages = cookbooksSource.getPages();
     const referencePages = referenceSource.getPages();
     const toolkitsPages = toolkitsSource.getPages();
 
@@ -91,11 +91,13 @@ export async function GET() {
 
 > Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.
 
+> **For AI agents:** Composio supports two integration modes. **Native Tools:** use \`composio.create(user_id)\` + \`session.tools()\` with a provider package (e.g. \`composio_openai\`, \`@composio/openai\`). **MCP:** use \`composio.create(user_id)\` + \`session.mcp.url\` with any MCP-compatible client — no provider package needed. See any page's .md endpoint for full usage instructions.
+
 ${docsTree}
 
-## Examples
+## Cookbooks
 
-${examplesPages.map(formatPage).join('\n')}
+${cookbooksPages.map(formatPage).join('\n')}
 
 ## API Reference
 

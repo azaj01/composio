@@ -33,6 +33,22 @@ const config = {
         permanent: false,
       },
       {
+        source: '/examples',
+        destination: '/cookbooks',
+        permanent: true,
+      },
+      // Specific /examples/ subroutes before the catch-all
+      {
+        source: '/examples/combined/:path*',
+        destination: '/cookbooks',
+        permanent: true,
+      },
+      {
+        source: '/examples/:path*',
+        destination: '/cookbooks/:path*',
+        permanent: true,
+      },
+      {
         source: '/docs/welcome',
         destination: '/docs',
         permanent: true,
@@ -342,7 +358,7 @@ const config = {
       },
       {
         source: '/guides/examples/:path*',
-        destination: '/examples',
+        destination: '/cookbooks',
         permanent: true,
       },
       {
@@ -472,7 +488,7 @@ const config = {
       // Guides case studies
       {
         source: '/guides/casestudy/:path*',
-        destination: '/examples',
+        destination: '/cookbooks',
         permanent: true,
       },
       // Docs pages that moved or don't exist
@@ -548,12 +564,7 @@ const config = {
         destination: '/reference',
         permanent: true,
       },
-      // Old Fern example URLs
-      {
-        source: '/examples/combined/:path*',
-        destination: '/examples',
-        permanent: true,
-      },
+      // Old Fern example URLs (specific redirect moved above catch-all)
       // Old /docs/frameworks/* paths (now /docs/providers/*)
       // e.g. /docs/frameworks/claude-code → /docs/providers/anthropic
       {
@@ -584,7 +595,7 @@ const config = {
       },
       {
         source: '/apps/usecases/:path*',
-        destination: '/examples',
+        destination: '/cookbooks',
         permanent: true,
       },
       {
@@ -717,7 +728,7 @@ const config = {
       },
       {
         source: '/cryptokit/:path*',
-        destination: '/examples',
+        destination: '/cookbooks',
         permanent: true,
       },
       {
