@@ -8166,6 +8166,16 @@
             "description": "The tool slug to execute",
             "name": "tool_slug",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "JSON object containing custom headers to pass to LLM providers (OpenAI, Bedrock, etc.)",
+              "example": "{\"x-custom-header\": \"value\", \"authorization\": \"Bearer token\"}"
+            },
+            "required": false,
+            "name": "x-llm-gateway-headers",
+            "in": "header"
           }
         ],
         "requestBody": {
