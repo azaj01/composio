@@ -56,8 +56,8 @@ export const reference = defineDocs({
   },
 });
 
-export const examples = defineDocs({
-  dir: 'content/examples',
+export const cookbooks = defineDocs({
+  dir: 'content/cookbooks',
   docs: {
     schema: docsSchema,
     postprocess: {

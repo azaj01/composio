@@ -1,4 +1,4 @@
-import { docs, reference, examples, toolkits, changelog } from 'fumadocs-mdx:collections/server';
+import { docs, reference, cookbooks, toolkits, changelog } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader, multiple } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 import { openapi } from './openapi';
@@ -68,9 +68,9 @@ export const referenceSource = loader({
   plugins: [lucideIconsPlugin()],
 });
 
-export const examplesSource = loader({
-  baseUrl: '/examples',
-  source: examples.toFumadocsSource(),
+export const cookbooksSource = loader({
+  baseUrl: '/cookbooks',
+  source: cookbooks.toFumadocsSource(),
   plugins: [lucideIconsPlugin()],
 });
 
@@ -350,7 +350,7 @@ ${page.data.description || ''}`;
   const cleanContent = mdxToCleanMarkdown(content);
 
   const footer = includeFooter
-    ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Examples](https://docs.composio.dev/llms.mdx/examples) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
+    ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
     : '';
 
   return `# ${page.data.title} (${page.url})

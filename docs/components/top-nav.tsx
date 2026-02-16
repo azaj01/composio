@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/docs', label: 'Docs' },
   { href: '/docs/api', label: 'API' },
-  { href: '/docs/examples', label: 'Examples' },
+  { href: '/cookbooks', label: 'Cookbooks' },
 ];
 
 export function TopNav() {
@@ -18,7 +18,7 @@ export function TopNav() {
       return pathname === '/docs' || 
         (pathname.startsWith('/docs') && 
          !pathname.startsWith('/docs/api') && 
-         !pathname.startsWith('/docs/examples'));
+         !pathname.startsWith('/cookbooks'));
     }
     return pathname.startsWith(href);
   };

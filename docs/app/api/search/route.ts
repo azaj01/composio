@@ -1,5 +1,5 @@
 // Use direct imports from collections to avoid top-level await in lib/source.ts
-import { docs, examples, toolkits } from 'fumadocs-mdx:collections/server';
+import { docs, cookbooks, toolkits } from 'fumadocs-mdx:collections/server';
 import { createSearchAPI } from 'fumadocs-core/search/server';
 import { loader } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
@@ -11,9 +11,9 @@ const docsSource = loader({
   plugins: [lucideIconsPlugin()],
 });
 
-const examplesSource = loader({
-  baseUrl: '/examples',
-  source: examples.toFumadocsSource(),
+const cookbooksSource = loader({
+  baseUrl: '/cookbooks',
+  source: cookbooks.toFumadocsSource(),
   plugins: [lucideIconsPlugin()],
 });
 
@@ -25,7 +25,7 @@ const toolkitsSource = loader({
 
 const allPages = [
   ...docsSource.getPages(),
-  ...examplesSource.getPages(),
+  ...cookbooksSource.getPages(),
   ...toolkitsSource.getPages(),
 ];
 

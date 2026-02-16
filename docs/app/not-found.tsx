@@ -85,8 +85,8 @@ export default async function NotFound() {
         <Link href="/toolkits" className="hover:text-fd-foreground transition-colors">
           Toolkits
         </Link>
-        <Link href="/examples" className="hover:text-fd-foreground transition-colors">
-          Examples
+        <Link href="/cookbooks" className="hover:text-fd-foreground transition-colors">
+          Cookbooks
         </Link>
         <Link href="/reference" className="hover:text-fd-foreground transition-colors">
           API Reference

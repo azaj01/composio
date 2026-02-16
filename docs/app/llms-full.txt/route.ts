@@ -1,4 +1,4 @@
-import { getLLMText, source, examplesSource, referenceSource, toolkitsSource } from '@/lib/source';
+import { getLLMText, source, cookbooksSource, referenceSource, toolkitsSource } from '@/lib/source';
 import type { ReactNode } from 'react';
 
 export const revalidate = false;
@@ -98,9 +98,9 @@ export async function GET() {
       source.pageTree.children as TreeNode[]
     );
 
-    const [docsResults, examplesResults, referenceResults, toolkitsResults] = await Promise.all([
+    const [docsResults, cookbooksResults, referenceResults, toolkitsResults] = await Promise.all([
       getTextForPages(orderedDocsPages),
-      getTextForPages(examplesSource.getPages() as PageLike[]),
+      getTextForPages(cookbooksSource.getPages() as PageLike[]),
       getTextForPages(referenceSource.getPages() as PageLike[]),
       getTextForPages(toolkitsSource.getPages() as PageLike[]),
     ]);
@@ -108,8 +108,8 @@ export async function GET() {
     const results = [
       '# Composio Documentation\n\n> Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.\n\n# Documentation\n',
       ...docsResults,
-      '\n# Examples\n',
-      ...examplesResults,
+      '\n# Cookbooks\n',
+      ...cookbooksResults,
       '\n# API Reference\n',
       ...referenceResults,
       '\n# Toolkits\n',
