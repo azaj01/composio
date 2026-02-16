@@ -2,8 +2,8 @@
   "title": "Examples",
   "root": true,
   "pages": [
-    "templates",
     "---Getting Started---",
+    "templates",
     "fast-api",
     "hono",
     "---Productivity & Automation---",
