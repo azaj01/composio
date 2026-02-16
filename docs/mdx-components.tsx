@@ -17,6 +17,7 @@ import { Figure } from '@/components/figure';
 import { StepTitle } from '@/components/step-title';
 import { Video } from '@/components/video';
 import { CapabilityCard, CapabilityList } from '@/components/capability-card';
+import { TemplateCard, TemplateGrid } from '@/components/template-card';
 import { ToolkitsLanding } from '@/components/toolkits/toolkits-landing';
 import { Mermaid } from '@/components/mermaid';
 import {
@@ -79,6 +80,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Video,
     CapabilityCard,
     CapabilityList,
+    TemplateCard,
+    TemplateGrid,
     ToolkitsLanding,
     Mermaid,
     StepTitle,

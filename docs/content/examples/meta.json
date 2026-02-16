@@ -3,6 +3,7 @@
   "root": true,
   "pages": [
     "---Getting Started---",
+    "templates",
     "fast-api",
     "hono",
     "---Productivity & Automation---",
