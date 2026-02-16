@@ -2,6 +2,7 @@
   "title": "Examples",
   "root": true,
   "pages": [
+    "templates",
     "---Getting Started---",
     "fast-api",
     "hono",

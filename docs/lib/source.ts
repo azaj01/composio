@@ -201,8 +201,19 @@ export function mdxToCleanMarkdown(content: string): string {
   );
   result = result.replace(/<\/ToolTypeOption>/g, '');
 
-  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, etc.)
-  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding)[^>]*>/g, '');
+  // Convert TemplateCard to markdown link with description
+  result = result.replace(
+    /<TemplateCard[\s\S]*?title="([^"]*)"[\s\S]*?description="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?\/>/g,
+    '- [$1]($3): $2'
+  );
+  // TemplateCard with href before title
+  result = result.replace(
+    /<TemplateCard[\s\S]*?href="([^"]*)"[\s\S]*?title="([^"]*)"[\s\S]*?description="([^"]*)"[\s\S]*?\/>/g,
+    '- [$2]($1): $3'
+  );
+
+  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, TemplateGrid, etc.)
+  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding|TemplateGrid)[^>]*>/g, '');
 
   // Remove remaining self-closing JSX tags (including those with JSX expressions)
   result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
