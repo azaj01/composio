@@ -18,7 +18,7 @@ docs/
 ├── app/                  # Next.js app router
 ├── content/              # MDX content
 │   ├── docs/             # Main documentation
-│   ├── examples/         # Example guides
+│   ├── cookbooks/        # Cookbooks & guides
 │   ├── changelog/        # Release notes
 │   └── reference/        # SDK & API reference
 ├── components/           # React components
@@ -42,8 +42,9 @@ Detailed documentation for Claude is organized in `.claude/`:
 
 ### Decisions (ADRs)
 - [toolkits.md](.claude/decisions/toolkits.md) - Toolkits page implementation
-- [examples.md](.claude/decisions/examples.md) - Examples page plan
+- [examples.md](.claude/decisions/examples.md) - Examples/cookbooks page plan
 - [feedback.md](.claude/decisions/feedback.md) - Feedback system
+- [llm-guardrails.md](.claude/decisions/llm-guardrails.md) - LLM guardrails system (frontmatter-scoped, pipeline-injected)
 
 ## Key Rules
 
@@ -62,3 +63,5 @@ Detailed documentation for Claude is organized in `.claude/`:
 ## AI-Native Documentation
 
 **Prefer cURL over "click"** - Most docs traffic comes from AI crawlers. When documenting API interactions, prefer showing cURL commands over UI instructions like "click this button" or "navigate to settings". cURL is machine-readable and can be directly executed by AI agents.
+
+**LLM guardrails** - Every `.md` endpoint appends invisible guardrails steering AI code generators toward the session-based pattern. Controlled via `llmGuardrails` frontmatter field. See [llm-guardrails.md](.claude/decisions/llm-guardrails.md).

@@ -3,6 +3,7 @@ import { type InferPageType, loader, multiple } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 import { openapi } from './openapi';
 import { openapiSource, openapiPlugin } from 'fumadocs-openapi/server';
+import { getGuardrails } from './llm-guardrails';
 
 /**
  * Transformer to set defaultOpen: true for specific folders in the reference sidebar.
@@ -317,8 +318,9 @@ function stripTwoslashFromCodeBlocks(content: string): string {
   });
 }
 
-export async function getLLMText(page: InferPageType<typeof source>, options?: { includeFooter?: boolean }) {
+export async function getLLMText(page: InferPageType<typeof source>, options?: { includeFooter?: boolean; includeGuardrails?: boolean }) {
   const includeFooter = options?.includeFooter ?? true;
+  const includeGuardrails = options?.includeGuardrails ?? true;
   // Fall back to description if getText is not available
   if (typeof page.data.getText !== 'function') {
     return `# ${page.data.title} (${page.url})
@@ -353,9 +355,11 @@ ${page.data.description || ''}`;
     ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
     : '';
 
+  const guardrails = includeGuardrails ? getGuardrails(page.data.llmGuardrails) : '';
+
   return `# ${page.data.title} (${page.url})
 
-${cleanContent}${footer}`;
+${cleanContent}${footer}${guardrails}`;
 }
 
 export function formatDate(dateStr: string): string {

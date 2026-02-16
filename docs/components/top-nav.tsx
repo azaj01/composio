@@ -15,10 +15,9 @@ export function TopNav() {
 
   const isActive = (href: string) => {
     if (href === '/docs') {
-      return pathname === '/docs' || 
-        (pathname.startsWith('/docs') && 
-         !pathname.startsWith('/docs/api') && 
-         !pathname.startsWith('/cookbooks'));
+      return pathname === '/docs' ||
+        (pathname.startsWith('/docs') &&
+         !pathname.startsWith('/docs/api'));
     }
     return pathname.startsWith(href);
   };

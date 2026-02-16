@@ -1,4 +1,5 @@
 import { getLLMText, source, cookbooksSource, referenceSource, toolkitsSource } from '@/lib/source';
+import { SESSION_GUARDRAILS } from '@/lib/llm-guardrails';
 import type { ReactNode } from 'react';
 
 export const revalidate = false;
@@ -82,7 +83,7 @@ async function getTextForPages(pages: PageLike[]) {
     pages.map(async (page) => {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return await getLLMText(page as any, { includeFooter: false });
+        return await getLLMText(page as any, { includeFooter: false, includeGuardrails: false });
       } catch {
         // Graceful fallback if getText fails
         return `# ${page.data.title} (${page.url})\n\n${page.data.description || ''}`;
@@ -106,7 +107,7 @@ export async function GET() {
     ]);
 
     const results = [
-      '# Composio Documentation\n\n> Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.\n\n# Documentation\n',
+      `# Composio Documentation\n\n> Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.${SESSION_GUARDRAILS}\n# Documentation\n`,
       ...docsResults,
       '\n# Cookbooks\n',
       ...cookbooksResults,

@@ -17,6 +17,11 @@ import { z } from 'zod';
 // Extended schema with keywords for search
 const docsSchema = frontmatterSchema.extend({
   keywords: z.array(z.string()).optional(),
+  /** Controls which LLM guardrail set is appended to the .md output.
+   *  - undefined / omitted → default session-based guardrails
+   *  - "direct-execution" → softer guardrails acknowledging this is the low-level API
+   *  - "none" → no guardrails appended */
+  llmGuardrails: z.enum(['direct-execution', 'none']).optional(),
 });
 
 export const docs = defineDocs({

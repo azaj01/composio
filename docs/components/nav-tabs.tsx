@@ -16,7 +16,7 @@ export function NavTabs() {
     if (exact) {
       // For "Docs", only active if exactly /docs or /docs/ but not /docs/api
       return pathname === href || pathname === `${href}/` || 
-        (pathname.startsWith('/docs') && !pathname.startsWith('/docs/api') && !pathname.startsWith('/cookbooks'));
+        (pathname.startsWith('/docs') && !pathname.startsWith('/docs/api'));
     }
     return pathname.startsWith(href);
   };
