@@ -147,46 +147,6 @@ Upgrade your plan. See [pricing](https://composio.dev/pricing) for available pla
 Yes, Composio supports self-hosting on the Enterprise plan. See [pricing](https://composio.dev/pricing) for details or [talk to us](https://calendly.com/composiohq/enterprise).
 </Accordion>
 
-<Accordion title="&quot;App is blocked&quot; warning while connecting to Google apps">
-When connecting Google apps (Gmail, Sheets, Slides, Docs, Drive, etc.) you may see a "This app is blocked" OAuth error. It means the scopes you're requesting aren't verified for the OAuth client being used. Two common fixes:
-
-### Using the default OAuth app
-- Cause: you added extra scopes beyond the default Composio-managed scopes.  
-- Fix: remove the additional scopes from your authConfig and retry, or create your own OAuth app and use its credentials (see [How to create OAuth2 credentials for Google Apps](https://composio.dev/auth/googleapps)).  
-
-<Figure src="/images/troubleshooting/troubleshooting-auth-app-blocked.png" alt="App blocked screenshot" size="md" />
-
-### Using your own OAuth app
-- Cause: you're requesting scopes not yet verified for your OAuth app. Google requires verification for some sensitive scopes.  
-- Fix: submit the scopes for verification in Google Cloud Console; to change the domain shown on the consent screen, configure a custom redirect URL. See Google verification docs: https://support.google.com/cloud/answer/13463073 and our guide: https://docs.composio.dev/docs/custom-auth-configs#white-labeling-the-oauth-consent-screen
-</Accordion>
-
-<Accordion title="&quot;&lt;Google App Name&gt; API has not been used in project &lt;ID&gt; before or it is disabled">
-This error occurs when the Google API for the toolkit (Sheets, Drive, Gmail, Slides, etc.) is not enabled for the Cloud project that owns your OAuth credentials. Example error:
-
-```bash
-<Google App Name> API has not been used in project <ID> before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/... then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry
-```
-
-How to resolve:
-- If using your own OAuth app, enable the required API in Google Cloud Console → APIs & Services, then wait a few minutes and retry.  
-- See step 2.1 in our guide: https://composio.dev/auth/googleapps
-</Accordion>
-
-<Accordion title="Access blocked: Authorization Error (Error 400: invalid_scope)">
-This error means the requested scopes are invalid or formatted incorrectly in the authorization URL.
-
-How to resolve:
-- Verify scope formatting and validity (see the [Google OAuth scopes docs](https://developers.google.com/identity/protocols/oauth2)).  
-- If creating authConfigs programmatically, follow the [programmatic authConfig guide](https://docs.composio.dev/docs/programmatic-auth-configs).  
-
-<Figure src="/images/invalid_scope-error.png" alt="Invalid scope screenshot" size="md" />
-
-</Accordion>
-
-</Accordions>
- 
-<Accordions>
 <Accordion title="How do I configure sessions with custom auth configs?">
 Some toolkits require your own OAuth credentials or API keys. Create an auth config in the dashboard by selecting the toolkit, choosing the auth scheme, and entering your credentials. Then pass the auth config ID when creating a session using the `auth_configs` (or `auth_config_id`) parameter so the session uses your developer credentials instead of Composio‑managed auth.  
 See: https://docs.composio.dev/docs/using-custom-auth-configuration
