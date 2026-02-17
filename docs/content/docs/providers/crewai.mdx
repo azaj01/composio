@@ -4,14 +4,14 @@ description: Build an agent with CrewAI and enable it to use 800+ tools with Com
 keywords: [crew]
 ---
 
-The CrewAI Provider formats the Composio tools into an object compatible with CrewAI's tool calling capabilities. Agents and LLM workflows built with this can call and execute the Composio tools.
+The CrewAI Provider formats Composio tools into an object compatible with CrewAI's tool calling capabilities.
 
 ## Setup
 
 The CrewAI provider is available for only the Python SDK.
 
 ```bash
-pip install composio_crewai==0.8.0
+pip install composio composio_crewai crewai langchain_openai
 ```
 
 ## Usage
@@ -23,34 +23,26 @@ from langchain_openai import ChatOpenAI
 from composio import Composio
 from composio_crewai import CrewAIProvider
 
-# Initialize tools.
 openai_client = ChatOpenAI()
 composio = Composio(provider=CrewAIProvider())
 
-# Get All the tools
-tools = composio.tools.get(user_id="default", toolkits=["GITHUB"])
+# Create a session for your user
+session = composio.create(user_id="user_123")
+tools = session.tools()
 
-# Define agent
 crewai_agent = Agent(
     role="Github Agent",
-    goal="""You take action on Github using Github APIs""",
-    backstory=(
-        "You are AI agent that is responsible for taking actions on Github "
-        "on users' behalf. You need to take action on Github using Github APIs"
-    ),
+    goal="You take action on Github using Github APIs",
+    backstory="You are an AI agent that takes actions on Github on users' behalf.",
     verbose=True,
     tools=tools,
     llm=openai_client,
 )
 
-# Define task
 task = Task(
-    description=(
-        "Star a repo composiohq/composio on GitHub, if the action is successful "
-        "include Action executed successfully"
-    ),
+    description="Star the composiohq/composio repository on GitHub",
     agent=crewai_agent,
-    expected_output="if the star happened",
+    expected_output="Whether the star action succeeded",
 )
 
 my_crew = Crew(agents=[crewai_agent], tasks=[task])
