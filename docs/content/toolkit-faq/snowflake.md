@@ -2,8 +2,10 @@
 
 For a step-by-step guide on creating and configuring your own Snowflake OAuth credentials with Composio, see [How to create OAuth credentials for Snowflake](https://composio.dev/auth/snowflake).
 
-## Create Snowflake OAuth app (example)
+## How do I create a Snowflake OAuth app?
+
 Example Snowflake SQL to create a security integration for OAuth:
+
 ```sql
 CREATE SECURITY INTEGRATION oauth_custom_all_roles
   TYPE = oauth
@@ -13,8 +15,12 @@ CREATE SECURITY INTEGRATION oauth_custom_all_roles
   OAUTH_REFRESH_TOKEN_VALIDITY = 7776000;
 ```
 
-## Roles and config
-Ensure the OAuth app and Snowflake roles/databases/schemas are configured correctly for the integration.
+## How do I configure roles and permissions for Snowflake?
 
-## Customer integration notes
-Snowflake requires per-customer OAuth credentials; customers often supply their own credentials when integrating with Composio.
+Ensure the OAuth app and Snowflake roles, databases, and schemas are configured correctly for the integration.
+
+## Does Snowflake require per-customer OAuth credentials?
+
+Yes. Snowflake typically requires per-customer OAuth credentials. Customers often supply their own credentials when integrating with Composio.
+
+---

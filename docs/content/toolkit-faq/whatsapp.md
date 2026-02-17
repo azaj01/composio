@@ -1,8 +1,9 @@
-## WhatsApp Toolkit — FAQ
+## Why isn't my WhatsApp message being delivered?
 
-## Sending messages
-The `WHATSAPP_SEND_MESSAGE` tool follows the customer service window: recipients only receive messages within 24 hours of their last message, unless you use a template message which can be sent outside the window.
+WhatsApp has a 24-hour customer service window. Recipients only receive messages within 24 hours of their last message to you. To message outside this window, use a template message.
 
-## Connection initiation fail
-If integration initiation fails with errors like `Missing required fields: generic_id`, ensure required fields are provided. See integration docs: https://docs.composio.dev/toolkits/whatsapp#authentication-details
+## Why is my WhatsApp connection failing with "Missing required fields"?
 
+Ensure all required fields are provided when initiating the connection. See the [WhatsApp authentication details](https://docs.composio.dev/toolkits/whatsapp#authentication-details).
+
+---

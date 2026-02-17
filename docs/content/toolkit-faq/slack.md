@@ -2,34 +2,32 @@
 
 For a step-by-step guide on creating and configuring your own Slack OAuth credentials with Composio, see [How to create OAuth credentials for Slack](https://composio.dev/auth/slack).
 
-## Slack vs Slackbot — key differences
-- Scope: Slack = workspace-level API (channels, files, users); Slackbot = bot-centric messaging/interactivity.  
-- Triggers: Slack = workspace events; Slackbot = bot entry points (app_mention, DMs, slash commands).  
-- Actions: Slack can manage channels/files/users; Slackbot focuses on messaging, ephemeral messages, and modals.  
-- Message identity: Slack can post as app; Slackbot posts as the bot user.  
-- Use cases: Slack for workspace management; Slackbot for conversational UX and bot flows.
+## What is the difference between Slack and Slackbot toolkits?
 
-## Docs & Scopes
-See Slack Developer Docs: https://docs.slack.dev/reference/scopes/
+Slack is for workspace-level API access (channels, files, users) while Slackbot is bot-centric (messaging, interactivity). Slack triggers cover workspace events; Slackbot covers bot entry points like app mentions, DMs, and slash commands. Slack can post as the app; Slackbot posts as the bot user.
 
-## Redirect URI mismatch
-Update in Slack App → OAuth & Permissions → Redirect URLs.
+## Where can I find Slack's available scopes?
 
-## Using Webhooks (Events)
-1. Enable Event Subscriptions in your Slack app.  
-2. Set Request URL to: `https://backend.composio.dev/api/v3/trigger_instances/slack/default/handle`  
-3. Add `reaction_added` (and other events) to Subscribe to Bot Events and save.  
-- If using Composio Slack app: you're all set.  
-- If using Slackbot integration: add the bot to channels you want to monitor (or use /add to add Composio App).
+See the [Slack scopes reference](https://docs.slack.dev/reference/scopes/).
 
-## Scope Errors
-1. Missing bot scope → add a bot scope under OAuth & Permissions.  
-2. "Insufficient scopes" → ensure all scopes from your Auth Config are configured in the Slack app.
+## Why am I getting a redirect URI mismatch error?
 
-## Action-specific notes
-- `as_user` parameter: Slack API — set `as_user=True`; Slackbot — leave blank (defaults False).  
-- `missing_charset` error: usually due to invalid `as_user`, wrong channel ID, or missing required fields.
+Update the redirect URL in your Slack App under OAuth & Permissions → Redirect URLs.
 
-## Cannot use Triggers
-Provide the Verification Token (or signing secret) in the Auth Config so Composio can validate incoming events.
+## How do I set up Slack event webhooks?
 
+Enable Event Subscriptions in your Slack app. Set the Request URL to `https://backend.composio.dev/api/v3/trigger_instances/slack/default/handle`. Add events (e.g., `reaction_added`) to Subscribe to Bot Events and save. If using the Slackbot integration, add the bot to the channels you want to monitor.
+
+## Why am I getting scope errors on Slack?
+
+Either you're missing a bot scope (add one under OAuth & Permissions) or you have "Insufficient scopes" (ensure all scopes from your auth config are configured in the Slack app).
+
+## What does the `as_user` parameter do in Slack tools?
+
+For the Slack toolkit, set `as_user=True` to post as the authenticated user. For Slackbot, leave it blank (defaults to false). A `missing_charset` error usually means invalid `as_user`, wrong channel ID, or missing required fields.
+
+## Why aren't my Slack triggers working?
+
+Provide the Verification Token or signing secret in the auth config so Composio can validate incoming events.
+
+---

@@ -1,11 +1,7 @@
-## OneDrive Toolkit — FAQ
+## Why am I getting 404 on `ONE_DRIVE_DOWNLOAD_FILE` for a shared file?
 
-## Why am I getting 404 on `ONE_DRIVE_DOWNLOAD_FILE` for my shared file?
-Cause: items shown in "Shared" may be references to files that live in a SharePoint site (not actual files in the user's OneDrive). Those referenced items cannot be downloaded via the OneDrive item endpoints.
+Items in "Shared" may be references to files stored in SharePoint, not actual files in the user's OneDrive. These references can't be downloaded via OneDrive endpoints.
 
-Fix:
-- Open the file's location in OneDrive/SharePoint and choose **Copy to → My files** to create a real copy in the user's OneDrive.  
-- After the copy completes, download the copied file with `ONE_DRIVE_DOWNLOAD_FILE`.
+To fix this, open the file's location in OneDrive or SharePoint, choose "Copy to" then "My files" to create a copy in the user's OneDrive, and download the copy. If you need programmatic access to SharePoint files, use the SharePoint APIs instead.
 
-Note: if you need programmatic access to files stored in SharePoint sites, use the SharePoint APIs or ensure the file is copied into the user's OneDrive first.
-
+---

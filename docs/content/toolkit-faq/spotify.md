@@ -1,5 +1,5 @@
-## Spotify Toolkit — FAQ
+## Why is there no default OAuth app for Spotify?
 
-## No default OAuth app
-We do not provide a default OAuth app for Spotify. You can use your own OAuth app for production. We're in contact with Spotify for approval but recommend creating your own app in the meantime.
+Composio does not provide a default OAuth app for Spotify. Create your own OAuth app in the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) to use the Spotify toolkit.
 
+---
