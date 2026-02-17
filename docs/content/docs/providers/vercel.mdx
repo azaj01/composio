@@ -10,12 +10,6 @@ The Vercel AI SDK provider transforms Composio tools into Vercel's [tool format]
 Vercel AI SDK is TypeScript only. There is no Python SDK.
 </Callout>
 
-<IntegrationTabs tabs={[
-  { value: "tools", label: "Tools" },
-  { value: "mcp", label: "MCP" },
-]}>
-
-<IntegrationContent value="tools">
 <Steps>
 <Step>
 **Install**
@@ -69,70 +63,3 @@ for await (const textPart of stream.textStream) {
 ```
 </Step>
 </Steps>
-</IntegrationContent>
-
-<IntegrationContent value="mcp">
-<Steps>
-<Step>
-**Install**
-
-No `@composio/vercel` package needed — use Vercel AI SDK's [MCP client](https://sdk.vercel.ai/docs/ai-sdk-core/mcp) directly.
-
-```bash
-npm install @composio/core ai @ai-sdk/anthropic @ai-sdk/mcp
-```
-</Step>
-
-<Step>
-**Configure API Keys**
-
-<Callout type="info">
-Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `ANTHROPIC_API_KEY` with your [Anthropic API key](https://console.anthropic.com/settings/keys).
-</Callout>
-
-```txt title=".env"
-COMPOSIO_API_KEY=xxxxxxxxx
-ANTHROPIC_API_KEY=xxxxxxxxx
-```
-</Step>
-
-<Step>
-**Create session and run**
-
-```typescript
-// @noErrors
-import { anthropic } from "@ai-sdk/anthropic";
-import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
-import { Composio } from "@composio/core";
-import { streamText, stepCountIs } from "ai";
-
-const composio = new Composio();
-
-// Create a session for your user
-const { mcp } = await composio.create("user_123");
-
-const client = await createMCPClient({
-  transport: {
-    type: "http",
-    url: mcp.url,
-    headers: mcp.headers,
-  },
-});
-const tools = await client.tools();
-
-const stream = await streamText({
-  model: anthropic("claude-opus-4-6"),
-  tools,
-  prompt: "Summarize my emails from today",
-  stopWhen: stepCountIs(10),
-});
-
-for await (const textPart of stream.textStream) {
-  process.stdout.write(textPart);
-}
-```
-</Step>
-</Steps>
-</IntegrationContent>
-
-</IntegrationTabs>
