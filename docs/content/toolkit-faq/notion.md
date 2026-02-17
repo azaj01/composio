@@ -1,21 +1,17 @@
-## Notion Toolkit — FAQ
+## Why do Notion operations show "Composio" instead of the user's name?
 
-## Notion Operations show Composio instead of user’s name
-Why it happens: Notion attributes actions to the Integration itself (name/logo set in the Integration configuration), so operations and comments show the integration identity rather than the individual user.  
-Fix: create and use your own Notion integration if you need a custom name/logo. See: https://developers.notion.com/docs/create-a-notion-integration
+Notion attributes actions to the integration itself, not the individual user. The name and logo shown come from the integration configuration. To use a custom name or logo, create your own Notion integration. See [Notion integration docs](https://developers.notion.com/docs/create-a-notion-integration).
 
-## Granting access to more pages
-If you initially granted access to specific pages and later need to add more:
-1. Open Notion → Settings & Members → Connections  
-2. Select the integration (Composio or your custom integration)  
-3. Click "Select pages" (or "Manage access") and add/remove pages as required
+## How do I grant access to more Notion pages?
 
-## Notion has no scopes
-Notion does not use OAuth scopes. Instead, integrations are granted access to specific resources (pages/databases) during the authorization flow or via integration settings. You do not need to pass scopes when creating an authConfig.
+Open Notion, go to Settings & Members, then Connections. Select the integration (Composio or your custom integration), click "Select pages" or "Manage access", and add or remove pages as needed.
 
-## Configuring Scopes / Access model
-Notion access is controlled by the integration type:
-- OAuth app (public): access selection happens at authorization time.  
-- Internal integration (API key): page access is managed in the Integration settings.  
-Choose the integration model that matches your deployment and permissions needs.
+## Does Notion use OAuth scopes?
 
+No. Notion controls access by granting integrations access to specific pages and databases, not through scopes. You don't need to pass scopes when creating an auth config.
+
+## How does Notion's access model work?
+
+It depends on the integration type. OAuth apps (public) let users select which pages to share during authorization. Internal integrations (API key) have page access managed in the integration settings.
+
+---

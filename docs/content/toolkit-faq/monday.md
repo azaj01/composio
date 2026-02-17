@@ -18,8 +18,9 @@ No. The admin only needs to install the app once per workspace. After that, any 
 
 For a step-by-step guide on creating and configuring your own Monday.com OAuth credentials with Composio, see [How to create OAuth2 credentials for Monday](https://composio.dev/auth/monday).
 
-## Monday has no scopes
-Note: Monday's authConfig does not accept scopes in the same way Google does. Scopes are configured on the OAuth app itself. When using the default OAuth app, ensure the required app-level scopes are configured for full toolkit access. If creating a custom app, add these scopes as needed:
+## How do I configure scopes for Monday.com?
+
+Monday.com doesn't accept scopes in the auth config the way Google does. Scopes are configured on the OAuth app itself. If you're using the default OAuth app, the required scopes are already configured. If creating your own app, add the scopes you need:
 
 ```bash
 me:read
@@ -42,3 +43,5 @@ teams:write
 webhooks:write
 webhooks:read
 ```
+
+---
