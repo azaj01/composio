@@ -2,27 +2,30 @@
 
 For a step-by-step guide on creating and configuring your own Google OAuth credentials with Composio, see [How to create OAuth2 credentials for Google Apps](https://composio.dev/auth/googleapps).
 
-## "App is blocked" warning while connecting to Google apps
-Why it happens: the OAuth client requests scopes that aren't verified for that app (often due to added granular scopes).  
-Fix: remove the extra scopes or use your own OAuth app and submit scopes for verification (see the [Create OAuth app guide](https://composio.dev/auth/googleapps)).
+## Why am I seeing "App is blocked" when connecting Google Meet?
 
-## "<Google App Name> API has not been used in project <ID> before or it is disabled"
-Why it happens: the Meet API is not enabled for the Cloud project tied to your OAuth credentials.  
-Fix: enable the Meet API in Google Cloud Console → APIs & Services, then wait a few minutes and retry.
+The OAuth client is requesting scopes that Google hasn't verified for that client. This usually happens when you add extra scopes beyond the defaults.
 
-## Access blocked: Authorization Error (Error 400: invalid_scope)
-Why it happens: requested scopes are invalid or misformatted in the auth URL.  
-Fix: verify scopes against the [Google OAuth scopes docs](https://developers.google.com/identity/protocols/oauth2) and follow the [programmatic authConfig guide](https://docs.composio.dev/docs/programmatic-auth-configs).
+Remove the additional scopes from your auth config, or create your own OAuth app and submit the scopes for verification. See [How to create OAuth2 credentials for Google Apps](https://composio.dev/auth/googleapps).
 
-## Composio name shown on the OAuth consent screen
-To white‑label the consent screen, create and use your own OAuth app and set a custom redirect URL. See the [white‑label OAuth guide](https://docs.composio.dev/docs/custom-auth-configs#white-labeling-the-oauth-consent-screen).
+## Why am I getting "Google Meet API has not been used in project" error?
 
-## 401 errors for tool calls
-Common causes: user revoked access, password/2FA change, Workspace admin policy, or refresh‑token limits (~50). Reauthorize when needed.
+When using custom OAuth credentials, the Google Meet API must be enabled in the Google Cloud project that owns those credentials. Enable it in Google Cloud Console under APIs & Services, wait a few minutes, and retry.
 
----
-## Why am I getting "Quota Exhausted" or "rate limit exhausted" on the service <SERVICE>.googleapis.com?
-Google enforces request quotas (per‑minute and daily) to protect its APIs. When many clients use the same OAuth app, shared quotas can be exhausted and cause these errors.  
-Fixes: implement exponential backoff and retries, batch/cache requests to reduce the rate, or use your own OAuth app credentials to avoid shared limits.
+## Why am I getting "Error 400: invalid_scope"?
+
+The requested scopes are invalid or incorrectly formatted in the authorization URL. Verify your scope values against the [Google OAuth scopes docs](https://developers.google.com/identity/protocols/oauth2). If you're creating auth configs programmatically, see the [programmatic auth config guide](/docs/programmatic-auth-configs).
+
+## Why does the OAuth consent screen show "Composio" instead of my app?
+
+By default, the consent screen uses Composio's OAuth app. To show your own app name and logo, create your own OAuth app and set a custom redirect URL. See [White-labeling the OAuth consent screen](/docs/custom-auth-configs#white-labeling-the-oauth-consent-screen).
+
+## Why am I getting 401 errors on tool calls?
+
+The user's access token is no longer valid. Common causes: the user revoked access, changed their password or 2FA, a Workspace admin policy changed, or Google's refresh token limit (~50 per account) was exceeded. Re-authenticating the user typically resolves this.
+
+## Why am I getting "Quota Exhausted" or "rate limit exhausted"?
+
+Google enforces per-minute and daily request quotas. If you're using Composio's default OAuth app, you share that quota with other users, which can cause limits to be hit faster. Use your own OAuth app credentials to get a dedicated quota, and add exponential backoff and retries to handle transient rate limits.
 
 ---
