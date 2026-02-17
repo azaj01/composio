@@ -1,14 +1,16 @@
 ---
 title: LangChain
 description: Build an agent with LangChain and enable it to use 800+ tools with Composio.
-keywords: [langgraph]
+keywords: [langchain]
 ---
 
-The LangChain Provider transforms Composio tools into a format compatible with LangChain's function calling capabilities.
+The LangChain provider transforms Composio tools into LangChain's [StructuredTool](https://python.langchain.com/docs/how_to/custom_tools/) format with built-in execution.
 
-## Setup
+<Steps>
+<Step>
+**Install**
 
-<Tabs items={["Python", "TypeScript"]}>
+<Tabs groupId="language" items={["Python", "TypeScript"]} persist>
 <Tab value="Python">
 ```bash
 pip install composio composio_langchain langchain langchain_openai
@@ -16,43 +18,54 @@ pip install composio composio_langchain langchain langchain_openai
 </Tab>
 <Tab value="TypeScript">
 ```bash
-npm install @composio/core @composio/langchain @langchain/openai @langchain/langgraph @langchain/core
+npm install @composio/core @composio/langchain langchain @langchain/openai
 ```
 </Tab>
 </Tabs>
+</Step>
 
-## Usage
+<Step>
+**Configure API Keys**
 
-<Tabs items={["Python", "TypeScript"]}>
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `OPENAI_API_KEY` with your [OpenAI API key](https://platform.openai.com/api-keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+OPENAI_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+**Create session and run**
+
+<Tabs groupId="language" items={["Python", "TypeScript"]} persist>
 <Tab value="Python">
 ```python
 from composio import Composio
 from composio_langchain import LangchainProvider
-from langchain import hub  # type: ignore
-from langchain.agents import AgentExecutor, create_openai_functions_agent
+from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
-prompt = hub.pull("hwchase17/openai-functions-agent")
-openai_client = ChatOpenAI(model="gpt-5")
-
 composio = Composio(provider=LangchainProvider())
+llm = ChatOpenAI(model="gpt-5.2")
 
 # Create a session for your user
 session = composio.create(user_id="user_123")
 tools = session.tools()
 
-agent = create_openai_functions_agent(openai_client, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent = create_agent(tools=tools, model=llm)
+result = agent.invoke({"messages": [("user", "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'")]})
 
-agent_executor.invoke({"input": "Star the composiohq/composio repository on GitHub"})
+print(result["messages"][-1].content)
 ```
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+// @noErrors
 import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage, AIMessage } from '@langchain/core/messages';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { StateGraph, MessagesAnnotation } from '@langchain/langgraph';
+import { createAgent } from 'langchain';
 import { Composio } from '@composio/core';
 import { LangchainProvider } from '@composio/langchain';
 
@@ -64,39 +77,20 @@ const composio = new Composio({
 const session = await composio.create("user_123");
 const tools = await session.tools();
 
-const toolNode = new ToolNode(tools);
+const model = new ChatOpenAI({ model: 'gpt-5.2' });
 
-const model = new ChatOpenAI({
-  model: 'gpt-4o-mini',
-  temperature: 0,
-}).bindTools(tools);
-
-function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
-  const lastMessage = messages[messages.length - 1] as AIMessage;
-  if (lastMessage.tool_calls?.length) {
-    return 'tools';
-  }
-  return '__end__';
-}
-
-async function callModel(state: typeof MessagesAnnotation.State) {
-  const response = await model.invoke(state.messages);
-  return { messages: [response] };
-}
-
-const workflow = new StateGraph(MessagesAnnotation)
-  .addNode('agent', callModel)
-  .addEdge('__start__', 'agent')
-  .addNode('tools', toolNode)
-  .addEdge('tools', 'agent')
-  .addConditionalEdges('agent', shouldContinue);
-
-const app = workflow.compile();
-
-const finalState = await app.invoke({
-  messages: [new HumanMessage('Star the composiohq/composio repository on GitHub')],
+const agent = createAgent({
+  model,
+  tools,
 });
-console.log(finalState.messages[finalState.messages.length - 1].content);
+
+const result = await agent.invoke({
+  messages: [{ role: "user", content: "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'" }],
+});
+
+console.log(result.messages[result.messages.length - 1].content);
 ```
 </Tab>
 </Tabs>
+</Step>
+</Steps>
