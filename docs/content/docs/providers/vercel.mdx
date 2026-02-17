@@ -57,7 +57,7 @@ const session = await composio.create("user_123");
 const tools = await session.tools();
 
 const stream = await streamText({
-  model: anthropic("claude-sonnet-4-5"),
+  model: anthropic("claude-opus-4-6"),
   tools,
   prompt: "Star the composiohq/composio repository on github",
   stopWhen: stepCountIs(10),
@@ -121,7 +121,7 @@ const client = await createMCPClient({
 const tools = await client.tools();
 
 const stream = await streamText({
-  model: anthropic("claude-sonnet-4-5"),
+  model: anthropic("claude-opus-4-6"),
   tools,
   prompt: "Summarize my emails from today",
   stopWhen: stepCountIs(10),
