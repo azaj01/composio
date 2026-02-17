@@ -53,7 +53,7 @@ const tools = await session.tools();
 const stream = await streamText({
   model: anthropic("claude-opus-4-6"),
   tools,
-  prompt: "Star the composiohq/composio repository on github",
+  prompt: "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'",
   stopWhen: stepCountIs(10),
 });
 
