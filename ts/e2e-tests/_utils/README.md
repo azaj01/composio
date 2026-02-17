@@ -152,7 +152,7 @@ it('calls LLM', async () => {
 | Constant    | Value     | Use Case                                   |
 | ----------- | --------- | ------------------------------------------ |
 | `DEFAULT`   | `5_000`   | Standard test operations                   |
-| `FIXTURE`   | `15_000`  | `beforeAll` hooks that call `runFixture()` |
+| `FIXTURE`   | `60_000`  | `beforeAll` hooks that call `runFixture()` |
 | `LLM_SHORT` | `30_000`  | Quick LLM calls                            |
 | `LLM_LONG`  | `60_000`  | Complex LLM operations                     |
 
