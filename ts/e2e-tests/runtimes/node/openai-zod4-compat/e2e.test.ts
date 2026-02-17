@@ -6,7 +6,6 @@
  */
 
 import { e2e, type E2ETestResultWithSetup } from '@e2e-tests/utils';
-import { TIMEOUTS } from '@e2e-tests/utils/const';
 import { describe, it, expect, beforeAll } from 'bun:test';
 
 declare module 'bun' {
@@ -24,12 +23,13 @@ e2e(import.meta.url, {
   defineTests: ({ runFixture }) => {
     let result: E2ETestResultWithSetup;
 
+    // npm install inside Docker needs more time than the default TIMEOUTS.FIXTURE (60s)
     beforeAll(async () => {
       result = await runFixture({
         filename: 'index.mjs',
         setup: 'npm install --legacy-peer-deps',
       });
-    }, TIMEOUTS.FIXTURE);
+    }, 300_000);
 
     describe('setup', () => {
       it('npm install completes successfully', () => {
