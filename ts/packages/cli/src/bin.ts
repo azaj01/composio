@@ -1,7 +1,7 @@
 import process from 'node:process';
 import { Cause, Console, Effect, Exit, Layer, Logger } from 'effect';
 import { captureErrors, prettyPrintFromCapturedErrors } from 'effect-errors/index';
-import { CliConfig, ValidationError } from '@effect/cli';
+import { CliConfig, HelpDoc, ValidationError } from '@effect/cli';
 import { FetchHttpClient } from '@effect/platform';
 import { BunContext, BunRuntime, BunFileSystem } from '@effect/platform-bun';
 import type { Teardown } from '@effect/platform/Runtime';
@@ -101,9 +101,18 @@ const runWithArgs = Effect.flatMap(runWithConfig, run => run(process.argv)) sati
 runWithArgs.pipe(
   Effect.scoped,
   // @effect/cli already prints validation errors (missing args, invalid flags, etc.)
-  // via its own printDocs before re-failing. Swallow the error here to avoid
+  // via its own printDocs before re-failing. Swallow the re-thrown error to avoid
   // routing it through the generic error box which would dump raw JSON.
-  Effect.catchIf(ValidationError.isValidationError, () => Effect.void),
+  // When a flag is passed without its required value (e.g. `--query` instead of
+  // `--query "text"`), @effect/cli reports it as "unknown argument" — add a tip.
+  Effect.catchIf(ValidationError.isValidationError, error => {
+    const text = HelpDoc.toAnsiText(error.error).trim();
+    const flagMatch = text.match(/Received unknown argument: '(--\w+)'/);
+    if (flagMatch) {
+      return Console.error(`Tip: ${flagMatch[1]} requires a value, e.g. ${flagMatch[1]} "value"`);
+    }
+    return Effect.void;
+  }),
   Effect.withSpan('composio-cli', {
     attributes: {
       name: constants.APP_NAME,
