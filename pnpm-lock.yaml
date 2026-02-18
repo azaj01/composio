@@ -179,6 +179,12 @@ importers:
         specifier: workspace:*
         version: link:../../_utils
 
+  ts/e2e-tests/cli/whoami:
+    devDependencies:
+      '@e2e-tests/utils':
+        specifier: workspace:*
+        version: link:../../_utils
+
   ts/e2e-tests/runtimes/cloudflare/cf-workers-basic:
     dependencies:
       '@composio/core':
@@ -656,16 +662,16 @@ importers:
         version: link:../../packages/providers/llamaindex
       '@llamaindex/openai':
         specifier: ^0.4.20
-        version: 0.4.22(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(ws@8.19.0)(zod@4.3.6)
+        version: 0.4.22(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(ws@8.19.0)(zod@3.25.76)
       '@llamaindex/workflow':
         specifier: ^1.1.24
-        version: 1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(zod@4.3.6)
+        version: 1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(zod@3.25.76)
       dotenv:
         specifier: ^16.4.1
         version: 16.6.1
       llamaindex:
         specifier: ^0.12.0
-        version: 0.12.1(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@4.3.6)
+        version: 0.12.1(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.76)
     devDependencies:
       '@types/bun':
         specifier: ^1.2.9
@@ -1262,7 +1268,7 @@ importers:
     dependencies:
       llamaindex:
         specifier: ^0.12.0
-        version: 0.12.1(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@4.3.6)
+        version: 0.12.1(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@4.3.6)
     devDependencies:
       '@composio/core':
         specifier: workspace:*
@@ -7524,26 +7530,43 @@ snapshots:
       tree-sitter: 0.22.4
       web-tree-sitter: 0.24.7
 
-  '@llamaindex/openai@0.4.22(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(ws@8.19.0)(zod@4.3.6)':
+  '@llamaindex/openai@0.4.22(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(ws@8.19.0)(zod@3.25.76)':
     dependencies:
       '@llamaindex/core': 0.6.22
       '@llamaindex/env': 0.1.30
-      openai: 5.23.2(ws@8.19.0)(zod@4.3.6)
+      openai: 5.23.2(ws@8.19.0)(zod@3.25.76)
     transitivePeerDependencies:
       - ws
       - zod
 
-  '@llamaindex/workflow-core@1.3.3(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(zod@4.3.6)':
+  '@llamaindex/workflow-core@1.3.3(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(zod@3.25.76)':
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)
       hono: 4.11.9
+      zod: 3.25.76
+
+  '@llamaindex/workflow-core@1.3.3(zod@4.3.6)':
+    optionalDependencies:
       zod: 4.3.6
 
-  '@llamaindex/workflow@1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(zod@4.3.6)':
+  '@llamaindex/workflow@1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(zod@3.25.76)':
     dependencies:
       '@llamaindex/core': 0.6.22
       '@llamaindex/env': 0.1.30
-      '@llamaindex/workflow-core': 1.3.3(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(zod@4.3.6)
+      '@llamaindex/workflow-core': 1.3.3(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@modelcontextprotocol/sdk'
+      - hono
+      - next
+      - p-retry
+      - rxjs
+      - zod
+
+  '@llamaindex/workflow@1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(zod@4.3.6)':
+    dependencies:
+      '@llamaindex/core': 0.6.22
+      '@llamaindex/env': 0.1.30
+      '@llamaindex/workflow-core': 1.3.3(zod@4.3.6)
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - hono
@@ -9924,12 +9947,34 @@ snapshots:
       rfdc: 1.4.1
       wrap-ansi: 9.0.2
 
-  llamaindex@0.12.1(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@4.3.6):
+  llamaindex@0.12.1(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.76):
     dependencies:
       '@llamaindex/core': 0.6.22
       '@llamaindex/env': 0.1.30
       '@llamaindex/node-parser': 2.0.22(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)
-      '@llamaindex/workflow': 1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(hono@4.11.9)(zod@4.3.6)
+      '@llamaindex/workflow': 1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(hono@4.11.9)(zod@3.25.76)
+      '@types/lodash': 4.17.23
+      '@types/node': 24.10.13
+      lodash: 4.17.23
+      magic-bytes.js: 1.13.0
+    transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@modelcontextprotocol/sdk'
+      - gpt-tokenizer
+      - hono
+      - next
+      - p-retry
+      - rxjs
+      - tree-sitter
+      - web-tree-sitter
+      - zod
+
+  llamaindex@0.12.1(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@4.3.6):
+    dependencies:
+      '@llamaindex/core': 0.6.22
+      '@llamaindex/env': 0.1.30
+      '@llamaindex/node-parser': 2.0.22(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)
+      '@llamaindex/workflow': 1.1.24(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(zod@4.3.6)
       '@types/lodash': 4.17.23
       '@types/node': 24.10.13
       lodash: 4.17.23
@@ -10208,6 +10253,11 @@ snapshots:
       define-lazy-prop: 3.0.0
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
+
+  openai@5.23.2(ws@8.19.0)(zod@3.25.76):
+    optionalDependencies:
+      ws: 8.19.0
+      zod: 3.25.76
 
   openai@5.23.2(ws@8.19.0)(zod@4.3.6):
     optionalDependencies:
