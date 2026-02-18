@@ -1,5 +1,5 @@
-import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { glob } from 'node:fs/promises';
 import {
   type FileObject,
   printErrors,
@@ -152,23 +152,13 @@ async function getFiles(): Promise<FileObject[]> {
     }
   }
 
-  // Toolkit FAQ files (embedded snippets not in any Fumadocs source)
-  const faqDir = join(process.cwd(), 'content/toolkit-faq');
-  try {
-    const faqFiles = await readdir(faqDir);
-    for (const file of faqFiles) {
-      if (!file.endsWith('.md')) continue;
-      const filePath = join(faqDir, file);
-      const content = await readFile(filePath, 'utf-8');
-      const slug = file.replace(/\.md$/, '');
-      allFiles.push({
-        path: filePath,
-        content,
-        url: `/toolkits/${slug}`,
-      });
-    }
-  } catch {
-    // toolkit-faq directory doesn't exist, skip
+  // Scan any .md files under content/ not already covered by Fumadocs sources
+  const coveredPaths = new Set(allFiles.map((f) => f.path));
+  const extraMdFiles = await Array.fromAsync(glob('content/**/*.md'));
+  for (const filePath of extraMdFiles) {
+    if (coveredPaths.has(filePath)) continue;
+    const content = await readFile(filePath, 'utf-8');
+    allFiles.push({ path: filePath, content });
   }
 
   return allFiles;
