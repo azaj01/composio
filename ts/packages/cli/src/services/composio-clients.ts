@@ -13,7 +13,13 @@ import {
   SynchronizedRef,
 } from 'effect';
 import { Composio as _RawComposioClient, APIPromise } from '@composio/client';
-import { Toolkit, Toolkits } from 'src/models/toolkits';
+import {
+  Toolkit,
+  Toolkits,
+  ToolkitDetailed,
+  ToolkitCategory,
+  type ToolkitSearchResult,
+} from 'src/models/toolkits';
 import { ToolsAsEnums, Tools, Tool } from 'src/models/tools';
 import {
   groupByVersion,
@@ -252,6 +258,27 @@ export const TriggerTypesResponse = Schema.Struct({
   total_pages: Schema.Int,
   next_cursor: Schema.NullOr(Schema.String),
 }).annotations({ identifier: 'TriggerTypesResponse' });
+
+// Single-page search response (includes total_items for "Listing X of Y" display)
+export const ToolkitSearchResponse = Schema.Struct({
+  items: Toolkits,
+  total_items: Schema.Int,
+  total_pages: Schema.Int,
+  current_page: Schema.Int,
+  next_cursor: Schema.NullOr(Schema.String),
+}).annotations({ identifier: 'ToolkitSearchResponse' });
+
+// Detailed retrieve response (includes auth_config_details)
+export const ToolkitDetailedResponse = ToolkitDetailed.annotations({
+  identifier: 'ToolkitDetailedResponse',
+});
+
+// Categories response
+export const ToolkitCategoriesResponse = Schema.Struct({
+  items: Schema.Array(ToolkitCategory),
+  total_items: Schema.Int,
+  next_cursor: Schema.NullOr(Schema.String),
+}).annotations({ identifier: 'ToolkitCategoriesResponse' });
 
 /**
  * Error response schemas
@@ -640,10 +667,70 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
                     composio_managed_auth_schemes: retrieved.composio_managed_auth_schemes,
                     is_local_toolkit: retrieved.is_local_toolkit,
                     no_auth: retrieved.no_auth,
-                    meta: retrieved.meta,
+                    meta: {
+                      ...retrieved.meta,
+                      tools_count: 0,
+                      triggers_count: 0,
+                    },
                   }) satisfies Toolkit
               )
             ),
+          /**
+           * Searches toolkits with optional filters. Returns a single page of results (no auto-pagination).
+           * @param params - Search/filter parameters
+           */
+          search: (params: {
+            search?: string;
+            category?: string;
+            limit?: number;
+            cursor?: string;
+          }) =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client =>
+                  client.toolkits.list({
+                    search: params.search,
+                    category: params.category,
+                    limit: params.limit,
+                    cursor: params.cursor,
+                  }),
+                ToolkitSearchResponse
+              )
+            ).pipe(
+              Effect.map(
+                response =>
+                  ({
+                    items: response.items,
+                    total_items: response.total_items,
+                    total_pages: response.total_pages,
+                    next_cursor: response.next_cursor,
+                  }) satisfies ToolkitSearchResult
+              )
+            ),
+          /**
+           * Retrieves detailed toolkit info including auth_config_details.
+           * @param slug - Toolkit slug
+           */
+          retrieveDetailed: (slug: string) =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client => client.toolkits.retrieve(slug),
+                ToolkitDetailedResponse
+              )
+            ),
+          /**
+           * Retrieves all available toolkit categories.
+           */
+          retrieveCategories: () =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client => client.toolkits.retrieveCategories(),
+                ToolkitCategoriesResponse
+              )
+            ).pipe(Effect.map(response => response.items)),
         },
         tools: {
           /**
@@ -951,6 +1038,25 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
           },
           InvalidToolkitVersionsError | InvalidToolkitsError | HttpError | NoSuchElementException
         > => validateToolkitVersionsImpl(client, overrides, relevantToolkits),
+        /**
+         * Searches toolkits with optional filters. Returns a single page of results.
+         * @param params - Search/filter parameters
+         */
+        searchToolkits: (params: {
+          search?: string;
+          category?: string;
+          limit?: number;
+          cursor?: string;
+        }) => client.toolkits.search(params),
+        /**
+         * Retrieves detailed toolkit info including auth_config_details.
+         * @param slug - Toolkit slug
+         */
+        getToolkitDetailed: (slug: string) => client.toolkits.retrieveDetailed(slug),
+        /**
+         * Retrieves all available toolkit categories.
+         */
+        getCategories: () => client.toolkits.retrieveCategories(),
       };
     }),
     dependencies: [ComposioClientLive.Default],

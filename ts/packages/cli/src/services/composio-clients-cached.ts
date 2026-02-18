@@ -238,6 +238,13 @@ export const ComposioToolkitsRepositoryCached = Layer.effect(
       // 3. Caching validation results could cause false positives/negatives
       validateToolkitVersions: (overrides, relevantToolkits) =>
         underlyingRepository.validateToolkitVersions(overrides, relevantToolkits),
+      // These methods should NOT be cached:
+      // - searchToolkits: results depend on query params, caching would be misleading
+      // - getToolkitDetailed: detailed info should be fresh (auth config fields change)
+      // - getCategories: categories change infrequently but are cheap to fetch
+      searchToolkits: params => underlyingRepository.searchToolkits(params),
+      getToolkitDetailed: slug => underlyingRepository.getToolkitDetailed(slug),
+      getCategories: () => underlyingRepository.getCategories(),
     });
   })
 ).pipe(

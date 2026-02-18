@@ -15,7 +15,7 @@ describe('CLI: composio', () => {
         expect(result).toEqual(
           ValidationError.commandMismatch(
             HelpDoc.p(
-              "Invalid subcommand for composio - use one of 'version', 'upgrade', 'whoami', 'login', 'logout', 'generate', 'py', 'ts'"
+              "Invalid subcommand for composio - use one of 'version', 'upgrade', 'whoami', 'login', 'logout', 'generate', 'py', 'ts', 'toolkits'"
             )
           )
         );
@@ -83,6 +83,14 @@ describe('CLI: composio', () => {
           Environment Variables:
             COMPOSIO_TOOLKIT_VERSION_<TOOLKIT>  Override toolkit version (e.g., COMPOSIO_TOOLKIT_VERSION_GMAIL=20250901_00)
                                                 Use "latest" or unset to use the latest version.
+
+            - toolkits                                                                                                 Discover and inspect Composio toolkits.
+
+            - toolkits list [--query text] [--category text] [--limit integer]                                         List available toolkits.
+
+            - toolkits info <slug>                                                                                     View details of a specific toolkit.
+
+            - toolkits search [--limit integer] <query>                                                                Search toolkits by use case.
           "
         `);
       })
