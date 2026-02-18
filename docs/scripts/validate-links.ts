@@ -80,7 +80,7 @@ async function getHeadingsForPage(page: PageOf): Promise<string[]> {
  */
 async function buildPopulateEntries(src: AnySource) {
   return Promise.all(
-    src.getPages().map(async (page) => ({
+    src.getPages().map(async (page: PageOf) => ({
       value: { slug: page.slugs },
       hashes: await getHeadingsForPage(page),
     })),
