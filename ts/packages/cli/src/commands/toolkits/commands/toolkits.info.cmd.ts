@@ -6,7 +6,10 @@ import { TerminalUI } from 'src/services/terminal-ui';
 import type { ToolkitDetailed, AuthConfigDetail } from 'src/models/toolkits';
 import { bold, gray } from 'src/ui/colors';
 
-const slug = Args.text({ name: 'slug' }).pipe(Args.withDescription('Toolkit slug (e.g. "gmail")'));
+const slug = Args.text({ name: 'slug' }).pipe(
+  Args.withDescription('Toolkit slug (e.g. "gmail")'),
+  Args.optional
+);
 
 /**
  * Format auth config fields for display.
@@ -96,30 +99,41 @@ export const toolkitsCmd$Info = Command.make('info', { slug }, ({ slug }) =>
       return;
     }
 
+    // Missing slug guard
+    if (Option.isNone(slug)) {
+      yield* ui.log.warn('Missing required argument: <slug>');
+      yield* ui.log.step('Try specifying a toolkit slug, e.g.:\n> composio toolkits info "gmail"');
+      return;
+    }
+
+    const slugValue = slug.value;
+
     const toolkit = yield* ui
-      .withSpinner(`Fetching toolkit "${slug}"...`, repo.getToolkitDetailed(slug))
+      .withSpinner(`Fetching toolkit "${slugValue}"...`, repo.getToolkitDetailed(slugValue))
       .pipe(
         Effect.catchTag('services/HttpServerError', (e: HttpServerError) =>
           Effect.gen(function* () {
-            if (e.status === 404) {
-              // Try to suggest similar toolkits
-              const suggestions = yield* repo.searchToolkits({ search: slug, limit: 3 }).pipe(
-                Effect.map(r => r.items),
-                Effect.catchAll(() => Effect.succeed([]))
+            // Show structured error message and suggested fix from the API
+            if (e.details) {
+              yield* ui.log.error(e.details.message);
+              yield* ui.log.step(e.details.suggestedFix);
+            } else {
+              yield* ui.log.error(`Failed to fetch toolkit "${slugValue}".`);
+            }
+
+            // Try to suggest similar toolkits
+            const suggestions = yield* repo.searchToolkits({ search: slugValue, limit: 3 }).pipe(
+              Effect.map(r => r.items),
+              Effect.catchAll(() => Effect.succeed([]))
+            );
+
+            if (suggestions.length > 0) {
+              const suggestionLines = suggestions
+                .map(s => `  ${s.slug} — ${s.meta.description}`)
+                .join('\n');
+              yield* ui.log.step(
+                `Did you mean?\n${suggestionLines}\n\n> composio toolkits info "${suggestions[0]!.slug}"`
               );
-
-              if (suggestions.length > 0) {
-                const suggestionLines = suggestions
-                  .map(s => `  ${s.slug} — ${s.meta.description}`)
-                  .join('\n');
-                yield* ui.log.error(
-                  `Toolkit "${slug}" not found.\n\nDid you mean?\n${suggestionLines}\n\n> composio toolkits info "${suggestions[0]!.slug}"`
-                );
-              } else {
-                yield* ui.log.error(`Toolkit "${slug}" not found.`);
-              }
-
-              return yield* Effect.fail(e);
             }
 
             return yield* Effect.fail(e);

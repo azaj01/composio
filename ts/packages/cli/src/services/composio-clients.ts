@@ -37,11 +37,21 @@ import { renderPrettyError } from './utils/pretty-error';
  */
 
 /**
+ * Structured error details from the Composio API.
+ */
+export interface HttpErrorDetails {
+  readonly message: string;
+  readonly suggestedFix: string;
+  readonly code: number;
+}
+
+/**
  * Error thrown when a HTTP request fails.
  */
 export class HttpServerError extends Data.TaggedError('services/HttpServerError')<{
   readonly cause?: unknown;
   readonly status?: number;
+  readonly details?: HttpErrorDetails;
 }> {}
 
 /**
@@ -347,6 +357,11 @@ const handleHttpErrorResponse = (response: Response): Effect.Effect<never, HttpS
           new HttpServerError({
             cause: `HTTP ${status}\n${pretty}`,
             status,
+            details: {
+              message: error.message,
+              suggestedFix: error.suggested_fix,
+              code: error.code,
+            },
           })
         );
       }

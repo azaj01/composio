@@ -160,7 +160,41 @@ describe('CLI: composio toolkits info', () => {
           const lines = yield* MockConsole.getLines({ stripAnsi: true });
           const output = lines.join('\n');
 
-          expect(output).toContain('not found');
+          expect(output).toContain('Failed to fetch toolkit "gmal"');
+        })
+      );
+    }
+  );
+
+  layer(TestLive({ baseConfigProvider: testConfigProvider, toolkitsData }))(
+    '[Given] invalid slug with substring match',
+    it => {
+      it.scoped('shows error with suggestion', () =>
+        Effect.gen(function* () {
+          // "gma" is a substring of "gmail", so the mock will find suggestions
+          const result = yield* cli(['toolkits', 'info', 'gma']).pipe(Effect.either);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+
+          expect(output).toContain('Failed to fetch toolkit "gma"');
+          expect(output).toContain('Did you mean?');
+          expect(output).toContain('gmail');
+        })
+      );
+    }
+  );
+
+  layer(TestLive({ baseConfigProvider: testConfigProvider, toolkitsData }))(
+    '[Given] no slug argument',
+    it => {
+      it.scoped('shows missing argument warning with tip', () =>
+        Effect.gen(function* () {
+          yield* cli(['toolkits', 'info']);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+
+          expect(output).toContain('Missing required argument');
+          expect(output).toContain('composio toolkits info "gmail"');
         })
       );
     }
