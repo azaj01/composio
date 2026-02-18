@@ -195,5 +195,31 @@ describe('TerminalUI', () => {
         expect(result).toBe(99);
       })
     );
+
+    it.scoped(
+      'useMakeSpinner does NOT double-error when callback calls spinner.error then fails',
+      () =>
+        Effect.gen(function* () {
+          const ui = yield* TerminalUI;
+
+          const exit = yield* Effect.exit(
+            ui.useMakeSpinner('fetching', spinner =>
+              Effect.gen(function* () {
+                // Simulate tapError pattern: callback calls spinner.error(), then the effect fails
+                yield* spinner.error('Login timed out. Please try again.');
+                return yield* Effect.fail(new Error('timed out'));
+              })
+            )
+          );
+
+          expect(exit._tag).toBe('Failure');
+
+          const lines = yield* MockConsole.getLines();
+          // Should see the user's error message
+          expect(lines).toContain('Login timed out. Please try again.');
+          // Should NOT see the default spinner message as a second error
+          expect(lines.filter(l => l === 'fetching')).toHaveLength(0);
+        })
+    );
   });
 });
