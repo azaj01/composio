@@ -248,7 +248,7 @@ export const TestLayer = (input?: TestLiveInput) =>
 
     const CliConfigLive = CliConfig.layer(ComposioCliConfig);
 
-    const _console = yield* MockConsole.effect;
+    const _console = yield* MockConsole.make;
 
     const layers = Layer.mergeAll(
       Console.setConsole(_console),
