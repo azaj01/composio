@@ -3,15 +3,17 @@
   "pages": [
     "openai-agents",
     "anthropic",
+    "claude-agent-sdk",
     "vercel",
     "langchain",
     "langgraph",
     "mastra",
     "openai",
     "google",
+    "google-adk",
     "llamaindex",
     "crewai",
-    "cloudflare",
+    "autogen",
     "custom-providers"
   ]
 }
