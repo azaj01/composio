@@ -61,7 +61,8 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.1",
+    "@clack/core": "catalog:",
+    "@clack/prompts": "catalog:",
     "@composio/client": "catalog:",
     "@composio/core": "workspace:*",
     "@composio/ts-builders": "workspace:*",

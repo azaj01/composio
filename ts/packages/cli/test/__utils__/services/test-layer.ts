@@ -17,6 +17,7 @@ import {
 import { ComposioCliConfig } from 'src/cli-config';
 import * as MockConsole from './mock-console';
 import * as MockTerminal from './mock-terminal';
+import { TerminalUITest } from './terminal-ui-test';
 import type { Toolkits } from 'src/models/toolkits';
 import { NodeProcess } from 'src/services/node-process';
 import {
@@ -263,7 +264,8 @@ export const TestLayer = (input?: TestLiveInput) =>
       BunFileSystem.layer,
       BunContext.layer,
       MockTerminal.layer,
-      BunPath.layer
+      BunPath.layer,
+      TerminalUITest
     ) satisfies RequiredLayer;
 
     return layers;
