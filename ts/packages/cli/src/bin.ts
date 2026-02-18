@@ -107,7 +107,7 @@ runWithArgs.pipe(
   // `--query "text"`), @effect/cli reports it as "unknown argument" — add a tip.
   Effect.catchIf(ValidationError.isValidationError, error => {
     const text = HelpDoc.toAnsiText(error.error).trim();
-    const flagMatch = text.match(/Received unknown argument: '(--\w+)'/);
+    const flagMatch = text.match(/Received unknown argument: '(-{1,2}[\w-]+)'/);
     if (flagMatch) {
       return Console.error(`Tip: ${flagMatch[1]} requires a value, e.g. ${flagMatch[1]} "value"`);
     }
