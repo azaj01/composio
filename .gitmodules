@@ -1,0 +1,4 @@
+[submodule "ts/vendor/effect"]
+	path = ts/vendor/effect
+	url = git@github.com:Effect-TS/effect.git
+	branch = main
