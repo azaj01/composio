@@ -31,7 +31,13 @@ type PageOf = ReturnType<AnySource['getPages']>[number];
 function extractHeadingsFromContent(content: string): string[] {
   const slugger = new GithubSlugger();
   const headings: string[] = [];
+  let inCodeBlock = false;
   for (const line of content.split('\n')) {
+    if (line.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (inCodeBlock) continue;
     const match = line.match(/^#{1,6}\s+(.+)$/);
     if (match) {
       headings.push(slugger.slug(match[1]));
