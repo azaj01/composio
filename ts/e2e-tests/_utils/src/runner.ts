@@ -24,6 +24,7 @@ import {
   resolveDenoVersionMetaList,
   resolveCliVersionMetaList,
 } from './config';
+import type { ExecResult } from './image-lifecycle';
 import {
   ensureNodeImage,
   runNodeContainer,
@@ -348,36 +349,45 @@ interface VersionExecutionContext {
 }
 
 // ============================================================================
-// Node.js Docker Executors
+// Shared Docker Executor Factories
 // ============================================================================
 
 /**
- * Creates Docker execution utilities for a specific Node.js version.
+ * A function that runs a command inside a Docker container.
+ * All runtime-specific container runners (Node, Deno, CLI) share this signature
+ * for the subset of options used by `createRunCmd`.
  */
-function createNodeDockerExecutors(
-  config: RunE2EInternalConfig,
-  nodeVersion: string,
-  imageTag: string,
-  repoRoot: string,
-  logManager: DebugLogManager
-) {
-  const { cwd, suiteName, env, usesFixtures } = config;
-  const containerEnv = buildContainerEnv(env);
-  const effectiveCwd = usesFixtures ? `${cwd}/fixtures` : cwd;
+type ContainerRunner = (options: {
+  imageTag: string;
+  cmd: string;
+  cwd: string;
+  env: Record<string, string | undefined>;
+  name: string;
+  remove?: boolean;
+  volumes?: Array<{ volume: string; target: string; readonly: boolean }>;
+}) => Promise<ExecResult>;
 
-  const context: VersionExecutionContext = {
-    phases: [],
-    versionStartTime: Date.now(),
-    imageTag,
-  };
+/**
+ * Creates a `runCmd` function that executes a command in a Docker container,
+ * tracks phase results, and optionally captures files from the container.
+ */
+function createRunCmd(options: {
+  runContainer: ContainerRunner;
+  containerPrefix: string;
+  effectiveCwd: string;
+  containerEnv: Record<string, string | undefined>;
+  imageTag: string;
+  context: VersionExecutionContext;
+}): (input: RunCmdInput) => Promise<E2ETestResult | E2ETestResultWithFiles> {
+  const { runContainer, containerPrefix, effectiveCwd, containerEnv, imageTag, context } = options;
 
-  const runCmd = async (input: RunCmdInput): Promise<E2ETestResult | E2ETestResultWithFiles> => {
+  return async (input: RunCmdInput) => {
     const { command, files } = normalizeRunCmdInput(input);
     const shouldCapture = Array.isArray(files) && files.length > 0;
-    const containerName = `e2e-${suiteName}-node-${nodeVersion.replace(/\./g, '-')}-${Date.now()}`;
+    const containerName = `${containerPrefix}-${Date.now()}`;
     const startTime = Date.now();
 
-    const result = await runNodeContainer({
+    const result = await runContainer({
       imageTag,
       cmd: command,
       cwd: effectiveCwd,
@@ -416,6 +426,70 @@ function createNodeDockerExecutors(
 
     return result;
   };
+}
+
+/**
+ * Creates a `finalizeVersionLog` function that writes the version's
+ * phase results to the debug log.
+ */
+function createFinalizeVersionLog(options: {
+  runtime: RuntimeKind;
+  version: string;
+  context: VersionExecutionContext;
+  logManager: DebugLogManager;
+}): () => Promise<void> {
+  const { runtime, version, context, logManager } = options;
+
+  return async () => {
+    const totalDurationMs = Date.now() - context.versionStartTime;
+    const allPassed = context.phases.every(p => p.exitCode === 0);
+    const status: 'pass' | 'fail' = allPassed ? 'pass' : 'fail';
+
+    await logManager.writeVersionSection({
+      runtime,
+      version,
+      status,
+      imageTag: context.imageTag,
+      phases: context.phases,
+      totalDurationMs,
+    });
+  };
+}
+
+// ============================================================================
+// Node.js Docker Executors
+// ============================================================================
+
+/**
+ * Creates Docker execution utilities for a specific Node.js version.
+ */
+function createNodeDockerExecutors(
+  config: RunE2EInternalConfig,
+  nodeVersion: string,
+  imageTag: string,
+  repoRoot: string,
+  logManager: DebugLogManager
+) {
+  const { cwd, suiteName, env, usesFixtures } = config;
+  const containerEnv = buildContainerEnv(env);
+  const effectiveCwd = usesFixtures ? `${cwd}/fixtures` : cwd;
+
+  const context: VersionExecutionContext = {
+    phases: [],
+    versionStartTime: Date.now(),
+    imageTag,
+  };
+
+  const containerPrefix = `e2e-${suiteName}-node-${nodeVersion.replace(/\./g, '-')}`;
+
+  const runCmd = createRunCmd({
+    runContainer: runNodeContainer,
+    containerPrefix,
+    effectiveCwd,
+    containerEnv,
+    imageTag,
+    context,
+  });
 
   /**
    * Unified fixture runner with optional setup phase.
@@ -434,7 +508,7 @@ function createNodeDockerExecutors(
     }
 
     const volumeName = generateVolumeName(suiteName, nodeVersion);
-    const containerBaseName = `e2e-${suiteName}-node-${nodeVersion.replace(/\./g, '-')}-${Date.now()}`;
+    const containerBaseName = `${containerPrefix}-${Date.now()}`;
     const volumeTarget = `${effectiveCwd.startsWith('/') ? effectiveCwd : `/app/${effectiveCwd}`}/node_modules`;
 
     try {
@@ -495,20 +569,12 @@ function createNodeDockerExecutors(
     }
   }
 
-  const finalizeVersionLog = async (): Promise<void> => {
-    const totalDurationMs = Date.now() - context.versionStartTime;
-    const allPassed = context.phases.every(p => p.exitCode === 0);
-    const status: 'pass' | 'fail' = allPassed ? 'pass' : 'fail';
-
-    await logManager.writeVersionSection({
-      runtime: 'node',
-      version: nodeVersion,
-      status,
-      imageTag: context.imageTag,
-      phases: context.phases,
-      totalDurationMs,
-    });
-  };
+  const finalizeVersionLog = createFinalizeVersionLog({
+    runtime: 'node',
+    version: nodeVersion,
+    context,
+    logManager,
+  });
 
   return { runCmd, runFixture, finalizeVersionLog, context };
 }
@@ -537,51 +603,16 @@ function createDenoDockerExecutors(
     imageTag,
   };
 
-  const runCmd = async (input: RunCmdInput): Promise<E2ETestResult | E2ETestResultWithFiles> => {
-    const { command, files } = normalizeRunCmdInput(input);
-    const shouldCapture = Array.isArray(files) && files.length > 0;
-    const containerName = `e2e-${suiteName}-deno-${denoVersion.replace(/\./g, '-')}-${Date.now()}`;
-    const startTime = Date.now();
+  const containerPrefix = `e2e-${suiteName}-deno-${denoVersion.replace(/\./g, '-')}`;
 
-    const result = await runDenoContainer({
-      imageTag,
-      cmd: command,
-      cwd: effectiveCwd,
-      env: containerEnv,
-      name: containerName,
-      remove: !shouldCapture,
-    });
-
-    const durationMs = Date.now() - startTime;
-
-    context.phases.push({
-      phase: 'fixture',
-      phaseIndex: context.phases.length + 1,
-      totalPhases: context.phases.length + 1,
-      command,
-      containerName,
-      durationMs,
-      exitCode: result.exitCode,
-      stdout: result.stdout,
-      stderr: result.stderr,
-    });
-
-    if (shouldCapture) {
-      const containerCwd = toContainerCwd(effectiveCwd);
-      try {
-        const captured = await captureFilesFromContainer({
-          containerName,
-          containerCwd,
-          files: files as string[],
-        });
-        return { ...result, files: captured };
-      } finally {
-        await dockerRm(containerName);
-      }
-    }
-
-    return result;
-  };
+  const runCmd = createRunCmd({
+    runContainer: runDenoContainer,
+    containerPrefix,
+    effectiveCwd,
+    containerEnv,
+    imageTag,
+    context,
+  });
 
   function runFixture(options: { filename: string }): Promise<E2ETestResult>;
   function runFixture(options: { filename: string; setup: string }): Promise<E2ETestResultWithSetup>;
@@ -597,7 +628,7 @@ function createDenoDockerExecutors(
 
     // Deno with setup: use Docker volumes for caching
     const volumeName = generateVolumeName(suiteName, denoVersion);
-    const containerBaseName = `e2e-${suiteName}-deno-${denoVersion.replace(/\./g, '-')}-${Date.now()}`;
+    const containerBaseName = `${containerPrefix}-${Date.now()}`;
     // Deno caches to DENO_DIR, but we also support node_modules for npm packages
     const volumeTarget = `${effectiveCwd.startsWith('/') ? effectiveCwd : `/app/${effectiveCwd}`}/node_modules`;
 
@@ -659,20 +690,12 @@ function createDenoDockerExecutors(
     }
   }
 
-  const finalizeVersionLog = async (): Promise<void> => {
-    const totalDurationMs = Date.now() - context.versionStartTime;
-    const allPassed = context.phases.every(p => p.exitCode === 0);
-    const status: 'pass' | 'fail' = allPassed ? 'pass' : 'fail';
-
-    await logManager.writeVersionSection({
-      runtime: 'deno',
-      version: denoVersion,
-      status,
-      imageTag: context.imageTag,
-      phases: context.phases,
-      totalDurationMs,
-    });
-  };
+  const finalizeVersionLog = createFinalizeVersionLog({
+    runtime: 'deno',
+    version: denoVersion,
+    context,
+    logManager,
+  });
 
   return { runCmd, runFixture, finalizeVersionLog, context };
 }
@@ -701,70 +724,25 @@ function createCliDockerExecutors(
     imageTag,
   };
 
-  const runCmd = async (input: RunCmdInput): Promise<E2ETestResult | E2ETestResultWithFiles> => {
-    const { command, files } = normalizeRunCmdInput(input);
-    const shouldCapture = Array.isArray(files) && files.length > 0;
-    const containerName = `e2e-${suiteName}-cli-${cliVersion.replace(/\./g, '-')}-${Date.now()}`;
-    const startTime = Date.now();
-
-    const result = await runCliContainer({
-      imageTag,
-      cmd: command,
-      cwd: effectiveCwd,
-      env: containerEnv,
-      name: containerName,
-      remove: !shouldCapture,
-    });
-
-    const durationMs = Date.now() - startTime;
-
-    context.phases.push({
-      phase: 'fixture',
-      phaseIndex: context.phases.length + 1,
-      totalPhases: context.phases.length + 1,
-      command,
-      containerName,
-      durationMs,
-      exitCode: result.exitCode,
-      stdout: result.stdout,
-      stderr: result.stderr,
-    });
-
-    if (shouldCapture) {
-      const containerCwd = toContainerCwd(effectiveCwd);
-      try {
-        const captured = await captureFilesFromContainer({
-          containerName,
-          containerCwd,
-          files: files as string[],
-        });
-        return { ...result, files: captured };
-      } finally {
-        await dockerRm(containerName);
-      }
-    }
-
-    return result;
-  };
+  const runCmd = createRunCmd({
+    runContainer: runCliContainer,
+    containerPrefix: `e2e-${suiteName}-cli-${cliVersion.replace(/\./g, '-')}`,
+    effectiveCwd,
+    containerEnv,
+    imageTag,
+    context,
+  });
 
   const runFixture = ((_: RunFixtureOptions) => {
     throw new Error('runFixture is not supported for CLI runtime tests');
   }) as DefineTestsContext['runFixture'];
 
-  const finalizeVersionLog = async (): Promise<void> => {
-    const totalDurationMs = Date.now() - context.versionStartTime;
-    const allPassed = context.phases.every(p => p.exitCode === 0);
-    const status: 'pass' | 'fail' = allPassed ? 'pass' : 'fail';
-
-    await logManager.writeVersionSection({
-      runtime: 'cli',
-      version: cliVersion,
-      status,
-      imageTag: context.imageTag,
-      phases: context.phases,
-      totalDurationMs,
-    });
-  };
+  const finalizeVersionLog = createFinalizeVersionLog({
+    runtime: 'cli',
+    version: cliVersion,
+    context,
+    logManager,
+  });
 
   return { runCmd, runFixture, finalizeVersionLog, context };
 }
