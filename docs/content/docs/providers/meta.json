@@ -5,11 +5,13 @@
     "anthropic",
     "vercel",
     "langchain",
+    "langgraph",
     "mastra",
     "openai",
     "google",
     "llamaindex",
     "crewai",
+    "cloudflare",
     "custom-providers"
   ]
 }

@@ -1,0 +1,99 @@
+---
+title: Cloudflare Workers AI
+description: Build an agent with Cloudflare Workers AI and enable it to use 800+ tools with Composio.
+keywords: [cloudflare, workers ai]
+---
+
+The Cloudflare provider transforms Composio tools into Cloudflare Workers AI's [function calling format](https://developers.cloudflare.com/workers-ai/function-calling/) with manual tool execution.
+
+<Steps>
+<Step>
+**Install**
+
+```bash
+npm install @composio/core @composio/cloudflare
+```
+</Step>
+
+<Step>
+**Configure API Keys**
+
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings). Your Cloudflare Worker has access to AI via the `env.AI` binding.
+</Callout>
+
+Add `COMPOSIO_API_KEY` to your Worker's environment variables in `wrangler.toml` or via the Cloudflare dashboard.
+
+```toml title="wrangler.toml"
+[vars]
+COMPOSIO_API_KEY = "xxxxxxxxx"
+```
+</Step>
+
+<Step>
+**Create session and run**
+
+```js
+import { Composio } from "@composio/core";
+import { CloudflareProvider } from "@composio/cloudflare";
+
+export default {
+  async fetch(request, env) {
+    const composio = new Composio({
+      apiKey: env.COMPOSIO_API_KEY,
+      provider: new CloudflareProvider(),
+    });
+
+    // Create a session for your user
+    const session = await composio.create("user_123");
+    const tools = await session.tools();
+
+    const toolsArray = Object.values(tools);
+
+    let response = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
+      messages: [
+        {
+          role: "user",
+          content:
+            "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'",
+        },
+      ],
+      tools: toolsArray,
+    });
+
+    // Agentic loop — keep executing tool calls until the model responds with text
+    while (response.tool_calls && response.tool_calls.length > 0) {
+      const toolResults = [];
+      for (const toolCall of response.tool_calls) {
+        const result = await composio.provider.executeToolCall(
+          "user_123",
+          { name: toolCall.name, arguments: toolCall.arguments },
+          {}
+        );
+        toolResults.push({
+          role: "tool",
+          tool_call_id: toolCall.name,
+          content: result,
+        });
+      }
+
+      response = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
+        messages: [
+          {
+            role: "user",
+            content:
+              "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'",
+          },
+          { role: "assistant", content: "", tool_calls: response.tool_calls },
+          ...toolResults,
+        ],
+        tools: toolsArray,
+      });
+    }
+
+    return new Response(response.response ?? "No response");
+  },
+};
+```
+</Step>
+</Steps>
