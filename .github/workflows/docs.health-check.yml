@@ -23,8 +23,12 @@ jobs:
             local url="$2"
             local extra_args="${3:-}"
             CHECKED=$((CHECKED + 1))
-            STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 $extra_args "$url" || echo "000")
-            if [ "$STATUS" -ge 400 ] || [ "$STATUS" = "000" ]; then
+            if STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 $extra_args "$url" 2>/dev/null); then
+              :
+            else
+              STATUS="000"
+            fi
+            if [ "$STATUS" -ge 400  2>/dev/null ] || [ "$STATUS" = "000" ]; then
               echo "FAIL: ${label} → ${STATUS}"
               echo "${label} → ${STATUS}" >> "$FAIL_FILE"
               FAIL_COUNT=$((FAIL_COUNT + 1))
