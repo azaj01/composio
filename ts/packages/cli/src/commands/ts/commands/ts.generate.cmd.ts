@@ -374,7 +374,7 @@ export function generateTypescriptTypeStubs({
       })
     );
 
-    yield* Effect.log(`Writing type stubs to ${outputDir}...`);
+    yield* ui.log.step(`Writing type stubs to ${outputDir}`);
     yield* fs.makeDirectory(outputDir, { recursive: true });
 
     // Read toolkit version overrides from environment variables
@@ -393,51 +393,56 @@ export function generateTypescriptTypeStubs({
       client,
     });
 
-    // Fetch data using a spinner for progress
-    const spinner = yield* ui.makeSpinner('Fetching data from Composio API...');
+    // Fetch, generate, and write with a spinner that auto-cleans up on error
+    yield* ui.useMakeSpinner('Fetching data from Composio API...', spinner =>
+      Effect.gen(function* () {
+        const { toolkits, triggerTypes, typeableTools, versionMap } = yield* toolkitSlugsFilter !==
+        null
+          ? fetchFilteredData(client, toolkitSlugsFilter, typeTools, validatedOverrides, spinner)
+          : fetchAllData(client, typeTools, validatedOverrides, spinner);
 
-    const { toolkits, triggerTypes, typeableTools, versionMap } = yield* toolkitSlugsFilter !== null
-      ? fetchFilteredData(client, toolkitSlugsFilter, typeTools, validatedOverrides, spinner)
-      : fetchAllData(client, typeTools, validatedOverrides, spinner);
+        yield* spinner.message('Generating TypeScript type stubs...');
+        const index = createToolkitIndex({ toolkits, typeableTools, triggerTypes, versionMap });
 
-    yield* spinner.message('Generating TypeScript type stubs...');
-    const index = createToolkitIndex({ toolkits, typeableTools, triggerTypes, versionMap });
+        // Generate TypeScript sources
+        const sources = yield* generateTypeScriptSources({
+          outputDir,
+          emitSingleFile: Boolean(compact), // Ensure boolean type
+          banner: BANNER,
+          importExtension: 'js',
+        })(index);
 
-    // Generate TypeScript sources
-    const sources = yield* generateTypeScriptSources({
-      outputDir,
-      emitSingleFile: Boolean(compact), // Ensure boolean type
-      banner: BANNER,
-      importExtension: 'js',
-    })(index);
+        yield* spinner.message('Writing files to disk...');
 
-    yield* spinner.message('Writing files to disk...');
+        // Write all generated files
+        yield* pipe(
+          Effect.all(
+            sources.map(([filePath, content]) =>
+              fs
+                .writeFileString(filePath, content)
+                .pipe(
+                  Effect.mapError(error => new Error(`Failed to write file ${filePath}: ${error}`))
+                )
+            ),
+            { concurrency: 'unbounded' }
+          ),
+          Effect.mapError(error => new Error(`Failed to write generated files: ${error}`))
+        );
 
-    // Write all generated files
-    yield* pipe(
-      Effect.all(
-        sources.map(([filePath, content]) =>
-          fs
-            .writeFileString(filePath, content)
-            .pipe(Effect.mapError(error => new Error(`Failed to write file ${filePath}: ${error}`)))
-        ),
-        { concurrency: 'unbounded' }
-      ),
-      Effect.mapError(error => new Error(`Failed to write generated files: ${error}`))
+        // Compile TypeScript to JavaScript if needed
+        if (transpiled) {
+          yield* spinner.message('Transpiling to JavaScript...');
+          yield* pipe(
+            transpileTypeScriptSources({ sources, outputDir }),
+            Effect.catchAll(error =>
+              Effect.logWarning(`Failed to compile TypeScript files: ${error.message}`)
+            )
+          );
+        }
+
+        yield* spinner.stop('Type stubs generated successfully');
+      })
     );
-
-    // Compile TypeScript to JavaScript if needed
-    if (transpiled) {
-      yield* spinner.message('Transpiling to JavaScript...');
-      yield* pipe(
-        transpileTypeScriptSources({ sources, outputDir }),
-        Effect.catchAll(error =>
-          Effect.logWarning(`Failed to compile TypeScript files: ${error.message}`)
-        )
-      );
-    }
-
-    yield* spinner.stop('Type stubs generated successfully');
 
     yield* Option.isNone(outputOpt)
       ? ui.note(

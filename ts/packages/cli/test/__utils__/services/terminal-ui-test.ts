@@ -1,4 +1,4 @@
-import { Console, Effect, Layer } from 'effect';
+import { Console, Effect, Exit, Layer } from 'effect';
 import { TerminalUI } from 'src/services/terminal-ui';
 
 /**
@@ -43,6 +43,29 @@ export const TerminalUITest = Layer.succeed(
           stop: (msg?: string) => (msg ? Console.log(msg) : Effect.void),
           error: (msg?: string) => (msg ? Console.error(msg) : Effect.void),
         };
+      }),
+
+    useMakeSpinner: (message, use) =>
+      Effect.gen(function* () {
+        let stopped = false;
+        const handle = {
+          message: (_msg: string) => Effect.void,
+          stop: (msg?: string) =>
+            Effect.gen(function* () {
+              stopped = true;
+              if (msg) yield* Console.log(msg);
+            }),
+          error: (msg?: string) =>
+            Effect.gen(function* () {
+              stopped = true;
+              if (msg) yield* Console.error(msg);
+            }),
+        };
+        const exit = yield* Effect.exit(use(handle));
+        if (Exit.isFailure(exit) && !stopped) {
+          yield* Console.error(message);
+        }
+        return yield* exit;
       }),
   })
 );

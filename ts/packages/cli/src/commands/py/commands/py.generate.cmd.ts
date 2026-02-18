@@ -67,7 +67,7 @@ export function generatePythonTypeStubs({
       })
     );
 
-    yield* Effect.log(`Writing type stubs to ${outputDir}...`);
+    yield* ui.log.step(`Writing type stubs to ${outputDir}`);
     yield* fs.makeDirectory(outputDir, { recursive: true });
 
     // Read toolkit version overrides from environment variables
@@ -84,82 +84,91 @@ export function generatePythonTypeStubs({
       client,
     });
 
-    const spinner = yield* ui.makeSpinner('Fetching data from Composio API...');
-
-    // Validate toolkit slugs if specified (separate from version validation)
-    const validatedToolkitSlugs = hasToolkitsFilter
-      ? yield* client
-          .validateToolkits(toolkitsOpt)
-          .pipe(
-            Effect.catchTag('services/InvalidToolkitsError', error =>
-              Effect.fail(
-                new Error(
-                  `Invalid toolkit(s): ${error.invalidToolkits.join(', ')}. ` +
-                    `Available toolkits: ${error.availableToolkits.slice(0, 10).join(', ')}${error.availableToolkits.length > 10 ? '...' : ''}`
+    // Fetch, generate, and write with a spinner that auto-cleans up on error
+    yield* ui.useMakeSpinner('Fetching data from Composio API...', spinner =>
+      Effect.gen(function* () {
+        // Validate toolkit slugs if specified (separate from version validation)
+        const validatedToolkitSlugs = hasToolkitsFilter
+          ? yield* client
+              .validateToolkits(toolkitsOpt)
+              .pipe(
+                Effect.catchTag('services/InvalidToolkitsError', error =>
+                  Effect.fail(
+                    new Error(
+                      `Invalid toolkit(s): ${error.invalidToolkits.join(', ')}. ` +
+                        `Available toolkits: ${error.availableToolkits.slice(0, 10).join(', ')}${error.availableToolkits.length > 10 ? '...' : ''}`
+                    )
+                  )
                 )
               )
-            )
-          )
-      : [];
+          : [];
 
-    const [allToolkits, tools, triggerTypes] = yield* Effect.all(
-      [
-        Effect.logDebug('Fetching toolkits...').pipe(Effect.flatMap(() => client.getToolkits())),
-        Effect.logDebug('Fetching tools...').pipe(Effect.flatMap(() => client.getToolsAsEnums())),
-        Effect.logDebug('Fetching trigger types...').pipe(
-          Effect.flatMap(() => client.getTriggerTypes())
-        ),
-      ],
-      { concurrency: 'unbounded' }
+        const [allToolkits, tools, triggerTypes] = yield* Effect.all(
+          [
+            Effect.logDebug('Fetching toolkits...').pipe(
+              Effect.flatMap(() => client.getToolkits())
+            ),
+            Effect.logDebug('Fetching tools...').pipe(
+              Effect.flatMap(() => client.getToolsAsEnums())
+            ),
+            Effect.logDebug('Fetching trigger types...').pipe(
+              Effect.flatMap(() => client.getTriggerTypes())
+            ),
+          ],
+          { concurrency: 'unbounded' }
+        );
+
+        // Filter toolkits if --toolkits was specified
+        const toolkits = hasToolkitsFilter
+          ? client.filterToolkitsBySlugs(allToolkits, validatedToolkitSlugs)
+          : allToolkits;
+
+        if (hasToolkitsFilter) {
+          yield* spinner.message(
+            `Found ${toolkits.length} toolkit(s): ${toolkits.map(t => t.slug).join(', ')}`
+          );
+        }
+
+        // Build version map for toolkits being generated (using validated overrides)
+        const versionMap: ToolkitVersionOverrides = new Map();
+        for (const toolkit of toolkits) {
+          const version = validatedOverrides.get(toolkit.slug.toLowerCase() as Lowercase<string>);
+          if (version && version !== 'latest') {
+            versionMap.set(toolkit.slug.toLowerCase() as Lowercase<string>, version);
+          }
+        }
+
+        const typeableTools = { withTypes: false as const, tools };
+
+        yield* spinner.message('Generating Python type stubs...');
+        const index = createToolkitIndex({ toolkits, typeableTools, triggerTypes, versionMap });
+
+        // Generate Python sources
+        const sources = generatePythonSources({
+          banner: BANNER,
+          outputDir,
+        })(index);
+
+        yield* spinner.message('Writing files to disk...');
+
+        // Write all generated files
+        yield* pipe(
+          Effect.all(
+            sources.map(([filePath, content]) =>
+              fs
+                .writeFileString(filePath, content)
+                .pipe(
+                  Effect.mapError(error => new Error(`Failed to write file ${filePath}: ${error}`))
+                )
+            ),
+            { concurrency: 1 }
+          ),
+          Effect.mapError(error => new Error(`Failed to write generated files: ${error}`))
+        );
+
+        yield* spinner.stop('Type stubs generated successfully');
+      })
     );
-
-    // Filter toolkits if --toolkits was specified
-    const toolkits = hasToolkitsFilter
-      ? client.filterToolkitsBySlugs(allToolkits, validatedToolkitSlugs)
-      : allToolkits;
-
-    if (hasToolkitsFilter) {
-      yield* spinner.message(
-        `Found ${toolkits.length} toolkit(s): ${toolkits.map(t => t.slug).join(', ')}`
-      );
-    }
-
-    // Build version map for toolkits being generated (using validated overrides)
-    const versionMap: ToolkitVersionOverrides = new Map();
-    for (const toolkit of toolkits) {
-      const version = validatedOverrides.get(toolkit.slug.toLowerCase() as Lowercase<string>);
-      if (version && version !== 'latest') {
-        versionMap.set(toolkit.slug.toLowerCase() as Lowercase<string>, version);
-      }
-    }
-
-    const typeableTools = { withTypes: false as const, tools };
-
-    yield* spinner.message('Generating Python type stubs...');
-    const index = createToolkitIndex({ toolkits, typeableTools, triggerTypes, versionMap });
-
-    // Generate Python sources
-    const sources = generatePythonSources({
-      banner: BANNER,
-      outputDir,
-    })(index);
-
-    yield* spinner.message('Writing files to disk...');
-
-    // Write all generated files
-    yield* pipe(
-      Effect.all(
-        sources.map(([filePath, content]) =>
-          fs
-            .writeFileString(filePath, content)
-            .pipe(Effect.mapError(error => new Error(`Failed to write file ${filePath}: ${error}`)))
-        ),
-        { concurrency: 1 }
-      ),
-      Effect.mapError(error => new Error(`Failed to write generated files: ${error}`))
-    );
-
-    yield* spinner.stop('Type stubs generated successfully');
 
     yield* Option.isNone(outputOpt)
       ? ui.note(

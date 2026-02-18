@@ -59,8 +59,23 @@ export interface TerminalUI {
   /**
    * Create a controllable spinner for multi-step flows (e.g., login polling).
    * The caller is responsible for calling `stop()` or `error()`.
+   *
+   * WARNING: If the surrounding Effect fails, this spinner will NOT be cleaned up.
+   * Use `useMakeSpinner` instead for automatic cleanup on error.
    */
   readonly makeSpinner: (message: string) => Effect.Effect<SpinnerHandle>;
+
+  /**
+   * Create a controllable spinner that is automatically stopped on error or interruption.
+   * The `use` function receives a SpinnerHandle and must return an Effect.
+   * On success: the caller should call `spinner.stop(...)` inside `use`.
+   * On failure: the spinner is automatically stopped with an error message.
+   * On interruption: the spinner is automatically cancelled.
+   */
+  readonly useMakeSpinner: <A, E, R>(
+    message: string,
+    use: (spinner: SpinnerHandle) => Effect.Effect<A, E, R>
+  ) => Effect.Effect<A, E, R>;
 }
 
 export const TerminalUI = Context.GenericTag<TerminalUI>('services/TerminalUI');
@@ -68,6 +83,14 @@ export const TerminalUI = Context.GenericTag<TerminalUI>('services/TerminalUI');
 // ---------------------------------------------------------------------------
 // TerminalUILive — production layer using @clack/prompts
 // ---------------------------------------------------------------------------
+
+function createClackSpinnerHandle(s: p.SpinnerResult, defaultMessage: string): SpinnerHandle {
+  return {
+    message: (msg: string) => Effect.sync(() => s.message(msg)),
+    stop: (msg?: string) => Effect.sync(() => s.stop(msg ?? defaultMessage)),
+    error: (msg?: string) => Effect.sync(() => s.error(msg ?? defaultMessage)),
+  };
+}
 
 const makeLive: TerminalUI = {
   intro: title => Effect.sync(() => p.intro(title)),
@@ -110,12 +133,26 @@ const makeLive: TerminalUI = {
     Effect.sync(() => {
       const s = p.spinner();
       s.start(message);
-      return {
-        message: (msg: string) => Effect.sync(() => s.message(msg)),
-        stop: (msg?: string) => Effect.sync(() => s.stop(msg ?? message)),
-        error: (msg?: string) => Effect.sync(() => s.error(msg ?? message)),
-      };
+      return createClackSpinnerHandle(s, message);
     }),
+
+  useMakeSpinner: (message, use) =>
+    Effect.acquireUseRelease(
+      Effect.sync(() => {
+        const s = p.spinner();
+        s.start(message);
+        return { raw: s, handle: createClackSpinnerHandle(s, message) };
+      }),
+      ({ handle }) => use(handle),
+      ({ raw }, exit) =>
+        Effect.sync(() => {
+          // Only clean up if the spinner is still active (user didn't call stop/error)
+          // Clack spinners have an internal `isCancelled` state after stop/error/cancel
+          if (Exit.isFailure(exit) && !raw.isCancelled) {
+            raw.error(message);
+          }
+        })
+    ),
 };
 
 export const TerminalUILive = Layer.succeed(TerminalUI, makeLive);
