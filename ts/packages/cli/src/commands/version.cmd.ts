@@ -12,7 +12,7 @@ import { TerminalUI } from 'src/services/terminal-ui';
  * ```
  */
 export const versionCmd = Command.make('version', {}).pipe(
-  Command.withDescription('Display your account information.'),
+  Command.withDescription('Display the current Composio CLI version.'),
   Command.withHandler(() =>
     Effect.gen(function* () {
       const ui = yield* TerminalUI;

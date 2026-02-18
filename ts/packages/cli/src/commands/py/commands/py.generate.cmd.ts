@@ -182,6 +182,7 @@ export function generatePythonTypeStubs({
     yield* logMetrics(metrics);
 
     yield* ui.outro('Done');
+    yield* ui.output(outputDir);
 
     return outputDir;
   });

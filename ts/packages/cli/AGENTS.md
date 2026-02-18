@@ -161,12 +161,13 @@ The CLI follows the Unix convention of separating human-readable decoration from
 
 ### Rules
 
-1. **All `TerminalUI` methods except `output()` write to stderr** via Clack's `{ output: process.stderr }` option.
-2. **`ui.output(data)` writes to stdout** — use this for values that scripts should capture (API keys, version strings, generated paths).
-3. **Action commands** (login, logout, upgrade, generate) produce no stdout data — their output is purely decorative.
-4. **Data commands** (whoami, version) produce both decoration (stderr) and data (stdout).
-5. **Never write data to stderr** — decoration methods are for human context only.
-6. **Never write decoration to stdout** — it breaks pipes, `$(...)` captures, and `> file` redirects.
+1. **All `TerminalUI` methods except `output()` write to stderr** via Clack's `{ output: process.stderr }` option — but only in interactive mode.
+2. **`ui.output(data)` writes to stdout only when piped** — it checks `process.stdout.isTTY` and is a no-op in interactive terminals (the human already sees the data via decoration on stderr).
+3. **When stdout is piped, ALL decoration is suppressed** — `isInteractive` (`process.stdout.isTTY`) gates every decoration method. Only `ui.output()` writes in piped mode. This keeps `composio whoami | pbcopy` completely silent.
+4. **Action commands** (logout, upgrade) produce no stdout data — their output is purely decorative.
+5. **Data commands** (whoami, version, login, generate) call both decoration (stderr) and `ui.output()` (stdout). In interactive mode, only decoration is visible. In pipes/scripts, only the raw data is captured.
+6. **Never write data to stderr** — decoration methods are for human context only.
+7. **Never write decoration to stdout** — it breaks pipes, `$(...)` captures, and `> file` redirects.
 
 ### Pattern
 
@@ -183,13 +184,21 @@ yield * ui.log.step('Redirecting'); // Decoration → stderr
 
 ### How it works in practice
 
-```bash
-composio whoami              # Human sees pretty box AND plain key
-composio whoami 2>/dev/null  # Only the API key (suppresses decoration)
-API_KEY=$(composio whoami)   # Variable gets clean key, box shows in terminal
-composio whoami | pbcopy     # Clipboard gets clean key
+The CLI checks `process.stdout.isTTY` once at startup to determine the output mode:
 
-composio login               # All decoration visible (nothing to pipe)
+- **Interactive** (`stdout` is TTY): decoration visible on stderr, `ui.output()` is a no-op.
+- **Piped** (`stdout` is NOT TTY): decoration suppressed, `ui.output()` writes raw data to stdout.
+
+```bash
+composio whoami              # Pretty box only (interactive)
+composio whoami | pbcopy     # Silent — clipboard gets clean key
+API_KEY=$(composio whoami)   # Silent — variable gets clean key
+composio whoami > file.txt   # Silent — file gets clean key
+
+composio version             # Decorated version (interactive)
+composio version | cat       # Raw version string
+
+composio login               # All decoration visible, browser opens
 composio login 2>/dev/null   # Silent (but still opens browser, polls API)
 ```
 

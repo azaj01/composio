@@ -456,6 +456,7 @@ export function generateTypescriptTypeStubs({
     yield* logMetrics(metrics);
 
     yield* ui.outro('Done');
+    yield* ui.output(outputDir);
 
     return outputDir;
   });

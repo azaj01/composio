@@ -51,6 +51,7 @@ export const loginCmd = Command.make('login', { noBrowser }, ({ noBrowser }) =>
     }
 
     yield* ui.note(url, 'Login URL');
+    yield* ui.output(url);
 
     if (!noBrowser) {
       // Open the given `url` in the default browser
@@ -64,34 +65,35 @@ export const loginCmd = Command.make('login', { noBrowser }, ({ noBrowser }) =>
       );
     }
 
-    // Spinner during session polling
-    const spinner = yield* ui.makeSpinner('Waiting for login...');
+    // Retry operation until the session status is "linked" with exponential backoff.
+    // useMakeSpinner auto-cleans up the spinner on interruption (e.g., Ctrl+C).
+    const linkedSession = yield* ui.useMakeSpinner('Waiting for login...', spinner =>
+      Effect.retry(
+        Effect.gen(function* () {
+          const currentSession = yield* client.getSession({
+            ...session,
+          });
 
-    // Retry operation until the session status is "linked" with exponential backoff
-    const linkedSession = yield* Effect.retry(
-      Effect.gen(function* () {
-        const currentSession = yield* client.getSession({
-          ...session,
-        });
+          // Check if session is linked
+          if (currentSession.status === 'linked') {
+            return currentSession;
+          }
 
-        // Check if session is linked
-        if (currentSession.status === 'linked') {
-          return currentSession;
-        }
-
-        // If still pending, fail to trigger retry
-        return yield* Effect.fail(
-          new Error(`Session status is still '${currentSession.status}', waiting for 'linked'`)
-        );
-      }),
-      // Exponential backoff: start with 0.3s, max 5s, up to 15 retries
-      Schedule.exponential('0.3 seconds').pipe(
-        Schedule.intersect(Schedule.recurs(15)),
-        Schedule.intersect(Schedule.spaced('5 seconds'))
+          // If still pending, fail to trigger retry
+          return yield* Effect.fail(
+            new Error(`Session status is still '${currentSession.status}', waiting for 'linked'`)
+          );
+        }),
+        // Exponential backoff: start with 0.3s, max 5s, up to 15 retries
+        Schedule.exponential('0.3 seconds').pipe(
+          Schedule.intersect(Schedule.recurs(15)),
+          Schedule.intersect(Schedule.spaced('5 seconds'))
+        )
+      ).pipe(
+        Effect.tap(() => spinner.stop('Login successful')),
+        Effect.tapError(() => spinner.error('Login timed out. Please try again.'))
       )
-    ).pipe(Effect.tapError(() => spinner.error('Login timed out. Please try again.')));
-
-    yield* spinner.stop('Login successful');
+    );
 
     yield* Effect.logDebug(`Linked session: ${JSON.stringify(linkedSession)}`);
 

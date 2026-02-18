@@ -37,16 +37,6 @@ export const TerminalUITest = Layer.succeed(
         return result;
       }),
 
-    makeSpinner: message =>
-      Effect.gen(function* () {
-        void message;
-        return {
-          message: (_msg: string) => Effect.void,
-          stop: (msg?: string) => (msg ? Console.log(msg) : Effect.void),
-          error: (msg?: string) => (msg ? Console.error(msg) : Effect.void),
-        };
-      }),
-
     useMakeSpinner: (message, use) =>
       Effect.gen(function* () {
         let stopped = false;

@@ -1,10 +1,9 @@
 import process from 'node:process';
-import type { Writable } from 'node:stream';
 import * as p from '@clack/prompts';
 import { Context, Effect, Exit, Layer } from 'effect';
 
 // ---------------------------------------------------------------------------
-// SpinnerHandle — returned by `makeSpinner` for manual control
+// SpinnerHandle — returned by `useMakeSpinner` for manual control
 // ---------------------------------------------------------------------------
 
 export interface SpinnerHandle {
@@ -23,7 +22,12 @@ export interface SpinnerHandle {
 export interface TerminalUI {
   /**
    * Write raw data to stdout for piping and scripting.
+   *
    * This is the ONLY method that writes to stdout — everything else goes to stderr.
+   * When stdout is a TTY (interactive terminal), this is a no-op — the human already
+   * sees the data via decoration on stderr. When stdout is redirected (pipe, subshell,
+   * file), the raw value is written for machine consumption.
+   *
    * Use this for values that scripts should capture (API keys, version strings, etc.).
    */
   readonly output: (data: string) => Effect.Effect<void>;
@@ -66,15 +70,6 @@ export interface TerminalUI {
   ) => Effect.Effect<A, E, R>;
 
   /**
-   * Create a controllable spinner for multi-step flows (e.g., login polling).
-   * The caller is responsible for calling `stop()` or `error()`.
-   *
-   * WARNING: If the surrounding Effect fails, this spinner will NOT be cleaned up.
-   * Use `useMakeSpinner` instead for automatic cleanup on error.
-   */
-  readonly makeSpinner: (message: string) => Effect.Effect<SpinnerHandle>;
-
-  /**
    * Create a controllable spinner that is automatically stopped on error or interruption.
    * The `use` function receives a SpinnerHandle and must return an Effect.
    * On success: the caller should call `spinner.stop(...)` inside `use`.
@@ -94,10 +89,16 @@ export const TerminalUI = Context.GenericTag<TerminalUI>('services/TerminalUI');
 // ---------------------------------------------------------------------------
 
 /**
- * All decoration (spinners, logs, notes, intro/outro) writes to stderr.
- * This keeps stdout clean for data output that scripts and pipes capture.
+ * Whether the CLI is running interactively (stdout is a TTY).
+ * When piped (stdout is NOT a TTY), all decoration is suppressed and only
+ * `output()` writes raw data to stdout for machine consumption.
  */
-const DECORATION: Writable = process.stderr;
+const isInteractive = !!process.stdout.isTTY;
+
+/** Run a decoration side-effect only in interactive mode. */
+function decorate(fn: () => void): void {
+  if (isInteractive) fn();
+}
 
 function createClackSpinnerHandle(s: p.SpinnerResult, defaultMessage: string): SpinnerHandle {
   return {
@@ -107,72 +108,85 @@ function createClackSpinnerHandle(s: p.SpinnerResult, defaultMessage: string): S
   };
 }
 
+/** No-op spinner handle used when decoration is suppressed (piped mode). */
+const silentSpinnerHandle: SpinnerHandle = {
+  message: () => Effect.void,
+  stop: () => Effect.void,
+  error: () => Effect.void,
+};
+
 const makeLive: TerminalUI = {
   output: data =>
     Effect.sync(() => {
-      process.stdout.write(`${data}\n`);
+      if (!isInteractive) {
+        process.stdout.write(`${data}\n`);
+      }
     }),
 
-  intro: title => Effect.sync(() => p.intro(title, { output: DECORATION })),
-  outro: message => Effect.sync(() => p.outro(message, { output: DECORATION })),
+  intro: title => Effect.sync(() => decorate(() => p.intro(title, { output: process.stderr }))),
+  outro: message => Effect.sync(() => decorate(() => p.outro(message, { output: process.stderr }))),
 
   log: {
-    info: message => Effect.sync(() => p.log.info(message, { output: DECORATION })),
-    success: message => Effect.sync(() => p.log.success(message, { output: DECORATION })),
-    warn: message => Effect.sync(() => p.log.warn(message, { output: DECORATION })),
-    error: message => Effect.sync(() => p.log.error(message, { output: DECORATION })),
-    step: message => Effect.sync(() => p.log.step(message, { output: DECORATION })),
-    message: message => Effect.sync(() => p.log.message(message, { output: DECORATION })),
+    info: message =>
+      Effect.sync(() => decorate(() => p.log.info(message, { output: process.stderr }))),
+    success: message =>
+      Effect.sync(() => decorate(() => p.log.success(message, { output: process.stderr }))),
+    warn: message =>
+      Effect.sync(() => decorate(() => p.log.warn(message, { output: process.stderr }))),
+    error: message =>
+      Effect.sync(() => decorate(() => p.log.error(message, { output: process.stderr }))),
+    step: message =>
+      Effect.sync(() => decorate(() => p.log.step(message, { output: process.stderr }))),
+    message: message =>
+      Effect.sync(() => decorate(() => p.log.message(message, { output: process.stderr }))),
   },
 
-  note: (message, title) => Effect.sync(() => p.note(message, title ?? '', { output: DECORATION })),
+  note: (message, title) =>
+    Effect.sync(() => decorate(() => p.note(message, title ?? '', { output: process.stderr }))),
 
   withSpinner: (message, effect, options) =>
-    Effect.acquireUseRelease(
-      Effect.sync(() => {
-        const s = p.spinner({ output: DECORATION });
-        s.start(message);
-        return s;
-      }),
-      () => effect,
-      (s, exit) =>
-        Effect.sync(() => {
-          if (Exit.isSuccess(exit)) {
-            const successMsg =
-              typeof options?.successMessage === 'function'
-                ? options.successMessage(exit.value)
-                : (options?.successMessage ?? message);
-            s.stop(successMsg);
-          } else {
-            s.error(options?.errorMessage ?? message);
-          }
-        })
-    ),
-
-  makeSpinner: message =>
-    Effect.sync(() => {
-      const s = p.spinner({ output: DECORATION });
-      s.start(message);
-      return createClackSpinnerHandle(s, message);
-    }),
+    isInteractive
+      ? Effect.acquireUseRelease(
+          Effect.sync(() => {
+            const s = p.spinner({ output: process.stderr });
+            s.start(message);
+            return s;
+          }),
+          () => effect,
+          (s, exit) =>
+            Effect.sync(() => {
+              if (Exit.isSuccess(exit)) {
+                const successMsg =
+                  typeof options?.successMessage === 'function'
+                    ? options.successMessage(exit.value)
+                    : (options?.successMessage ?? message);
+                s.stop(successMsg);
+              } else {
+                s.error(options?.errorMessage ?? message);
+              }
+            })
+        )
+      : effect,
 
   useMakeSpinner: (message, use) =>
-    Effect.acquireUseRelease(
-      Effect.sync(() => {
-        const s = p.spinner({ output: DECORATION });
-        s.start(message);
-        return { raw: s, handle: createClackSpinnerHandle(s, message) };
-      }),
-      ({ handle }) => use(handle),
-      ({ raw }, exit) =>
-        Effect.sync(() => {
-          // Only clean up if the spinner is still active (user didn't call stop/error)
-          // Clack spinners have an internal `isCancelled` state after stop/error/cancel
-          if (Exit.isFailure(exit) && !raw.isCancelled) {
-            raw.error(message);
-          }
-        })
-    ),
+    isInteractive
+      ? Effect.acquireUseRelease(
+          Effect.sync(() => {
+            const s = p.spinner({ output: process.stderr });
+            s.start(message);
+            return { raw: s, handle: createClackSpinnerHandle(s, message) };
+          }),
+          ({ handle }) => use(handle),
+          ({ raw }, exit) =>
+            Effect.sync(() => {
+              // Only clean up if the spinner is still active (user didn't call stop/error)
+              // Clack spinners have an internal `isCancelled` state after stop/error/cancel
+              if (Exit.isFailure(exit) && !raw.isCancelled) {
+                raw.error(message);
+              }
+            })
+        )
+      : use(silentSpinnerHandle),
 };
 
 export const TerminalUILive = Layer.succeed(TerminalUI, makeLive);
