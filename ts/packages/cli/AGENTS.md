@@ -289,3 +289,44 @@ For principles on how to design CLI interactions (arguments, flags, help text, o
 - **Claude skill**: `.claude/skills/create-cli/SKILL.md` (standalone, trimmed for Claude Code context)
 
 Use these guidelines when adding new commands, designing flag interfaces, or making UX decisions for the CLI.
+
+---
+
+## Recording CLI Demos
+
+New commands should have VHS recordings for documentation. The recording script produces SVGs and asciicasts that demonstrate the CLI in action.
+
+### Adding Recordings
+
+1. Add entries to `recordings/recordings.yaml` under the appropriate group
+2. Run `bun scripts/record.ts` (requires `COMPOSIO_API_KEY` and `vhs` on PATH)
+
+### Recording Config
+
+Each entry in `recordings.yaml` accepts:
+
+| Field             | Required | Description                                                                             |
+| ----------------- | -------- | --------------------------------------------------------------------------------------- |
+| `name`            | Yes      | Filename stem (`<name>.svg`, `<name>.ascii`, `<name>.tape`)                             |
+| `command`         | Yes      | Shell command to record                                                                 |
+| `description`     | No       | Comment shown instantly above the command (via VHS `Hide`/`Show`)                       |
+| `sleepAfterEnter` | No       | Wait time after Enter (default: `6s` from `vhs.sleepAfterEnter`)                        |
+| `height`          | No       | `'dynamic'` for two-pass auto-sizing, or a fixed pixel number. Omit for default (750px) |
+
+Use `height: dynamic` for commands with long output (help text, full listings). The recorder probes with 2x height, parses the SVG to measure content, then re-records at the computed height (capped at `vhs.height * 2`).
+
+### Output Structure
+
+```
+recordings/
+├── recordings.yaml                    # Config
+├── tapes/<group>/<name>.tape          # Generated VHS tape files
+├── svgs/<group>/<name>.svg            # SVG recordings
+└── ascii/<group>/<name>.ascii         # Asciicast recordings
+```
+
+### Key Files
+
+- **Config**: `recordings/recordings.yaml`
+- **Script**: `scripts/record.ts` — Bun + Effect.ts, parallel VHS execution
+- **Shared tape**: `recordings/tapes/shared-config.tape` — common VHS settings (auto-generated)

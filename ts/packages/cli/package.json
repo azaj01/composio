@@ -36,7 +36,8 @@
     "prepublishOnly": "pnpm run build && pnpm run build:bin",
     "typecheck:src": "tsc --noEmit -p ./tsconfig.src.json",
     "typecheck:test": "tsc --noEmit -p ./tsconfig.test.json",
-    "typecheck": "pnpm run typecheck:src && pnpm run typecheck:test"
+    "typecheck": "pnpm run typecheck:src && pnpm run typecheck:test",
+    "record": "bun run ./scripts/record.ts"
   },
   "keywords": [
     "composio",
