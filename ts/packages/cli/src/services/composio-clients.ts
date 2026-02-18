@@ -246,6 +246,8 @@ export const ToolkitRetrieveResponse = Schema.Struct({
     created_at: Schema.DateTimeUtc,
     updated_at: Schema.DateTimeUtc,
     available_versions: Schema.optionalWith(Schema.Array(Schema.String), { default: () => [] }),
+    tools_count: Schema.optionalWith(Schema.Int, { default: () => 0 }),
+    triggers_count: Schema.optionalWith(Schema.Int, { default: () => 0 }),
   }),
 }).annotations({ identifier: 'ToolkitRetrieveResponse' });
 export type ToolkitRetrieveResponse = Schema.Schema.Type<typeof ToolkitRetrieveResponse>;
@@ -682,11 +684,7 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
                     composio_managed_auth_schemes: retrieved.composio_managed_auth_schemes,
                     is_local_toolkit: retrieved.is_local_toolkit,
                     no_auth: retrieved.no_auth,
-                    meta: {
-                      ...retrieved.meta,
-                      tools_count: 0,
-                      triggers_count: 0,
-                    },
+                    meta: retrieved.meta,
                   }) satisfies Toolkit
               )
             ),
