@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { glob } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import {
   type FileObject,
   printErrors,
@@ -162,10 +163,10 @@ async function getFiles(): Promise<FileObject[]> {
   }
 
   // Scan any .md files under content/ not already covered by Fumadocs sources
-  const coveredPaths = new Set(allFiles.map((f) => f.path));
+  const coveredPaths = new Set(allFiles.map((f) => resolve(f.path)));
   const extraMdFiles = await Array.fromAsync(glob('content/**/*.md'));
   for (const filePath of extraMdFiles) {
-    if (coveredPaths.has(filePath)) continue;
+    if (coveredPaths.has(resolve(filePath))) continue;
     const content = await readFile(filePath, 'utf-8');
     allFiles.push({ path: filePath, content });
   }
