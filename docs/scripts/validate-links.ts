@@ -6,7 +6,6 @@ import {
   scanURLs,
   validateFiles,
 } from 'next-validate-link';
-import type { InferPageType } from 'fumadocs-core/source';
 import {
   source,
   referenceSource,
@@ -20,27 +19,89 @@ type AnySource =
   | typeof cookbooksSource
   | typeof toolkitsSource;
 
+type PageOf = ReturnType<AnySource['getPages']>[number];
+
+/**
+ * Slugify a heading the same way rehype-slug does.
+ */
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Extract heading anchors from raw MDX/markdown content.
+ * Falls back to this when data.toc is unavailable (outside Next.js runtime).
+ */
+function extractHeadingsFromContent(content: string): string[] {
+  const headings: string[] = [];
+  for (const line of content.split('\n')) {
+    const match = line.match(/^#{1,6}\s+(.+)$/);
+    if (match) {
+      headings.push(slugify(match[1]));
+    }
+  }
+  return headings;
+}
+
+/**
+ * Get headings for a page, trying data.toc first then falling back to raw content parsing.
+ */
+async function getHeadingsForPage(page: PageOf): Promise<string[]> {
+  if (page.data.toc?.length) {
+    return page.data.toc.map((item: { url: string }) => item.url.slice(1));
+  }
+  if ('getText' in page.data) {
+    try {
+      const content = await (page.data as { getText: (mode: string) => Promise<string> }).getText('raw');
+      return extractHeadingsFromContent(content);
+    } catch {
+      // fall through
+    }
+  }
+  if (page.absolutePath) {
+    try {
+      const content = await readFile(page.absolutePath, 'utf-8');
+      return extractHeadingsFromContent(content);
+    } catch {
+      // fall through
+    }
+  }
+  return [];
+}
+
+/**
+ * Build populate entries for a source, resolving headings asynchronously.
+ */
+async function buildPopulateEntries(src: AnySource) {
+  return Promise.all(
+    src.getPages().map(async (page) => ({
+      value: { slug: page.slugs },
+      hashes: await getHeadingsForPage(page),
+    })),
+  );
+}
+
 async function checkLinks() {
+  const [docsEntries, refEntries, cookbookEntries, toolkitEntries] = await Promise.all([
+    buildPopulateEntries(source),
+    buildPopulateEntries(referenceSource),
+    buildPopulateEntries(cookbooksSource),
+    buildPopulateEntries(toolkitsSource),
+  ]);
+
   const scanned = await scanURLs({
     preset: 'next',
     populate: {
-      // Dynamic routes (keys must include (home) route group to match app directory structure)
-      '(home)/docs/[[...slug]]': source.getPages().map((page) => ({
-        value: { slug: page.slugs },
-        hashes: getHeadings(page),
-      })),
-      '(home)/reference/[[...slug]]': referenceSource.getPages().map((page) => ({
-        value: { slug: page.slugs },
-        hashes: getHeadings(page),
-      })),
-      '(home)/cookbooks/[[...slug]]': cookbooksSource.getPages().map((page) => ({
-        value: { slug: page.slugs },
-        hashes: getHeadings(page),
-      })),
-      '(home)/toolkits/[[...slug]]': toolkitsSource.getPages().map((page) => ({
-        value: { slug: page.slugs },
-        hashes: getHeadings(page),
-      })),
+      // Keys must include (home) route group to match app directory structure
+      '(home)/docs/[[...slug]]': docsEntries,
+      '(home)/reference/[[...slug]]': refEntries,
+      '(home)/cookbooks/[[...slug]]': cookbookEntries,
+      '(home)/toolkits/[[...slug]]': toolkitEntries,
     },
   });
 
@@ -68,11 +129,6 @@ async function checkLinks() {
   if (filteredErrors.length > 0) {
     process.exit(1);
   }
-}
-
-function getHeadings({ data }: InferPageType<AnySource>): string[] {
-  if (!data.toc) return [];
-  return data.toc.map((item) => item.url.slice(1));
 }
 
 async function getFiles(): Promise<FileObject[]> {
