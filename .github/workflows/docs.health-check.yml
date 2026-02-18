@@ -14,82 +14,73 @@ jobs:
         id: check
         run: |
           BASE_URL="https://docs.composio.dev"
-          FAILED=""
+          FAIL_FILE=$(mktemp)
           CHECKED=0
+          FAIL_COUNT=0
 
-          # Standard HTML endpoints
-          ENDPOINTS=(
-            # LLM/AI agent entry points
-            "/llms.txt"
-            "/llms-full.txt"
-            "/docs/quickstart.md"
-            "/docs/tools-and-toolkits.md"
-
-            # Main pages
-            "/docs"
-            "/docs/quickstart"
-            "/docs/authentication"
-            "/docs/tools-and-toolkits"
-            "/docs/users-and-sessions"
-            "/docs/configuring-sessions"
-            "/cookbooks"
-            "/toolkits"
-            "/reference"
-
-            # Provider pages
-            "/docs/providers/openai"
-            "/docs/providers/vercel"
-            "/docs/providers/anthropic"
-
-            # Key sub-pages
-            "/docs/tools-direct/fetching-tools"
-            "/docs/tools-direct/executing-tools"
-            "/docs/authenticating-users/in-chat-authentication"
-            "/docs/common-faq"
-          )
-
-          # Endpoints to also test with Accept: text/markdown
-          MARKDOWN_ENDPOINTS=(
-            "/docs/quickstart"
-            "/docs/tools-and-toolkits"
-            "/docs/authentication"
-            "/docs/providers/openai"
-            "/cookbooks"
-          )
-
-          for endpoint in "${ENDPOINTS[@]}"; do
+          check_url() {
+            local label="$1"
+            local url="$2"
+            local extra_args="${3:-}"
             CHECKED=$((CHECKED + 1))
-            STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 "${BASE_URL}${endpoint}" || echo "000")
-
+            STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 $extra_args "$url" || echo "000")
             if [ "$STATUS" -ge 400 ] || [ "$STATUS" = "000" ]; then
-              echo "FAIL: ${endpoint} → HTTP ${STATUS}"
-              FAILED="${FAILED}\n• \`${endpoint}\` → HTTP ${STATUS}"
+              echo "FAIL: ${label} → ${STATUS}"
+              echo "${label} → ${STATUS}" >> "$FAIL_FILE"
+              FAIL_COUNT=$((FAIL_COUNT + 1))
             else
-              echo "OK: ${endpoint} → HTTP ${STATUS}"
+              echo "  OK: ${label} → ${STATUS}"
             fi
-          done
+          }
 
-          for endpoint in "${MARKDOWN_ENDPOINTS[@]}"; do
-            CHECKED=$((CHECKED + 1))
-            STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 -H "Accept: text/markdown" "${BASE_URL}${endpoint}" || echo "000")
+          # LLM/AI agent entry points
+          check_url "/llms.txt" "${BASE_URL}/llms.txt"
+          check_url "/llms-full.txt" "${BASE_URL}/llms-full.txt"
+          check_url "/docs/quickstart.md" "${BASE_URL}/docs/quickstart.md"
+          check_url "/docs/tools-and-toolkits.md" "${BASE_URL}/docs/tools-and-toolkits.md"
 
-            if [ "$STATUS" -ge 400 ] || [ "$STATUS" = "000" ]; then
-              echo "FAIL: ${endpoint} (Accept: text/markdown) → HTTP ${STATUS}"
-              FAILED="${FAILED}\n• \`${endpoint}\` (Accept: text/markdown) → HTTP ${STATUS}"
-            else
-              echo "OK: ${endpoint} (Accept: text/markdown) → HTTP ${STATUS}"
-            fi
-          done
+          # Main pages
+          check_url "/docs" "${BASE_URL}/docs"
+          check_url "/docs/quickstart" "${BASE_URL}/docs/quickstart"
+          check_url "/docs/authentication" "${BASE_URL}/docs/authentication"
+          check_url "/docs/tools-and-toolkits" "${BASE_URL}/docs/tools-and-toolkits"
+          check_url "/docs/users-and-sessions" "${BASE_URL}/docs/users-and-sessions"
+          check_url "/docs/configuring-sessions" "${BASE_URL}/docs/configuring-sessions"
+          check_url "/cookbooks" "${BASE_URL}/cookbooks"
+          check_url "/toolkits" "${BASE_URL}/toolkits"
+          check_url "/reference" "${BASE_URL}/reference"
 
-          if [ -n "$FAILED" ]; then
+          # Provider pages
+          check_url "/docs/providers/openai" "${BASE_URL}/docs/providers/openai"
+          check_url "/docs/providers/vercel" "${BASE_URL}/docs/providers/vercel"
+          check_url "/docs/providers/anthropic" "${BASE_URL}/docs/providers/anthropic"
+
+          # Key sub-pages
+          check_url "/docs/tools-direct/fetching-tools" "${BASE_URL}/docs/tools-direct/fetching-tools"
+          check_url "/docs/tools-direct/executing-tools" "${BASE_URL}/docs/tools-direct/executing-tools"
+          check_url "/docs/authenticating-users/in-chat-authentication" "${BASE_URL}/docs/authenticating-users/in-chat-authentication"
+          check_url "/docs/common-faq" "${BASE_URL}/docs/common-faq"
+
+          # Markdown content negotiation
+          check_url "/docs/quickstart (markdown)" "${BASE_URL}/docs/quickstart" '-H "Accept: text/markdown"'
+          check_url "/docs/tools-and-toolkits (markdown)" "${BASE_URL}/docs/tools-and-toolkits" '-H "Accept: text/markdown"'
+          check_url "/docs/authentication (markdown)" "${BASE_URL}/docs/authentication" '-H "Accept: text/markdown"'
+          check_url "/docs/providers/openai (markdown)" "${BASE_URL}/docs/providers/openai" '-H "Accept: text/markdown"'
+          check_url "/cookbooks (markdown)" "${BASE_URL}/cookbooks" '-H "Accept: text/markdown"'
+
+          if [ "$FAIL_COUNT" -gt 0 ]; then
             echo "has_failures=true" >> $GITHUB_OUTPUT
-            echo "checked=$CHECKED" >> $GITHUB_OUTPUT
+
+            # Build the Slack message with real newlines
+            FAIL_LIST=$(sed 's/^/• /' "$FAIL_FILE")
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
             PAYLOAD=$(jq -n \
-              --arg failed "$FAILED" \
-              --arg checked "$CHECKED" \
-              --arg run_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-              '{text: ("🚨 *Docs Health Check Failed*\n\nSome endpoints returned errors. These are URLs that Claude Code / Codex hit when accessing our docs.\n\n*Failing endpoints:*" + $failed + "\n\n_Checked " + $checked + " endpoints total_\n<" + $run_url + "|View run>")}')
+              --arg fails "$FAIL_LIST" \
+              --arg count "$FAIL_COUNT" \
+              --arg total "$CHECKED" \
+              --arg url "$RUN_URL" \
+              '{text: ("🚨 *Docs Health Check*\n\n" + $count + "/" + $total + " endpoints failing:\n" + $fails + "\n\n<" + $url + "|View logs>")}')
 
             echo "slack_payload<<EOF" >> $GITHUB_OUTPUT
             echo "$PAYLOAD" >> $GITHUB_OUTPUT
@@ -98,6 +89,8 @@ jobs:
             echo "has_failures=false" >> $GITHUB_OUTPUT
             echo "All $CHECKED endpoints healthy"
           fi
+
+          rm -f "$FAIL_FILE"
 
       - name: Notify Slack
         if: steps.check.outputs.has_failures == 'true'
