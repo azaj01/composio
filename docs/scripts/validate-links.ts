@@ -1,3 +1,5 @@
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   type FileObject,
   printErrors,
@@ -22,20 +24,20 @@ async function checkLinks() {
   const scanned = await scanURLs({
     preset: 'next',
     populate: {
-      // Dynamic routes
-      'docs/[[...slug]]': source.getPages().map((page) => ({
+      // Dynamic routes (keys must include (home) route group to match app directory structure)
+      '(home)/docs/[[...slug]]': source.getPages().map((page) => ({
         value: { slug: page.slugs },
         hashes: getHeadings(page),
       })),
-      'reference/[[...slug]]': referenceSource.getPages().map((page) => ({
+      '(home)/reference/[[...slug]]': referenceSource.getPages().map((page) => ({
         value: { slug: page.slugs },
         hashes: getHeadings(page),
       })),
-      'cookbooks/[[...slug]]': cookbooksSource.getPages().map((page) => ({
+      '(home)/cookbooks/[[...slug]]': cookbooksSource.getPages().map((page) => ({
         value: { slug: page.slugs },
         hashes: getHeadings(page),
       })),
-      'toolkits/[[...slug]]': toolkitsSource.getPages().map((page) => ({
+      '(home)/toolkits/[[...slug]]': toolkitsSource.getPages().map((page) => ({
         value: { slug: page.slugs },
         hashes: getHeadings(page),
       })),
@@ -92,6 +94,25 @@ async function getFiles(): Promise<FileObject[]> {
         data: page.data,
       });
     }
+  }
+
+  // Toolkit FAQ files (embedded snippets not in any Fumadocs source)
+  const faqDir = join(process.cwd(), 'content/toolkit-faq');
+  try {
+    const faqFiles = await readdir(faqDir);
+    for (const file of faqFiles) {
+      if (!file.endsWith('.md')) continue;
+      const filePath = join(faqDir, file);
+      const content = await readFile(filePath, 'utf-8');
+      const slug = file.replace(/\.md$/, '');
+      allFiles.push({
+        path: filePath,
+        content,
+        url: `/toolkits/${slug}`,
+      });
+    }
+  } catch {
+    // toolkit-faq directory doesn't exist, skip
   }
 
   return allFiles;
