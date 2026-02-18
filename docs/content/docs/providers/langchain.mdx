@@ -18,7 +18,7 @@ pip install composio composio_langchain langchain langchain_openai
 </Tab>
 <Tab value="TypeScript">
 ```bash
-npm install @composio/core @composio/langchain langchain @langchain/openai
+npm install @composio/core @composio/langchain @langchain/openai @langchain/langgraph @langchain/core
 ```
 </Tab>
 </Tabs>
@@ -63,9 +63,10 @@ print(result["messages"][-1].content)
 </Tab>
 <Tab value="TypeScript">
 ```typescript
-// @noErrors
 import { ChatOpenAI } from '@langchain/openai';
-import { createAgent } from 'langchain';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { StateGraph, MessagesAnnotation } from '@langchain/langgraph';
 import { Composio } from '@composio/core';
 import { LangchainProvider } from '@composio/langchain';
 
@@ -77,18 +78,39 @@ const composio = new Composio({
 const session = await composio.create("user_123");
 const tools = await session.tools();
 
-const model = new ChatOpenAI({ model: 'gpt-5.2' });
+const toolNode = new ToolNode(tools);
 
-const agent = createAgent({
-  model,
-  tools,
+const model = new ChatOpenAI({
+  model: 'gpt-5.2',
+  temperature: 0,
+}).bindTools(tools);
+
+function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
+  const lastMessage = messages[messages.length - 1] as AIMessage;
+  if (lastMessage.tool_calls?.length) {
+    return 'tools';
+  }
+  return '__end__';
+}
+
+async function callModel(state: typeof MessagesAnnotation.State) {
+  const response = await model.invoke(state.messages);
+  return { messages: [response] };
+}
+
+const workflow = new StateGraph(MessagesAnnotation)
+  .addNode('agent', callModel)
+  .addEdge('__start__', 'agent')
+  .addNode('tools', toolNode)
+  .addEdge('tools', 'agent')
+  .addConditionalEdges('agent', shouldContinue);
+
+const app = workflow.compile();
+
+const finalState = await app.invoke({
+  messages: [new HumanMessage("Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'")],
 });
-
-const result = await agent.invoke({
-  messages: [{ role: "user", content: "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'" }],
-});
-
-console.log(result.messages[result.messages.length - 1].content);
+console.log(finalState.messages[finalState.messages.length - 1].content);
 ```
 </Tab>
 </Tabs>

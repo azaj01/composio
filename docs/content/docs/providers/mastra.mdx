@@ -4,15 +4,36 @@ description: Build an agent with Mastra and enable it to use 800+ tools with Com
 keywords: [mastra]
 ---
 
-The Mastra provider formats Composio tools into a format compatible with [Mastra](https://mastra.ai/en/docs/tools-mcp/overview#creating-tools)'s tool calling capabilities, including input schemas, execution logic, and descriptions.
+The Mastra provider transforms Composio tools into [Mastra's tool format](https://mastra.ai/en/docs/tools-mcp/overview#creating-tools) with built-in execution.
 
-## Setup
+<Callout type="info">
+Mastra is TypeScript only. There is no Python SDK.
+</Callout>
+
+<Steps>
+<Step>
+**Install**
 
 ```bash
 npm install @composio/core @composio/mastra @mastra/core @ai-sdk/openai
 ```
+</Step>
 
-## Usage
+<Step>
+**Configure API Keys**
+
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `OPENAI_API_KEY` with your [OpenAI API key](https://platform.openai.com/api-keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+OPENAI_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+**Create session and run**
 
 ```typescript
 import { Composio } from "@composio/core";
@@ -29,58 +50,18 @@ const session = await composio.create("user_123");
 const tools = await session.tools();
 
 const agent = new Agent({
-  id: "github-agent",
-  name: "GitHub Agent",
-  instructions: "You are a helpful assistant that can perform GitHub actions.",
-  model: openai("gpt-4.1"),
-  tools: tools,
+  id: "my-agent",
+  name: "My Agent",
+  instructions: "You are a helpful assistant.",
+  model: openai("gpt-5.2"),
+  tools,
 });
 
 const { text } = await agent.generate([
-  { role: "user", content: "Star the composiohq/composio repository on GitHub" },
+  { role: "user", content: "Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'" },
 ]);
 
 console.log(text);
 ```
-
-## Usage with MCP
-
-You can also use Composio MCP servers directly with Mastra's MCPClient.
-
-<Callout type="info">
-Composio MCP servers only support Streamable HTTP transport.
-</Callout>
-
-```typescript
-// @noErrors
-import { MCPClient } from "@mastra/mcp";
-import { openai } from "@ai-sdk/openai";
-import { Agent } from "@mastra/core/agent";
-import { Composio } from "@composio/core";
-
-const composio = new Composio();
-
-// Create a session for your user
-const session = await composio.create("user_123");
-
-// Create MCP client with the session's MCP server
-const mcpClient = new MCPClient({
-  id: "composio-mcp-client",
-  servers: {
-    composio: { url: new URL(session.mcp.url) },
-  }
-});
-
-const agent = new Agent({
-  id: "dev-assistant",
-  name: "Dev Assistant",
-  instructions: "Help manage GitHub repos, Linear issues, and Notion documentation.",
-  model: openai("gpt-4-turbo"),
-  tools: await mcpClient.getTools()
-});
-
-const response = await agent.generate(
-  "Star the composiohq/composio repository on GitHub"
-);
-console.log(response.text);
-```
+</Step>
+</Steps>
