@@ -368,9 +368,9 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
           })
         );
 
-        if (didUpgrade) {
-          yield* ui.outro('Restart your terminal to use the new version.');
-        }
+        yield* ui.outro(
+          didUpgrade ? 'Restart your terminal to use the new version.' : 'No upgrade needed.'
+        );
       });
 
     return {

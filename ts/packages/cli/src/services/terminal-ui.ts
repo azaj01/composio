@@ -100,11 +100,26 @@ function decorate(fn: () => void): void {
   if (isInteractive) fn();
 }
 
-function createClackSpinnerHandle(s: p.SpinnerResult, defaultMessage: string): SpinnerHandle {
+function createClackSpinnerHandle(
+  s: p.SpinnerResult,
+  defaultMessage: string
+): { handle: SpinnerHandle; isStopped: () => boolean } {
+  let stopped = false;
   return {
-    message: (msg: string) => Effect.sync(() => s.message(msg)),
-    stop: (msg?: string) => Effect.sync(() => s.stop(msg ?? defaultMessage)),
-    error: (msg?: string) => Effect.sync(() => s.error(msg ?? defaultMessage)),
+    handle: {
+      message: (msg: string) => Effect.sync(() => s.message(msg)),
+      stop: (msg?: string) =>
+        Effect.sync(() => {
+          stopped = true;
+          s.stop(msg ?? defaultMessage);
+        }),
+      error: (msg?: string) =>
+        Effect.sync(() => {
+          stopped = true;
+          s.error(msg ?? defaultMessage);
+        }),
+    },
+    isStopped: () => stopped,
   };
 }
 
@@ -174,14 +189,14 @@ const makeLive: TerminalUI = {
           Effect.sync(() => {
             const s = p.spinner({ output: process.stderr });
             s.start(message);
-            return { raw: s, handle: createClackSpinnerHandle(s, message) };
+            const { handle, isStopped } = createClackSpinnerHandle(s, message);
+            return { raw: s, handle, isStopped };
           }),
           ({ handle }) => use(handle),
-          ({ raw }, exit) =>
+          ({ raw, isStopped }, exit) =>
             Effect.sync(() => {
-              // Only clean up if the spinner is still active (user didn't call stop/error)
-              // Clack spinners have an internal `isCancelled` state after stop/error/cancel
-              if (Exit.isFailure(exit) && !raw.isCancelled) {
+              // Only clean up if the spinner hasn't been stopped/errored by the callback
+              if (Exit.isFailure(exit) && !isStopped()) {
                 raw.error(message);
               }
             })
