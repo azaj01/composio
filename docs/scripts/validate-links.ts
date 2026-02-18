@@ -8,14 +8,14 @@ import {
 } from 'next-validate-link';
 import {
   source,
-  referenceSource,
+  getReferenceSource,
   cookbooksSource,
   toolkitsSource,
 } from '../lib/source';
 
 type AnySource =
   | typeof source
-  | typeof referenceSource
+  | Awaited<ReturnType<typeof getReferenceSource>>
   | typeof cookbooksSource
   | typeof toolkitsSource;
 
@@ -87,6 +87,7 @@ async function buildPopulateEntries(src: AnySource) {
 }
 
 async function checkLinks() {
+  const referenceSource = await getReferenceSource();
   const [docsEntries, refEntries, cookbookEntries, toolkitEntries] = await Promise.all([
     buildPopulateEntries(source),
     buildPopulateEntries(referenceSource),
@@ -132,6 +133,7 @@ async function checkLinks() {
 }
 
 async function getFiles(): Promise<FileObject[]> {
+  const referenceSource = await getReferenceSource();
   const sources = [source, referenceSource, cookbooksSource, toolkitsSource];
   const allFiles: FileObject[] = [];
 
