@@ -41,7 +41,8 @@ ts/e2e-tests/
         ├── cf-workers-files/                # Cloudflare Workers file handling tests
         └── cf-workers-tool-router-ai/       # Cloudflare Workers AI SDK tool router tests
 └── cli/                                     # CLI runtime tests (scratch)
-    └── version/                             # composio version command tests
+    ├── version/                             # composio version command tests
+    └── whoami/                              # composio whoami command tests
 ```
 
 ## Running Tests
