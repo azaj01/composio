@@ -86,13 +86,20 @@ async function buildPopulateEntries(src: AnySource) {
   );
 }
 
+async function getDynamicToolkitEntries() {
+  const raw = await readFile('public/data/toolkits.json', 'utf-8');
+  const toolkits: { slug: string }[] = JSON.parse(raw);
+  return toolkits.map((t) => ({ value: { slug: [t.slug] }, hashes: [] as string[] }));
+}
+
 async function checkLinks() {
   const referenceSource = await getReferenceSource();
-  const [docsEntries, refEntries, cookbookEntries, toolkitEntries] = await Promise.all([
+  const [docsEntries, refEntries, cookbookEntries, toolkitEntries, dynamicToolkitEntries] = await Promise.all([
     buildPopulateEntries(source),
     buildPopulateEntries(referenceSource),
     buildPopulateEntries(cookbooksSource),
     buildPopulateEntries(toolkitsSource),
+    getDynamicToolkitEntries(),
   ]);
 
   const scanned = await scanURLs({
@@ -102,7 +109,7 @@ async function checkLinks() {
       '(home)/docs/[[...slug]]': docsEntries,
       '(home)/reference/[[...slug]]': refEntries,
       '(home)/cookbooks/[[...slug]]': cookbookEntries,
-      '(home)/toolkits/[[...slug]]': toolkitEntries,
+      '(home)/toolkits/[[...slug]]': [...toolkitEntries, ...dynamicToolkitEntries],
     },
   });
 
