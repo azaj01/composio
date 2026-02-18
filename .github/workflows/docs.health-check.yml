@@ -19,9 +19,6 @@ jobs:
 
           # Standard HTML endpoints
           ENDPOINTS=(
-            # TODO: Remove after testing — intentional 404 to verify Slack alert
-            "/this-page-does-not-exist-test-404"
-
             # LLM/AI agent entry points
             "/llms.txt"
             "/llms-full.txt"
