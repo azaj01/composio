@@ -1,7 +1,7 @@
 Set Height 1500
 Source "recordings/tapes/shared-config.tape"
-Output "recordings/svgs/ts:generate/help.svg"
-Output "recordings/ascii/ts:generate/help.ascii"
+Output "recordings/svgs/ts-generate/help.svg"
+Output "recordings/ascii/ts-generate/help.ascii"
 
 Hide
 Type "# Show ts generate subcommand help"

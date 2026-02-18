@@ -7,7 +7,7 @@ Hide
 Type "# List with no results"
 Enter
 Show
-Type "composio toolkits list --query "gmaxx""
+Type "composio toolkits list --query 'gmaxx'"
 Sleep 300ms
 Enter
 Sleep 6s

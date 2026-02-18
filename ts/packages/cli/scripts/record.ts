@@ -100,17 +100,24 @@ interface RecordingsConfig {
 
 // --- Tape generation ---
 
+function vhsQuote(value: string): string {
+  if (value.includes('"')) {
+    return `"${value.replace(/"/g, "'")}"`;
+  }
+  return `"${value}"`;
+}
+
 function generateSharedTape(vhs: VhsConfig): string {
   const lines = [
     `Require composio`,
-    `Env CI "${env.CI}"`,
+    `Env CI ${vhsQuote(env.CI)}`,
     `Set Shell ${vhs.shell}`,
     `Set Width ${vhs.width}`,
     // Height is intentionally omitted — set per-recording tape to support dynamic heights.
     `Set FontSize ${vhs.fontSize}`,
-    `Set FontFamily "${vhs.fontFamily}"`,
+    `Set FontFamily ${vhsQuote(vhs.fontFamily)}`,
     `Set Padding ${vhs.padding}`,
-    `Set Theme "${vhs.theme}"`,
+    `Set Theme ${vhsQuote(vhs.theme)}`,
     `Set TypingSpeed ${vhs.typingSpeed}`,
     `Set Framerate ${vhs.framerate}`,
     `Set CursorBlink ${vhs.cursorBlink}`,
@@ -127,17 +134,22 @@ function generateRecordingTape(opts: {
   sleepAfterEnter: string;
   height: number;
 }): string {
-  const lines = [`Set Height ${opts.height}`, `Source "${opts.sharedTapePath}"`];
-  lines.push(...opts.outputPaths.map(p => `Output "${p}"`), '');
+  const lines = [`Set Height ${opts.height}`, `Source ${vhsQuote(opts.sharedTapePath)}`];
+  lines.push(...opts.outputPaths.map(p => `Output ${vhsQuote(p)}`), '');
 
   if (opts.description) {
     lines.push('Hide');
-    lines.push(`Type "# ${opts.description}"`);
+    lines.push(`Type ${vhsQuote(`# ${opts.description}`)}`);
     lines.push('Enter');
     lines.push('Show');
   }
 
-  lines.push(`Type "${opts.command}"`, 'Sleep 300ms', 'Enter', `Sleep ${opts.sleepAfterEnter}`);
+  lines.push(
+    `Type ${vhsQuote(opts.command)}`,
+    'Sleep 300ms',
+    'Enter',
+    `Sleep ${opts.sleepAfterEnter}`
+  );
 
   return lines.join('\n') + '\n';
 }

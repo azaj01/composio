@@ -7,7 +7,7 @@ Hide
 Type "# Pipe output to JSON"
 Enter
 Show
-Type "composio toolkits search gmail | jq "first""
+Type "composio toolkits search gmail | jq 'first'"
 Sleep 300ms
 Enter
 Sleep 6s

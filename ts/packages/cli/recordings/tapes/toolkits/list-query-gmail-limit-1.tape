@@ -7,7 +7,7 @@ Hide
 Type "# Combine --query and --limit"
 Enter
 Show
-Type "composio toolkits list --query "gmail" --limit 1"
+Type "composio toolkits list --query 'gmail' --limit 1"
 Sleep 300ms
 Enter
 Sleep 6s

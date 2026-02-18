@@ -7,7 +7,7 @@ Hide
 Type "# List with --query filter"
 Enter
 Show
-Type "composio toolkits list --query "gmail""
+Type "composio toolkits list --query 'gmail'"
 Sleep 300ms
 Enter
 Sleep 6s

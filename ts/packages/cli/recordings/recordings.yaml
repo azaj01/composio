@@ -24,7 +24,7 @@ recordings:
       description: Show composio version
       command: "composio --version"
 
-  'ts:generate':
+  ts-generate:
     - name: help
       description: Show ts generate subcommand help
       command: "composio ts generate --help"
@@ -61,7 +61,7 @@ recordings:
 
     - name: search-gmail-pipe
       description: Pipe output to JSON
-      command: "composio toolkits search gmail | jq \"first\""
+      command: "composio toolkits search gmail | jq 'first'"
       height: dynamic
 
     - name: info
@@ -93,13 +93,13 @@ recordings:
 
     - name: list-query-gmail
       description: List with --query filter
-      command: 'composio toolkits list --query "gmail"'
+      command: "composio toolkits list --query 'gmail'"
       height: dynamic
 
     - name: list-query-gmail-limit-1
       description: Combine --query and --limit
-      command: 'composio toolkits list --query "gmail" --limit 1'
+      command: "composio toolkits list --query 'gmail' --limit 1"
 
     - name: list-query-gmaxx
       description: List with no results
-      command: 'composio toolkits list --query "gmaxx"'
+      command: "composio toolkits list --query 'gmaxx'"

@@ -49,7 +49,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # Pipe output to JSON
-> composio toolkits search gmail | jq  first
+> composio toolkits search gmail | jq 'first'
 
 
 
@@ -74,7 +74,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # Pipe output to JSON
-> composio toolkits search gmail | jq  first
+> composio toolkits search gmail | jq 'first'
 
 
 
@@ -99,7 +99,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # Pipe output to JSON
-> composio toolkits search gmail | jq  first
+> composio toolkits search gmail | jq 'first'
 
 
 
@@ -124,7 +124,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # Pipe output to JSON
-> composio toolkits search gmail | jq  first
+> composio toolkits search gmail | jq 'first'
 {
   "name": "Gmail",
   "slug": "gmail",

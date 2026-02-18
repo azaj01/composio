@@ -57,7 +57,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # List with --query filter
-> composio toolkits list --query  gmail
+> composio toolkits list --query 'gmail'
 
 
 
@@ -86,7 +86,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # List with --query filter
-> composio toolkits list --query  gmail
+> composio toolkits list --query 'gmail'
 
 
 
@@ -115,7 +115,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # List with --query filter
-> composio toolkits list --query  gmail
+> composio toolkits list --query 'gmail'
 
 
 
@@ -144,7 +144,7 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > # List with --query filter
-> composio toolkits list --query  gmail
+> composio toolkits list --query 'gmail'
 │
 ◒  Fetching toolkits...
 ◇  Fetching toolkits...
