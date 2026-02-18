@@ -80,9 +80,9 @@ export interface E2ETestResult {
 /**
  * Result of executing a command with requested file captures.
  */
-export interface E2ETestResultWithFiles extends E2ETestResult {
+export interface E2ETestResultWithFiles<F extends string = string> extends E2ETestResult {
   /** Captured file contents keyed by requested file path */
-  files: Record<string, string>;
+  files: { [K in F]: string };
 }
 
 /**
@@ -128,7 +128,7 @@ export interface DefineTestsContext {
   /** Run an arbitrary command in the Docker container */
   runCmd: {
     <const C extends string>(command: NonEmptyString<C>): Promise<E2ETestResult>;
-    <const C extends string>(options: { command: NonEmptyString<C>; files: NonEmptyArray<string> }): Promise<E2ETestResultWithFiles>;
+    <const C extends string, const F extends string>(options: { command: NonEmptyString<C>; files: NonEmptyArray<F> }): Promise<E2ETestResultWithFiles<F>>;
   };
   /**
    * Run a fixture file with Node.js.

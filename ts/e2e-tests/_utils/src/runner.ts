@@ -906,7 +906,7 @@ export function runE2E(config: RunE2EInternalConfig): void {
 
         defineTests({
           runtime: 'node',
-          runCmd: (cmd) => executors.runCmd(cmd),
+          runCmd: ((cmd: RunCmdInput) => executors.runCmd(cmd)) as DefineTestsContext['runCmd'],
           runFixture: ((opts: RunFixtureOptions) => executors.runFixture(opts)) as DefineTestsContext['runFixture'],
         });
 
@@ -950,7 +950,7 @@ export function runE2E(config: RunE2EInternalConfig): void {
 
         defineTests({
           runtime: 'deno',
-          runCmd: (cmd) => executors.runCmd(cmd),
+          runCmd: ((cmd: RunCmdInput) => executors.runCmd(cmd)) as DefineTestsContext['runCmd'],
           runFixture: ((opts: RunFixtureOptions) => executors.runFixture(opts)) as DefineTestsContext['runFixture'],
         });
 
@@ -994,7 +994,7 @@ export function runE2E(config: RunE2EInternalConfig): void {
 
         defineTests({
           runtime: 'cli',
-          runCmd: (cmd) => executors.runCmd(cmd),
+          runCmd: ((cmd: RunCmdInput) => executors.runCmd(cmd)) as DefineTestsContext['runCmd'],
           runFixture: ((opts: RunFixtureOptions) => executors.runFixture(opts)) as DefineTestsContext['runFixture'],
         });
 

@@ -16,7 +16,7 @@ e2e(import.meta.url, {
   defineTests: ({ runCmd }) => {
     const expectedVersion = String(cliPkg.version ?? '').trim();
     let versionResult: E2ETestResult;
-    let redirectedResult: E2ETestResultWithFiles;
+    let redirectedResult: E2ETestResultWithFiles<'out.txt'>;
 
     beforeAll(async () => {
       versionResult = await runCmd('composio version');
@@ -36,7 +36,7 @@ e2e(import.meta.url, {
       });
 
       it('stderr matches snapshot', () => {
-        expect(sanitizeOutput(versionResult.stderr)).toBe('');
+        expect(versionResult.stderr).toBe('');
       });
     });
 
@@ -46,15 +46,15 @@ e2e(import.meta.url, {
       });
 
       it('stdout is empty', () => {
-        expect(sanitizeOutput(redirectedResult.stdout)).toBe('');
+        expect(redirectedResult.stdout).toBe('');
       });
 
       it('stderr is empty', () => {
-        expect(sanitizeOutput(redirectedResult.stderr)).toBe('');
+        expect(redirectedResult.stderr).toBe('');
       });
 
       it('out.txt matches snapshot', () => {
-        expect(sanitizeOutput(redirectedResult.files['out.txt'] ?? '')).toBe(expectedVersion);
+        expect(sanitizeOutput(redirectedResult.files['out.txt'])).toBe(expectedVersion);
       });
     });
   },
