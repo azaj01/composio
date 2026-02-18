@@ -25,6 +25,21 @@ When working on CLI code, reference the Effect source for accurate patterns:
 
 **Important:** The submodule is for **read-only reference only**. Do not modify files in `ts/vendor/`. The CLI's actual dependencies come from npm via `pnpm install`.
 
+## Clack Reference Source
+
+The CLI uses [`@clack/prompts`](https://github.com/bombshell-dev/clack) for interactive terminal UI. A local copy of the Clack source code is available as a git submodule:
+
+- **Location:** `ts/vendor/clack/`
+- **Repo:** [bombshell-dev/clack](https://github.com/bombshell-dev/clack)
+
+When working on CLI prompts and terminal UI, reference the Clack source for accurate APIs:
+- `ts/vendor/clack/packages/prompts/src/` — `@clack/prompts` (high-level API: text, select, confirm, spinner, etc.)
+- `ts/vendor/clack/packages/core/src/` — `@clack/core` (low-level primitives)
+
+See `ts/packages/cli/AGENTS.md` for detailed Clack usage guidelines.
+
+**Important:** The submodule is for **read-only reference only**. Do not modify files in `ts/vendor/`. The CLI's actual `@clack/prompts` dependency comes from npm via `pnpm install`.
+
 ## Common Development Commands
 
 ### Build and Development

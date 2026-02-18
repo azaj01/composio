@@ -1,5 +1,5 @@
 import { Command, Options } from '@effect/cli';
-import { pipe, Console, Effect, Option, Array } from 'effect';
+import { pipe, Effect, Option, Array } from 'effect';
 import { FileSystem } from '@effect/platform';
 import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { logMetrics } from 'src/effects/log-metrics';
@@ -14,6 +14,7 @@ import {
   type ToolkitVersionOverrides,
 } from 'src/effects/toolkit-version-overrides';
 import { validateToolkitVersionOverrides } from 'src/effects/validate-toolkit-versions';
+import { TerminalUI } from 'src/services/terminal-ui';
 
 export const outputOpt = Options.optional(
   Options.directory('output-dir', {
@@ -47,10 +48,13 @@ export function generatePythonTypeStubs({
   toolkitsOpt,
 }: GetCmdParams<typeof _pyCmd$Generate>) {
   return Effect.gen(function* () {
+    const ui = yield* TerminalUI;
     const process = yield* NodeProcess;
     const cwd = process.cwd;
     const fs = yield* FileSystem.FileSystem;
     const client = yield* ComposioToolkitsRepository;
+
+    yield* ui.intro('composio py generate');
 
     // Determine the actual output directory
     const outputDir = yield* outputOpt.pipe(
@@ -74,15 +78,13 @@ export function generatePythonTypeStubs({
     const toolkitSlugsFilter = hasToolkitsFilter ? toolkitsOpt.map(s => s.toLowerCase()) : null;
 
     // Validate toolkit version overrides before fetching data
-    // This will log detected overrides, validate them against API, and warn about unused ones
     const { validatedOverrides } = yield* validateToolkitVersionOverrides({
       versionOverrides,
       toolkitSlugsFilter,
       client,
     });
 
-    // Fetch data from Composio API
-    yield* Console.log('Fetching latest data from Composio API. This may take a while...');
+    const spinner = yield* ui.makeSpinner('Fetching data from Composio API...');
 
     // Validate toolkit slugs if specified (separate from version validation)
     const validatedToolkitSlugs = hasToolkitsFilter
@@ -117,8 +119,8 @@ export function generatePythonTypeStubs({
       : allToolkits;
 
     if (hasToolkitsFilter) {
-      yield* Console.log(
-        `Filtering to ${toolkits.length} toolkit(s): ${toolkits.map(t => t.slug).join(', ')}`
+      yield* spinner.message(
+        `Found ${toolkits.length} toolkit(s): ${toolkits.map(t => t.slug).join(', ')}`
       );
     }
 
@@ -133,6 +135,7 @@ export function generatePythonTypeStubs({
 
     const typeableTools = { withTypes: false as const, tools };
 
+    yield* spinner.message('Generating Python type stubs...');
     const index = createToolkitIndex({ toolkits, typeableTools, triggerTypes, versionMap });
 
     // Generate Python sources
@@ -140,6 +143,8 @@ export function generatePythonTypeStubs({
       banner: BANNER,
       outputDir,
     })(index);
+
+    yield* spinner.message('Writing files to disk...');
 
     // Write all generated files
     yield* pipe(
@@ -154,19 +159,20 @@ export function generatePythonTypeStubs({
       Effect.mapError(error => new Error(`Failed to write generated files: ${error}`))
     );
 
+    yield* spinner.stop('Type stubs generated successfully');
+
     yield* Option.isNone(outputOpt)
-      ? Console.log(
-          '✅ Type stubs generated successfully.\n' +
-            'You can now import generated types via `from composio.generated.<toolkit_name> import <TOOLKIT_NAME>`.\n'
+      ? ui.note(
+          'from composio.generated.<toolkit_name> import <TOOLKIT_NAME>',
+          'Import your generated types'
         )
-      : Console.log(
-          `✅ Type stubs generated successfully.\n` +
-            `Generated files are available at: ${outputDir}`
-        );
+      : ui.log.info(`Generated files are available at: ${outputDir}`);
 
     // Log API metrics
     const metrics = yield* client.getMetrics();
     yield* logMetrics(metrics);
+
+    yield* ui.outro('Done');
 
     return outputDir;
   });
