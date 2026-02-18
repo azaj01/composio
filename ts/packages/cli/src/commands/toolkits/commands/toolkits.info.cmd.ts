@@ -108,9 +108,10 @@ export const toolkitsCmd$Info = Command.make('info', { slug }, ({ slug }) =>
 
     const slugValue = slug.value;
 
-    const toolkit = yield* ui
+    const toolkitOpt = yield* ui
       .withSpinner(`Fetching toolkit "${slugValue}"...`, repo.getToolkitDetailed(slugValue))
       .pipe(
+        Effect.asSome,
         Effect.catchTag('services/HttpServerError', (e: HttpServerError) =>
           Effect.gen(function* () {
             // Show structured error message and suggested fix from the API
@@ -134,12 +135,20 @@ export const toolkitsCmd$Info = Command.make('info', { slug }, ({ slug }) =>
               yield* ui.log.step(
                 `Did you mean?\n${suggestionLines}\n\n> composio toolkits info "${suggestions[0]!.slug}"`
               );
+            } else {
+              yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');
             }
 
-            return yield* Effect.fail(e);
+            return Option.none();
           })
         )
       );
+
+    if (Option.isNone(toolkitOpt)) {
+      return;
+    }
+
+    const toolkit = toolkitOpt.value;
 
     yield* ui.note(formatToolkitInfo(toolkit), `Toolkit: ${toolkit.name}`);
 
