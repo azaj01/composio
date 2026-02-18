@@ -60,7 +60,7 @@ const env = {
   // See https://github.com/bombshell-dev/clack/pull/169
   CI: 'true',
   COMPOSIO_API_KEY: Bun.env.COMPOSIO_API_KEY,
-};
+} as const;
 
 validateRequiredEnvVars(env);
 
@@ -100,10 +100,10 @@ interface RecordingsConfig {
 
 // --- Tape generation ---
 
-function generateSharedTape(vhs: VhsConfig, env: Record<string, string>): string {
+function generateSharedTape(vhs: VhsConfig): string {
   const lines = [
     `Require composio`,
-    ...Object.entries(env).map(([k, v]) => `Env ${k} "${v}"`),
+    `Env CI "${env.CI}"`,
     `Set Shell ${vhs.shell}`,
     `Set Width ${vhs.width}`,
     // Height is intentionally omitted — set per-recording tape to support dynamic heights.
@@ -311,7 +311,7 @@ function recordAll() {
 
     // Write shared config tape.
     const sharedTapePath = path.join(tapesDir, 'shared-config.tape');
-    yield* fs.writeFileString(sharedTapePath, generateSharedTape(config.vhs, env));
+    yield* fs.writeFileString(sharedTapePath, generateSharedTape(config.vhs));
 
     yield* Effect.sync(() =>
       p.log.step(`Loaded config from ${color.dim(path.relative(process.cwd(), configPath))}`)
