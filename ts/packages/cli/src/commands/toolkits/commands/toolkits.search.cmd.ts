@@ -47,14 +47,13 @@ export const toolkitsCmd$Search = Command.make('search', { query, limit }, ({ qu
       return;
     }
 
-    yield* ui.log.info(`Found ${result.items.length} toolkits`);
-    yield* ui.log.message('');
-    yield* ui.log.message(formatToolkitsTable(result.items));
+    yield* ui.log.info(
+      `Found ${result.items.length} toolkits\n\n${formatToolkitsTable(result.items)}`
+    );
 
     // Next step hint
     const firstSlug = result.items[0]?.slug;
     if (firstSlug) {
-      yield* ui.log.message('');
       yield* ui.log.step(`To view details:\n> composio toolkits info "${firstSlug}"`);
     }
 

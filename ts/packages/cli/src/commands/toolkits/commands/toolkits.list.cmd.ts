@@ -55,14 +55,13 @@ export const toolkitsCmd$List = Command.make('list', { query, limit }, ({ query,
     const showing = result.items.length;
     const total = result.total_items;
 
-    yield* ui.log.info(`Listing ${showing} of ${total} toolkits`);
-    yield* ui.log.message('');
-    yield* ui.log.message(formatToolkitsTable(result.items));
+    yield* ui.log.info(
+      `Listing ${showing} of ${total} toolkits\n\n${formatToolkitsTable(result.items)}`
+    );
 
     // Next step hint
     const firstSlug = result.items[0]?.slug;
     if (firstSlug) {
-      yield* ui.log.message('');
       yield* ui.log.step(`To view details of a toolkit:\n> composio toolkits info "${firstSlug}"`);
     }
 
