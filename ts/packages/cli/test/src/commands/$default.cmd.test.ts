@@ -86,7 +86,7 @@ describe('CLI: composio', () => {
 
             - toolkits                                                                                                 Discover and inspect Composio toolkits.
 
-            - toolkits list [--query text] [--category text] [--limit integer]                                         List available toolkits.
+            - toolkits list [--query text] [--limit integer]                                                           List available toolkits.
 
             - toolkits info [<slug>]                                                                                   View details of a specific toolkit.
 
