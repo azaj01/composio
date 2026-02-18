@@ -173,6 +173,12 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
+  ts/e2e-tests/cli/version:
+    devDependencies:
+      '@e2e-tests/utils':
+        specifier: workspace:*
+        version: link:../../_utils
+
   ts/e2e-tests/runtimes/cloudflare/cf-workers-basic:
     dependencies:
       '@composio/core':
