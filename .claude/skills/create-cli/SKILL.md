@@ -1,0 +1,1 @@
+../../../ts/packages/cli/.cursor/rules/cli-design-guidelines.mdc

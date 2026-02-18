@@ -278,3 +278,14 @@ When working on CLI code, reference the Effect source for accurate patterns:
 
 - The submodule is for **read-only reference only**. Do not modify files in `ts/vendor/effect/`.
 - The CLI's actual dependencies come from npm via `pnpm install`.
+
+---
+
+## CLI Design Guidelines
+
+For principles on how to design CLI interactions (arguments, flags, help text, output, errors, interactivity, config precedence), see:
+
+- **Full guidelines**: `ts/packages/cli/.cursor/rules/cli-design-guidelines.mdc`
+- **Also available as**: `.claude/skills/create-cli/SKILL.md` (symlink)
+
+Use these guidelines when adding new commands, designing flag interfaces, or making UX decisions for the CLI.
