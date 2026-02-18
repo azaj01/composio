@@ -7,6 +7,7 @@ import {
   scanURLs,
   validateFiles,
 } from 'next-validate-link';
+import GithubSlugger from 'github-slugger';
 import {
   source,
   getReferenceSource,
@@ -23,27 +24,17 @@ type AnySource =
 type PageOf = ReturnType<AnySource['getPages']>[number];
 
 /**
- * Slugify a heading the same way rehype-slug does.
- */
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-/**
  * Extract heading anchors from raw MDX/markdown content.
  * Falls back to this when data.toc is unavailable (outside Next.js runtime).
+ * Uses github-slugger to match rehype-slug's algorithm (handles Unicode, duplicate suffixes).
  */
 function extractHeadingsFromContent(content: string): string[] {
+  const slugger = new GithubSlugger();
   const headings: string[] = [];
   for (const line of content.split('\n')) {
     const match = line.match(/^#{1,6}\s+(.+)$/);
     if (match) {
-      headings.push(slugify(match[1]));
+      headings.push(slugger.slug(match[1]));
     }
   }
   return headings;
