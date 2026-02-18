@@ -1,51 +1,64 @@
 ---
 title: CrewAI
 description: Build an agent with CrewAI and enable it to use 800+ tools with Composio.
-keywords: [crew]
+keywords: [crewai]
 ---
 
-The CrewAI Provider formats Composio tools into an object compatible with CrewAI's tool calling capabilities.
+The CrewAI provider transforms Composio tools into CrewAI's [BaseTool](https://docs.crewai.com/concepts/tools) format with built-in execution.
 
-## Setup
-
-The CrewAI provider is available for only the Python SDK.
+<Steps>
+<Step>
+**Install**
 
 ```bash
-pip install composio composio_crewai crewai langchain_openai
+pip install composio composio_crewai crewai
 ```
+</Step>
 
-## Usage
+<Step>
+**Configure API Keys**
+
+<Callout type="info">
+Set `COMPOSIO_API_KEY` with your API key from [Settings](https://platform.composio.dev/?next_page=/settings) and `OPENAI_API_KEY` with your [OpenAI API key](https://platform.openai.com/api-keys).
+</Callout>
+
+```txt title=".env"
+COMPOSIO_API_KEY=xxxxxxxxx
+OPENAI_API_KEY=xxxxxxxxx
+```
+</Step>
+
+<Step>
+**Create session and run**
 
 ```python
 from crewai import Agent, Crew, Task
-from langchain_openai import ChatOpenAI
-
 from composio import Composio
 from composio_crewai import CrewAIProvider
 
-openai_client = ChatOpenAI()
 composio = Composio(provider=CrewAIProvider())
 
 # Create a session for your user
 session = composio.create(user_id="user_123")
 tools = session.tools()
 
-crewai_agent = Agent(
-    role="Github Agent",
-    goal="You take action on Github using Github APIs",
-    backstory="You are an AI agent that takes actions on Github on users' behalf.",
-    verbose=True,
+agent = Agent(
+    role="Email Agent",
+    goal="Send emails on behalf of the user",
+    backstory="You are an AI agent that sends emails using Gmail.",
     tools=tools,
-    llm=openai_client,
+    llm="gpt-5.2",
 )
 
 task = Task(
-    description="Star the composiohq/composio repository on GitHub",
-    agent=crewai_agent,
-    expected_output="Whether the star action succeeded",
+    description="Send an email to john@example.com with the subject 'Hello' and body 'Hello from Composio!'",
+    agent=agent,
+    expected_output="Confirmation that the email was sent",
 )
 
-my_crew = Crew(agents=[crewai_agent], tasks=[task])
-result = my_crew.kickoff()
+crew = Crew(agents=[agent], tasks=[task])
+result = crew.kickoff()
 print(result)
 ```
+</Step>
+</Steps>
