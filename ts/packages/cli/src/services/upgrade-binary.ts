@@ -328,13 +328,13 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
           return;
         }
 
-        yield* ui.useMakeSpinner('Checking for updates...', spinner =>
+        const didUpgrade = yield* ui.useMakeSpinner('Checking for updates...', spinner =>
           Effect.gen(function* () {
             const release = yield* fetchLatestRelease();
             const updateAvailable = yield* isUpdateAvailable(release);
             if (!updateAvailable) {
               yield* spinner.stop('You are already running the latest version!');
-              return;
+              return false;
             }
 
             yield* spinner.message(
@@ -364,9 +364,13 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
             yield* replaceBinary(extractedBinaryPath, currentPath);
 
             yield* spinner.stop('Upgrade completed!');
+            return true;
           })
         );
-        yield* ui.outro('Restart your terminal to use the new version.');
+
+        yield* ui.outro(
+          didUpgrade ? 'Restart your terminal to use the new version.' : 'No upgrade needed.'
+        );
       });
 
     return {
