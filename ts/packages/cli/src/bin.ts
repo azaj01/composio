@@ -1,7 +1,7 @@
 import process from 'node:process';
 import { Cause, Console, Effect, Exit, Layer, Logger } from 'effect';
 import { captureErrors, prettyPrintFromCapturedErrors } from 'effect-errors/index';
-import { CliConfig } from '@effect/cli';
+import { CliConfig, ValidationError } from '@effect/cli';
 import { FetchHttpClient } from '@effect/platform';
 import { BunContext, BunRuntime, BunFileSystem } from '@effect/platform-bun';
 import type { Teardown } from '@effect/platform/Runtime';
@@ -100,6 +100,10 @@ const runWithArgs = Effect.flatMap(runWithConfig, run => run(process.argv)) sati
  */
 runWithArgs.pipe(
   Effect.scoped,
+  // @effect/cli already prints validation errors (missing args, invalid flags, etc.)
+  // via its own printDocs before re-failing. Swallow the error here to avoid
+  // routing it through the generic error box which would dump raw JSON.
+  Effect.catchIf(ValidationError.isValidationError, () => Effect.void),
   Effect.withSpan('composio-cli', {
     attributes: {
       name: constants.APP_NAME,
