@@ -90,10 +90,11 @@ export const TestLayer = (input?: TestLiveInput) =>
       triggerTypesAsEnums: [] as TriggerTypesAsEnums,
       triggerTypes: [] as TriggerTypes,
     } satisfies TestLiveInput['toolkitsData'];
-    const { fixture, toolkitsData } = Object.assign(
-      { fixture: undefined, toolkitsData: defaultAppClientData },
-      input
-    );
+    const fixture = input?.fixture;
+    const toolkitsData = {
+      ...defaultAppClientData,
+      ...(input?.toolkitsData ?? {}),
+    };
 
     const tempDir = tempy.temporaryDirectory({ prefix: 'test' });
     const cwd = (yield* setupFixtureFolder({ fixture, tempDir })) ?? tempDir;
