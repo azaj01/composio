@@ -157,7 +157,9 @@ const makeLive: TerminalUI = {
   },
 
   note: (message, title) =>
-    Effect.sync(() => decorate(() => p.note(message, title ?? '', { output: process.stderr }))),
+    Effect.sync(() =>
+      decorate(() => p.note(message, title ?? '', { format: line => line, output: process.stderr }))
+    ),
 
   withSpinner: (message, effect, options) =>
     isInteractive

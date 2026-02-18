@@ -26,9 +26,15 @@ function formatFields(fields: ReadonlyArray<AuthConfigDetail['fields']['auth_con
     if (allFields.length === 0) {
       lines.push('    (none)');
     } else {
+      const nameWidth = Math.max(...allFields.map(f => f.name.length));
+      const labelWidth = Math.max(...allFields.map(f => f.label.length));
+      const typeWidth = Math.max(...allFields.map(f => f.type.length));
+
       for (const field of allFields) {
         const desc = field.description ? `  ${gray(`"${field.description}"`)}` : '';
-        lines.push(`    ${field.name.padEnd(16)} ${field.label.padEnd(10)} ${field.type}${desc}`);
+        lines.push(
+          `    ${field.name.padEnd(nameWidth)} ${field.label.padEnd(labelWidth)} ${field.type.padEnd(typeWidth)}${desc}`
+        );
       }
     }
   }
