@@ -10,6 +10,8 @@ import { TerminalUI } from 'src/services/terminal-ui';
 export const TerminalUITest = Layer.succeed(
   TerminalUI,
   TerminalUI.of({
+    output: data => Console.log(data),
+
     intro: title => Console.log(`-- ${title} --`),
     outro: message => Console.log(`-- ${message} --`),
 

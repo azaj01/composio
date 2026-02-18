@@ -23,49 +23,49 @@ Errors are captured via the custom `effect-errors/` module, which provides sourc
 
 Each command is declared with `@effect/cli`'s `Command.make()` pattern:
 
-| Command | Description |
-|---|---|
-| `composio version` | Display CLI version |
-| `composio whoami` | Show logged-in user's API key |
-| `composio login [--no-browser]` | OAuth2 login with browser redirect |
-| `composio logout` | Clear stored API key |
-| `composio upgrade` | Self-update binary from GitHub releases |
-| `composio generate` | Auto-detect project language, delegate to `ts` or `py` |
-| `composio ts generate` | Generate TypeScript type stubs for toolkits/tools/triggers |
-| `composio py generate` | Generate Python type stubs |
+| Command                         | Description                                                |
+| ------------------------------- | ---------------------------------------------------------- |
+| `composio version`              | Display CLI version                                        |
+| `composio whoami`               | Show logged-in user's API key                              |
+| `composio login [--no-browser]` | OAuth2 login with browser redirect                         |
+| `composio logout`               | Clear stored API key                                       |
+| `composio upgrade`              | Self-update binary from GitHub releases                    |
+| `composio generate`             | Auto-detect project language, delegate to `ts` or `py`     |
+| `composio ts generate`          | Generate TypeScript type stubs for toolkits/tools/triggers |
+| `composio py generate`          | Generate Python type stubs                                 |
 
 Options use `Options.text()`, `Options.boolean()`, `Options.choice()`, `Options.directory()` with Effect Schema validation.
 
 ### Services (`src/services/`)
 
-| Service | Purpose |
-|---|---|
-| `ComposioUserContext` | Auth state — reads/writes `~/.composio/user-config.json`, merges env vars |
-| `ComposioSessionRepository` | Creates OAuth2 sessions, polls until `linked` state |
-| `ComposioToolkitsRepository` | API client — fetches toolkits, tools, trigger types; validates versions |
+| Service                            | Purpose                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------- |
+| `ComposioUserContext`              | Auth state — reads/writes `~/.composio/user-config.json`, merges env vars    |
+| `ComposioSessionRepository`        | Creates OAuth2 sessions, polls until `linked` state                          |
+| `ComposioToolkitsRepository`       | API client — fetches toolkits, tools, trigger types; validates versions      |
 | `ComposioToolkitsRepositoryCached` | Decorator over base repository with file-based caching and graceful fallback |
-| `NodeOs` | OS abstraction (`homedir`, `platform`, `arch`) |
-| `EnvLangDetector` | Detects project language (TS/Python) from config files and lock files |
-| `JsPackageManagerDetector` | Detects npm/pnpm/yarn/bun for helpful install instructions |
-| `UpgradeBinary` | Fetches latest release from GitHub, downloads and replaces binary |
+| `NodeOs`                           | OS abstraction (`homedir`, `platform`, `arch`)                               |
+| `EnvLangDetector`                  | Detects project language (TS/Python) from config files and lock files        |
+| `JsPackageManagerDetector`         | Detects npm/pnpm/yarn/bun for helpful install instructions                   |
+| `UpgradeBinary`                    | Fetches latest release from GitHub, downloads and replaces binary            |
 
 ### Effects (`src/effects/`)
 
 Reusable Effect computations for cross-cutting concerns:
 
-| Effect | Purpose |
-|---|---|
-| `app-config` | Reads `COMPOSIO_*` env vars (API_KEY, BASE_URL, CACHE_DIR, etc.) |
-| `debug-config` | Debug overrides (DEBUG_OVERRIDE_VERSION, etc.) |
-| `force-config` | Force flags (FORCE_USE_CACHE) |
-| `setup-cache-dir` | Ensures `~/.composio/` directory exists |
-| `toolkit-version-overrides` | Parses `COMPOSIO_TOOLKIT_VERSION_<NAME>=<ver>` env vars |
-| `validate-toolkit-versions` | Validates overrides against available API versions |
-| `with-log-level` | Configures logger from CLI flag or env var |
+| Effect                         | Purpose                                                               |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `app-config`                   | Reads `COMPOSIO_*` env vars (API_KEY, BASE_URL, CACHE_DIR, etc.)      |
+| `debug-config`                 | Debug overrides (DEBUG_OVERRIDE_VERSION, etc.)                        |
+| `force-config`                 | Force flags (FORCE_USE_CACHE)                                         |
+| `setup-cache-dir`              | Ensures `~/.composio/` directory exists                               |
+| `toolkit-version-overrides`    | Parses `COMPOSIO_TOOLKIT_VERSION_<NAME>=<ver>` env vars               |
+| `validate-toolkit-versions`    | Validates overrides against available API versions                    |
+| `with-log-level`               | Configures logger from CLI flag or env var                            |
 | `find-composio-core-generated` | Locates `@composio/core` in node_modules (handles pnpm virtual store) |
-| `version` | Resolves CLI version from package.json |
-| `compare-semver` | Semantic version comparison for upgrade checks |
-| `log-metrics` | Formats and logs API request count and bytes transferred |
+| `version`                      | Resolves CLI version from package.json                                |
+| `compare-semver`               | Semantic version comparison for upgrade checks                        |
+| `log-metrics`                  | Formats and logs API request count and bytes transferred              |
 
 ### Models (`src/models/`)
 
@@ -119,14 +119,15 @@ The CLI uses the generator-based syntax throughout:
 
 ```typescript
 Effect.gen(function* () {
-  const service = yield* ServiceName;     // resolve dependency
-  const result = yield* someEffect;       // await computation
-  yield* Effect.log('message');           // side effect
+  const service = yield* ServiceName; // resolve dependency
+  const result = yield* someEffect; // await computation
+  yield* Effect.log('message'); // side effect
   return result;
-})
+});
 ```
 
 Key patterns:
+
 - `Effect.all([...], { concurrency: 'unbounded' })` for parallel fetches
 - `Layer.provide()` for dependency composition
 - `Effect.mapError()` / `Effect.catchTag()` for typed error handling
@@ -134,20 +135,70 @@ Key patterns:
 
 ### Key Dependencies
 
-| Package | Role |
-|---|---|
-| `effect` | Core runtime, data types, concurrency |
-| `@effect/cli` | Command, Options, Args declaration and parsing |
-| `@effect/platform` | FileSystem, Terminal abstraction |
-| `@effect/platform-bun` | Bun runtime layer |
-| `@clack/prompts` | Terminal UI symbols (expanding to full interactive prompts) |
-| `ansis`, `picocolors` | Colored output |
-| `@composio/client` | Raw Composio API client |
-| `@composio/core` | Core SDK types and constants |
-| `@composio/ts-builders` | TypeScript AST code generation |
-| `semver` | Version comparison for upgrades |
-| `open` | Opens URLs in browser (login flow) |
-| `decompress` | Extracts downloaded binaries |
+| Package                 | Role                                                                |
+| ----------------------- | ------------------------------------------------------------------- |
+| `effect`                | Core runtime, data types, concurrency                               |
+| `@effect/cli`           | Command, Options, Args declaration and parsing                      |
+| `@effect/platform`      | FileSystem, Terminal abstraction                                    |
+| `@effect/platform-bun`  | Bun runtime layer                                                   |
+| `@clack/prompts`        | Terminal UI — prompts, spinners, logs, notes (all output to stderr) |
+| `ansis`, `picocolors`   | Colored output                                                      |
+| `@composio/client`      | Raw Composio API client                                             |
+| `@composio/core`        | Core SDK types and constants                                        |
+| `@composio/ts-builders` | TypeScript AST code generation                                      |
+| `semver`                | Version comparison for upgrades                                     |
+| `open`                  | Opens URLs in browser (login flow)                                  |
+| `decompress`            | Extracts downloaded binaries                                        |
+
+---
+
+## Output Conventions: Composable CLI Output
+
+The CLI follows the Unix convention of separating human-readable decoration from machine-readable data:
+
+- **stdout** — data output only (`ui.output()`). This is what scripts and pipes capture.
+- **stderr** — all decoration (Clack spinners, logs, notes, intro/outro). Visible in terminal, invisible in pipes.
+
+### Rules
+
+1. **All `TerminalUI` methods except `output()` write to stderr** via Clack's `{ output: process.stderr }` option.
+2. **`ui.output(data)` writes to stdout** — use this for values that scripts should capture (API keys, version strings, generated paths).
+3. **Action commands** (login, logout, upgrade, generate) produce no stdout data — their output is purely decorative.
+4. **Data commands** (whoami, version) produce both decoration (stderr) and data (stdout).
+5. **Never write data to stderr** — decoration methods are for human context only.
+6. **Never write decoration to stdout** — it breaks pipes, `$(...)` captures, and `> file` redirects.
+
+### Pattern
+
+```typescript
+// Data command (e.g., whoami):
+yield * ui.note(apiKey, 'API Key'); // Decoration → stderr (human sees pretty box)
+yield * ui.output(apiKey); // Data → stdout (scripts capture plain value)
+
+// Action command (e.g., login):
+yield * ui.intro('composio login'); // Decoration → stderr
+yield * ui.log.step('Redirecting'); // Decoration → stderr
+// No ui.output() call — nothing for scripts to capture
+```
+
+### How it works in practice
+
+```bash
+composio whoami              # Human sees pretty box AND plain key
+composio whoami 2>/dev/null  # Only the API key (suppresses decoration)
+API_KEY=$(composio whoami)   # Variable gets clean key, box shows in terminal
+composio whoami | pbcopy     # Clipboard gets clean key
+
+composio login               # All decoration visible (nothing to pipe)
+composio login 2>/dev/null   # Silent (but still opens browser, polls API)
+```
+
+### Adding new commands
+
+When creating a new command, ask: "Does this command produce a value that scripts should capture?"
+
+- **Yes** → Use `ui.output(value)` for the data, `ui.log.*` / `ui.note()` for context
+- **No** → Use only `ui.log.*` / `ui.note()` / `ui.intro()` / `ui.outro()` — everything goes to stderr automatically
 
 ---
 
@@ -165,29 +216,30 @@ When working on CLI code that involves terminal UI, reference the Clack source f
 
 ### Key modules in `@clack/prompts`
 
-| Module | Purpose |
-|---|---|
-| `text.ts` | Text input prompt |
-| `password.ts` | Password input prompt |
-| `confirm.ts` | Yes/no confirmation prompt |
-| `select.ts` | Single-select list prompt |
-| `multi-select.ts` | Multi-select list prompt |
-| `group-multi-select.ts` | Grouped multi-select prompt |
-| `autocomplete.ts` | Autocomplete/search prompt |
-| `spinner.ts` | Loading spinner |
-| `progress-bar.ts` | Progress bar |
-| `log.ts` | Styled log messages |
-| `note.ts` | Boxed note output |
-| `task.ts` | Task runner with status |
-| `task-log.ts` | Task with streaming log output |
-| `stream.ts` | Streaming text output |
-| `box.ts` | Box drawing utility |
-| `messages.ts` | Intro/outro messages |
-| `common.ts` | Shared symbols (`S_BAR`, `S_BAR_H`, `unicodeOr`, etc.) |
+| Module                  | Purpose                                                |
+| ----------------------- | ------------------------------------------------------ |
+| `text.ts`               | Text input prompt                                      |
+| `password.ts`           | Password input prompt                                  |
+| `confirm.ts`            | Yes/no confirmation prompt                             |
+| `select.ts`             | Single-select list prompt                              |
+| `multi-select.ts`       | Multi-select list prompt                               |
+| `group-multi-select.ts` | Grouped multi-select prompt                            |
+| `autocomplete.ts`       | Autocomplete/search prompt                             |
+| `spinner.ts`            | Loading spinner                                        |
+| `progress-bar.ts`       | Progress bar                                           |
+| `log.ts`                | Styled log messages                                    |
+| `note.ts`               | Boxed note output                                      |
+| `task.ts`               | Task runner with status                                |
+| `task-log.ts`           | Task with streaming log output                         |
+| `stream.ts`             | Streaming text output                                  |
+| `box.ts`                | Box drawing utility                                    |
+| `messages.ts`           | Intro/outro messages                                   |
+| `common.ts`             | Shared symbols (`S_BAR`, `S_BAR_H`, `unicodeOr`, etc.) |
 
 ### Current clack usage in the CLI
 
 The CLI currently imports from `@clack/prompts`:
+
 - `S_BAR`, `S_BAR_H`, `unicodeOr` — Unicode box-drawing symbols for custom formatted output
 
 ### Guidelines
@@ -208,6 +260,7 @@ The CLI is built on the Effect.ts ecosystem. A local copy of the Effect source c
 - **Branch:** `main`
 
 When working on CLI code, reference the Effect source for accurate patterns:
+
 - `ts/vendor/effect/packages/effect/src/` — core Effect runtime
 - `ts/vendor/effect/packages/cli/src/` — @effect/cli (Command, Options, Args)
 - `ts/vendor/effect/packages/platform/src/` — @effect/platform (FileSystem, Terminal)

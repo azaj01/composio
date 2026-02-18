@@ -18,6 +18,7 @@ export const versionCmd = Command.make('version', {}).pipe(
       const ui = yield* TerminalUI;
       const version = yield* getVersion;
       yield* ui.log.info(version);
+      yield* ui.output(version);
 
       yield* Effect.logDebug('Composio CLI version command executed successfully.');
     })

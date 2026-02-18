@@ -1,3 +1,5 @@
+import process from 'node:process';
+import type { Writable } from 'node:stream';
 import * as p from '@clack/prompts';
 import { Context, Effect, Exit, Layer } from 'effect';
 
@@ -19,9 +21,16 @@ export interface SpinnerHandle {
 // ---------------------------------------------------------------------------
 
 export interface TerminalUI {
-  /** Display a session start marker (e.g., `┌  title`). */
+  /**
+   * Write raw data to stdout for piping and scripting.
+   * This is the ONLY method that writes to stdout — everything else goes to stderr.
+   * Use this for values that scripts should capture (API keys, version strings, etc.).
+   */
+  readonly output: (data: string) => Effect.Effect<void>;
+
+  /** Display a session start marker (e.g., `┌  title`). Writes to stderr. */
   readonly intro: (title: string) => Effect.Effect<void>;
-  /** Display a session end marker (e.g., `└  message`). */
+  /** Display a session end marker (e.g., `└  message`). Writes to stderr. */
   readonly outro: (message: string) => Effect.Effect<void>;
 
   /** Structured log output with severity-specific symbols. */
@@ -84,6 +93,12 @@ export const TerminalUI = Context.GenericTag<TerminalUI>('services/TerminalUI');
 // TerminalUILive — production layer using @clack/prompts
 // ---------------------------------------------------------------------------
 
+/**
+ * All decoration (spinners, logs, notes, intro/outro) writes to stderr.
+ * This keeps stdout clean for data output that scripts and pipes capture.
+ */
+const DECORATION: Writable = process.stderr;
+
 function createClackSpinnerHandle(s: p.SpinnerResult, defaultMessage: string): SpinnerHandle {
   return {
     message: (msg: string) => Effect.sync(() => s.message(msg)),
@@ -93,24 +108,29 @@ function createClackSpinnerHandle(s: p.SpinnerResult, defaultMessage: string): S
 }
 
 const makeLive: TerminalUI = {
-  intro: title => Effect.sync(() => p.intro(title)),
-  outro: message => Effect.sync(() => p.outro(message)),
+  output: data =>
+    Effect.sync(() => {
+      process.stdout.write(`${data}\n`);
+    }),
+
+  intro: title => Effect.sync(() => p.intro(title, { output: DECORATION })),
+  outro: message => Effect.sync(() => p.outro(message, { output: DECORATION })),
 
   log: {
-    info: message => Effect.sync(() => p.log.info(message)),
-    success: message => Effect.sync(() => p.log.success(message)),
-    warn: message => Effect.sync(() => p.log.warn(message)),
-    error: message => Effect.sync(() => p.log.error(message)),
-    step: message => Effect.sync(() => p.log.step(message)),
-    message: message => Effect.sync(() => p.log.message(message)),
+    info: message => Effect.sync(() => p.log.info(message, { output: DECORATION })),
+    success: message => Effect.sync(() => p.log.success(message, { output: DECORATION })),
+    warn: message => Effect.sync(() => p.log.warn(message, { output: DECORATION })),
+    error: message => Effect.sync(() => p.log.error(message, { output: DECORATION })),
+    step: message => Effect.sync(() => p.log.step(message, { output: DECORATION })),
+    message: message => Effect.sync(() => p.log.message(message, { output: DECORATION })),
   },
 
-  note: (message, title) => Effect.sync(() => p.note(message, title ?? '')),
+  note: (message, title) => Effect.sync(() => p.note(message, title ?? '', { output: DECORATION })),
 
   withSpinner: (message, effect, options) =>
     Effect.acquireUseRelease(
       Effect.sync(() => {
-        const s = p.spinner();
+        const s = p.spinner({ output: DECORATION });
         s.start(message);
         return s;
       }),
@@ -131,7 +151,7 @@ const makeLive: TerminalUI = {
 
   makeSpinner: message =>
     Effect.sync(() => {
-      const s = p.spinner();
+      const s = p.spinner({ output: DECORATION });
       s.start(message);
       return createClackSpinnerHandle(s, message);
     }),
@@ -139,7 +159,7 @@ const makeLive: TerminalUI = {
   useMakeSpinner: (message, use) =>
     Effect.acquireUseRelease(
       Effect.sync(() => {
-        const s = p.spinner();
+        const s = p.spinner({ output: DECORATION });
         s.start(message);
         return { raw: s, handle: createClackSpinnerHandle(s, message) };
       }),

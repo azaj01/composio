@@ -6,6 +6,20 @@ import { TestLive, MockConsole } from 'test/__utils__';
 describe('TerminalUI', () => {
   layer(TestLive())(it => {
     // -----------------------------------------------------------------------
+    // Data output
+    // -----------------------------------------------------------------------
+
+    it.scoped('output writes raw data capturable by MockConsole', () =>
+      Effect.gen(function* () {
+        const ui = yield* TerminalUI;
+        yield* ui.output('ak_test123');
+
+        const lines = yield* MockConsole.getLines();
+        expect(lines).toContain('ak_test123');
+      })
+    );
+
+    // -----------------------------------------------------------------------
     // Log text capture
     // -----------------------------------------------------------------------
 

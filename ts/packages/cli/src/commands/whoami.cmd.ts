@@ -21,7 +21,11 @@ export const whoamiCmd = Command.make('whoami', {}).pipe(
       yield* ctx.data.apiKey.pipe(
         Option.match({
           onNone: () => ui.log.warn('You are not logged in yet. Please run `composio login`.'),
-          onSome: apiKey => ui.note(apiKey, 'API Key'),
+          onSome: apiKey =>
+            Effect.gen(function* () {
+              yield* ui.note(apiKey, 'API Key');
+              yield* ui.output(apiKey);
+            }),
         })
       );
     })
