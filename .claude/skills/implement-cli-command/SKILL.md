@@ -1,3 +1,7 @@
+---
+description: Implement new CLI commands in ts/packages/cli/ using Effect.ts patterns, service wiring, and @effect/cli declarations.
+---
+
 # Implement CLI Command
 
 Implement new commands and subcommands in `ts/packages/cli/`. Covers file creation, Effect patterns, service wiring, option declaration, output conventions, and registration.
@@ -15,6 +19,8 @@ For CLI **e2e tests**, see the `create-cli-e2e` skill instead.
 ## Architecture
 
 The CLI uses `@effect/cli` for command declaration, `effect` for the runtime, and a service-oriented architecture with dependency injection via Effect layers.
+
+See `ts/packages/cli/AGENTS.md` for the full architecture reference (services, effects, models, dependencies, vendor submodule locations).
 
 ```
 src/
@@ -160,7 +166,7 @@ const layers = Layer.mergeAll(
 );
 ```
 
-Most commands only use services already provided: `TerminalUI`, `ComposioUserContext`, `ComposioToolkitsRepository`, `ComposioSessionRepository`, `UpgradeBinary`, `FileSystem`, `NodeProcess`, `NodeOs`.
+Most commands only use services already provided. The `ComposioToolkitsRepository` service is provided by `ComposioToolkitsRepositoryCachedLive` in `bin.ts` — you do not need to add a separate layer for the base repository.
 
 ## Creating a Subcommand Group
 
@@ -247,9 +253,11 @@ const $cmd = $defaultCmd.pipe(
 
 ## Option Declaration Patterns
 
-Options are declared at module level using `@effect/cli`'s `Options` API.
+Options are declared at module level using `@effect/cli`'s `Options` API. The template above demonstrates the most common types (required text, optional text). For other option types, see `ts/vendor/effect/packages/cli/src/Options.ts`.
 
-### Common Option Types
+Both `Options.optional(Options.text(...))` (wrapping) and `Options.text(...).pipe(Options.optional)` (piped) are valid. Use whichever reads better.
+
+### Common patterns:
 
 ```typescript
 import { Options } from '@effect/cli';
@@ -260,18 +268,6 @@ const verbose = Options.boolean('verbose').pipe(
   Options.withDescription('Enable verbose output.')
 );
 
-// Required text
-const name = Options.text('name').pipe(
-  Options.withDescription('Name of the resource.')
-);
-
-// Optional text — yields Option<string> in handler
-const search = Options.optional(
-  Options.text('search')
-).pipe(
-  Options.withDescription('Search query.')
-);
-
 // Text with alias
 const output = Options.optional(
   Options.text('output')
@@ -280,136 +276,50 @@ const output = Options.optional(
   Options.withDescription('Output path.')
 );
 
-// Repeated text — yields Array<string>
-const toolkits = Options.text('toolkits').pipe(
-  Options.repeated,
-  Options.withDescription('One or more toolkit slugs.')
-);
-
 // Choice from fixed set
 const format = Options.choice('format', ['json', 'table', 'plain']).pipe(
   Options.withDefault('table'),
   Options.withDescription('Output format.')
-);
-
-// Directory path (with existence check)
-const dir = Options.optional(
-  Options.directory('output-dir', { exists: 'either' })
-).pipe(
-  Options.withAlias('o'),
-  Options.withDescription('Output directory.')
-);
-
-// Schema-validated option
-import { Schema } from 'effect';
-
-const limit = Options.integer('limit').pipe(
-  Options.withSchema(Schema.Int.pipe(Schema.positive())),
-  Options.withDefault(10),
-  Options.withDescription('Max results.')
 );
 ```
 
 ### Using Options in Handler
 
 ```typescript
-Command.make('my-cmd', { search, verbose, toolkits }, ({ search, verbose, toolkits }) =>
-  Effect.gen(function* () {
-    // search: Option<string> — use Option.getOrUndefined, Option.match, Option.isSome
-    const searchValue = Option.getOrUndefined(search);
+Command.make('my-cmd', { search, verbose }).pipe(
+  Command.withHandler(({ search, verbose }) =>
+    Effect.gen(function* () {
+      // search: Option<string> — use Option.getOrUndefined, Option.match, Option.isSome
+      const searchValue = Option.getOrUndefined(search);
 
-    // verbose: boolean — direct use
-    if (verbose) { yield* Effect.logDebug('Verbose mode'); }
-
-    // toolkits: Array<string> — may be empty
-    if (Array.isNonEmptyArray(toolkits)) {
-      // filter by toolkits
-    }
-  })
-)
+      // verbose: boolean — direct use
+      if (verbose) { yield* Effect.logDebug('Verbose mode'); }
+    })
+  )
+);
 ```
 
 ## Output Conventions
 
-Every command must follow the composable CLI output contract:
+Follow the output conventions in `ts/packages/cli/AGENTS.md` § "Output Conventions" (stdout for data via `ui.output()`, stderr for decoration).
 
-### Data Commands
-
-Commands that produce a value scripts should capture:
+**Data commands** — produce a value scripts should capture:
 
 ```typescript
 yield* ui.note(apiKey, 'API Key');   // Decoration → stderr (pretty box)
 yield* ui.output(apiKey);            // Data → stdout (scripts capture)
 ```
 
-### Action Commands
-
-Commands that perform a side effect but produce no data:
+**Action commands** — perform a side effect, no data:
 
 ```typescript
 yield* ui.log.success('Logged out successfully.');
 // NO ui.output() call — nothing for scripts to capture
 ```
 
-### Rule: Never Mix
+## TerminalUI Spinners
 
-- Never write data to stderr (decoration methods only)
-- Never write decoration to stdout (ui.output only)
-- `ui.output()` is a no-op in interactive mode (TTY) and writes to stdout when piped
-
-## Available Services
-
-Resolve services in handlers with `yield* ServiceName`.
-
-| Service | Import | Purpose |
-|---|---|---|
-| `TerminalUI` | `src/services/terminal-ui` | Output: `output()`, `log.*`, `note()`, `intro()`, `outro()`, spinners |
-| `ComposioUserContext` | `src/services/user-context` | Auth state: `data.apiKey`, `isLoggedIn()`, `logout` |
-| `ComposioToolkitsRepository` | `src/services/composio-clients` | API: `getToolkits()`, `getTools()`, `getTriggerTypes()`, `validateToolkits()` |
-| `ComposioSessionRepository` | `src/services/composio-clients` | OAuth: `createSession()`, `getSession()` |
-| `UpgradeBinary` | `src/services/upgrade-binary` | Self-update: `upgrade()` |
-| `FileSystem.FileSystem` | `@effect/platform` | File I/O: `readFileString()`, `writeFileString()`, `exists()` |
-| `NodeProcess` | `src/services/node-process` | Process info: `cwd`, `env` |
-| `NodeOs` | `src/services/node-os` | OS info: `homedir()`, `platform()`, `arch()` |
-| `EnvLangDetector` | `src/services/env-lang-detector` | Detect project language (TS/Python) |
-| `JsPackageManagerDetector` | `src/services/js-package-manager-detector` | Detect npm/pnpm/yarn/bun |
-
-## Available Effects
-
-Reusable computations from `src/effects/`:
-
-| Effect | Import | Purpose |
-|---|---|---|
-| `getVersion` | `src/effects/version` | CLI version from package.json |
-| `logMetrics` | `src/effects/log-metrics` | Log API request count and bytes |
-| `setupCacheDir` | `src/effects/setup-cache-dir` | Ensure `~/.composio/` exists |
-| `getToolkitVersionOverrides` | `src/effects/toolkit-version-overrides` | Parse `COMPOSIO_TOOLKIT_VERSION_*` env vars |
-| `jsFindComposioCoreGenerated` | `src/effects/find-composio-core-generated` | Locate `@composio/core` in node_modules |
-| `compareSemver` | `src/effects/compare-semver` | Semantic version comparison |
-
-## TerminalUI API
-
-### Output
-
-```typescript
-yield* ui.output(data);  // Machine-readable data → stdout when piped, no-op when interactive
-```
-
-### Decoration (all → stderr when interactive, suppressed when piped)
-
-```typescript
-yield* ui.intro('composio my-command');          // Opening banner
-yield* ui.outro('Done');                          // Closing banner
-yield* ui.note(content, 'Title');                 // Boxed note
-yield* ui.log.info('message');                    // Blue info
-yield* ui.log.success('message');                 // Green success
-yield* ui.log.warn('message');                    // Yellow warning
-yield* ui.log.error('message');                   // Red error
-yield* ui.log.step('message');                    // Green checkmark step
-yield* ui.log.message('message');                 // With vertical bar
-```
-
-### Spinners
+The `TerminalUI` service provides two spinner APIs. For output/decoration methods (`output`, `log.*`, `note`, `intro`, `outro`), see `ts/packages/cli/src/services/terminal-ui.ts`.
 
 ```typescript
 // Automatic: wraps an Effect, auto-stops on success/error
@@ -432,6 +342,16 @@ const result = yield* ui.useMakeSpinner('Loading...', spinner =>
 );
 ```
 
+## Creating a New Service
+
+If your command requires functionality not covered by existing services (see `ts/packages/cli/AGENTS.md` for the full list):
+
+1. Define the service interface and tag in `src/services/<name>.ts`
+2. Create a `Live` layer implementation
+3. Register the layer in `src/bin.ts`
+
+Reference `src/services/upgrade-binary.ts` for a simple service pattern, or `src/services/composio-clients.ts` for a complex one with caching.
+
 ## Error Handling Patterns
 
 ### Optional Values
@@ -440,7 +360,10 @@ const result = yield* ui.useMakeSpinner('Loading...', spinner =>
 yield* ctx.data.apiKey.pipe(
   Option.match({
     onNone: () => ui.log.warn('Not logged in. Run `composio login`.'),
-    onSome: apiKey => ui.output(apiKey),
+    onSome: apiKey =>
+      Effect.gen(function* () {
+        yield* ui.output(apiKey);
+      }),
   })
 );
 ```
@@ -455,14 +378,6 @@ yield* client.getToolkitsBySlugs(slugs).pipe(
       return yield* Effect.fail(error);
     })
   )
-);
-```
-
-### Error Transformation
-
-```typescript
-yield* fs.writeFileString(path, content).pipe(
-  Effect.mapError(err => new Error(`Failed to write ${path}: ${err}`))
 );
 ```
 
@@ -558,6 +473,8 @@ When implementing a new command:
 7. If using a new service, add its layer to `src/bin.ts`
 8. Build to verify: `cd ts/packages/cli && pnpm build`
 
+If the build fails, check for: (1) missing service imports, (2) `Option<string>` being used where `string` is expected (use `Option.getOrUndefined` or `Option.match`), (3) the command not being exported from its file.
+
 ## Reference Files
 
 | File | Purpose |
@@ -573,4 +490,4 @@ When implementing a new command:
 | `src/bin.ts` | Entry point, layer composition, error handling |
 | `src/services/terminal-ui.ts` | TerminalUI service interface |
 | `src/services/composio-clients.ts` | API client service (HTTP, pagination, metrics) |
-| `ts/packages/cli/CLAUDE.md` | CLI architecture and output conventions |
+| `ts/packages/cli/AGENTS.md` | CLI architecture, services, effects, output conventions |

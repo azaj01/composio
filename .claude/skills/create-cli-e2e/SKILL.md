@@ -1,3 +1,7 @@
+---
+description: Write end-to-end tests for CLI commands using the Docker-based test framework in ts/e2e-tests/cli/.
+---
+
 # CLI E2E Test Development
 
 Write, expand, and maintain end-to-end tests for CLI commands in `ts/e2e-tests/cli/`.
@@ -8,6 +12,9 @@ Write, expand, and maintain end-to-end tests for CLI commands in `ts/e2e-tests/c
 - Modifying or extending an existing CLI e2e test
 - Debugging a failing CLI e2e test
 - Reviewing whether a CLI command's output contract is properly tested
+
+For CLI **design** (arguments, flags, help text, UX), see the `create-cli` skill.
+For CLI **implementation** (Effect patterns, services, command registration), see the `implement-cli-command` skill.
 
 ## Architecture
 
@@ -25,12 +32,10 @@ Key properties:
 
 ### What "piped mode" means for tests
 
-Inside Docker `sh -c`, the composio binary's stdout is never a TTY. This means `ui.output()` writes to stdout and all Clack decoration is suppressed. Both test groups verify piped-mode behavior:
-
-| Test Group | What It Verifies |
-|---|---|
-| **Command execution** (`composio version`) | stdout contains the data, stderr is empty |
-| **Stdout redirection** (`composio version > out.txt`) | Shell-level redirect captures data into a file; Docker stdout and stderr are both empty |
+Inside Docker, the composio binary's stdout is never a TTY. This triggers the CLI's piped-mode behavior (see `ts/packages/cli/AGENTS.md` § "Output Conventions"):
+- `ui.output()` writes to stdout
+- All Clack decoration is suppressed
+- stderr is empty for successful commands
 
 ## File Structure
 
@@ -68,27 +73,31 @@ ts/e2e-tests/cli/<suite-name>/
 }
 ```
 
-## Test Patterns
+## Choosing a Test Pattern
 
-Every test file starts with the same structure:
+Use this decision tree to select the right pattern:
 
-```typescript
-import { e2e, sanitizeOutput, type E2ETestResult, type E2ETestResultWithFiles } from '@e2e-tests/utils';
-import { TIMEOUTS } from '@e2e-tests/utils/const';
-import { describe, it, expect, beforeAll } from 'bun:test';
+```
+Does the command need env vars (e.g., COMPOSIO_API_KEY)?
+├─ No → Is the output deterministic (exact value known at test time)?
+│       ├─ Yes → Pattern A (simple command, exact assertions)
+│       └─ No  → Pattern D (fuzzy assertions: toContain, toBeGreaterThan)
+└─ Yes → Is the output deterministic given the env?
+         ├─ Yes → Pattern B (env vars + exact assertions)
+         └─ No  → Pattern D (env vars + fuzzy assertions)
 
-e2e(import.meta.url, {
-  versions: { cli: ['current'] },
-  // env: { ... },  // Only if needed
-  defineTests: ({ runCmd }) => {
-    // Tests here
-  },
-});
+Are you testing an error case (missing args, invalid input)?
+└─ Yes → Pattern C (non-zero exit code, stderr non-empty)
+
+Does the command perform an action with no machine-readable output?
+└─ Yes → Pattern E (exitCode=0, stdout empty, no redirect test)
 ```
 
-### Pattern A: Simple Command, No Env Vars
+## Test Patterns
 
-For commands that produce deterministic output without needing authentication.
+### Pattern A: Simple Command, No Env Vars (Canonical)
+
+For commands that produce deterministic output without needing authentication. This is the base pattern — all other patterns are variations of this.
 
 **Reference**: `ts/e2e-tests/cli/version/e2e.test.ts`
 
@@ -156,13 +165,16 @@ e2e(import.meta.url, {
 });
 ```
 
+**Structure summary:**
+- Two test groups: **command execution** (stdout has data, stderr empty) + **stdout redirection** (file has data, Docker stdout/stderr both empty)
+- Use `sanitizeOutput()` on stdout and file contents before assertions
+- Use `TIMEOUTS.FIXTURE` for the `beforeAll` that runs Docker commands
+
 ### Pattern B: Command Requiring Env Vars
 
-For commands that need authentication or configuration from the host environment.
+**Same as Pattern A**, with three additions:
 
 **Reference**: `ts/e2e-tests/cli/whoami/e2e.test.ts`
-
-Three additions compared to Pattern A:
 
 1. **Type augmentation** for compile-time safety on `Bun.env`:
    ```typescript
@@ -187,99 +199,21 @@ Three additions compared to Pattern A:
 
 The rest follows the same two-group structure (command execution + stdout redirection).
 
-**Full example:**
-
-```typescript
-/**
- * CLI whoami command e2e test
- *
- * Verifies that the compiled composio CLI prints the API key in a scratch container.
- */
-
-import { e2e, sanitizeOutput, type E2ETestResult, type E2ETestResultWithFiles } from '@e2e-tests/utils';
-import { TIMEOUTS } from '@e2e-tests/utils/const';
-import { describe, it, expect, beforeAll } from 'bun:test';
-
-declare module 'bun' {
-  interface Env {
-    COMPOSIO_API_KEY: string;
-  }
-}
-
-e2e(import.meta.url, {
-  versions: {
-    cli: ['current'],
-  },
-  env: {
-    COMPOSIO_API_KEY: Bun.env.COMPOSIO_API_KEY,
-  },
-  defineTests: ({ runCmd }) => {
-    const expectedApiKey = Bun.env.COMPOSIO_API_KEY.trim();
-    let whoamiResult: E2ETestResult;
-    let redirectedResult: E2ETestResultWithFiles<'out.txt'>;
-
-    beforeAll(async () => {
-      whoamiResult = await runCmd('composio whoami');
-      redirectedResult = await runCmd({
-        command: 'composio whoami > out.txt',
-        files: ['out.txt'],
-      });
-    }, TIMEOUTS.FIXTURE);
-
-    describe('composio whoami', () => {
-      it('exits successfully', () => {
-        expect(whoamiResult.exitCode).toBe(0);
-      });
-
-      it('stdout contains the API key', () => {
-        expect(sanitizeOutput(whoamiResult.stdout)).toBe(expectedApiKey);
-      });
-
-      it('stderr is empty', () => {
-        expect(whoamiResult.stderr).toBe('');
-      });
-    });
-
-    describe('stdout redirection to out.txt', () => {
-      it('exits successfully', () => {
-        expect(redirectedResult.exitCode).toBe(0);
-      });
-
-      it('stdout is empty', () => {
-        expect(redirectedResult.stdout).toBe('');
-      });
-
-      it('stderr is empty', () => {
-        expect(redirectedResult.stderr).toBe('');
-      });
-
-      it('out.txt contains the API key', () => {
-        expect(sanitizeOutput(redirectedResult.files['out.txt'])).toBe(expectedApiKey);
-      });
-    });
-  },
-});
-```
-
 ### Pattern C: Error Case Testing
 
-For verifying that the CLI fails gracefully with correct exit codes and error messages.
+**Differences from Pattern A:**
+- No stdout redirection test needed — error cases don't produce data output
+- Assert non-zero exit code with `not.toBe(0)` (don't hardcode a specific error code)
+- Assert stderr is non-empty; optionally use `toContain()` for specific error message fragments
+- Import only `E2ETestResult`, not `E2ETestResultWithFiles`
 
 ```typescript
-/**
- * CLI tools-info error case e2e test
- *
- * Verifies that the CLI fails gracefully when required arguments are missing.
- */
-
 import { e2e, sanitizeOutput, type E2ETestResult } from '@e2e-tests/utils';
 import { TIMEOUTS } from '@e2e-tests/utils/const';
 import { describe, it, expect, beforeAll } from 'bun:test';
 
 e2e(import.meta.url, {
-  versions: {
-    cli: ['current'],
-  },
+  versions: { cli: ['current'] },
   defineTests: ({ runCmd }) => {
     let missingArgResult: E2ETestResult;
 
@@ -300,122 +234,42 @@ e2e(import.meta.url, {
 });
 ```
 
-Notes:
-- No stdout redirection test needed — error cases don't produce data output.
-- Use `not.toBe(0)` for exit code rather than a specific number (the CLI may change error codes).
-- Assert stderr is non-empty; optionally use `toContain()` for specific error message fragments.
+Pattern C can be combined with A or B in the same test file to test both success and error paths.
 
 ### Pattern D: Multi-line / API-dependent Output
 
-For commands that call the Composio API and return dynamic, multi-line data.
+**Same structure as Pattern A or B** (depending on whether env vars are needed), with different assertion strategies:
 
-```typescript
-/**
- * CLI toolkits-list command e2e test
- *
- * Verifies that the CLI lists available toolkits from the API.
- */
-
-import { e2e, sanitizeOutput, type E2ETestResult, type E2ETestResultWithFiles } from '@e2e-tests/utils';
-import { TIMEOUTS } from '@e2e-tests/utils/const';
-import { describe, it, expect, beforeAll } from 'bun:test';
-
-declare module 'bun' {
-  interface Env {
-    COMPOSIO_API_KEY: string;
-  }
-}
-
-e2e(import.meta.url, {
-  versions: {
-    cli: ['current'],
-  },
-  env: {
-    COMPOSIO_API_KEY: Bun.env.COMPOSIO_API_KEY,
-  },
-  defineTests: ({ runCmd }) => {
-    let listResult: E2ETestResult;
-    let redirectedResult: E2ETestResultWithFiles<'out.txt'>;
-
-    beforeAll(async () => {
-      listResult = await runCmd('composio toolkits list');
-      redirectedResult = await runCmd({
-        command: 'composio toolkits list > out.txt',
-        files: ['out.txt'],
-      });
-    }, TIMEOUTS.FIXTURE);
-
-    describe('composio toolkits list', () => {
-      it('exits successfully', () => {
-        expect(listResult.exitCode).toBe(0);
-      });
-
-      it('stdout is non-empty', () => {
-        expect(sanitizeOutput(listResult.stdout).length).toBeGreaterThan(0);
-      });
-
-      it('stdout contains known toolkits', () => {
-        const output = sanitizeOutput(listResult.stdout);
-        // Use well-known toolkits that are always present
-        expect(output).toContain('github');
-      });
-
-      it('stdout has multiple lines', () => {
-        const lines = sanitizeOutput(listResult.stdout).split('\n').filter(Boolean);
-        expect(lines.length).toBeGreaterThan(1);
-      });
-
-      it('stderr is empty', () => {
-        expect(listResult.stderr).toBe('');
-      });
-    });
-
-    describe('stdout redirection to out.txt', () => {
-      it('exits successfully', () => {
-        expect(redirectedResult.exitCode).toBe(0);
-      });
-
-      it('stdout is empty', () => {
-        expect(redirectedResult.stdout).toBe('');
-      });
-
-      it('stderr is empty', () => {
-        expect(redirectedResult.stderr).toBe('');
-      });
-
-      it('out.txt contains data', () => {
-        expect(sanitizeOutput(redirectedResult.files['out.txt']).length).toBeGreaterThan(0);
-      });
-    });
-  },
-});
-```
-
-Key rules for API-dependent output:
 - **Never use exact-match assertions** (`toBe`) on API data — the data changes over time.
 - Use `toContain()` for known, stable items (e.g., `github`, `gmail` are always present).
 - Use `toBeGreaterThan()` for structural checks (line count, length).
 - Use `toMatch()` with regex for format validation.
 
+```typescript
+// Instead of:
+expect(sanitizeOutput(listResult.stdout)).toBe(exactValue);
+
+// Use fuzzy assertions:
+expect(sanitizeOutput(listResult.stdout).length).toBeGreaterThan(0);
+expect(sanitizeOutput(listResult.stdout)).toContain('github');
+const lines = sanitizeOutput(listResult.stdout).split('\n').filter(Boolean);
+expect(lines.length).toBeGreaterThan(1);
+```
+
+The redirect test group is identical to Pattern A — assert the file contains data, Docker stdout/stderr are empty.
+
 ### Pattern E: Action Command, No Stdout Data
 
 For commands that perform an action but produce no machine-readable output (e.g., `logout`, `upgrade`).
 
+**Differences from Pattern A:**
+- No redirection test — there's no data to redirect
+- stdout should be literally empty (no `sanitizeOutput()` needed)
+- Import only `E2ETestResult`, not `E2ETestResultWithFiles`
+
 ```typescript
-/**
- * CLI logout command e2e test
- *
- * Verifies that the CLI logout command completes without error.
- */
-
-import { e2e, type E2ETestResult } from '@e2e-tests/utils';
-import { TIMEOUTS } from '@e2e-tests/utils/const';
-import { describe, it, expect, beforeAll } from 'bun:test';
-
 e2e(import.meta.url, {
-  versions: {
-    cli: ['current'],
-  },
+  versions: { cli: ['current'] },
   defineTests: ({ runCmd }) => {
     let logoutResult: E2ETestResult;
 
@@ -439,20 +293,6 @@ e2e(import.meta.url, {
   },
 });
 ```
-
-Notes:
-- No redirection test needed — there's no data to redirect.
-- No `sanitizeOutput()` needed — stdout should be literally empty.
-- Import only `E2ETestResult`, not `E2ETestResultWithFiles`.
-
-## Output Contract Rules
-
-Enforce these in every CLI e2e test:
-
-1. **Data commands** produce machine-readable output on stdout (via `ui.output()`).
-2. **Action commands** produce no stdout data — stdout is always empty.
-3. **stderr is always empty** for successful commands (non-TTY suppresses all Clack decoration).
-4. **Redirected output** (`> out.txt`) captures the same data that direct stdout contains; Docker stdout and stderr both become empty.
 
 ## Commands NOT Testable with This Framework
 
@@ -557,20 +397,6 @@ runCmd('composio logout && composio whoami')
 
 ## API Reference
 
-### `e2e(importMetaUrl, config)`
-
-Entry point. Pass `import.meta.url` as the first argument — the framework infers `cwd` and `suiteName` from the file path.
-
-### `E2EConfig`
-
-```typescript
-{
-  versions: { cli: ['current'] },  // Always use ['current'] for CLI tests
-  env?: Record<string, string | undefined>,  // Env vars to pass to Docker
-  defineTests: (ctx: DefineTestsContext) => void,
-}
-```
-
 ### `runCmd` (two overloads)
 
 ```typescript
@@ -585,11 +411,9 @@ const result: E2ETestResultWithFiles<'out.txt'> = await runCmd({
 // Access: result.files['out.txt']
 ```
 
-### `sanitizeOutput(output)`
-
-Strips ANSI escape codes, normalizes `\r\n` to `\n`, trims whitespace. Use on stdout and file contents before assertions.
-
 ### `TIMEOUTS`
+
+Defined in `ts/e2e-tests/_utils/src/const.ts`:
 
 ```typescript
 TIMEOUTS.DEFAULT   // 5_000ms   — individual test timeout
@@ -607,10 +431,9 @@ Use `TIMEOUTS.FIXTURE` for the `beforeAll` that runs Docker commands. Use `TIMEO
 | `ts/e2e-tests/cli/version/e2e.test.ts` | Pattern A reference |
 | `ts/e2e-tests/cli/whoami/e2e.test.ts` | Pattern B reference |
 | `ts/e2e-tests/_utils/src/types.ts` | `E2EConfig`, `E2ETestResult`, `DefineTestsContext` types |
-| `ts/e2e-tests/_utils/src/e2e.ts` | `e2e()` entry point |
 | `ts/e2e-tests/_utils/src/const.ts` | `TIMEOUTS`, `WELL_KNOWN_ENV_VARS` |
 | `ts/e2e-tests/_utils/src/sanitize.ts` | `sanitizeOutput()` |
 | `ts/e2e-tests/_utils/Dockerfile.cli` | Docker image definition |
 | `ts/e2e-tests/cli/README.md` | Test suites table |
 | `CLI.md` | Planned CLI commands |
-| `ts/packages/cli/CLAUDE.md` | CLI architecture and output conventions |
+| `ts/packages/cli/AGENTS.md` | CLI architecture and output conventions |

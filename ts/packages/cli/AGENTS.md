@@ -285,7 +285,7 @@ When working on CLI code, reference the Effect source for accurate patterns:
 
 For principles on how to design CLI interactions (arguments, flags, help text, output, errors, interactivity, config precedence), see:
 
-- **Full guidelines**: `ts/packages/cli/.cursor/rules/cli-design-guidelines.mdc`
-- **Also available as**: `.claude/skills/create-cli/SKILL.md` (symlink)
+- **Cursor rules**: `ts/packages/cli/.cursor/rules/cli-design-guidelines.mdc`
+- **Claude skill**: `.claude/skills/create-cli/SKILL.md` (standalone, trimmed for Claude Code context)
 
 Use these guidelines when adding new commands, designing flag interfaces, or making UX decisions for the CLI.
