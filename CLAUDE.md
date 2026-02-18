@@ -10,6 +10,21 @@ This is the Composio SDK v3 repository containing both TypeScript and Python SDK
 
 - For documentation tasks, refer to `fern/CLAUDE.md`
 
+## Effect.ts Reference Source
+
+The CLI package (`@composio/cli`) is built on the Effect.ts ecosystem. A local copy of the Effect source code is available as a git submodule:
+
+- **Location:** `ts/vendor/effect/`
+- **Repo:** [Effect-TS/effect](https://github.com/Effect-TS/effect)
+- **Branch:** `main`
+
+When working on CLI code, reference the Effect source for accurate patterns:
+- `ts/vendor/effect/packages/effect/src/` — core Effect runtime
+- `ts/vendor/effect/packages/cli/src/` — @effect/cli (Command, Options, Args)
+- `ts/vendor/effect/packages/platform/src/` — @effect/platform (FileSystem, Terminal)
+
+**Important:** The submodule is for **read-only reference only**. Do not modify files in `ts/vendor/`. The CLI's actual dependencies come from npm via `pnpm install`.
+
 ## Common Development Commands
 
 ### Build and Development
