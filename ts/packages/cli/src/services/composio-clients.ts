@@ -13,13 +13,7 @@ import {
   SynchronizedRef,
 } from 'effect';
 import { Composio as _RawComposioClient, APIPromise } from '@composio/client';
-import {
-  Toolkit,
-  Toolkits,
-  ToolkitDetailed,
-  ToolkitCategory,
-  type ToolkitSearchResult,
-} from 'src/models/toolkits';
+import { Toolkit, Toolkits, ToolkitDetailed, type ToolkitSearchResult } from 'src/models/toolkits';
 import { ToolsAsEnums, Tools, Tool } from 'src/models/tools';
 import {
   groupByVersion,
@@ -284,13 +278,6 @@ export const ToolkitSearchResponse = Schema.Struct({
 export const ToolkitDetailedResponse = ToolkitDetailed.annotations({
   identifier: 'ToolkitDetailedResponse',
 });
-
-// Categories response
-export const ToolkitCategoriesResponse = Schema.Struct({
-  items: Schema.Array(ToolkitCategory),
-  total_items: Schema.Int,
-  next_cursor: Schema.NullOr(Schema.String),
-}).annotations({ identifier: 'ToolkitCategoriesResponse' });
 
 /**
  * Error response schemas
@@ -733,17 +720,6 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
                 ToolkitDetailedResponse
               )
             ),
-          /**
-           * Retrieves all available toolkit categories.
-           */
-          retrieveCategories: () =>
-            withMetrics(
-              callClient(
-                clientSingleton,
-                client => client.toolkits.retrieveCategories(),
-                ToolkitCategoriesResponse
-              )
-            ).pipe(Effect.map(response => response.items)),
         },
         tools: {
           /**
@@ -1066,10 +1042,6 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
          * @param slug - Toolkit slug
          */
         getToolkitDetailed: (slug: string) => client.toolkits.retrieveDetailed(slug),
-        /**
-         * Retrieves all available toolkit categories.
-         */
-        getCategories: () => client.toolkits.retrieveCategories(),
       };
     }),
     dependencies: [ComposioClientLive.Default],

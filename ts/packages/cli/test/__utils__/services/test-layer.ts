@@ -18,7 +18,7 @@ import { ComposioCliConfig } from 'src/cli-config';
 import * as MockConsole from './mock-console';
 import * as MockTerminal from './mock-terminal';
 import { TerminalUITest } from './terminal-ui-test';
-import type { Toolkits, ToolkitDetailed, ToolkitCategory } from 'src/models/toolkits';
+import type { Toolkits, ToolkitDetailed } from 'src/models/toolkits';
 import { NodeProcess } from 'src/services/node-process';
 import {
   ComposioSessionRepository,
@@ -57,7 +57,6 @@ export interface TestLiveInput {
   toolkitsData?: {
     toolkits?: Toolkits;
     detailedToolkits?: ToolkitDetailed[];
-    categories?: ToolkitCategory[];
     tools?: Tools;
     triggerTypesAsEnums?: TriggerTypesAsEnums;
     triggerTypes?: TriggerTypes;
@@ -85,7 +84,6 @@ export const TestLayer = (input?: TestLiveInput) =>
     const defaultAppClientData = {
       toolkits: [] as Toolkits,
       detailedToolkits: [] as ToolkitDetailed[],
-      categories: [] as ToolkitCategory[],
       tools: [] as Tools,
       triggerTypesAsEnums: [] as TriggerTypesAsEnums,
       triggerTypes: [] as TriggerTypes,
@@ -94,6 +92,8 @@ export const TestLayer = (input?: TestLiveInput) =>
     const toolkitsData = {
       ...defaultAppClientData,
       ...(input?.toolkitsData ?? {}),
+      detailedToolkits:
+        input?.toolkitsData?.detailedToolkits ?? defaultAppClientData.detailedToolkits,
     };
 
     const tempDir = tempy.temporaryDirectory({ prefix: 'test' });
@@ -257,7 +257,6 @@ export const TestLayer = (input?: TestLiveInput) =>
           }
           return Effect.succeed(found);
         },
-        getCategories: () => Effect.succeed(toolkitsData.categories),
       })
     );
     const ComposioSessionRepositoryTest = yield* setupComposioSessionRepository();
