@@ -89,7 +89,7 @@ export async function GET() {
 
     const index = `# Composio Documentation
 
-> Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.
+> Composio powers 1000+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.
 
 > **For AI agents:** Composio supports two integration modes. **Native Tools:** use \`composio.create(user_id)\` + \`session.tools()\` with a provider package (e.g. \`composio_openai\`, \`@composio/openai\`). **MCP:** use \`composio.create(user_id)\` + \`session.mcp.url\` with any MCP-compatible client — no provider package needed. See any page's .md endpoint for full usage instructions.
 
