@@ -1,6 +1,6 @@
 import { Command, Options } from '@effect/cli';
 import { Effect, Schedule } from 'effect';
-import open, { apps } from 'open';
+import open from 'open';
 import { ComposioSessionRepository } from 'src/services/composio-clients';
 import { ComposioUserContext } from 'src/services/user-context';
 import { TerminalUI } from 'src/services/terminal-ui';
@@ -54,14 +54,21 @@ export const loginCmd = Command.make('login', { noBrowser }, ({ noBrowser }) =>
     yield* ui.output(url);
 
     if (!noBrowser) {
-      // Open the given `url` in the default browser
-      yield* Effect.tryPromise(() =>
-        open(url, {
-          app: {
-            name: apps.browser,
-          },
-          wait: false,
-        })
+      // Open the given `url` in the default browser.
+      // Do NOT use `apps.browser` — it triggers AppleScript-based default browser
+      // detection (`bundle-name` → Finder + System Events), which fails on macOS
+      // when the terminal lacks Apple Events permissions (error -1743).
+      // Calling `open(url)` without an app lets the OS handle browser selection natively.
+      yield* Effect.tryPromise(() => open(url, { wait: false })).pipe(
+        Effect.catchAll(error =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug('Failed to open browser:', error);
+            yield* ui.log.warn('Could not open the browser automatically.');
+            yield* ui.log.info(
+              `Tip: try using \`composio login --no-browser\` and open the URL manually.`
+            );
+          })
+        )
       );
     }
 
