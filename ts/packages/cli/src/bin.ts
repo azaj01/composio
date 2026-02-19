@@ -1,7 +1,7 @@
 import process from 'node:process';
 import { Cause, Console, Effect, Exit, HashMap, Layer, Logger, Option } from 'effect';
 import { captureErrors, prettyPrintFromCapturedErrors } from 'effect-errors/index';
-import { CliConfig, Command, HelpDoc, Usage, ValidationError } from '@effect/cli';
+import { CliConfig, CommandDescriptor, HelpDoc, Usage, ValidationError } from '@effect/cli';
 import { FetchHttpClient } from '@effect/platform';
 import { BunContext, BunRuntime, BunFileSystem } from '@effect/platform-bun';
 import type { Teardown } from '@effect/platform/Runtime';
@@ -125,13 +125,13 @@ const collectValueOptionNamesFromUsage = (usage: Usage.Usage, acc: Set<string>) 
 
 const valueOptionNames = (() => {
   const names = new Set<string>();
-  const visit = (command: Command.Command<unknown>) => {
-    collectValueOptionNamesFromUsage(Command.getUsage(command), names);
-    for (const [, subcommand] of HashMap.toEntries(Command.getSubcommands(command))) {
+  const visit = (command: CommandDescriptor.Command<unknown>) => {
+    collectValueOptionNamesFromUsage(CommandDescriptor.getUsage(command), names);
+    for (const [, subcommand] of HashMap.toEntries(CommandDescriptor.getSubcommands(command))) {
       visit(subcommand);
     }
   };
-  visit(rootCommand);
+  visit(rootCommand.descriptor);
   return names;
 })();
 
