@@ -107,7 +107,7 @@ export async function GET() {
     ]);
 
     const results = [
-      `# Composio Documentation\n\n> Composio powers 800+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.${SESSION_GUARDRAILS}\n# Documentation\n`,
+      `# Composio Documentation\n\n> Composio powers 1000+ toolkits, tool search, context management, authentication, and a sandboxed workbench to help you build AI agents that turn intent into action.${SESSION_GUARDRAILS}\n# Documentation\n`,
       ...docsResults,
       '\n# Cookbooks\n',
       ...cookbooksResults,
