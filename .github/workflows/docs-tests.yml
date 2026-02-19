@@ -49,8 +49,10 @@ jobs:
             sleep 1
           done
 
+          set +e
           bun run test:integration
           TEST_EXIT=$?
+          set -e
 
           kill $SERVER_PID 2>/dev/null || true
           exit $TEST_EXIT
