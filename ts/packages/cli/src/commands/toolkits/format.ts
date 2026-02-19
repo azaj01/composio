@@ -1,13 +1,6 @@
 import type { Toolkit } from 'src/models/toolkits';
 import { bold, gray } from 'src/ui/colors';
-
-/**
- * Truncate a string to the given max length, appending "..." if truncated.
- */
-function truncate(str: string, max: number): string {
-  if (str.length <= max) return str;
-  return str.slice(0, max - 3) + '...';
-}
+import { truncate } from 'src/ui/truncate';
 
 /**
  * Format a list of toolkits as a human-readable table.
