@@ -362,7 +362,14 @@ async def main():
     )
 
     async with ClaudeSDKClient(options=options) as client:
-        print("Assistant ready! Type 'exit' to quit.")
+        print("""
+What task would you like me to help you with?
+I can use tools like Gmail, GitHub, Linear, Notion, and more.
+(Type 'exit' to exit)
+Example tasks:
+  - 'Summarize my emails from today'
+  - 'List all open issues on the composio github repository'
+""")
 
         while True:
             user_input = input("You: ").strip()
@@ -370,7 +377,7 @@ async def main():
                 break
 
             await client.query(user_input)
-            print("Claude: ", end="")
+            print("Claude: ", end="", flush=True)
             async for message in client.receive_response():
                 if isinstance(message, AssistantMessage):
                     for block in message.content:
@@ -488,13 +495,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 ```python
 import asyncio
 from dotenv import load_dotenv
-from claude_agent_sdk.client import ClaudeSDKClient
-from claude_agent_sdk.types import (
-    ClaudeAgentOptions,
-    AssistantMessage,
-    TextBlock,
-    ToolUseBlock,
-)
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, TextBlock, ToolUseBlock
 from composio import Composio
 
 load_dotenv()
@@ -506,7 +507,6 @@ composio = Composio()
 user_id = "user_123"
 session = composio.create(user_id=user_id)
 
-# Configure Claude with Composio MCP server
 options = ClaudeAgentOptions(
     system_prompt=(
         "You are a helpful assistant with access to external tools. "
@@ -522,7 +522,6 @@ options = ClaudeAgentOptions(
     permission_mode="bypassPermissions",
 )
 
-
 async def main():
     print("""
 What task would you like me to help you with?
@@ -534,29 +533,23 @@ Example tasks:
 """)
 
     async with ClaudeSDKClient(options) as client:
-        # Multi-turn conversation with agentic tool calling
         while True:
             user_input = input("You: ").strip()
             if user_input.lower() == "exit":
                 break
 
-            print("\nClaude: ", end="", flush=True)
-            try:
-                await client.query(user_input)
-                async for msg in client.receive_response():
-                    if isinstance(msg, AssistantMessage):
-                        for block in msg.content:
-                            if isinstance(block, ToolUseBlock):
-                                print(f"\n[Using tool: {block.name}]", end="")
-                            elif isinstance(block, TextBlock):
-                                print(block.text, end="", flush=True)
-                print()
-            except Exception as e:
-                print(f"\n[Error]: {e}")
+            await client.query(user_input)
+            print("Claude: ", end="", flush=True)
+            async for msg in client.receive_response():
+                if isinstance(msg, AssistantMessage):
+                    for block in msg.content:
+                        if isinstance(block, ToolUseBlock):
+                            print(f"\n  [Using tool: {block.name}]")
+                        elif isinstance(block, TextBlock):
+                            print(block.text, end="", flush=True)
+            print()
 
-
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 </Tab>
 <Tab value="TypeScript">
