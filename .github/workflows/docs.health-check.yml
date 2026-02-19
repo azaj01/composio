@@ -21,9 +21,9 @@ jobs:
           check_url() {
             local label="$1"
             local url="$2"
-            local extra_args="${3:-}"
+            shift 2
             CHECKED=$((CHECKED + 1))
-            if STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 $extra_args "$url" 2>/dev/null); then
+            if STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 "$@" "$url" 2>/dev/null); then
               :
             else
               STATUS="000"
@@ -66,11 +66,11 @@ jobs:
           check_url "/docs/common-faq" "${BASE_URL}/docs/common-faq"
 
           # Markdown content negotiation
-          check_url "/docs/quickstart (markdown)" "${BASE_URL}/docs/quickstart" '-H "Accept: text/markdown"'
-          check_url "/docs/tools-and-toolkits (markdown)" "${BASE_URL}/docs/tools-and-toolkits" '-H "Accept: text/markdown"'
-          check_url "/docs/authentication (markdown)" "${BASE_URL}/docs/authentication" '-H "Accept: text/markdown"'
-          check_url "/docs/providers/openai (markdown)" "${BASE_URL}/docs/providers/openai" '-H "Accept: text/markdown"'
-          check_url "/cookbooks (markdown)" "${BASE_URL}/cookbooks" '-H "Accept: text/markdown"'
+          check_url "/docs/quickstart (markdown)" "${BASE_URL}/docs/quickstart" -H "Accept: text/markdown"
+          check_url "/docs/tools-and-toolkits (markdown)" "${BASE_URL}/docs/tools-and-toolkits" -H "Accept: text/markdown"
+          check_url "/docs/authentication (markdown)" "${BASE_URL}/docs/authentication" -H "Accept: text/markdown"
+          check_url "/docs/providers/openai (markdown)" "${BASE_URL}/docs/providers/openai" -H "Accept: text/markdown"
+          check_url "/cookbooks (markdown)" "${BASE_URL}/cookbooks" -H "Accept: text/markdown"
 
           if [ "$FAIL_COUNT" -gt 0 ]; then
             echo "has_failures=true" >> $GITHUB_OUTPUT
