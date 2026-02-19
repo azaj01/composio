@@ -103,3 +103,50 @@ recordings:
     - name: list-query-gmaxx
       description: List with no results
       command: "composio toolkits list --query 'gmaxx'"
+
+  tools:
+    - name: help
+      description: Show tools subcommand help
+      command: "composio tools --help"
+      height: dynamic
+
+    - name: list-toolkit-gmail
+      description: List tools in a toolkit
+      command: "composio tools list --toolkits gmail"
+      height: dynamic
+
+    - name: list-toolkit-gmail-limit-3
+      description: List with --limit flag
+      command: "composio tools list --toolkits gmail --limit 3"
+
+    - name: list-search-send-email
+      description: List with --search filter
+      command: "composio tools list --search 'send email'"
+      height: dynamic
+
+    - name: list-search-no-results
+      description: List with no results
+      command: "composio tools list --toolkits 'nonexistent'"
+
+    - name: search-send-email
+      description: Search tools by use case
+      command: "composio tools search 'send email'"
+      height: dynamic
+
+    - name: search-no-results
+      description: Search with no results
+      command: "composio tools search 'xyznonexistent'"
+
+    - name: info
+      description: Show info without arguments
+      command: "composio tools info"
+
+    - name: info-gmail-send-email
+      description: Show tool details
+      command: "composio tools info GMAIL_SEND_EMAIL"
+      height: dynamic
+
+    - name: info-nonexistent
+      description: Info with nonexistent tool
+      command: "composio tools info NONEXISTENT_TOOL"
+      height: dynamic

@@ -62,10 +62,6 @@ function formatSchemaProperties(schema: Record<string, unknown>): string {
     return { name, type, label, description };
   });
 
-  if (entries.length === 0) {
-    return '  (none)';
-  }
-
   const nameWidth = Math.max(...entries.map(e => e.name.length));
   const typeWidth = Math.max(...entries.map(e => e.type.length));
   const labelWidth = Math.max(...entries.map(e => e.label.length));

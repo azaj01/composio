@@ -270,6 +270,13 @@ export const TestLayer = (input?: TestLiveInput) =>
             );
           }
 
+          if (params.tags) {
+            const tagList = params.tags.split(',').map(t => t.trim().toLowerCase());
+            results = results.filter(t =>
+              tagList.some(tag => t.tags.map(tt => tt.toLowerCase()).includes(tag))
+            );
+          }
+
           const limit = params.limit ?? 30;
           const items = results.slice(0, limit);
           return Effect.succeed({
@@ -285,10 +292,13 @@ export const TestLayer = (input?: TestLiveInput) =>
               new HttpServerError({ cause: `Tool "${slug}" not found`, status: 404 })
             );
           }
+          // Derive toolkit slug from tool slug prefix (e.g. GMAIL_SEND_EMAIL -> gmail)
+          const parts = found.slug.split('_');
+          const toolkitSlug = parts.length > 1 ? parts[0]!.toLowerCase() : '';
           return Effect.succeed({
             ...found,
             no_auth: false,
-            toolkit: { name: '', slug: '' },
+            toolkit: { name: toolkitSlug, slug: toolkitSlug },
           });
         },
         getToolkitDetailed: (slug: string) => {

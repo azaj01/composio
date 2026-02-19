@@ -94,7 +94,7 @@ describe('CLI: composio', () => {
 
             - tools                                                                                                    Discover and inspect Composio tools.
 
-            - tools list [--search text] [--toolkits text] [--tags text] [--limit integer]                             List available tools.
+            - tools list [--query text] [--toolkits text] [--tags text] [--limit integer]                              List available tools.
 
             - tools info [<slug>]                                                                                      View details of a specific tool.
 

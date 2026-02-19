@@ -92,11 +92,11 @@ describe('CLI: composio tools list', () => {
   );
 
   layer(TestLive({ baseConfigProvider: testConfigProvider, toolkitsData }))(
-    '[Given] --search "send" [Then] shows filtered results',
+    '[Given] --query "send" [Then] shows filtered results',
     it => {
       it.scoped('filters by search query', () =>
         Effect.gen(function* () {
-          yield* cli(['tools', 'list', '--search', 'send']);
+          yield* cli(['tools', 'list', '--query', 'send']);
           const lines = yield* MockConsole.getLines({ stripAnsi: true });
           const output = lines.join('\n');
 
@@ -145,6 +145,23 @@ describe('CLI: composio tools list', () => {
           const output = lines.join('\n');
 
           expect(output).toContain('No tools found');
+        })
+      );
+    }
+  );
+
+  layer(TestLive({ baseConfigProvider: testConfigProvider, toolkitsData }))(
+    '[Given] --tags "email" [Then] filters by tag',
+    it => {
+      it.scoped('filters by tag', () =>
+        Effect.gen(function* () {
+          yield* cli(['tools', 'list', '--tags', 'email']);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+
+          expect(output).toContain('GMAIL_SEND_EMAIL');
+          expect(output).toContain('GMAIL_CREATE_DRAFT');
+          expect(output).not.toContain('SLACK_SEND_MESSAGE');
         })
       );
     }

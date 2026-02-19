@@ -5,7 +5,7 @@ import { ComposioUserContext } from 'src/services/user-context';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { formatToolsTable, formatToolsJson } from '../format';
 
-const search = Options.text('search').pipe(
+const query = Options.text('query').pipe(
   Options.withDescription('Text search by name, slug, or description'),
   Options.optional
 );
@@ -33,14 +33,14 @@ const limit = Options.integer('limit').pipe(
  * @example
  * ```bash
  * composio tools list --toolkits "gmail"
- * composio tools list --search "send email" --toolkits "gmail"
+ * composio tools list --query "send email" --toolkits "gmail"
  * composio tools list --tags "important" --limit 10
  * ```
  */
 export const toolsCmd$List = Command.make(
   'list',
-  { search, toolkits, tags, limit },
-  ({ search, toolkits, tags, limit }) =>
+  { query, toolkits, tags, limit },
+  ({ query, toolkits, tags, limit }) =>
     Effect.gen(function* () {
       const ui = yield* TerminalUI;
       const ctx = yield* ComposioUserContext;
@@ -57,7 +57,7 @@ export const toolsCmd$List = Command.make(
       const result = yield* ui.withSpinner(
         'Fetching tools...',
         repo.searchTools({
-          search: Option.getOrUndefined(search),
+          search: Option.getOrUndefined(query),
           toolkit_slug: Option.getOrUndefined(toolkits),
           tags: Option.getOrUndefined(tags),
           limit: clampedLimit,

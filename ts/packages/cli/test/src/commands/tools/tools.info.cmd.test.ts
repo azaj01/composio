@@ -66,6 +66,8 @@ describe('CLI: composio tools info', () => {
           expect(output).toContain('required');
           expect(output).toContain('Output Parameters');
           expect(output).toContain('message_id');
+          // Verify next-step hint includes derived toolkit slug
+          expect(output).toContain('composio tools list --toolkits "gmail"');
         })
       );
     }
