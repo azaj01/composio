@@ -1,14 +1,7 @@
 import type { Tool } from 'src/models/tools';
 import type { ToolDetailedResponse } from 'src/services/composio-clients';
 import { bold, gray } from 'src/ui/colors';
-
-/**
- * Truncate a string to the given max length, appending "..." if truncated.
- */
-function truncate(str: string, max: number): string {
-  if (str.length <= max) return str;
-  return str.slice(0, max - 3) + '...';
-}
+import { truncate } from 'src/ui/truncate';
 
 /**
  * Format a list of tools as a human-readable table.
