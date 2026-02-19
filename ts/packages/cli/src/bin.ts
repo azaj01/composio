@@ -125,7 +125,12 @@ const collectValueOptionNamesFromUsage = (usage: Usage.Usage, acc: Set<string>) 
 
 const valueOptionNames = (() => {
   const names = new Set<string>();
+  const visited = new Set<CommandDescriptor.Command<unknown>>();
   const visit = (command: CommandDescriptor.Command<unknown>) => {
+    if (visited.has(command)) {
+      return;
+    }
+    visited.add(command);
     collectValueOptionNamesFromUsage(CommandDescriptor.getUsage(command), names);
     for (const [, subcommand] of HashMap.toEntries(CommandDescriptor.getSubcommands(command))) {
       visit(subcommand);
