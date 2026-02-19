@@ -15,7 +15,7 @@ describe('CLI: composio', () => {
         expect(result).toEqual(
           ValidationError.commandMismatch(
             HelpDoc.p(
-              "Invalid subcommand for composio - use one of 'version', 'upgrade', 'whoami', 'login', 'logout', 'generate', 'py', 'ts', 'toolkits'"
+              "Invalid subcommand for composio - use one of 'version', 'upgrade', 'whoami', 'login', 'logout', 'generate', 'py', 'ts', 'toolkits', 'tools'"
             )
           )
         );
@@ -91,6 +91,14 @@ describe('CLI: composio', () => {
             - toolkits info [<slug>]                                                                                   View details of a specific toolkit.
 
             - toolkits search [--limit integer] <query>                                                                Search toolkits by use case.
+
+            - tools                                                                                                    Discover and inspect Composio tools.
+
+            - tools list [--search text] [--toolkits text] [--tags text] [--limit integer]                             List available tools.
+
+            - tools info [<slug>]                                                                                      View details of a specific tool.
+
+            - tools search [--toolkits text] [--limit integer] <query>                                                 Search tools by use case.
           "
         `);
       })

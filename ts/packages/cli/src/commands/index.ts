@@ -12,6 +12,7 @@ import { pyCmd } from './py/py.cmd';
 import { tsCmd } from './ts/ts.cmd';
 import { generateCmd } from './generate.cmd';
 import { toolkitsCmd } from './toolkits/toolkits.cmd';
+import { toolsCmd } from './tools/tools.cmd';
 
 const $cmd = $defaultCmd.pipe(
   Command.withSubcommands([
@@ -24,6 +25,7 @@ const $cmd = $defaultCmd.pipe(
     pyCmd,
     tsCmd,
     toolkitsCmd,
+    toolsCmd,
   ])
 );
 

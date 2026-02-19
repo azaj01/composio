@@ -262,6 +262,25 @@ export const ToolsResponse = Schema.Struct({
 }).annotations({ identifier: 'ToolsResponse' });
 export type ToolsResponse = Schema.Schema.Type<typeof ToolsResponse>;
 
+export const ToolDetailedResponse = Schema.Struct({
+  name: Schema.String,
+  slug: Schema.String,
+  description: Schema.String,
+  tags: Schema.Array(Schema.String),
+  available_versions: Schema.Array(Schema.String),
+  input_parameters: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  output_parameters: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  no_auth: Schema.optionalWith(Schema.Boolean, { default: () => false }),
+  toolkit: Schema.optionalWith(
+    Schema.Struct({
+      name: Schema.String,
+      slug: Schema.String,
+    }),
+    { default: () => ({ name: '', slug: '' }) }
+  ),
+}).annotations({ identifier: 'ToolDetailedResponse' });
+export type ToolDetailedResponse = Schema.Schema.Type<typeof ToolDetailedResponse>;
+
 export const TriggerTypesAsEnumsResponse = TriggerTypesAsEnums;
 export type TriggerTypesAsEnumsResponse = Schema.Schema.Type<typeof TriggerTypesAsEnumsResponse>;
 
@@ -621,6 +640,119 @@ class ComposioClientSingleton extends Effect.Service<ComposioClientSingleton>()(
   }
 ) {}
 
+/**
+ * Build the `tools` namespace for ComposioClientLive.
+ * Extracted to keep the main generator under the max-lines-per-function limit.
+ */
+function buildToolsNamespace(
+  clientSingleton: ComposioClientSingleton,
+  withMetrics: <A, E, R>(
+    effect: Effect.Effect<{ data: A; metrics: Metrics }, E, R>
+  ) => Effect.Effect<A, E, R>
+) {
+  return {
+    /**
+     * Retrieve a list of all available tool enumeration values (tool slugs) for the project.
+     */
+    retrieveEnum: () =>
+      withMetrics(
+        callClient(clientSingleton, client => client.tools.retrieveEnum(), ToolsAsEnumsResponse)
+      ),
+    /**
+     * Retrieve a list of tools, automatically handling pagination.
+     * It always fetches the latest version of tools for each toolkit.
+     * For more granular toolkit version control, use `listByVersionSpecs`.
+     * @param toolkitSlugs - Array of toolkit slugs to filter by
+     */
+    list: (toolkitSlugs: ReadonlyArray<string>) =>
+      withMetrics(
+        callClientWithPagination(
+          clientSingleton,
+          (client, cursor, limit) =>
+            client.tools.list({
+              cursor,
+              toolkit_slug: toolkitSlugs.length > 0 ? toolkitSlugs.join(',') : undefined,
+              toolkit_versions: 'latest',
+              limit,
+            }),
+          ToolsResponse
+        )
+      ),
+    /**
+     * Retrieve tools for multiple toolkits, grouped by version.
+     * Makes parallel API calls for each version group, then merges results.
+     * @param specs - Array of toolkit version specifications
+     */
+    listByVersionSpecs: (specs: ReadonlyArray<ToolkitVersionSpec>) =>
+      Effect.gen(function* () {
+        const grouped = groupByVersion(specs);
+        const versionGroups = [...grouped.entries()];
+
+        // Fetch all version groups in parallel with bounded concurrency
+        const responses = yield* Effect.all(
+          versionGroups.map(([version, slugs]) =>
+            withMetrics(
+              callClientWithPagination(
+                clientSingleton,
+                (client, cursor, limit) =>
+                  client.tools.list({
+                    cursor,
+                    toolkit_slug: slugs.join(','),
+                    toolkit_versions: version,
+                    limit,
+                  }),
+                ToolsResponse
+              )
+            )
+          ),
+          { concurrency: MAX_CONCURRENT_REQUESTS_PER_ENDPOINT }
+        );
+
+        // Merge all tools from all version groups
+        const allTools = responses.flatMap(response => response.items);
+        return { items: allTools };
+      }),
+    /**
+     * Search tools with optional filters. Returns a single page of results (no auto-pagination).
+     * @param params - Search/filter parameters
+     */
+    search: (params: {
+      search?: string;
+      toolkit_slug?: string;
+      tags?: string;
+      limit?: number;
+      cursor?: string;
+    }) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client =>
+            client.tools.list({
+              search: params.search,
+              toolkit_slug: params.toolkit_slug,
+              tags: params.tags ? params.tags.split(',').map(t => t.trim()) : undefined,
+              limit: params.limit,
+              cursor: params.cursor,
+              toolkit_versions: 'latest',
+            }),
+          ToolsResponse
+        )
+      ),
+    /**
+     * Retrieves detailed info about a single tool by slug.
+     * @param slug - Tool slug (e.g. "GMAIL_SEND_EMAIL")
+     */
+    retrieve: (slug: string) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.tools.retrieve(slug, { toolkit_versions: 'latest' }),
+          ToolDetailedResponse
+        )
+      ),
+  };
+}
+
 // Service that wraps the raw Composio client, which is shared by all client services.
 export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
   'services/ComposioClientLive',
@@ -745,73 +877,7 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
               )
             ).pipe(Effect.map(response => response.items)),
         },
-        tools: {
-          /**
-           * Retrieve a list of all available tool enumeration values (tool slugs) for the project.
-           */
-          retrieveEnum: () =>
-            withMetrics(
-              callClient(
-                clientSingleton,
-                client => client.tools.retrieveEnum(),
-                ToolsAsEnumsResponse
-              )
-            ),
-          /**
-           * Retrieve a list of tools, automatically handling pagination.
-           * It always fetches the latest version of tools for each toolkit.
-           * For more granular toolkit version control, use `listByVersionSpecs`.
-           * @param toolkitSlugs - Array of toolkit slugs to filter by
-           */
-          list: (toolkitSlugs: ReadonlyArray<string>) =>
-            withMetrics(
-              callClientWithPagination(
-                clientSingleton,
-                (client, cursor, limit) =>
-                  client.tools.list({
-                    cursor,
-                    toolkit_slug: toolkitSlugs.length > 0 ? toolkitSlugs.join(',') : undefined,
-                    toolkit_versions: 'latest',
-                    limit,
-                  }),
-                ToolsResponse
-              )
-            ),
-          /**
-           * Retrieve tools for multiple toolkits, grouped by version.
-           * Makes parallel API calls for each version group, then merges results.
-           * @param specs - Array of toolkit version specifications
-           */
-          listByVersionSpecs: (specs: ReadonlyArray<ToolkitVersionSpec>) =>
-            Effect.gen(function* () {
-              const grouped = groupByVersion(specs);
-              const versionGroups = [...grouped.entries()];
-
-              // Fetch all version groups in parallel with bounded concurrency
-              const responses = yield* Effect.all(
-                versionGroups.map(([version, slugs]) =>
-                  withMetrics(
-                    callClientWithPagination(
-                      clientSingleton,
-                      (client, cursor, limit) =>
-                        client.tools.list({
-                          cursor,
-                          toolkit_slug: slugs.join(','),
-                          toolkit_versions: version,
-                          limit,
-                        }),
-                      ToolsResponse
-                    )
-                  )
-                ),
-                { concurrency: MAX_CONCURRENT_REQUESTS_PER_ENDPOINT }
-              );
-
-              // Merge all tools from all version groups
-              const allTools = responses.flatMap(response => response.items);
-              return { items: allTools };
-            }),
-        },
+        tools: buildToolsNamespace(clientSingleton, withMetrics),
         triggersTypes: {
           /**
            * Retrieves a list of all available trigger type enum values that can be used across the API.
@@ -1070,6 +1136,22 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
          * Retrieves all available toolkit categories.
          */
         getCategories: () => client.toolkits.retrieveCategories(),
+        /**
+         * Searches tools with optional filters. Returns a single page of results.
+         * @param params - Search/filter parameters
+         */
+        searchTools: (params: {
+          search?: string;
+          toolkit_slug?: string;
+          tags?: string;
+          limit?: number;
+          cursor?: string;
+        }) => client.tools.search(params),
+        /**
+         * Retrieves detailed info about a single tool by slug.
+         * @param slug - Tool slug (e.g. "GMAIL_SEND_EMAIL")
+         */
+        getToolDetailed: (slug: string) => client.tools.retrieve(slug),
       };
     }),
     dependencies: [ComposioClientLive.Default],

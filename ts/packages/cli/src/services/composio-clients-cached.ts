@@ -245,6 +245,9 @@ export const ComposioToolkitsRepositoryCached = Layer.effect(
       searchToolkits: params => underlyingRepository.searchToolkits(params),
       getToolkitDetailed: slug => underlyingRepository.getToolkitDetailed(slug),
       getCategories: () => underlyingRepository.getCategories(),
+      // Tool search/detail should NOT be cached (query-dependent, should be fresh)
+      searchTools: params => underlyingRepository.searchTools(params),
+      getToolDetailed: slug => underlyingRepository.getToolDetailed(slug),
     });
   })
 ).pipe(

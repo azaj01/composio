@@ -246,6 +246,51 @@ export const TestLayer = (input?: TestLiveInput) =>
             next_cursor: null,
           });
         },
+        searchTools: (params: {
+          search?: string;
+          toolkit_slug?: string;
+          tags?: string;
+          limit?: number;
+          cursor?: string;
+        }) => {
+          let results = [...toolkitsData.tools];
+
+          if (params.toolkit_slug) {
+            const slugs = params.toolkit_slug.split(',').map(s => s.trim().toUpperCase() + '_');
+            results = results.filter(t => slugs.some(p => t.slug.toUpperCase().startsWith(p)));
+          }
+
+          if (params.search) {
+            const q = params.search.toLowerCase();
+            results = results.filter(
+              t =>
+                t.name.toLowerCase().includes(q) ||
+                t.slug.toLowerCase().includes(q) ||
+                t.description.toLowerCase().includes(q)
+            );
+          }
+
+          const limit = params.limit ?? 30;
+          const items = results.slice(0, limit);
+          return Effect.succeed({
+            items,
+            total_pages: Math.ceil(results.length / limit),
+            next_cursor: null,
+          });
+        },
+        getToolDetailed: (slug: string) => {
+          const found = toolkitsData.tools.find(t => t.slug.toUpperCase() === slug.toUpperCase());
+          if (!found) {
+            return Effect.fail(
+              new HttpServerError({ cause: `Tool "${slug}" not found`, status: 404 })
+            );
+          }
+          return Effect.succeed({
+            ...found,
+            no_auth: false,
+            toolkit: { name: '', slug: '' },
+          });
+        },
         getToolkitDetailed: (slug: string) => {
           const found = toolkitsData.detailedToolkits.find(
             t => t.slug.toLowerCase() === slug.toLowerCase()
