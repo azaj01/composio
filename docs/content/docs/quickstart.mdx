@@ -697,7 +697,6 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 <StepTitle>Create session and run agent</StepTitle>
 
 ```typescript
-// @noErrors
 import "dotenv/config";
 import { anthropic } from "@ai-sdk/anthropic";
 import { Composio } from "@composio/core";
@@ -724,7 +723,6 @@ Example tasks:
   - 'List all open issues on the composio github repository'
 `);
 
-// Message history for multi-turn conversation
 const messages: ModelMessage[] = [];
 
 while (true) {
@@ -734,32 +732,25 @@ while (true) {
   messages.push({ role: "user", content: input });
   process.stdout.write("Assistant: ");
 
-  try {
-    const result = await streamText({
-      system: "You are a helpful personal assistant. Use Composio tools to take action.",
-      model: anthropic("claude-sonnet-4-5"),
-      messages,
-      stopWhen: stepCountIs(10),
-      onStepFinish: (step) => {
-        for (const toolCall of step.toolCalls) {
-          process.stdout.write(`\n[Using tool: ${toolCall.toolName}]`);
-        }
-      },
-      tools,
-    });
+  const result = await streamText({
+    system: "You are a helpful personal assistant. Use Composio tools to take action.",
+    model: anthropic("claude-sonnet-4-6"),
+    messages,
+    stopWhen: stepCountIs(10),
+    onStepFinish: (step) => {
+      for (const toolCall of step.toolCalls) {
+        process.stdout.write(`\n[Using tool: ${toolCall.toolName}]`);
+      }
+    },
+    tools,
+  });
 
-    let assistantResponse = "";
-    for await (const textPart of result.textStream) {
-      process.stdout.write(textPart);
-      assistantResponse += textPart;
-    }
-    console.log();
-
-    // Add assistant response to history for context
-    messages.push({ role: "assistant", content: assistantResponse });
-  } catch (error) {
-    console.error("\n[Error]:", error instanceof Error ? error.message : error);
+  for await (const textPart of result.textStream) {
+    process.stdout.write(textPart);
   }
+  console.log();
+
+  messages.push(...(await result.response).messages);
 }
 
 readline.close();
@@ -796,10 +787,9 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 <StepTitle>Create session and run agent</StepTitle>
 
 ```typescript
-// @noErrors
 import "dotenv/config";
 import { anthropic } from "@ai-sdk/anthropic";
-import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
+import { createMCPClient } from "@ai-sdk/mcp";
 import { Composio } from "@composio/core";
 import { streamText, stepCountIs, type ModelMessage } from "ai";
 import { createInterface } from "readline/promises";
@@ -832,7 +822,6 @@ Example tasks:
   - 'List all open issues on the composio github repository'
 `);
 
-// Message history for multi-turn conversation
 const messages: ModelMessage[] = [];
 
 while (true) {
@@ -842,34 +831,28 @@ while (true) {
   messages.push({ role: "user", content: input });
   process.stdout.write("Assistant: ");
 
-  try {
-    const result = await streamText({
-      system: "You are a helpful personal assistant. Use Composio tools to take action.",
-      model: anthropic("claude-sonnet-4-5"),
-      messages,
-      stopWhen: stepCountIs(10),
-      onStepFinish: (step) => {
-        for (const toolCall of step.toolCalls) {
-          process.stdout.write(`\n[Using tool: ${toolCall.toolName}]`);
-        }
-      },
-      tools,
-    });
+  const result = await streamText({
+    system: "You are a helpful personal assistant. Use Composio tools to take action.",
+    model: anthropic("claude-sonnet-4-6"),
+    messages,
+    stopWhen: stepCountIs(10),
+    onStepFinish: (step) => {
+      for (const toolCall of step.toolCalls) {
+        process.stdout.write(`\n[Using tool: ${toolCall.toolName}]`);
+      }
+    },
+    tools,
+  });
 
-    let assistantResponse = "";
-    for await (const textPart of result.textStream) {
-      process.stdout.write(textPart);
-      assistantResponse += textPart;
-    }
-    console.log();
-
-    // Add assistant response to history for context
-    messages.push({ role: "assistant", content: assistantResponse });
-  } catch (error) {
-    console.error("\n[Error]:", error instanceof Error ? error.message : error);
+  for await (const textPart of result.textStream) {
+    process.stdout.write(textPart);
   }
+  console.log();
+
+  messages.push(...(await result.response).messages);
 }
 
+await client.close();
 readline.close();
 ```
 </Step>
