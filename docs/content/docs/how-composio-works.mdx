@@ -42,15 +42,17 @@ Rather than loading hundreds of tool definitions into your agent's context, a se
 graph LR
     A["Your agent"] --> B["Session"]
     B --> C["Meta tools"]
-    C --> D["SEARCH_TOOLS"]
-    C --> E["MANAGE_CONNECTIONS"]
-    C --> F["MULTI_EXECUTE"]
-    C --> G["WORKBENCH + BASH"]
+    C --> D["COMPOSIO_SEARCH_TOOLS"]
+    C --> E["COMPOSIO_MANAGE_CONNECTIONS"]
+    C --> F["COMPOSIO_MULTI_EXECUTE_TOOL"]
+    C --> G["COMPOSIO_REMOTE_WORKBENCH"]
+    C --> H["COMPOSIO_REMOTE_BASH_TOOL"]
 
     D -.- D1["Discover tools by use case"]:::annotation
     E -.- E1["Handle OAuth and API keys"]:::annotation
     F -.- F1["Run tools with user credentials"]:::annotation
     G -.- G1["Persistent Python sandbox"]:::annotation
+    H -.- H1["File operations and data processing"]:::annotation
 
     classDef annotation stroke-dasharray: 5 5
 ```
