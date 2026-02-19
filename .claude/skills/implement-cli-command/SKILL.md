@@ -472,8 +472,58 @@ When implementing a new command:
 6. Register in `src/commands/index.ts` (or in the parent group's command file)
 7. If using a new service, add its layer to `src/bin.ts`
 8. Build to verify: `cd ts/packages/cli && pnpm build`
+9. Add recordings for the new command (see **Recording** below)
 
 If the build fails, check for: (1) missing service imports, (2) `Option<string>` being used where `string` is expected (use `Option.getOrUndefined` or `Option.match`), (3) the command not being exported from its file.
+
+## Recording
+
+New commands should have VHS recordings for documentation. Recordings produce SVGs and asciicasts that demonstrate the command in action.
+
+### Step 1: Add Entries to recordings.yaml
+
+Add recording entries to `ts/packages/cli/recordings/recordings.yaml` under the appropriate group:
+
+```yaml
+recordings:
+  my-command:
+    - name: help
+      description: Show my-command help
+      command: "composio my-command --help"
+      height: dynamic  # Use for commands whose output exceeds 750px
+
+    - name: basic
+      description: Run my-command with default options
+      command: "composio my-command"
+```
+
+Each entry has:
+- `name` — filename for the recording (produces `<name>.svg`, `<name>.ascii`, `<name>.tape`)
+- `command` — the exact shell command to record
+- `description` — (optional) comment shown instantly above the command
+- `sleepAfterEnter` — (optional) override the default wait time after Enter (default: `6s`)
+- `height` — (optional) `'dynamic'` for auto-sizing via two-pass recording, or a fixed pixel number. Omit to use the default height (750px)
+
+Use `height: dynamic` for commands that produce long output (help text, full listings). Fixed height is fine for short-output commands (version, no-results, limited queries).
+
+### Step 2: Run the Recorder
+
+```bash
+cd ts/packages/cli
+bun scripts/record.ts
+```
+
+Requires `COMPOSIO_API_KEY` in the environment and `vhs` + `composio` on `PATH`.
+
+### Output Structure
+
+```
+recordings/
+├── recordings.yaml                    # Config
+├── tapes/<group>/<name>.tape          # Generated VHS tape files (committed)
+├── svgs/<group>/<name>.svg            # SVG recordings
+└── ascii/<group>/<name>.ascii         # Asciicast recordings
+```
 
 ## Reference Files
 

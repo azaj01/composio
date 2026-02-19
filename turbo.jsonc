@@ -51,6 +51,20 @@
     },
     "//#clean": {
       "cache": false
+    },
+    "record": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "scripts/record.ts",
+        "recordings/recordings.yaml"
+      ],
+      "outputs": [
+        "recordings/tapes/**",
+        "recordings/svgs/**",
+        "recordings/ascii/**"
+      ],
+      "env": ["COMPOSIO_API_KEY"]
     }
   }
 }
