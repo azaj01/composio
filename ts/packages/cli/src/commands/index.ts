@@ -27,6 +27,8 @@ const $cmd = $defaultCmd.pipe(
   ])
 );
 
+export const rootCommand = $cmd;
+
 export const runWithConfig = Effect.gen(function* () {
   const version = yield* getVersion;
 
