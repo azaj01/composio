@@ -1,8 +1,10 @@
 // Use direct imports from collections to avoid top-level await in lib/source.ts
 import { docs, reference, cookbooks, toolkits, changelog } from 'fumadocs-mdx:collections/server';
 import { createSearchAPI } from 'fumadocs-core/search/server';
-import { loader } from 'fumadocs-core/source';
+import { loader, multiple } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
+import { openapiSource, openapiPlugin } from 'fumadocs-openapi/server';
+import { openapi } from '@/lib/openapi';
 import { getAllToolkitsSync } from '@/lib/toolkit-data';
 
 // Create loaders directly here to avoid the problematic lib/source.ts import
@@ -24,30 +26,7 @@ const toolkitsSource = loader({
   plugins: [lucideIconsPlugin()],
 });
 
-// Sync reference source (MDX pages only — SDK reference, errors, rate-limits, etc.)
-// OpenAPI-generated API reference pages require async loading and can't be indexed here
-const referenceSource = loader({
-  baseUrl: '/reference',
-  source: reference.toFumadocsSource(),
-  plugins: [lucideIconsPlugin()],
-});
-
-// MDX pages from Fumadocs sources
-const mdxIndexes = [
-  ...docsSource.getPages(),
-  ...cookbooksSource.getPages(),
-  ...toolkitsSource.getPages(),
-  ...referenceSource.getPages(),
-].map((page) => ({
-  id: page.url,
-  title: page.data.title ?? 'Untitled',
-  description: page.data.description,
-  url: page.url,
-  structuredData: page.data.structuredData,
-  keywords: 'keywords' in page.data ? page.data.keywords : undefined,
-}));
-
-// Dynamic toolkit pages from toolkits.json
+// Dynamic toolkit entries from toolkits.json
 const mdxToolkitSlugs = new Set(
   toolkitsSource.getPages().map((page) => page.slugs.join('/')),
 );
@@ -59,7 +38,7 @@ const dynamicToolkitIndexes = getAllToolkitsSync()
     title: toolkit.name,
     description: toolkit.description,
     url: `/toolkits/${toolkit.slug}`,
-    structuredData: { headings: [], contents: [] },
+    structuredData: { headings: [] as never[], contents: [] as never[] },
     keywords: [toolkit.slug, toolkit.category].filter(Boolean) as string[],
   }));
 
@@ -69,10 +48,42 @@ const changelogIndexes = changelog.map((entry) => ({
   title: entry.title,
   description: entry.description ?? '',
   url: `/docs/changelog/${entry.date.replace(/-/g, '/')}`,
-  structuredData: { headings: [], contents: [] },
+  structuredData: { headings: [] as never[], contents: [] as never[] },
   keywords: ['changelog'],
 }));
 
+// Use dynamic indexes to support async OpenAPI page loading
 export const { GET } = createSearchAPI('advanced', {
-  indexes: [...mdxIndexes, ...dynamicToolkitIndexes, ...changelogIndexes],
+  indexes: async () => {
+    // Load OpenAPI pages and build full reference source
+    const openapiPages = await openapiSource(openapi, {
+      groupBy: 'tag',
+      baseDir: 'api-reference',
+    });
+
+    const fullReferenceSource = loader({
+      baseUrl: '/reference',
+      source: multiple({
+        mdx: reference.toFumadocsSource(),
+        openapi: openapiPages,
+      }),
+      plugins: [lucideIconsPlugin(), openapiPlugin()],
+    });
+
+    const mdxIndexes = [
+      ...docsSource.getPages(),
+      ...cookbooksSource.getPages(),
+      ...toolkitsSource.getPages(),
+      ...fullReferenceSource.getPages(),
+    ].map((page) => ({
+      id: page.url,
+      title: page.data.title ?? 'Untitled',
+      description: page.data.description,
+      url: page.url,
+      structuredData: page.data.structuredData,
+      keywords: 'keywords' in page.data ? (page.data.keywords as string[]) : undefined,
+    }));
+
+    return [...mdxIndexes, ...dynamicToolkitIndexes, ...changelogIndexes];
+  },
 });
