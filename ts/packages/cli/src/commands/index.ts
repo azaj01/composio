@@ -13,6 +13,8 @@ import { tsCmd } from './ts/ts.cmd';
 import { generateCmd } from './generate.cmd';
 import { toolkitsCmd } from './toolkits/toolkits.cmd';
 import { toolsCmd } from './tools/tools.cmd';
+import { authConfigsCmd } from './auth-configs/auth-configs.cmd';
+import { connectedAccountsCmd } from './connected-accounts/connected-accounts.cmd';
 
 const $cmd = $defaultCmd.pipe(
   Command.withSubcommands([
@@ -26,6 +28,8 @@ const $cmd = $defaultCmd.pipe(
     tsCmd,
     toolkitsCmd,
     toolsCmd,
+    authConfigsCmd,
+    connectedAccountsCmd,
   ])
 );
 

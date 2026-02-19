@@ -13,7 +13,10 @@ import {
   SynchronizedRef,
 } from 'effect';
 import { Composio as _RawComposioClient, APIPromise } from '@composio/client';
+import type { AuthConfigCreateParams } from '@composio/client/resources/auth-configs';
 import { Toolkit, Toolkits, ToolkitDetailed, type ToolkitSearchResult } from 'src/models/toolkits';
+import { AuthConfigItem, AuthConfigItems } from 'src/models/auth-configs';
+import { ConnectedAccountItem, ConnectedAccountItems } from 'src/models/connected-accounts';
 import { ToolsAsEnums, Tools, Tool } from 'src/models/tools';
 import {
   groupByVersion,
@@ -298,6 +301,62 @@ export const ToolkitDetailedResponse = ToolkitDetailed.annotations({
   identifier: 'ToolkitDetailedResponse',
 });
 
+// Auth config list response (single page with total_items for "Listing X of Y" display)
+export const AuthConfigListResponse = Schema.Struct({
+  items: AuthConfigItems,
+  total_items: Schema.Int,
+  total_pages: Schema.Int,
+  current_page: Schema.Int,
+  next_cursor: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
+}).annotations({ identifier: 'AuthConfigListResponse' });
+export type AuthConfigListResponse = Schema.Schema.Type<typeof AuthConfigListResponse>;
+
+// Auth config retrieve response (same shape as a single list item)
+export const AuthConfigRetrieveResponse = AuthConfigItem.annotations({
+  identifier: 'AuthConfigRetrieveResponse',
+});
+export type AuthConfigRetrieveResponse = Schema.Schema.Type<typeof AuthConfigRetrieveResponse>;
+
+// Auth config create response
+export const AuthConfigCreateResponse = Schema.Struct({
+  auth_config: Schema.Struct({
+    id: Schema.String,
+    auth_scheme: Schema.String,
+    is_composio_managed: Schema.Boolean,
+  }),
+  toolkit: Schema.Struct({
+    slug: Schema.String,
+  }),
+}).annotations({ identifier: 'AuthConfigCreateResponse' });
+export type AuthConfigCreateResponse = Schema.Schema.Type<typeof AuthConfigCreateResponse>;
+
+// Connected account list response (single page with total_items for "Listing X of Y" display)
+export const ConnectedAccountListResponse = Schema.Struct({
+  items: ConnectedAccountItems,
+  total_items: Schema.Int,
+  total_pages: Schema.Int,
+  current_page: Schema.Int,
+  next_cursor: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
+}).annotations({ identifier: 'ConnectedAccountListResponse' });
+export type ConnectedAccountListResponse = Schema.Schema.Type<typeof ConnectedAccountListResponse>;
+
+// Connected account retrieve response (same shape as a single list item)
+export const ConnectedAccountRetrieveResponse = ConnectedAccountItem.annotations({
+  identifier: 'ConnectedAccountRetrieveResponse',
+});
+
+// Link create response
+export const LinkCreateResponse = Schema.Struct({
+  connected_account_id: Schema.String,
+  expires_at: Schema.String,
+  link_token: Schema.String,
+  redirect_url: Schema.String,
+}).annotations({ identifier: 'LinkCreateResponse' });
+export type LinkCreateResponse = Schema.Schema.Type<typeof LinkCreateResponse>;
+export type ConnectedAccountRetrieveResponse = Schema.Schema.Type<
+  typeof ConnectedAccountRetrieveResponse
+>;
+
 /**
  * Error response schemas
  */
@@ -413,14 +472,17 @@ const streamResponseWithByteCount = (
         })
     );
 
-    // Collect all chunks while counting bytes
+    // Collect all chunks while counting bytes (mutate array in-place for O(N) instead of O(N^2))
     const [chunks, byteSize] = yield* pipe(
       byteStream,
       Stream.run(
         Sink.fold<[Uint8Array[], number], Uint8Array>(
           [[], 0],
           () => true,
-          ([chunks, size], chunk) => [[...chunks, chunk], size + chunk.byteLength]
+          ([chunks, size], chunk) => {
+            chunks.push(chunk);
+            return [chunks, size + chunk.byteLength] as [Uint8Array[], number];
+          }
         )
       )
     );
@@ -740,6 +802,146 @@ function buildToolsNamespace(
   };
 }
 
+/**
+ * Build the `authConfigs` namespace for ComposioClientLive.
+ * Extracted to keep the main generator under the max-lines-per-function limit.
+ */
+function buildAuthConfigsNamespace(
+  clientSingleton: ComposioClientSingleton,
+  withMetrics: <A, E, R>(
+    effect: Effect.Effect<{ data: A; metrics: Metrics }, E, R>
+  ) => Effect.Effect<A, E, R>
+) {
+  return {
+    /**
+     * List auth configs with optional filters. Returns a single page of results.
+     * @param params - Search/filter parameters
+     */
+    list: (params: {
+      search?: string;
+      toolkit_slug?: string;
+      limit?: number;
+      show_disabled?: boolean;
+    }) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client =>
+            client.authConfigs.list({
+              search: params.search,
+              toolkit_slug: params.toolkit_slug,
+              limit: params.limit,
+              show_disabled: params.show_disabled ?? true,
+            }),
+          AuthConfigListResponse
+        )
+      ),
+    /**
+     * Retrieves detailed info about a single auth config by its nanoid.
+     * @param nanoid - Auth config ID
+     */
+    retrieve: (nanoid: string) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.authConfigs.retrieve(nanoid),
+          AuthConfigRetrieveResponse
+        )
+      ),
+    /**
+     * Creates a new auth config for a toolkit.
+     * @param params - Create parameters (discriminated union: use_composio_managed_auth | use_custom_auth)
+     */
+    create: (params: AuthConfigCreateParams) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.authConfigs.create(params),
+          AuthConfigCreateResponse
+        )
+      ),
+    /**
+     * Soft-deletes an auth config by its nanoid.
+     * @param nanoid - Auth config ID
+     */
+    delete: (nanoid: string) =>
+      withMetrics(
+        callClient(clientSingleton, client => client.authConfigs.delete(nanoid), Schema.Unknown)
+      ),
+  };
+}
+
+/**
+ * Build the `connectedAccounts` namespace for ComposioClientLive.
+ * Extracted to keep the main generator under the max-lines-per-function limit.
+ */
+function buildConnectedAccountsNamespace(
+  clientSingleton: ComposioClientSingleton,
+  withMetrics: <A, E, R>(
+    effect: Effect.Effect<{ data: A; metrics: Metrics }, E, R>
+  ) => Effect.Effect<A, E, R>
+) {
+  return {
+    /**
+     * List connected accounts with optional filters. Returns a single page of results.
+     * @param params - Search/filter parameters
+     */
+    list: (params: {
+      toolkit_slugs?: string[];
+      user_ids?: string[];
+      statuses?: string[];
+      limit?: number;
+    }) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client =>
+            client.connectedAccounts.list({
+              toolkit_slugs: params.toolkit_slugs,
+              user_ids: params.user_ids,
+              statuses: params.statuses as
+                | Array<'INITIALIZING' | 'INITIATED' | 'ACTIVE' | 'FAILED' | 'EXPIRED' | 'INACTIVE'>
+                | undefined,
+              limit: params.limit,
+            }),
+          ConnectedAccountListResponse
+        )
+      ),
+    /**
+     * Retrieves detailed info about a single connected account by its nanoid.
+     * @param nanoid - Connected account ID (e.g. "con_1a2b3c4d5e6f")
+     */
+    retrieve: (nanoid: string) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.connectedAccounts.retrieve(nanoid),
+          ConnectedAccountRetrieveResponse
+        )
+      ),
+    /**
+     * Soft-deletes a connected account by its nanoid.
+     * @param nanoid - Connected account ID
+     */
+    delete: (nanoid: string) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.connectedAccounts.delete(nanoid),
+          Schema.Unknown
+        )
+      ),
+    /**
+     * Creates a new authentication link session for connecting an external account.
+     * @param params - auth_config_id and user_id
+     */
+    createLink: (params: { auth_config_id: string; user_id: string }) =>
+      withMetrics(
+        callClient(clientSingleton, client => client.link.create(params), LinkCreateResponse)
+      ),
+  };
+}
+
 // Service that wraps the raw Composio client, which is shared by all client services.
 export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
   'services/ComposioClientLive',
@@ -909,6 +1111,8 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
               )
             ),
         },
+        authConfigs: buildAuthConfigsNamespace(clientSingleton, withMetrics),
+        connectedAccounts: buildConnectedAccountsNamespace(clientSingleton, withMetrics),
       };
     }),
     dependencies: [ComposioClientSingleton.Default],
@@ -1124,6 +1328,38 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
          * @param slug - Tool slug (e.g. "GMAIL_SEND_EMAIL")
          */
         getToolDetailed: (slug: string) => client.tools.retrieve(slug),
+        /**
+         * Lists auth configs with optional filters. Returns a single page of results.
+         * @param params - Search/filter parameters
+         */
+        listAuthConfigs: (params: {
+          search?: string;
+          toolkit_slug?: string;
+          limit?: number;
+          show_disabled?: boolean;
+        }) => client.authConfigs.list(params),
+        /**
+         * Retrieves detailed info about a single auth config by its nanoid.
+         * @param nanoid - Auth config ID
+         */
+        getAuthConfig: (nanoid: string) => client.authConfigs.retrieve(nanoid),
+        /**
+         * Creates a new auth config for a toolkit.
+         * @param params - Create parameters (discriminated union: use_composio_managed_auth | use_custom_auth)
+         */
+        createAuthConfig: (params: AuthConfigCreateParams) => client.authConfigs.create(params),
+        deleteAuthConfig: (nanoid: string) => client.authConfigs.delete(nanoid),
+        // Connected account operations (thin wrappers — see buildConnectedAccountsNamespace)
+        listConnectedAccounts: (params: {
+          toolkit_slugs?: string[];
+          user_ids?: string[];
+          statuses?: string[];
+          limit?: number;
+        }) => client.connectedAccounts.list(params),
+        getConnectedAccount: (nanoid: string) => client.connectedAccounts.retrieve(nanoid),
+        deleteConnectedAccount: (nanoid: string) => client.connectedAccounts.delete(nanoid),
+        createConnectedAccountLink: (params: { auth_config_id: string; user_id: string }) =>
+          client.connectedAccounts.createLink(params),
       };
     }),
     dependencies: [ComposioClientLive.Default],
