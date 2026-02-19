@@ -29,7 +29,7 @@
         "@anthropic-ai/claude-agent-sdk": "^0.2.5",
         "@anthropic-ai/sdk": "^0.71.2",
         "@composio/anthropic": "^0.5.5",
-        "@composio/claude-agent-sdk": "^0.5.5",
+        "@composio/claude-agent-sdk": "^0.6.3",
         "@composio/core": "^0.6.3",
         "@composio/google": "^0.5.5",
         "@composio/langchain": "^0.5.5",
@@ -158,7 +158,7 @@
 
     "@composio/anthropic": ["@composio/anthropic@0.5.5", "", { "peerDependencies": { "@anthropic-ai/sdk": "^0.52.0", "@composio/core": "0.5.5", "@mastra/mcp": "^0.12.0" } }, "sha512-hRBjabqJW7UI9yzf2yIgYyyEMjmvGjvFx0ZK40629GJ0tdDnan4RcfcLiNnwZBbf9OKn3zecNTZXGMYSTNnsQA=="],
 
-    "@composio/claude-agent-sdk": ["@composio/claude-agent-sdk@0.5.5", "", { "dependencies": { "zod": "^3.25.76" }, "peerDependencies": { "@anthropic-ai/claude-agent-sdk": ">=0.1.0", "@composio/core": "0.5.5" } }, "sha512-P8yd8qVnPM6E0hNkDa3xyqi7liPdD/QmhHzFSSwDbrGRyIOXe7f9gugWDXJG4ROYK2hTrUIfcMCXhfdJnPiQ8A=="],
+    "@composio/claude-agent-sdk": ["@composio/claude-agent-sdk@0.6.3", "", { "dependencies": { "zod": "^3.25.76" }, "peerDependencies": { "@anthropic-ai/claude-agent-sdk": ">=0.1.0", "@composio/core": "0.6.3" } }, "sha512-724KwTShuore9zQrxRvbOzVrqZ8w9Z5ZkzElKYJX6mbUq33GaVs5bFbgSomNDaRe9kkLAI7fPP8WteZJB32akA=="],
 
     "@composio/client": ["@composio/client@0.1.0-alpha.56", "", {}, "sha512-hNgChB5uhdvT4QXNzzfUuvtG6vrfanQQFY2hPyKwbeR4x6mEmIGFiZ4y2qynErdUWldAZiB/7pY/MBMg6Q9E0g=="],
 
