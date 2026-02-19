@@ -8,7 +8,7 @@ This is the Composio SDK v3 repository containing both TypeScript and Python SDK
 
 ## Memories and Notes
 
-- For documentation tasks, refer to `fern/CLAUDE.md`
+- For documentation tasks, refer to `docs/CLAUDE.md`
 
 ## Effect.ts Reference Source
 
@@ -112,7 +112,7 @@ composio/
 │   │   └── ts-builders/   # TypeScript code generation utilities
 │   └── examples/          # Usage examples for different providers
 ├── python/                # Python SDK
-├── fern/                  # Documentation and API specs
+├── docs/                  # Documentation (Fumadocs)
 └── examples/              # Cross-platform examples
 ```
 
@@ -194,7 +194,7 @@ CI                       # CI environment flag
 - **Type Definitions**: `ts/packages/core/src/types/`
 - **Error Classes**: `ts/packages/core/src/errors/`
 - **Examples**: `ts/examples/` and `examples/`
-- **Documentation**: `ts/docs/` and `fern/`
+- **Documentation**: `docs/`
 - **Build Configs**: `turbo.jsonc`, `tsconfig.base.json`, `tsdown.config.base.ts`
 - **E2E Tests**: `ts/e2e-tests/`
 
