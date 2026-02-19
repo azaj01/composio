@@ -18,11 +18,12 @@ import { ComposioCliConfig } from 'src/cli-config';
 import * as MockConsole from './mock-console';
 import * as MockTerminal from './mock-terminal';
 import { TerminalUITest } from './terminal-ui-test';
-import type { Toolkits } from 'src/models/toolkits';
+import type { Toolkits, ToolkitDetailed } from 'src/models/toolkits';
 import { NodeProcess } from 'src/services/node-process';
 import {
   ComposioSessionRepository,
   ComposioToolkitsRepository,
+  HttpServerError,
   InvalidToolkitsError,
   InvalidToolkitVersionsError,
   type InvalidVersionDetail,
@@ -55,6 +56,7 @@ export interface TestLiveInput {
    */
   toolkitsData?: {
     toolkits?: Toolkits;
+    detailedToolkits?: ToolkitDetailed[];
     tools?: Tools;
     triggerTypesAsEnums?: TriggerTypesAsEnums;
     triggerTypes?: TriggerTypes;
@@ -81,14 +83,18 @@ export const TestLayer = (input?: TestLiveInput) =>
   Effect.gen(function* () {
     const defaultAppClientData = {
       toolkits: [] as Toolkits,
+      detailedToolkits: [] as ToolkitDetailed[],
       tools: [] as Tools,
       triggerTypesAsEnums: [] as TriggerTypesAsEnums,
       triggerTypes: [] as TriggerTypes,
     } satisfies TestLiveInput['toolkitsData'];
-    const { fixture, toolkitsData } = Object.assign(
-      { fixture: undefined, toolkitsData: defaultAppClientData },
-      input
-    );
+    const fixture = input?.fixture;
+    const toolkitsData = {
+      ...defaultAppClientData,
+      ...(input?.toolkitsData ?? {}),
+      detailedToolkits:
+        input?.toolkitsData?.detailedToolkits ?? defaultAppClientData.detailedToolkits,
+    };
 
     const tempDir = tempy.temporaryDirectory({ prefix: 'test' });
     const cwd = (yield* setupFixtureFolder({ fixture, tempDir })) ?? tempDir;
@@ -212,6 +218,44 @@ export const TestLayer = (input?: TestLiveInput) =>
             validatedOverrides: overrides,
             warnings: warnings as ReadonlyArray<string>,
           });
+        },
+        searchToolkits: (params: {
+          search?: string;
+          category?: string;
+          limit?: number;
+          cursor?: string;
+        }) => {
+          let results = [...toolkitsData.toolkits];
+
+          if (params.search) {
+            const q = params.search.toLowerCase();
+            results = results.filter(
+              t =>
+                t.name.toLowerCase().includes(q) ||
+                t.slug.toLowerCase().includes(q) ||
+                t.meta.description.toLowerCase().includes(q)
+            );
+          }
+
+          const limit = params.limit ?? 30;
+          const items = results.slice(0, limit);
+          return Effect.succeed({
+            items,
+            total_items: results.length,
+            total_pages: Math.ceil(results.length / limit),
+            next_cursor: null,
+          });
+        },
+        getToolkitDetailed: (slug: string) => {
+          const found = toolkitsData.detailedToolkits.find(
+            t => t.slug.toLowerCase() === slug.toLowerCase()
+          );
+          if (!found) {
+            return Effect.fail(
+              new HttpServerError({ cause: `Toolkit "${slug}" not found`, status: 404 })
+            );
+          }
+          return Effect.succeed(found);
         },
       })
     );
