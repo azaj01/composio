@@ -80,7 +80,7 @@ describe('CLI: composio toolkits search', () => {
           expect(output).toContain('Gmail');
           expect(output).toContain('Outlook');
           expect(output).not.toContain('Slack');
-          expect(output).toContain('Found 2 toolkits');
+          expect(output).toContain('Found 2 of 2 toolkits');
         })
       );
     }
@@ -110,7 +110,7 @@ describe('CLI: composio toolkits search', () => {
           const lines = yield* MockConsole.getLines({ stripAnsi: true });
           const output = lines.join('\n');
 
-          expect(output).toContain('Found 1 toolkits');
+          expect(output).toContain('Found 1 of 2 toolkits');
         })
       );
     }

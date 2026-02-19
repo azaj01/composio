@@ -241,10 +241,8 @@ export const ComposioToolkitsRepositoryCached = Layer.effect(
       // These methods should NOT be cached:
       // - searchToolkits: results depend on query params, caching would be misleading
       // - getToolkitDetailed: detailed info should be fresh (auth config fields change)
-      // - getCategories: categories change infrequently but are cheap to fetch
       searchToolkits: params => underlyingRepository.searchToolkits(params),
       getToolkitDetailed: slug => underlyingRepository.getToolkitDetailed(slug),
-      getCategories: () => underlyingRepository.getCategories(),
       // Tool search/detail should NOT be cached (query-dependent, should be fresh)
       searchTools: params => underlyingRepository.searchTools(params),
       getToolDetailed: slug => underlyingRepository.getToolDetailed(slug),

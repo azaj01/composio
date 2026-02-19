@@ -47,8 +47,11 @@ export const toolkitsCmd$Search = Command.make('search', { query, limit }, ({ qu
       return;
     }
 
+    const showing = result.items.length;
+    const total = result.total_items;
+
     yield* ui.log.info(
-      `Found ${result.items.length} toolkits\n\n${formatToolkitsTable(result.items)}`
+      `Found ${showing} of ${total} toolkits\n\n${formatToolkitsTable(result.items)}`
     );
 
     // Next step hint

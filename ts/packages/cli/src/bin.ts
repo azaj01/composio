@@ -1,11 +1,11 @@
 import process from 'node:process';
-import { Cause, Console, Effect, Exit, Layer, Logger } from 'effect';
+import { Cause, Console, Effect, Exit, HashMap, Layer, Logger, Option } from 'effect';
 import { captureErrors, prettyPrintFromCapturedErrors } from 'effect-errors/index';
-import { CliConfig, HelpDoc, ValidationError } from '@effect/cli';
+import { CliConfig, CommandDescriptor, HelpDoc, Usage, ValidationError } from '@effect/cli';
 import { FetchHttpClient } from '@effect/platform';
 import { BunContext, BunRuntime, BunFileSystem } from '@effect/platform-bun';
 import type { Teardown } from '@effect/platform/Runtime';
-import { runWithConfig } from 'src/commands';
+import { rootCommand, runWithConfig } from 'src/commands';
 import * as constants from 'src/constants';
 import { ComposioCliConfig } from 'src/cli-config';
 import { BaseConfigProviderLive, ConfigLive, extendConfigProvider } from 'src/services/config';
@@ -93,6 +93,53 @@ const runWithArgs = Effect.flatMap(runWithConfig, run => run(process.argv)) sati
   unknown
 >;
 
+const collectValueOptionNamesFromUsage = (usage: Usage.Usage, acc: Set<string>) => {
+  switch (usage._tag) {
+    case 'Named': {
+      if (Option.isSome(usage.acceptedValues)) {
+        for (const name of usage.names) {
+          if (name.startsWith('-')) {
+            acc.add(name);
+          }
+        }
+      }
+      return;
+    }
+    case 'Optional':
+    case 'Repeated': {
+      collectValueOptionNamesFromUsage(usage.usage, acc);
+      return;
+    }
+    case 'Alternation':
+    case 'Concat': {
+      collectValueOptionNamesFromUsage(usage.left, acc);
+      collectValueOptionNamesFromUsage(usage.right, acc);
+      return;
+    }
+    case 'Mixed':
+    case 'Empty': {
+      return;
+    }
+  }
+};
+
+const valueOptionNames = (() => {
+  const names = new Set<string>();
+  const visited = new Set<CommandDescriptor.Command<unknown>>();
+  const visit = (command: CommandDescriptor.Command<unknown>) => {
+    if (visited.has(command)) {
+      return;
+    }
+    visited.add(command);
+    collectValueOptionNamesFromUsage(CommandDescriptor.getUsage(command), names);
+    for (const [, subcommand] of HashMap.toEntries(CommandDescriptor.getSubcommands(command))) {
+      visit(subcommand);
+    }
+  };
+  visit(rootCommand.descriptor);
+  return names;
+})();
+
 /**
  * CLI entrypoint, which:
  * - runs the Effect runtime and sets up its runtime environment
@@ -108,7 +155,7 @@ runWithArgs.pipe(
   Effect.catchIf(ValidationError.isValidationError, error => {
     const text = HelpDoc.toAnsiText(error.error).trim();
     const flagMatch = text.match(/Received unknown argument: '(-{1,2}[\w-]+)'/);
-    if (flagMatch) {
+    if (flagMatch && valueOptionNames.has(flagMatch[1])) {
       return Console.error(`Tip: ${flagMatch[1]} requires a value, e.g. ${flagMatch[1]} "value"`);
     }
     return Effect.void;

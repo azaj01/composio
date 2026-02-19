@@ -87,15 +87,6 @@ export const ToolkitDetailed = Schema.Struct({
 export type ToolkitDetailed = Schema.Schema.Type<typeof ToolkitDetailed>;
 
 /**
- * Toolkit category.
- */
-export const ToolkitCategory = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-}).annotations({ identifier: 'ToolkitCategory' });
-export type ToolkitCategory = Schema.Schema.Type<typeof ToolkitCategory>;
-
-/**
  * Search result for a single page of toolkits.
  */
 export const ToolkitSearchResult = Schema.Struct({
