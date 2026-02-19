@@ -1,6 +1,6 @@
 # E2E Test Utilities
 
-Shared infrastructure for running `@composio/core` end-to-end tests in isolated Docker environments.
+Shared infrastructure for running `@composio/core` and CLI end-to-end tests in isolated Docker environments.
 
 ## What's Here
 
@@ -10,6 +10,7 @@ Shared infrastructure for running `@composio/core` end-to-end tests in isolated 
 | `scripts/`        | Docker build and cleanup scripts                       |
 | `Dockerfile.node` | Multi-stage Dockerfile for Node.js test environments   |
 | `Dockerfile.deno` | Dockerfile for Deno test environments                  |
+| `Dockerfile.cli`  | Scratch Dockerfile for CLI test environments           |
 
 ## API
 
@@ -19,12 +20,14 @@ The main entry point for e2e tests. Automatically infers the working directory a
 
 ```typescript
 import { e2e, type E2ETestResult } from '@e2e-tests/utils';
+import { TIMEOUTS } from '@e2e-tests/utils/const';
 import { describe, it, expect, beforeAll } from 'bun:test';
 
 e2e(import.meta.url, {
   versions: {
     node: ['20.18.0', '20.19.0', '22.12.0'], // optional, defaults to .nvmrc
     deno: ['2.6.7'],                          // optional, defaults to .dvmrc
+    cli: ['current'],                         // optional, defaults to CLI package.json version
   },
   env: { MY_VAR: 'value' },                   // optional env vars
   defineTests: ({ runtime, runCmd, runFixture }) => {
@@ -32,7 +35,7 @@ e2e(import.meta.url, {
 
     beforeAll(async () => {
       result = await runFixture({ filename: 'fixtures/test.mjs' });
-    });
+    }, TIMEOUTS.FIXTURE);
 
     describe('output', () => {
       it('exits successfully', () => {
@@ -60,6 +63,7 @@ Configuration object passed to `e2e()`:
 | -------- | -------------------------------- | ------------------------------------------------ |
 | `node`   | `readonly NodeVersionFromUser[]` | Node.js versions. Defaults to `.nvmrc`           |
 | `deno`   | `readonly DenoVersionFromUser[]` | Deno versions. Defaults to `.dvmrc`              |
+| `cli`    | `readonly CliVersionFromUser[]`  | CLI versions. Defaults to CLI package.json       |
 
 ### `DefineTestsContext`
 
@@ -67,7 +71,7 @@ The context passed to the `defineTests` callback:
 
 | Property     | Type/Signature                                                   | Description                                    |
 | ------------ | ---------------------------------------------------------------- | ---------------------------------------------- |
-| `runtime`    | `'node' \| 'deno'`                                               | Current runtime being tested                   |
+| `runtime`    | `'node' \| 'deno' \| 'cli'`                                      | Current runtime being tested                   |
 | `runCmd`     | `(command: string) => Promise<E2ETestResult>`                    | Run arbitrary command in Docker container      |
 | `runFixture` | `(options: RunFixtureOptions) => Promise<E2ETestResult \| E2ETestResultWithSetup>` | Run fixture with optional setup phase |
 
@@ -110,6 +114,21 @@ interface E2ETestResult {
 }
 ```
 
+### `runCmd` with File Capture
+
+When you need to assert on files created inside the container, pass a `files` array:
+
+```typescript
+const result = await runCmd({
+  command: 'composio version > out.txt',
+  files: ['out.txt'],
+});
+
+expect(result.files['out.txt']).toBe('0.1.24');
+```
+
+The files are copied out of the container after execution and returned as a map in the result.
+
 ### `E2ETestResultWithSetup`
 
 Extended result when `runFixture` is called with a `setup` option:
@@ -148,11 +167,12 @@ it('calls LLM', async () => {
 }, { timeout: TIMEOUTS.LLM_SHORT });
 ```
 
-| Constant    | Value     | Use Case                           |
-| ----------- | --------- | ---------------------------------- |
-| `DEFAULT`   | `5_000`   | Standard test operations           |
-| `LLM_SHORT` | `15_000`  | Quick LLM calls                    |
-| `LLM_LONG`  | `60_000`  | Complex LLM operations             |
+| Constant    | Value     | Use Case                                   |
+| ----------- | --------- | ------------------------------------------ |
+| `DEFAULT`   | `5_000`   | Standard test operations                   |
+| `FIXTURE`   | `120_000` | `beforeAll` hooks that call `runFixture()` |
+| `LLM_SHORT` | `30_000`  | Quick LLM calls                            |
+| `LLM_LONG`  | `60_000`  | Complex LLM operations                     |
 
 ## Version Resolution
 
@@ -188,6 +208,18 @@ The following versions are pre-defined in `const.ts`:
 - `2.6.7`
 - `current` (resolves to `.dvmrc` version)
 
+### CLI Version Resolution
+
+CLI versions to test are resolved in this order:
+
+1. **`COMPOSIO_E2E_CLI_VERSION` env var** (highest priority): Use `[env_value]`
+2. **`config.versions.cli`**: Use the provided array
+3. **Default**: Use version from `ts/packages/cli/package.json`
+
+### Well-Known CLI Versions
+
+- `current` (resolves to CLI package.json version)
+
 ## Environment Variable Validation
 
 Environment variables passed to `E2EConfig.env` are validated at test startup. If any variable has an `undefined` value, the test fails fast with a clear error message:
@@ -210,6 +242,8 @@ When `usesFixtures: true` is set:
 Use this for tests that have their own `package.json` and need to run `npm install`:
 
 ```typescript
+import { TIMEOUTS } from '@e2e-tests/utils/const';
+
 e2e(import.meta.url, {
   usesFixtures: true,
   defineTests: ({ runFixture }) => {
@@ -219,7 +253,7 @@ e2e(import.meta.url, {
         filename: 'index.mjs',           // Resolves to fixtures/index.mjs
         setup: 'npm install',             // Runs in fixtures/
       });
-    });
+    }, TIMEOUTS.FIXTURE);
   },
 });
 ```
@@ -227,10 +261,10 @@ e2e(import.meta.url, {
 ## Scripts
 
 ```bash
-# Pre-build Docker images for all well-known Node and Deno versions
+# Pre-build Docker images for all well-known Node, Deno, and CLI versions
 pnpm docker:build
 
-# Remove all e2e Docker images (both Node.js and Deno)
+# Remove all e2e Docker images (Node.js, Deno, and CLI)
 pnpm docker:clean
 ```
 

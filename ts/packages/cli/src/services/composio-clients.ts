@@ -13,7 +13,7 @@ import {
   SynchronizedRef,
 } from 'effect';
 import { Composio as _RawComposioClient, APIPromise } from '@composio/client';
-import { Toolkit, Toolkits } from 'src/models/toolkits';
+import { Toolkit, Toolkits, ToolkitDetailed, type ToolkitSearchResult } from 'src/models/toolkits';
 import { ToolsAsEnums, Tools, Tool } from 'src/models/tools';
 import {
   groupByVersion,
@@ -31,11 +31,21 @@ import { renderPrettyError } from './utils/pretty-error';
  */
 
 /**
+ * Structured error details from the Composio API.
+ */
+export interface HttpErrorDetails {
+  readonly message: string;
+  readonly suggestedFix: string;
+  readonly code: number;
+}
+
+/**
  * Error thrown when a HTTP request fails.
  */
 export class HttpServerError extends Data.TaggedError('services/HttpServerError')<{
   readonly cause?: unknown;
   readonly status?: number;
+  readonly details?: HttpErrorDetails;
 }> {}
 
 /**
@@ -230,6 +240,8 @@ export const ToolkitRetrieveResponse = Schema.Struct({
     created_at: Schema.DateTimeUtc,
     updated_at: Schema.DateTimeUtc,
     available_versions: Schema.optionalWith(Schema.Array(Schema.String), { default: () => [] }),
+    tools_count: Schema.optionalWith(Schema.Int, { default: () => 0 }),
+    triggers_count: Schema.optionalWith(Schema.Int, { default: () => 0 }),
   }),
 }).annotations({ identifier: 'ToolkitRetrieveResponse' });
 export type ToolkitRetrieveResponse = Schema.Schema.Type<typeof ToolkitRetrieveResponse>;
@@ -252,6 +264,20 @@ export const TriggerTypesResponse = Schema.Struct({
   total_pages: Schema.Int,
   next_cursor: Schema.NullOr(Schema.String),
 }).annotations({ identifier: 'TriggerTypesResponse' });
+
+// Single-page search response (includes total_items for "Listing X of Y" display)
+export const ToolkitSearchResponse = Schema.Struct({
+  items: Toolkits,
+  total_items: Schema.Int,
+  total_pages: Schema.Int,
+  current_page: Schema.Int,
+  next_cursor: Schema.NullOr(Schema.String),
+}).annotations({ identifier: 'ToolkitSearchResponse' });
+
+// Detailed retrieve response (includes auth_config_details)
+export const ToolkitDetailedResponse = ToolkitDetailed.annotations({
+  identifier: 'ToolkitDetailedResponse',
+});
 
 /**
  * Error response schemas
@@ -320,6 +346,11 @@ const handleHttpErrorResponse = (response: Response): Effect.Effect<never, HttpS
           new HttpServerError({
             cause: `HTTP ${status}\n${pretty}`,
             status,
+            details: {
+              message: error.message,
+              suggestedFix: error.suggested_fix,
+              code: error.code,
+            },
           })
         );
       }
@@ -644,6 +675,51 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
                   }) satisfies Toolkit
               )
             ),
+          /**
+           * Searches toolkits with optional filters. Returns a single page of results (no auto-pagination).
+           * @param params - Search/filter parameters
+           */
+          search: (params: {
+            search?: string;
+            category?: string;
+            limit?: number;
+            cursor?: string;
+          }) =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client =>
+                  client.toolkits.list({
+                    search: params.search,
+                    category: params.category,
+                    limit: params.limit,
+                    cursor: params.cursor,
+                  }),
+                ToolkitSearchResponse
+              )
+            ).pipe(
+              Effect.map(
+                response =>
+                  ({
+                    items: response.items,
+                    total_items: response.total_items,
+                    total_pages: response.total_pages,
+                    next_cursor: response.next_cursor,
+                  }) satisfies ToolkitSearchResult
+              )
+            ),
+          /**
+           * Retrieves detailed toolkit info including auth_config_details.
+           * @param slug - Toolkit slug
+           */
+          retrieveDetailed: (slug: string) =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client => client.toolkits.retrieve(slug),
+                ToolkitDetailedResponse
+              )
+            ),
         },
         tools: {
           /**
@@ -951,6 +1027,21 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
           },
           InvalidToolkitVersionsError | InvalidToolkitsError | HttpError | NoSuchElementException
         > => validateToolkitVersionsImpl(client, overrides, relevantToolkits),
+        /**
+         * Searches toolkits with optional filters. Returns a single page of results.
+         * @param params - Search/filter parameters
+         */
+        searchToolkits: (params: {
+          search?: string;
+          category?: string;
+          limit?: number;
+          cursor?: string;
+        }) => client.toolkits.search(params),
+        /**
+         * Retrieves detailed toolkit info including auth_config_details.
+         * @param slug - Toolkit slug
+         */
+        getToolkitDetailed: (slug: string) => client.toolkits.retrieveDetailed(slug),
       };
     }),
     dependencies: [ComposioClientLive.Default],

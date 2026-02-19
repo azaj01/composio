@@ -51,6 +51,7 @@ jobs:
         id: changes
         run: |
           cd ..
+          git add -N docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ 2>/dev/null || true
           if git diff --quiet docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ 2>/dev/null; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No changes detected"
