@@ -65,11 +65,10 @@ user_id = "user_123"
 session = composio.create(user_id=user_id)
 tools = session.tools()
 
-# Configure agent with Composio tools
 agent = Agent(
     name="Personal Assistant",
     instructions="You are a helpful personal assistant. Use Composio tools to take action.",
-    model="gpt-5",
+    model="gpt-5.2",
     tools=tools,
 )
 
@@ -91,11 +90,8 @@ while True:
         break
 
     print("Assistant: ", end="", flush=True)
-    try:
-        result = Runner.run_sync(starting_agent=agent, input=user_input, session=memory)
-        print(f"{result.final_output}\n")
-    except Exception as e:
-        print(f"\n[Error]: {e}")
+    result = Runner.run_sync(starting_agent=agent, input=user_input, session=memory)
+    print(f"{result.final_output}\n")
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -209,11 +205,10 @@ composio = Composio()
 user_id = "user_123"
 session = composio.create(user_id=user_id)
 
-# Configure agent with Composio MCP server
 agent = Agent(
     name="Personal Assistant",
     instructions="You are a helpful personal assistant. Use Composio tools to take action.",
-    model="gpt-5",
+    model="gpt-5.2",
     tools=[
         HostedMCPTool(
             tool_config={
@@ -227,7 +222,6 @@ agent = Agent(
     ],
 )
 
-# Memory for multi-turn conversation
 memory = SQLiteSession(user_id)
 
 print("""
@@ -245,11 +239,8 @@ while True:
         break
 
     print("Assistant: ", end="", flush=True)
-    try:
-        result = Runner.run_sync(starting_agent=agent, input=user_input, session=memory)
-        print(f"{result.final_output}\n")
-    except Exception as e:
-        print(f"\n[Error]: {e}")
+    result = Runner.run_sync(starting_agent=agent, input=user_input, session=memory)
+    print(f"{result.final_output}\n")
 ```
 </Tab>
 <Tab value="TypeScript">
