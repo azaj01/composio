@@ -62,12 +62,22 @@ Composio handles this automatically:
 2. The auth config is reused for all users authenticating with that toolkit
 3. Connected accounts are created and linked to your users
 
-Most toolkits work out of the box with **Composio managed OAuth**. For API key-based toolkits, users enter their keys directly via Connect Link. Composio automatically refreshes OAuth tokens before they expire — you don't need to handle re-authentication.
+<Accordions>
+<Accordion title="What are connected accounts?">
+A connected account is created when a user authenticates with a toolkit. It stores the user's credentials (OAuth tokens or API keys) and links them to your user ID. Each user can have multiple connected accounts, even for the same toolkit (e.g., work and personal Gmail).
+</Accordion>
+<Accordion title="What happens when tokens expire?">
+Composio automatically refreshes OAuth tokens before they expire. You don't need to handle re-authentication or token expiration. Connected accounts stay valid as long as the user doesn't revoke access.
+</Accordion>
+</Accordions>
+
+Most toolkits work out of the box with **Composio managed OAuth**. For API key-based toolkits, users enter their keys directly via Connect Link.
 
 You only need to create a custom auth config when:
 - You want to use your **own OAuth app credentials** for white-labeling
 - You need **specific OAuth scopes** beyond the defaults
 - The toolkit doesn't have Composio managed auth
+- You have **existing auth configs** with connected accounts you want to use
 
 To bring your own OAuth apps or customize scopes, see [custom auth configs](/docs/using-custom-auth-configuration).
 
