@@ -119,9 +119,9 @@ recordings:
       description: List with --limit flag
       command: "composio tools list --toolkits gmail --limit 3"
 
-    - name: list-search-send-email
-      description: List with --search filter
-      command: "composio tools list --search 'send email'"
+    - name: list-query-send-email
+      description: List with --query filter
+      command: "composio tools list --query 'send email'"
       height: dynamic
 
     - name: list-search-no-results

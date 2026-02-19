@@ -22,10 +22,6 @@
 
 
 
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
 > # Search for a specific toolkit
 >
@@ -51,6 +47,27 @@
 
 
 
+────────────────────────────────────────────────────────────────────────────────
+> # Search for a specific toolkit
+> composio toolkits search gmail
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -80,46 +97,9 @@
 
 
 
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
 > # Search for a specific toolkit
 > composio toolkits search gmail
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> # Search for a specific toolkit
-> composio toolkits search gmail
-
-
-
-
 
 
 
@@ -166,9 +146,5 @@ a Gmail CRM that brings sales automa...
 ◇  To view details:
 │  > composio toolkits info "gmail"
 >
-
-
-
-
 
 ────────────────────────────────────────────────────────────────────────────────

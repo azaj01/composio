@@ -22,8 +22,6 @@
 
 
 
-
-
 ────────────────────────────────────────────────────────────────────────────────
 > # Info with partial match
 >
@@ -49,6 +47,29 @@
 
 
 
+────────────────────────────────────────────────────────────────────────────────
+> # Info with partial match
+> composio toolkits info gmai
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -76,40 +97,9 @@
 
 
 
-
-
 ────────────────────────────────────────────────────────────────────────────────
 > # Info with partial match
 > composio toolkits info gmai
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> # Info with partial match
-> composio toolkits info gmai
-
-
 
 
 
@@ -154,8 +144,6 @@ ed platform for seamless integration and management of your digital life.
 │
 │  > composio toolkits info "gmail"
 >
-
-
 
 
 

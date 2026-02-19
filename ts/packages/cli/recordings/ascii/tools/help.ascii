@@ -22,8 +22,15 @@
 
 
 
+
+
+
+
+
+
+
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
+> # Show tools subcommand help
 >
 
 
@@ -47,24 +54,6 @@
 
 
 
-────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -73,8 +62,15 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
+> # Show tools subcommand help
+> composio tools --help
+
+
+
+
+
+
+
 
 
 
@@ -98,8 +94,15 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
+> # Show tools subcommand help
+> composio tools --help
+
+
+
+
+
+
+
 
 
 
@@ -123,8 +126,8 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
+> # Show tools subcommand help
+> composio tools --help
 
 
 
@@ -142,6 +145,45 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> # Show tools subcommand help
+> composio tools --help
+composio
+
+composio 0.1.24
+
+USAGE
+
+$ tools
+
+DESCRIPTION
+
+Discover and inspect Composio tools.
+
+COMMANDS
+
+  - list [--search text] [--toolkits text] [--tags text] [--limit integer]
+ List available tools.
+
+  - info [<slug>]
+ View details of a specific tool.
+
+  - search [--toolkits text] [--limit integer] <query>
+ Search tools by use case.
+
+>
 
 
 

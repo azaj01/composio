@@ -23,7 +23,7 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
+> # Show info without arguments
 >
 
 
@@ -48,8 +48,8 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
+> # Show info without arguments
+> composio tools info
 
 
 
@@ -73,8 +73,8 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
+> # Show info without arguments
+> composio tools info
 
 
 
@@ -98,8 +98,8 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
+> # Show info without arguments
+> composio tools info
 
 
 
@@ -123,14 +123,14 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> # Combine --query and --limit
-> composio toolkits list --query 'gmail' --limit 1
-
-
-
-
-
-
+> # Show info without arguments
+> composio tools info
+│
+▲  Missing required argument: <slug>
+│
+◇  Try specifying a tool slug, e.g.:
+│  > composio tools info "GMAIL_SEND_EMAIL"
+>
 
 
 
