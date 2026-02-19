@@ -65,7 +65,7 @@ const dynamicToolkitIndexes = getAllToolkitsSync()
 
 // Changelog entries
 const changelogIndexes = changelog.map((entry) => ({
-  id: `/docs/changelog/${entry.date.replace(/-/g, '/')}`,
+  id: `/docs/changelog/${entry.date.replace(/-/g, '/')}#${entry.title}`,
   title: entry.title,
   description: entry.description ?? '',
   url: `/docs/changelog/${entry.date.replace(/-/g, '/')}`,
