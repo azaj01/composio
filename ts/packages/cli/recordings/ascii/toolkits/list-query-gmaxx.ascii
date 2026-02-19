@@ -127,10 +127,10 @@
 > composio toolkits list --query 'gmaxx'
 │
 ◒  Fetching toolkits...
-
-
-
-
+◇  Fetching toolkits...
+│
+▲  No toolkits found. Try broadening your search.
+>
 
 
 
