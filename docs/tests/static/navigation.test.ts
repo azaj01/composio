@@ -49,6 +49,7 @@ describe("Navigation - meta.json validity", () => {
 
     for (const entry of meta.pages as string[]) {
       if (isSeparator(entry)) continue;
+      if (entry === "...") continue;
 
       const asFile = join(CONTENT_DIR, `${entry}.mdx`);
       const asDir = join(CONTENT_DIR, entry);
@@ -102,8 +103,10 @@ describe("Navigation - meta.json validity", () => {
     const rootMetaPath = join(CONTENT_DIR, "meta.json");
     const rootMeta = JSON.parse(await readFile(rootMetaPath, "utf-8"));
     const rootEntries = new Set(
-      (rootMeta.pages as string[]).filter((e: string) => !isSeparator(e))
+      (rootMeta.pages as string[]).filter((e: string) => !isSeparator(e) && e !== "...")
     );
+    // "..." means "include everything else", so skip orphan check for root
+    if (rootEntries.has("...")) return;
     const rootFiles = await readdir(CONTENT_DIR, { withFileTypes: true });
 
     for (const file of rootFiles) {
