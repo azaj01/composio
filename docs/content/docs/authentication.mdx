@@ -46,7 +46,7 @@ An **auth config** is a blueprint that defines how authentication works for a to
 - **Scopes** — what actions your tools can perform
 - **Credentials** — your own app credentials or Composio's managed auth
 
-You create one auth config per toolkit, and it applies to every user who connects that toolkit. When a user authenticates, Composio creates a **connected account** that stores their credentials (OAuth tokens or API keys) and links them to your user ID.
+Composio creates one auth config per toolkit, and it applies to every user who connects that toolkit. When a user authenticates, Composio creates a **connected account** that stores their credentials (OAuth tokens or API keys) and links them to your user ID. If you want to create your own auth configs, see [custom auth configs](/docs/using-custom-auth-configuration).
 
 ```mermaid
 graph LR
