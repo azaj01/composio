@@ -3,6 +3,7 @@
   "pages": [
     "new-sdk",
     "toolkit-versioning",
-    "tool-router-beta"
+    "tool-router-beta",
+    "direct-to-sessions"
   ]
 }
