@@ -5,11 +5,7 @@ import { Search, MessageSquare } from 'lucide-react';
 import { useSearchContext } from '@fumadocs/ui/contexts/search';
 import { useI18n } from '@fumadocs/ui/contexts/i18n';
 
-type DecimalAPI = {
-  show: () => void;
-  hide: () => void;
-  theme: (config: Record<string, string>) => void;
-};
+import type { DecimalAPI } from './decimal-widget';
 
 function getDecimal() {
   return (window as typeof window & { Decimal?: DecimalAPI }).Decimal;
