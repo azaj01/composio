@@ -5,23 +5,18 @@ import { Search, MessageSquare } from 'lucide-react';
 import { useSearchContext } from '@fumadocs/ui/contexts/search';
 import { useI18n } from '@fumadocs/ui/contexts/i18n';
 
-function openDecimalWidget() {
-  // Try the global API first
-  const win = window as typeof window & { Decimal?: Record<string, unknown> };
-  if (win.Decimal) {
-    for (const key of ['open', 'toggle', 'show'] as const) {
-      if (typeof win.Decimal[key] === 'function') {
-        (win.Decimal[key] as () => void)();
-        return;
-      }
-    }
-  }
-  // Fallback: find and click the widget's launcher button in the DOM
-  const launcher =
-    document.querySelector<HTMLElement>('[data-decimal-widget]') ??
-    document.querySelector<HTMLElement>('[class*="decimal" i]') ??
-    document.querySelector<HTMLElement>('#decimal-widget button');
-  launcher?.click();
+type DecimalAPI = {
+  show: () => void;
+  hide: () => void;
+  theme: (config: Record<string, string>) => void;
+};
+
+function getDecimal() {
+  return (window as typeof window & { Decimal?: DecimalAPI }).Decimal;
+}
+
+function showDecimalWidget() {
+  getDecimal()?.show();
 }
 
 function useIsMac() {
@@ -41,7 +36,7 @@ function useAskAIShortcut() {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
         e.preventDefault();
-        openDecimalWidget();
+        showDecimalWidget();
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -81,7 +76,7 @@ export function SearchAndAskAI() {
       )}
       <button
         type="button"
-        onClick={openDecimalWidget}
+        onClick={showDecimalWidget}
         className="inline-flex items-center gap-2 rounded-lg border bg-fd-secondary/50 p-1.5 ps-2.5 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground shrink-0"
       >
         Ask AI
@@ -114,7 +109,7 @@ export function SearchAndAskAIMobile() {
       <button
         type="button"
         aria-label="Ask AI"
-        onClick={openDecimalWidget}
+        onClick={showDecimalWidget}
         className="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium transition-colors duration-100 hover:bg-fd-accent hover:text-fd-accent-foreground"
       >
         <MessageSquare className="size-4.5" />
