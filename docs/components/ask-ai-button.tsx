@@ -11,17 +11,8 @@ function getDecimal() {
   return (window as typeof window & { Decimal?: DecimalAPI }).Decimal;
 }
 
-let isDecimalOpen = false;
-
-function toggleDecimalWidget() {
-  const decimal = getDecimal();
-  if (!decimal) return;
-  if (isDecimalOpen) {
-    decimal.hide();
-  } else {
-    decimal.show();
-  }
-  isDecimalOpen = !isDecimalOpen;
+function showDecimalWidget() {
+  getDecimal()?.show();
 }
 
 function useIsMac() {
@@ -41,7 +32,7 @@ function useAskAIShortcut() {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
         e.preventDefault();
-        toggleDecimalWidget();
+        showDecimalWidget();
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -81,7 +72,7 @@ export function SearchAndAskAI() {
       )}
       <button
         type="button"
-        onClick={toggleDecimalWidget}
+        onClick={showDecimalWidget}
         className="inline-flex items-center gap-2 rounded-lg border bg-fd-secondary/50 p-1.5 ps-2.5 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground shrink-0"
       >
         Ask AI
@@ -114,7 +105,7 @@ export function SearchAndAskAIMobile() {
       <button
         type="button"
         aria-label="Ask AI"
-        onClick={toggleDecimalWidget}
+        onClick={showDecimalWidget}
         className="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium transition-colors duration-100 hover:bg-fd-accent hover:text-fd-accent-foreground"
       >
         <MessageSquare className="size-4.5" />
