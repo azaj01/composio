@@ -50,9 +50,8 @@ session = composio.create(
 <Tab value="TypeScript">
 ```typescript
 import { Composio } from '@composio/core';
-
-const composio = new Composio();
-
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
 // Before: manual tool fetching with userId
 // const tools = await composio.tools.get("user_123", { toolkits: ["GITHUB", "SLACK"] });
 
@@ -185,7 +184,7 @@ import { Composio } from '@composio/core';
 // });
 
 // After: no version management needed
-const composio = new Composio();
+const composio = new Composio({ apiKey: 'your_api_key' });
 const session = await composio.create("user_123");
 ```
 </Tab>
