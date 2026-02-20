@@ -1941,6 +1941,11 @@
                           "custom"
                         ]
                       },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The display name of the authentication configuration"
+                      },
                       "credentials": {
                         "type": "object",
                         "properties": {
@@ -2039,6 +2044,11 @@
                         "enum": [
                           "default"
                         ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The display name of the authentication configuration"
                       },
                       "scopes": {
                         "anyOf": [
@@ -4555,6 +4565,835 @@
           },
           "501": {
             "description": "Not implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/internal/trigger/logs": {
+      "post": {
+        "summary": "Search and retrieve trigger event logs",
+        "description": "Search and retrieve trigger event logs with advanced filtering capabilities including search parameters",
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "postInternalTriggerLogs",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "time": {
+                    "type": "string",
+                    "enum": [
+                      "5m",
+                      "30m",
+                      "6h",
+                      "1d",
+                      "1w",
+                      "1month",
+                      "1y"
+                    ],
+                    "description": "Return logs from the last N time units",
+                    "example": "5m"
+                  },
+                  "from": {
+                    "type": "number",
+                    "nullable": true,
+                    "description": "Start time for logs (epoch timestamp in milliseconds)"
+                  },
+                  "to": {
+                    "type": "number",
+                    "nullable": true,
+                    "description": "End time for logs (epoch timestamp in milliseconds)"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "success",
+                      "error"
+                    ],
+                    "description": "Filter logs by their status level",
+                    "example": "success"
+                  },
+                  "search": {
+                    "type": "string",
+                    "description": "Search term to filter logs"
+                  },
+                  "integrationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "entityId": {
+                    "type": "string"
+                  },
+                  "userId": {
+                    "type": "string",
+                    "description": "Filter logs by user ID"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "nullable": true,
+                    "default": 20,
+                    "description": "The limit of trigger logs to return"
+                  },
+                  "cursor": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "search_params": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "operation": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "description": "Advanced search parameters for filtering logs"
+                  },
+                  "include_payload": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to include payload fields in the response. Set to false for faster list views."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved trigger logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nextCursor": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "connectionId": {
+                            "type": "string"
+                          },
+                          "clientId": {
+                            "type": "string"
+                          },
+                          "entityId": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "appName": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "trigger",
+                              "action"
+                            ],
+                            "description": "Log entity type (trigger or action)",
+                            "example": "trigger"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "trigger",
+                                  "action"
+                                ],
+                                "description": "Log entity type (trigger or action)",
+                                "example": "trigger"
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "type": "string"
+                              },
+                              "provider": {
+                                "type": "string"
+                              },
+                              "clientId": {
+                                "type": "string"
+                              },
+                              "connectionId": {
+                                "type": "string"
+                              },
+                              "triggerProviderPayload": {
+                                "type": "string"
+                              },
+                              "triggerClientPayload": {
+                                "type": "string"
+                              },
+                              "triggerClientError": {
+                                "type": "string"
+                              },
+                              "triggerName": {
+                                "type": "string"
+                              },
+                              "triggerClientResponse": {
+                                "type": "string"
+                              },
+                              "triggerId": {
+                                "type": "string"
+                              },
+                              "triggerNanoId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "type",
+                              "createdAt",
+                              "updatedAt",
+                              "provider",
+                              "clientId",
+                              "connectionId"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "connectionId",
+                          "clientId",
+                          "entityId",
+                          "status",
+                          "appName",
+                          "createdAt",
+                          "type",
+                          "meta"
+                        ]
+                      },
+                      "default": []
+                    }
+                  },
+                  "required": [
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/internal/action_execution/logs": {
+      "post": {
+        "summary": "Search and retrieve action execution logs",
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "postInternalActionExecutionLogs",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cursor": {
+                    "type": "number",
+                    "nullable": true,
+                    "description": "cursor_that_can_be_used_to_paginate_through_the_logs"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "number_of_logs_to_return"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "whether_the_search_is_case_sensitive_or_not"
+                  },
+                  "from": {
+                    "type": "number",
+                    "description": "start_time_of_the_logs_in_epoch_time"
+                  },
+                  "to": {
+                    "type": "number",
+                    "description": "end_time_of_the_logs_in_epoch_time"
+                  },
+                  "search_params": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "operation": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "cursor"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved action execution fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "actionKey": {
+                            "type": "string"
+                          },
+                          "appKey": {
+                            "type": "string"
+                          },
+                          "app": {
+                            "type": "object",
+                            "properties": {
+                              "icon": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "icon",
+                              "name"
+                            ]
+                          },
+                          "connectedAccountId": {
+                            "type": "string"
+                          },
+                          "entityId": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "success",
+                              "failed"
+                            ]
+                          },
+                          "executionTime": {
+                            "type": "number"
+                          },
+                          "minimalResponse": {
+                            "type": "string",
+                            "deprecated": true
+                          },
+                          "metadata": {
+                            "type": "object",
+                            "properties": {
+                              "recipe_id": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "createdAt": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "actionKey",
+                          "appKey",
+                          "app",
+                          "connectedAccountId",
+                          "entityId",
+                          "status",
+                          "executionTime",
+                          "minimalResponse",
+                          "createdAt"
+                        ]
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "number",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/internal/action_execution/fields": {
+      "get": {
+        "summary": "Get action log fields for filtering",
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "getInternalActionExecutionFields",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved action execution fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "The id of the field"
+                            },
+                            "displayName": {
+                              "type": "string",
+                              "description": "The display name of the field"
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of the field"
+                            },
+                            "regex": {
+                              "type": "string",
+                              "description": "The regex of the field"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                            "type"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "fields"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/internal/action_execution/log/{id}": {
+      "get": {
+        "summary": "Get detailed execution log by ID",
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "getInternalActionExecutionLogById",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved action execution log",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "actionLogId": {
+                      "type": "string"
+                    },
+                    "actionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success",
+                        "error",
+                        "warning",
+                        "info"
+                      ]
+                    },
+                    "app": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "uniqueId": {
+                          "type": "string"
+                        },
+                        "icon": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "uniqueId",
+                        "icon"
+                      ]
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "connection": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "entity": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "entity"
+                      ]
+                    },
+                    "session": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "executionMetadata": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "steps": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "tool_execution",
+                              "fetch_connection_details"
+                            ]
+                          },
+                          "startTime": {
+                            "type": "number"
+                          },
+                          "endTime": {
+                            "type": "number"
+                          },
+                          "totalDuration": {
+                            "type": "number"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "success",
+                              "failure",
+                              "error"
+                            ]
+                          },
+                          "message": {
+                            "type": "string"
+                          },
+                          "metadata": {
+                            "type": "object",
+                            "properties": {
+                              "encryption": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "logs": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "network",
+                                    "system"
+                                  ]
+                                },
+                                "level": {
+                                  "type": "string"
+                                },
+                                "message": {
+                                  "type": "string"
+                                },
+                                "requestId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "time": {
+                                  "type": "number"
+                                },
+                                "request": {
+                                  "type": "object",
+                                  "properties": {
+                                    "method": {
+                                      "type": "string"
+                                    },
+                                    "url": {
+                                      "type": "string"
+                                    },
+                                    "headers": {
+                                      "type": "object",
+                                      "additionalProperties": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "params": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    },
+                                    "timeout": {
+                                      "type": "number"
+                                    },
+                                    "json": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  },
+                                  "required": [
+                                    "method",
+                                    "url"
+                                  ]
+                                },
+                                "response": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "number"
+                                    },
+                                    "time": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "time"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "level",
+                                "message",
+                                "requestId",
+                                "time",
+                                "request",
+                                "response"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "startTime",
+                          "endTime",
+                          "totalDuration",
+                          "status",
+                          "message"
+                        ]
+                      }
+                    },
+                    "payloadReceived": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "startTime": {
+                      "type": "number"
+                    },
+                    "endTime": {
+                      "type": "number"
+                    },
+                    "totalDuration": {
+                      "type": "string"
+                    },
+                    "response": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "actionLogId",
+                    "actionId",
+                    "status",
+                    "app",
+                    "version",
+                    "connection",
+                    "session",
+                    "executionMetadata",
+                    "steps",
+                    "payloadReceived",
+                    "startTime",
+                    "endTime",
+                    "totalDuration",
+                    "response",
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
