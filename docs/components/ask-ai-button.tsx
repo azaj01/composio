@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, MessageSquare } from 'lucide-react';
 import { useSearchContext } from '@fumadocs/ui/contexts/search';
 import { useI18n } from '@fumadocs/ui/contexts/i18n';
@@ -24,6 +24,14 @@ function openDecimalWidget() {
   launcher?.click();
 }
 
+function useIsMac() {
+  const [isMac, setIsMac] = useState(true);
+  useEffect(() => {
+    setIsMac(navigator.platform.toUpperCase().includes('MAC'));
+  }, []);
+  return isMac;
+}
+
 function useAskAIShortcut() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -42,6 +50,7 @@ export function SearchAndAskAI() {
   const { enabled, hotKey, setOpenSearch } = useSearchContext();
   const { text } = useI18n();
   useAskAIShortcut();
+  const isMac = useIsMac();
 
   return (
     <>
@@ -70,7 +79,7 @@ export function SearchAndAskAI() {
       >
         Ask AI
         <div className="hidden xl:inline-flex gap-0.5">
-          <kbd className="rounded-md border bg-fd-background px-1.5">⌘</kbd>
+          <kbd className="rounded-md border bg-fd-background px-1.5">{isMac ? '⌘' : 'Ctrl'}</kbd>
           <kbd className="rounded-md border bg-fd-background px-1.5">I</kbd>
         </div>
       </button>
