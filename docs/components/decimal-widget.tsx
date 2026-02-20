@@ -3,7 +3,11 @@
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
 
-type DecimalAPI = { theme: (config: Record<string, string>) => void };
+export type DecimalAPI = {
+  show: () => void;
+  hide: () => void;
+  theme: (config: Record<string, string>) => void;
+};
 
 const DARK_THEME = {
   colorScheme: 'dark',
