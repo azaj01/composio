@@ -5,6 +5,22 @@ import './global.css';
 import { Inter, IBM_Plex_Mono } from 'next/font/google';
 import { PostHogProvider } from '@/components/posthog-provider';
 import { DecimalWidget } from '@/components/decimal-widget';
+import CustomSearchDialog from '@/components/custom-search-dialog';
+import { source } from '@/lib/source';
+
+const defaultLinkSlugs = [
+  ['quickstart'],
+  ['authentication'],
+  ['configuring-sessions'],
+  ['common-faq'],
+  ['troubleshooting'],
+];
+
+const defaultLinks = defaultLinkSlugs.flatMap((slug) => {
+  const page = source.getPage(slug);
+  if (!page) return [];
+  return [{ title: page.data.title, description: page.data.description ?? '', href: page.url }];
+});
 
 export const metadata: Metadata = {
   title: {
@@ -96,9 +112,10 @@ export default function Layout({ children }: LayoutProps<'/'>) {
               enableSystem: true,
             }}
             search={{
+              SearchDialog: CustomSearchDialog,
               options: {
-                api: '/api/search',
-              },
+                defaultLinks,
+              } as Record<string, unknown>,
             }}
           >
             {children}
