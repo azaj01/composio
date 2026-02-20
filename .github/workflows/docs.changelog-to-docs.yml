@@ -10,6 +10,7 @@ jobs:
   suggest-docs-updates:
     name: Suggest Documentation Updates
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       pull-requests: write
