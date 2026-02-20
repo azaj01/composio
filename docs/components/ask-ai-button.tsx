@@ -12,7 +12,13 @@ function getDecimal() {
 }
 
 function showDecimalWidget() {
-  getDecimal()?.show();
+  const decimal = getDecimal();
+  if (decimal) {
+    decimal.show();
+    return;
+  }
+  // Widget script may not have loaded yet — retry once after a short delay
+  setTimeout(() => getDecimal()?.show(), 500);
 }
 
 function useIsMac() {
