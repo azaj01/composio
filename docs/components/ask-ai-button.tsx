@@ -6,6 +6,7 @@ import { useSearchContext } from '@fumadocs/ui/contexts/search';
 import { useI18n } from '@fumadocs/ui/contexts/i18n';
 
 function openDecimalWidget() {
+  // Try the global API first
   const win = window as typeof window & { Decimal?: Record<string, unknown> };
   if (win.Decimal) {
     for (const key of ['open', 'toggle', 'show'] as const) {
@@ -15,6 +16,7 @@ function openDecimalWidget() {
       }
     }
   }
+  // Fallback: find and click the widget's launcher button in the DOM
   const launcher =
     document.querySelector<HTMLElement>('[data-decimal-widget]') ??
     document.querySelector<HTMLElement>('[class*="decimal" i]') ??
