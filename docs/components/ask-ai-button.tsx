@@ -11,26 +11,13 @@ function getDecimal() {
   return (window as typeof window & { Decimal?: DecimalAPI }).Decimal;
 }
 
-function isDecimalVisible() {
-  // Look for the sidebar panel (iframe), not the small launcher button
-  const panel = document.querySelector('iframe[src*="decimal"]');
-  if (!panel) return false;
-  const rect = panel.getBoundingClientRect();
-  // The push-sidebar panel is wide (300px+); the launcher is small
-  return rect.width > 200;
-}
-
-function toggleDecimalWidget() {
+function showDecimalWidget() {
   const decimal = getDecimal();
-  if (!decimal) {
-    setTimeout(() => getDecimal()?.show(), 500);
+  if (decimal) {
+    decimal.show();
     return;
   }
-  if (isDecimalVisible()) {
-    decimal.hide();
-  } else {
-    decimal.show();
-  }
+  setTimeout(() => getDecimal()?.show(), 500);
 }
 
 function useIsMac() {
@@ -44,7 +31,7 @@ function useIsMac() {
 const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
     e.preventDefault();
-    toggleDecimalWidget();
+    showDecimalWidget();
   }
 };
 
@@ -84,7 +71,7 @@ export function SearchAndAskAI() {
       )}
       <button
         type="button"
-        onClick={toggleDecimalWidget}
+        onClick={showDecimalWidget}
         className="inline-flex items-center gap-2 rounded-lg border bg-fd-secondary/50 p-1.5 ps-2.5 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground shrink-0"
       >
         Ask AI
@@ -117,7 +104,7 @@ export function SearchAndAskAIMobile() {
       <button
         type="button"
         aria-label="Ask AI"
-        onClick={toggleDecimalWidget}
+        onClick={showDecimalWidget}
         className="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium transition-colors duration-100 hover:bg-fd-accent hover:text-fd-accent-foreground"
       >
         <MessageSquare className="size-4.5" />
