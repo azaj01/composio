@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   SearchDialog,
@@ -16,6 +17,14 @@ import { useI18n } from 'fumadocs-ui/contexts/i18n';
 import { useDocsSearch } from 'fumadocs-core/search/client';
 import { BotMessageSquare } from 'lucide-react';
 import { toggleDecimalWidget } from './ask-ai-button';
+
+function MetaKey() {
+  const [key, setKey] = useState('⌘');
+  useEffect(() => {
+    if (!navigator.platform.toUpperCase().includes('MAC')) setKey('Ctrl');
+  }, []);
+  return key;
+}
 
 export interface DefaultLink {
   title: string;
@@ -73,7 +82,7 @@ export default function CustomSearchDialog({
         ) : (
           <SearchDialogList items={query.data === 'empty' ? null : query.data} />
         )}
-        <div className="border-t px-3 py-2">
+        <div className="flex items-center justify-between border-t px-3 py-2">
           <button
             type="button"
             className="inline-flex items-center gap-1.5 text-xs text-fd-muted-foreground hover:text-fd-foreground transition-colors"
@@ -85,6 +94,14 @@ export default function CustomSearchDialog({
             <BotMessageSquare className="size-3.5" />
             You can also Ask AI
           </button>
+          <div className="inline-flex gap-0.5">
+            <kbd className="rounded-md border bg-fd-background px-1.5 text-xs text-fd-muted-foreground">
+              <MetaKey />
+            </kbd>
+            <kbd className="rounded-md border bg-fd-background px-1.5 text-xs text-fd-muted-foreground">
+              I
+            </kbd>
+          </div>
         </div>
       </SearchDialogContent>
     </SearchDialog>
