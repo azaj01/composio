@@ -23,23 +23,17 @@ function useIsMac() {
   return isMac;
 }
 
-let shortcutRegistered = false;
+const handleKeyDown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+    e.preventDefault();
+    showDecimalWidget();
+  }
+};
 
 function useAskAIShortcut() {
   useEffect(() => {
-    if (shortcutRegistered) return;
-    shortcutRegistered = true;
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
-        e.preventDefault();
-        showDecimalWidget();
-      }
-    }
     document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      shortcutRegistered = false;
-    };
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 }
 
