@@ -1,6 +1,7 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import Image from 'next/image';
 import { Play } from 'lucide-react';
+import { SearchAndAskAI, SearchAndAskAIMobile } from '@/components/ask-ai-button';
 
 // Composio Logo Component with light/dark mode switching
 function ComposioLogo() {
@@ -33,6 +34,12 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: <ComposioLogo />,
       transparentMode: 'top',
+    },
+    searchToggle: {
+      components: {
+        lg: <SearchAndAskAI />,
+        sm: <SearchAndAskAIMobile />,
+      },
     },
     links: [
       {
