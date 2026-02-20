@@ -67,6 +67,26 @@ graph LR
 
 Meta tool calls within a session share context through a `session_id`. The agent can search for a tool in one call and execute it in the next without losing state. Tools can also store information (IDs, relationships) in memory for subsequent calls.
 
+### How they work together
+
+The meta tools are how the agent reaches the actual toolkit tools:
+
+```mermaid
+graph TD
+    A["Agent: 'Create a GitHub issue for this bug'"] --> B["COMPOSIO_SEARCH_TOOLS"]
+    B --> C["GITHUB_CREATE_ISSUE"]
+    B --> C2["GITHUB_LIST_ISSUES"]
+    B --> C3["GITHUB_GET_REPO"]
+    B -.- B1["Returns matching tools with schemas"]:::annotation
+    C --> D["COMPOSIO_MULTI_EXECUTE_TOOL"]
+    D --> E["GitHub API"]
+    D -.- D1["Injects user's OAuth token, makes the call"]:::annotation
+
+    classDef annotation stroke-dasharray: 5 5
+```
+
+`SEARCH_TOOLS` discovers the right toolkit tools for the task. `MULTI_EXECUTE_TOOL` runs them against the external API with the user's credentials. If the user isn't authenticated yet, `MANAGE_CONNECTIONS` handles that in between.
+
 For large responses or bulk operations (labeling hundreds of emails, processing CSVs), the agent uses `COMPOSIO_REMOTE_WORKBENCH` to run Python with helper functions like `invoke_llm` and `run_composio_tool`.
 
 <Card icon={<BookOpen />} title="Tools and toolkits" href="/docs/tools-and-toolkits" description="Meta tools, context management, and execution" />
