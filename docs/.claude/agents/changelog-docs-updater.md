@@ -21,9 +21,10 @@ Triggered when a changelog file (`docs/content/changelog/*.mdx`) is pushed to `n
 | **New feature** (new parameter, new method, new option) | Add to the relevant existing guide where it fits naturally |
 | **Deprecation** | Add a `<Callout type="warn">` note near the deprecated usage |
 | **Behavior change** (default changed, response format changed) | Update descriptions and examples that reference the old behavior |
-| **New toolkit support** | No docs changes needed (toolkits are auto-generated) |
+| **Toolkit changes** (new toolkit, toolkit deprecation, credential removal, toolkit-level config) | No docs changes needed (toolkit pages are auto-generated) |
 | **Bug fix** (no API change) | No docs changes needed |
 | **Performance improvement** | No docs changes needed |
+| **Infrastructure / internal changes** | No docs changes needed |
 
 ## Rules
 
