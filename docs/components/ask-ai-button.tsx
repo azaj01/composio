@@ -12,11 +12,12 @@ function getDecimal() {
 }
 
 function isDecimalVisible() {
-  // Check if the push-sidebar panel is visible in the DOM
-  const panel = document.querySelector('iframe[src*="decimal"], [class*="decimal" i]');
+  // Look for the sidebar panel (iframe), not the small launcher button
+  const panel = document.querySelector('iframe[src*="decimal"]');
   if (!panel) return false;
   const rect = panel.getBoundingClientRect();
-  return rect.width > 0 && rect.height > 0;
+  // The push-sidebar panel is wide (300px+); the launcher is small
+  return rect.width > 200;
 }
 
 function toggleDecimalWidget() {
