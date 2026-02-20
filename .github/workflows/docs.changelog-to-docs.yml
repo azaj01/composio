@@ -48,7 +48,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          direct_prompt: |
+          prompt: |
             New changelog entries were merged to next. Read the agent instructions and update documentation accordingly.
 
             1. Read docs/.claude/agents/changelog-docs-updater.md for full instructions
