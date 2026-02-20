@@ -32,8 +32,12 @@ function useIsMac() {
   return isMac;
 }
 
+let shortcutRegistered = false;
+
 function useAskAIShortcut() {
   useEffect(() => {
+    if (shortcutRegistered) return;
+    shortcutRegistered = true;
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
         e.preventDefault();
@@ -41,7 +45,10 @@ function useAskAIShortcut() {
       }
     }
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      shortcutRegistered = false;
+    };
   }, []);
 }
 
@@ -90,7 +97,6 @@ export function SearchAndAskAI() {
 /** Mobile: search icon + Ask AI icon, shown below lg breakpoint */
 export function SearchAndAskAIMobile() {
   const { enabled, setOpenSearch } = useSearchContext();
-  useAskAIShortcut();
 
   return (
     <>
