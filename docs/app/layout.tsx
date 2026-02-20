@@ -114,6 +114,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
             search={{
               SearchDialog: CustomSearchDialog,
               options: {
+                api: '/api/search',
                 defaultLinks,
               } as Record<string, unknown>,
             }}

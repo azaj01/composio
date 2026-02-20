@@ -25,20 +25,20 @@ export interface DefaultLink {
 
 interface CustomSearchDialogProps extends SharedProps {
   defaultLinks?: DefaultLink[];
+  api?: string;
 }
 
 export default function CustomSearchDialog({
   defaultLinks = [],
+  api = '/api/search',
   ...props
 }: CustomSearchDialogProps) {
   const { locale } = useI18n();
   const { search, setSearch, query } = useDocsSearch({
     type: 'fetch',
     locale,
-    api: '/api/search',
+    api,
   });
-
-  const isEmpty = query.data === 'empty';
 
   return (
     <SearchDialog
@@ -54,7 +54,7 @@ export default function CustomSearchDialog({
           <SearchDialogInput />
           <SearchDialogClose />
         </SearchDialogHeader>
-        {isEmpty && defaultLinks.length > 0 ? (
+        {query.data === 'empty' && defaultLinks.length > 0 ? (
           <div className="flex flex-col p-2">
             {defaultLinks.map((link) => (
               <Link
