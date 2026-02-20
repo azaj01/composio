@@ -4,6 +4,10 @@ description: Transform tool results after execution
 llmGuardrails: "direct-execution"
 ---
 
+<Callout type="info">
+If you're building an agent, we recommend using [sessions](/docs/configuring-sessions) instead. Sessions handle tool fetching, authentication, and execution automatically.
+</Callout>
+
 After execution modifiers are part of Composio SDK's powerful middleware capabilities that allow you to customize and extend the behavior of tools.
 
 These modifiers are called after the tool is executed. This allows you to modify the result of the tool before it is returned to the agent.

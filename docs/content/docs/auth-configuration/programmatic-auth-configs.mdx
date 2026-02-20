@@ -5,6 +5,10 @@ keywords: [create auth config, sdk]
 llmGuardrails: "direct-execution"
 ---
 
+<Callout type="info">
+If you're building an agent, we recommend using [sessions](/docs/configuring-sessions#custom-auth-configs) instead. Sessions let you pass custom auth configs directly when creating a session.
+</Callout>
+
 Auth configs are created once and reused many times. However, when managing multiple toolkits, you may want to create auth configs programmatically.
 
 - When creating and destroying auth configs multiple times in your app's lifecycle.
