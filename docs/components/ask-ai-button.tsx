@@ -26,7 +26,7 @@ export function toggleDecimalWidget() {
   widgetOpen = !widgetOpen;
 }
 
-function detectMac(): boolean {
+export function detectMac(): boolean {
   try {
     if ('userAgentData' in navigator) {
       return (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform === 'macOS';
