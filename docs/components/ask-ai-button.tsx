@@ -26,10 +26,21 @@ export function toggleDecimalWidget() {
   widgetOpen = !widgetOpen;
 }
 
+function detectMac(): boolean {
+  try {
+    if ('userAgentData' in navigator) {
+      return (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform === 'macOS';
+    }
+    return /mac/i.test(navigator.platform);
+  } catch {
+    return true; // default to Mac
+  }
+}
+
 function useIsMac() {
   const [isMac, setIsMac] = useState(true);
   useEffect(() => {
-    setIsMac(navigator.platform.toUpperCase().includes('MAC'));
+    setIsMac(detectMac());
   }, []);
   return isMac;
 }

@@ -18,10 +18,21 @@ import { useDocsSearch } from 'fumadocs-core/search/client';
 import { BotMessageSquare } from 'lucide-react';
 import { toggleDecimalWidget } from './ask-ai-button';
 
+function detectMac(): boolean {
+  try {
+    if ('userAgentData' in navigator) {
+      return (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform === 'macOS';
+    }
+    return /mac/i.test(navigator.platform);
+  } catch {
+    return true; // default to Mac
+  }
+}
+
 function MetaKey() {
   const [key, setKey] = useState('⌘');
   useEffect(() => {
-    if (!navigator.platform.toUpperCase().includes('MAC')) setKey('Ctrl');
+    if (!detectMac()) setKey('Ctrl');
   }, []);
   return key;
 }
