@@ -29,7 +29,10 @@ export function toggleDecimalWidget() {
 export function detectMac(): boolean {
   try {
     if ('userAgentData' in navigator) {
-      return (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform === 'macOS';
+      const platform = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform;
+      if (platform) {
+        return platform === 'macOS';
+      }
     }
     return /mac/i.test(navigator.platform);
   } catch {
