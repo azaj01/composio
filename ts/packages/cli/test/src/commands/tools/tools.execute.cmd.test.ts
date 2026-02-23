@@ -1,5 +1,5 @@
 import { describe, expect, layer } from '@effect/vitest';
-import { vi } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { ConfigProvider, Effect } from 'effect';
 import { extendConfigProvider } from 'src/services/config';
 import { ComposioToolExecutionError } from '@composio/core';
@@ -27,6 +27,17 @@ const parseLastJson = (lines: ReadonlyArray<string>) => {
 };
 
 describe('CLI: composio tools execute', () => {
+  // Disable CI redaction so tests see raw values.
+  // The explicit CI-redaction test overrides via vi.spyOn and is unaffected.
+  let savedCI: string | undefined;
+  beforeEach(() => {
+    savedCI = process.env.CI;
+    delete process.env.CI;
+  });
+  afterEach(() => {
+    if (savedCI !== undefined) process.env.CI = savedCI;
+  });
+
   layer(
     TestLive({
       baseConfigProvider: testConfigProvider,
