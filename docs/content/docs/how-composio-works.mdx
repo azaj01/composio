@@ -32,7 +32,7 @@ A session ties together:
 
 Sessions are immutable. Their configuration is fixed at creation. If the context changes (different toolkits, different connected account), create a new session. You don't need to cache or manage session IDs.
 
-<Card icon={<BookOpen />} title="Users & Sessions" href="/docs/users-and-sessions" description="How users and sessions scope tools and connections" />
+<Card icon={<Database />} title="Users & Sessions" href="/docs/users-and-sessions" description="How users and sessions scope tools and connections" />
 
 ## Meta tools
 
@@ -85,11 +85,17 @@ graph TD
     classDef annotation stroke-dasharray: 5 5
 ```
 
-`SEARCH_TOOLS` discovers the right toolkit tools for the task. `MULTI_EXECUTE_TOOL` runs them against the external API with the user's credentials. If the user isn't authenticated yet, `MANAGE_CONNECTIONS` handles that in between.
+`COMPOSIO_SEARCH_TOOLS` discovers the right toolkit tools for the task. `COMPOSIO_MULTI_EXECUTE_TOOL` runs them against the external API with the user's credentials. If the user isn't authenticated yet, `COMPOSIO_MANAGE_CONNECTIONS` handles that in between.
 
 For large responses or bulk operations (labeling hundreds of emails, processing CSVs), the agent uses `COMPOSIO_REMOTE_WORKBENCH` to run Python with helper functions like `invoke_llm` and `run_composio_tool`.
 
-<Card icon={<BookOpen />} title="Tools and toolkits" href="/docs/tools-and-toolkits" description="Meta tools, context management, and execution" />
+<Card icon={<Wrench />} title="Tools and toolkits" href="/docs/tools-and-toolkits" description="Meta tools, context management, and execution" />
+
+## Tool discovery
+
+When the agent calls `COMPOSIO_SEARCH_TOOLS`, Composio runs a Vector + BM25 hybrid search across all available toolkits to find the right tools for a given use-case query. The search returns matching tool schemas, connection statuses, and related tools in a single call.
+
+Composio also surfaces **learned plans** from past executions. These are step-by-step workflows that have worked before for similar tasks, guiding the LLM to better perform an operation without starting from scratch.
 
 ## Authentication
 
@@ -113,7 +119,7 @@ For apps that manage auth outside of chat, like during onboarding or on a settin
 
 <Cards>
   <Card icon={<Key />} title="Authentication" href="/docs/authentication" description="Connect Links, OAuth, API keys, and custom auth configs" />
-  <Card icon={<BookOpen />} title="Manual authentication" href="/docs/authenticating-users/manually-authenticating" description="Authenticate users outside of chat with session.authorize()" />
+  <Card icon={<ShieldCheck />} title="Manual authentication" href="/docs/authenticating-users/manually-authenticating" description="Authenticate users outside of chat with session.authorize()" />
 </Cards>
 
 ## Tool execution
@@ -121,6 +127,19 @@ For apps that manage auth outside of chat, like during onboarding or on a settin
 When the agent calls `COMPOSIO_MULTI_EXECUTE_TOOL`, Composio resolves the session to look up the user and their connections, validates the input against the tool's schema, injects the user's OAuth token or API key, calls the external API, and returns a structured result.
 
 Your agent doesn't touch API credentials or handle token refresh. Composio resolves credentials from the session and connected account, makes the authenticated call, and returns the result.
+
+## Remote workbench
+
+Large responses from `COMPOSIO_MULTI_EXECUTE_TOOL` are automatically synced to a secure remote workbench. Instead of stuffing thousands of lines into the context window, the agent can work with the data inside the workbench:
+
+- **Reading** files and tool responses
+- **Searching** across large outputs
+- **Writing and executing** Python code to transform, filter, or aggregate data
+- **Calling Composio tools** via the `run_composio_tool` helper for bulk orchestration
+
+This keeps the agent's context window lean while still letting it handle operations like labeling hundreds of emails, processing CSV exports, or summarizing long API responses.
+
+<Card icon={<Monitor />} title="Workbench" href="/docs/workbench" description="Persistent Python sandbox for large-context operations" />
 
 ## Direct tool execution
 
@@ -143,4 +162,4 @@ result = composio.tools.execute(
 
 This is useful for deterministic workflows where the agent doesn't need to discover tools at runtime.
 
-<Card icon={<BookOpen />} title="Direct tool execution" href="/docs/tools-direct/executing-tools" description="Fetch, authenticate, and execute tools without meta tools" />
+<Card icon={<Zap />} title="Direct tool execution" href="/docs/tools-direct/executing-tools" description="Fetch, authenticate, and execute tools without meta tools" />

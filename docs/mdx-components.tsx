@@ -35,6 +35,8 @@ import {
   Terminal,
   Palette,
   BookOpen,
+  Monitor,
+  MessageCircle,
 } from 'lucide-react';
 
 function slugify(text: string): string {
@@ -100,6 +102,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Terminal,
     Palette,
     BookOpen,
+    Monitor,
+    MessageCircle,
     ...components,
   };
 }
