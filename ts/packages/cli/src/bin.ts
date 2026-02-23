@@ -21,6 +21,8 @@ import { JsPackageManagerDetector } from 'src/services/js-package-manager-detect
 import { ComposioUserContextLive as _ComposioUserContextLive } from 'src/services/user-context';
 import { UpgradeBinary } from 'src/services/upgrade-binary';
 import { TerminalUILive } from 'src/services/terminal-ui';
+import { ToolsExecutorLive as _ToolsExecutorLive } from 'src/services/tools-executor';
+import { StdinLive } from 'src/services/stdin';
 
 /**
  * Concrete Effect layer compositions for the Composio CLI runtime.
@@ -65,6 +67,11 @@ export const UpgradeBinaryLive = Layer.provide(
   Layer.mergeAll(BunFileSystem.layer, FetchHttpClient.layer)
 ) satisfies RequiredLayer;
 
+export const ToolsExecutorLive = Layer.provide(
+  _ToolsExecutorLive,
+  ComposioUserContextLive
+) satisfies RequiredLayer;
+
 const layers = Layer.mergeAll(
   CliConfigLive.pipe(Layer.provide(ConfigLive)),
   NodeOs.Default,
@@ -73,10 +80,12 @@ const layers = Layer.mergeAll(
   ComposioUserContextLive,
   ComposioSessionRepositoryLive,
   ComposioToolkitsRepositoryCachedLive, // Use the cached layer instead of the regular one
+  ToolsExecutorLive,
   EnvLangDetector.Default,
   JsPackageManagerDetector.Default,
   BunContext.layer,
   BunFileSystem.layer,
+  StdinLive,
   TerminalUILive,
   Logger.pretty
 ) satisfies RequiredLayer;
@@ -172,13 +181,22 @@ runWithArgs.pipe(
       const captured = yield* captureErrors(cause, {
         stripCwd: true,
       });
-      const message = prettyPrintFromCapturedErrors(captured, {
-        hideStackTrace: true,
-        stripCwd: true,
-        enabled: true,
-      });
+      const filteredErrors = captured.errors.filter(
+        error => error.errorType !== 'ToolExecutionError'
+      );
 
-      yield* Console.error(message);
+      if (captured.interrupted || filteredErrors.length > 0) {
+        const message = prettyPrintFromCapturedErrors(
+          { ...captured, errors: filteredErrors },
+          {
+            hideStackTrace: true,
+            stripCwd: true,
+            enabled: true,
+          }
+        );
+
+        yield* Console.error(message);
+      }
     })
   ),
   Effect.provide(layers),
