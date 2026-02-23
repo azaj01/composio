@@ -32,7 +32,7 @@ A session ties together:
 
 Sessions are immutable. Their configuration is fixed at creation. If the context changes (different toolkits, different connected account), create a new session. You don't need to cache or manage session IDs.
 
-<Card icon={<BookOpen />} title="Users & Sessions" href="/docs/users-and-sessions" description="How users and sessions scope tools and connections" />
+<Card icon={<Database />} title="Users & Sessions" href="/docs/users-and-sessions" description="How users and sessions scope tools and connections" />
 
 ## Meta tools
 
@@ -89,7 +89,7 @@ graph TD
 
 For large responses or bulk operations (labeling hundreds of emails, processing CSVs), the agent uses `COMPOSIO_REMOTE_WORKBENCH` to run Python with helper functions like `invoke_llm` and `run_composio_tool`.
 
-<Card icon={<BookOpen />} title="Tools and toolkits" href="/docs/tools-and-toolkits" description="Meta tools, context management, and execution" />
+<Card icon={<Wrench />} title="Tools and toolkits" href="/docs/tools-and-toolkits" description="Meta tools, context management, and execution" />
 
 ## Tool discovery
 
@@ -119,7 +119,7 @@ For apps that manage auth outside of chat, like during onboarding or on a settin
 
 <Cards>
   <Card icon={<Key />} title="Authentication" href="/docs/authentication" description="Connect Links, OAuth, API keys, and custom auth configs" />
-  <Card icon={<BookOpen />} title="Manual authentication" href="/docs/authenticating-users/manually-authenticating" description="Authenticate users outside of chat with session.authorize()" />
+  <Card icon={<ShieldCheck />} title="Manual authentication" href="/docs/authenticating-users/manually-authenticating" description="Authenticate users outside of chat with session.authorize()" />
 </Cards>
 
 ## Tool execution
@@ -139,7 +139,7 @@ Large responses from `COMPOSIO_MULTI_EXECUTE_TOOL` are automatically synced to a
 
 This keeps the agent's context window lean while still letting it handle operations like labeling hundreds of emails, processing CSV exports, or summarizing long API responses.
 
-<Card icon={<BookOpen />} title="Workbench" href="/docs/workbench" description="Persistent Python sandbox for large-context operations" />
+<Card icon={<Monitor />} title="Workbench" href="/docs/workbench" description="Persistent Python sandbox for large-context operations" />
 
 ## Direct tool execution
 
@@ -162,4 +162,4 @@ result = composio.tools.execute(
 
 This is useful for deterministic workflows where the agent doesn't need to discover tools at runtime.
 
-<Card icon={<BookOpen />} title="Direct tool execution" href="/docs/tools-direct/executing-tools" description="Fetch, authenticate, and execute tools without meta tools" />
+<Card icon={<Zap />} title="Direct tool execution" href="/docs/tools-direct/executing-tools" description="Fetch, authenticate, and execute tools without meta tools" />
