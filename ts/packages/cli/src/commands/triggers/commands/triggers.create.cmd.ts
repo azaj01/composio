@@ -75,7 +75,7 @@ export const triggersCmd$Create = Command.make(
             'services/HttpServerError',
             handleHttpServerError(ui, {
               fallbackMessage: `Failed to create trigger "${triggerName.value}".`,
-              hint: 'List available trigger types with:\n> composio triggers status',
+              hint: 'List available trigger types with:\n> composio triggers list',
               fallbackValue: Option.none(),
             })
           )
