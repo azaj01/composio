@@ -52,7 +52,7 @@ const limit = Options.integer('limit').pipe(
 );
 
 const csvOption = (opt: Option.Option<string>): string[] | undefined =>
-  Option.isSome(opt) ? [...parseCsv(opt.value)] : undefined;
+  Option.isSome(opt) ? parseCsv(opt.value) : undefined;
 
 /**
  * Display active trigger instances with optional filters.

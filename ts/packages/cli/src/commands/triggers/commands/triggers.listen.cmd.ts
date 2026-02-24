@@ -189,10 +189,10 @@ export const triggersCmd$Listen = Command.make(
       }
 
       const filters: TriggerListenFilters = {
-        toolkits: Option.isSome(toolkits) ? [...parseCsv(toolkits.value)] : undefined,
+        toolkits: Option.isSome(toolkits) ? parseCsv(toolkits.value) : undefined,
         triggerId: Option.getOrUndefined(triggerId),
         connectedAccountId: Option.getOrUndefined(connectedAccountId),
-        triggerSlug: Option.isSome(triggerSlug) ? [...parseCsv(triggerSlug.value)] : undefined,
+        triggerSlug: Option.isSome(triggerSlug) ? parseCsv(triggerSlug.value) : undefined,
         userId: Option.getOrUndefined(userId),
       };
 

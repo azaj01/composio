@@ -1,4 +1,4 @@
-export const parseCsv = (value: string): ReadonlyArray<string> =>
+export const parseCsv = (value: string): string[] =>
   value
     .split(',')
     .map(item => item.trim())
