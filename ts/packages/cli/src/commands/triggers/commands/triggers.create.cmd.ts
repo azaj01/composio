@@ -44,7 +44,14 @@ export const triggersCmd$Create = Command.make(
       let parsedTriggerConfig: Record<string, unknown> | undefined;
       if (Option.isSome(triggerConfig)) {
         try {
-          parsedTriggerConfig = JSON.parse(triggerConfig.value) as Record<string, unknown>;
+          const parsed: unknown = JSON.parse(triggerConfig.value);
+          if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            yield* ui.log.error(
+              '--trigger-config must be a JSON object (e.g. \'{"key":"value"}\').'
+            );
+            return;
+          }
+          parsedTriggerConfig = parsed as Record<string, unknown>;
         } catch {
           yield* ui.log.error('Invalid JSON in --trigger-config. Please provide valid JSON.');
           yield* ui.log.step(

@@ -1,8 +1,7 @@
 import { Command, Options } from '@effect/cli';
+import { FileSystem } from '@effect/platform';
 import { Deferred, Effect, Option, Runtime } from 'effect';
 import path from 'node:path';
-import process from 'node:process';
-import { promises as fs } from 'node:fs';
 import { requireAuth } from 'src/effects/require-auth';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { TriggersRealtime } from 'src/services/triggers-realtime';
@@ -12,6 +11,7 @@ import {
   formatTriggerListenTableHeader,
   formatTriggerListenTableRow,
 } from '../format';
+import { parseCsv } from '../parse-csv';
 import { parseTriggerListenEvent } from '../parse';
 import type { TriggerListenFilters } from '../types';
 
@@ -73,12 +73,6 @@ const out = Options.text('out').pipe(
   Options.optional
 );
 
-const parseCsv = (value: string): ReadonlyArray<string> =>
-  value
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean);
-
 const randomUUID = () => crypto.randomUUID();
 
 const signWebhookPayload = async ({
@@ -134,15 +128,20 @@ const detectWebhookPayloadVersion = (eventData: Record<string, unknown>): 'V1' |
 
 const emitTableLine = (line: string, ui: TerminalUI): Effect.Effect<void> =>
   Effect.gen(function* () {
-    if (process.stdout.isTTY) {
-      yield* Effect.sync(() => {
-        process.stderr.write(`${line}\n`);
-      });
-      return;
-    }
+    yield* ui.log.message(line);
     yield* ui.output(line);
   });
 
+/**
+ * Listen to realtime trigger events for your project.
+ *
+ * @example
+ * ```bash
+ * composio triggers listen --toolkits gmail --table
+ * composio triggers listen --trigger-slug GMAIL_NEW_GMAIL_MESSAGE --json --max-events 5
+ * composio triggers listen --forward "http://localhost:8080/webhook" --out events.jsonl
+ * ```
+ */
 export const triggersCmd$Listen = Command.make(
   'listen',
   {
@@ -173,6 +172,7 @@ export const triggersCmd$Listen = Command.make(
       if (!(yield* requireAuth)) return;
 
       const ui = yield* TerminalUI;
+      const fs = yield* FileSystem.FileSystem;
       const realtime = yield* TriggersRealtime;
       const runtime = yield* Effect.runtime<never>();
       const forwardUrl = Option.getOrUndefined(forward);
@@ -183,26 +183,20 @@ export const triggersCmd$Listen = Command.make(
 
       if (outputFilePath) {
         // Ensure output directory exists before listening.
-        yield* Effect.tryPromise({
-          try: async () => {
-            await fs.mkdir(path.dirname(outputFilePath), { recursive: true });
-          },
-          catch: error => new Error(`Failed to prepare output file directory: ${String(error)}`),
-        }).pipe(
-          Effect.catchAll(error =>
-            Effect.gen(function* () {
-              yield* ui.log.error(String(error));
-              return yield* Effect.fail(error);
-            })
-          )
-        );
+        yield* fs
+          .makeDirectory(path.dirname(outputFilePath), { recursive: true })
+          .pipe(Effect.tapError(error => ui.log.error(String(error))));
       }
 
       const filters: TriggerListenFilters = {
-        toolkits: Option.isSome(toolkits) ? parseCsv(toolkits.value) : undefined,
+        toolkits: Option.isSome(toolkits)
+          ? parseCsv(toolkits.value).map(x => x.toLowerCase())
+          : undefined,
         triggerId: Option.getOrUndefined(triggerId),
         connectedAccountId: Option.getOrUndefined(connectedAccountId),
-        triggerSlug: Option.isSome(triggerSlug) ? parseCsv(triggerSlug.value) : undefined,
+        triggerSlug: Option.isSome(triggerSlug)
+          ? parseCsv(triggerSlug.value).map(x => x.toLowerCase())
+          : undefined,
         userId: Option.getOrUndefined(userId),
       };
 
@@ -231,9 +225,6 @@ export const triggersCmd$Listen = Command.make(
       yield* ui.log.info('Listening for realtime trigger events. Press Ctrl+C to stop.');
       if (outputFilePath) {
         yield* ui.log.info(`Writing matching events to: ${outputFilePath}`);
-      }
-      if (forwardUrl) {
-        yield* ui.log.info(`Forwarding matching events to: ${forwardUrl}`);
       }
 
       if (maxEventsLimit !== undefined) {
@@ -278,47 +269,50 @@ export const triggersCmd$Listen = Command.make(
             const logLine = `${payloadForForwarding}\n`;
 
             if (outputFilePath) {
-              yield* Effect.tryPromise({
-                try: () => fs.appendFile(outputFilePath, logLine, 'utf8'),
-                catch: error => new Error(`Failed writing to ${outputFilePath}: ${String(error)}`),
-              }).pipe(Effect.catchAll(error => ui.log.warn(String(error))));
+              yield* fs
+                .writeFileString(outputFilePath, logLine, { flag: 'a' })
+                .pipe(Effect.catchAll(error => ui.log.warn(String(error))));
             }
 
             if (forwardUrl && webhookSecret) {
-              const webhookId =
-                typeof eventData.id === 'string' && eventData.id.length > 0
-                  ? eventData.id
-                  : randomUUID();
-              const webhookTimestamp = `${Math.floor(Date.now() / 1000)}`;
-              const webhookSignature = yield* Effect.tryPromise(() =>
-                signWebhookPayload({
-                  secret: webhookSecret,
-                  webhookId,
-                  webhookTimestamp,
-                  payload: payloadForForwarding,
-                })
-              );
-              const webhookVersion = detectWebhookPayloadVersion(eventData);
+              yield* Effect.gen(function* () {
+                const webhookId =
+                  typeof eventData.id === 'string' && eventData.id.length > 0
+                    ? eventData.id
+                    : randomUUID();
+                const webhookTimestamp = `${Math.floor(Date.now() / 1000)}`;
+                const webhookSignature = yield* Effect.tryPromise({
+                  try: () =>
+                    signWebhookPayload({
+                      secret: webhookSecret,
+                      webhookId,
+                      webhookTimestamp,
+                      payload: payloadForForwarding,
+                    }),
+                  catch: error => new Error(`Failed to sign webhook payload: ${String(error)}`),
+                });
+                const webhookVersion = detectWebhookPayloadVersion(eventData);
 
-              yield* Effect.tryPromise({
-                try: async () => {
-                  const response = await fetch(forwardUrl, {
-                    method: 'POST',
-                    headers: {
-                      'content-type': 'application/json',
-                      'webhook-id': webhookId,
-                      'webhook-timestamp': webhookTimestamp,
-                      'webhook-signature': webhookSignature,
-                      'x-composio-webhook-version': webhookVersion,
-                    },
-                    body: payloadForForwarding,
-                  });
-                  if (!response.ok) {
-                    throw new Error(`Forwarding failed with HTTP ${response.status}`);
-                  }
-                },
-                catch: error =>
-                  new Error(`Failed forwarding event to ${forwardUrl}: ${String(error)}`),
+                yield* Effect.tryPromise({
+                  try: async () => {
+                    const response = await fetch(forwardUrl, {
+                      method: 'POST',
+                      headers: {
+                        'content-type': 'application/json',
+                        'webhook-id': webhookId,
+                        'webhook-timestamp': webhookTimestamp,
+                        'webhook-signature': webhookSignature,
+                        'x-composio-webhook-version': webhookVersion,
+                      },
+                      body: payloadForForwarding,
+                    });
+                    if (!response.ok) {
+                      throw new Error(`Forwarding failed with HTTP ${response.status}`);
+                    }
+                  },
+                  catch: error =>
+                    new Error(`Failed forwarding event to ${forwardUrl}: ${String(error)}`),
+                });
               }).pipe(Effect.catchAll(error => ui.log.warn(String(error))));
             }
 

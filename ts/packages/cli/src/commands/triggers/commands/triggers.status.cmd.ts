@@ -10,6 +10,7 @@ import {
   formatTriggersStatusTable,
   toolkitSlugFromTriggerName,
 } from '../format';
+import { parseCsv } from '../parse-csv';
 
 const userIds = Options.text('user-ids').pipe(
   Options.withDescription('Filter by user IDs, comma-separated'),
@@ -45,36 +46,13 @@ const showDisabled = Options.boolean('show-disabled').pipe(
   Options.withDescription('Include disabled triggers in the response')
 );
 
-const deprecatedConnectedAccountUuids = Options.text('deprecated-connected-account-uuids').pipe(
-  Options.withDescription(
-    'DEPRECATED: Use --connected-account-ids instead. Filter by connected account UUIDs, comma-separated'
-  ),
-  Options.optional
-);
-
 const limit = Options.integer('limit').pipe(
   Options.withDefault(30),
   Options.withDescription('Number of results per page (1-1000)')
 );
 
-const parseCsv = (value: string): string[] =>
-  value
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean);
-
 const csvOption = (opt: Option.Option<string>): string[] | undefined =>
-  Option.isSome(opt) ? parseCsv(opt.value) : undefined;
-
-const mergeCsvOptions = (
-  preferred: Option.Option<string>,
-  deprecated: Option.Option<string>
-): string[] | undefined => {
-  const preferredValues = csvOption(preferred) ?? [];
-  const deprecatedValues = csvOption(deprecated) ?? [];
-  const merged = [...preferredValues, ...deprecatedValues];
-  return merged.length > 0 ? merged : undefined;
-};
+  Option.isSome(opt) ? [...parseCsv(opt.value)] : undefined;
 
 /**
  * Display active trigger instances with optional filters.
@@ -88,29 +66,16 @@ export const triggersCmd$Status = Command.make(
     triggerIds,
     triggerNames,
     showDisabled,
-    deprecatedConnectedAccountUuids,
     limit,
   },
-  ({
-    userIds,
-    connectedAccountIds,
-    toolkits,
-    triggerIds,
-    triggerNames,
-    showDisabled,
-    deprecatedConnectedAccountUuids,
-    limit,
-  }) =>
+  ({ userIds, connectedAccountIds, toolkits, triggerIds, triggerNames, showDisabled, limit }) =>
     Effect.gen(function* () {
       if (!(yield* requireAuth)) return;
 
       const ui = yield* TerminalUI;
       const repo = yield* ComposioToolkitsRepository;
 
-      const connectedAccountIdsList = mergeCsvOptions(
-        connectedAccountIds,
-        deprecatedConnectedAccountUuids
-      );
+      const connectedAccountIdsList = csvOption(connectedAccountIds);
       const triggerNamesList = csvOption(triggerNames)?.map(name => name.toUpperCase());
       const toolkitsList = csvOption(toolkits)?.map(slug => slug.toLowerCase());
 

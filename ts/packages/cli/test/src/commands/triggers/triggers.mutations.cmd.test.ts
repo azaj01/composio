@@ -88,11 +88,70 @@ describe('CLI: composio triggers mutations', () => {
   );
 
   layer(TestLive({ baseConfigProvider: testConfigProvider }))(
+    '[Given] create with non-object JSON config [Then] shows type validation error',
+    it => {
+      it.scoped('rejects array JSON in --trigger-config', () =>
+        Effect.gen(function* () {
+          yield* cli([
+            'triggers',
+            'create',
+            'GMAIL_NEW_GMAIL_MESSAGE',
+            '--trigger-config',
+            '[1,2,3]',
+          ]);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+
+          expect(output).toContain('--trigger-config must be a JSON object');
+        })
+      );
+
+      it.scoped('rejects number JSON in --trigger-config', () =>
+        Effect.gen(function* () {
+          yield* cli(['triggers', 'create', 'GMAIL_NEW_GMAIL_MESSAGE', '--trigger-config', '42']);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+
+          expect(output).toContain('--trigger-config must be a JSON object');
+        })
+      );
+    }
+  );
+
+  layer(TestLive({ baseConfigProvider: testConfigProvider }))(
     '[Given] missing ID for enable [Then] warns about missing argument',
     it => {
       it.scoped('shows missing id warning', () =>
         Effect.gen(function* () {
           yield* cli(['triggers', 'enable']);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+          expect(output).toContain('Missing required argument');
+        })
+      );
+    }
+  );
+
+  layer(TestLive({ baseConfigProvider: testConfigProvider }))(
+    '[Given] missing ID for disable [Then] warns about missing argument',
+    it => {
+      it.scoped('shows missing id warning', () =>
+        Effect.gen(function* () {
+          yield* cli(['triggers', 'disable']);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+          expect(output).toContain('Missing required argument');
+        })
+      );
+    }
+  );
+
+  layer(TestLive({ baseConfigProvider: testConfigProvider }))(
+    '[Given] missing ID for delete [Then] warns about missing argument',
+    it => {
+      it.scoped('shows missing id warning', () =>
+        Effect.gen(function* () {
+          yield* cli(['triggers', 'delete']);
           const lines = yield* MockConsole.getLines({ stripAnsi: true });
           const output = lines.join('\n');
           expect(output).toContain('Missing required argument');
