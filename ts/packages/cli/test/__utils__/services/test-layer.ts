@@ -42,6 +42,9 @@ import { ComposioUserContextLive } from 'src/services/user-context';
 import { UpgradeBinary } from 'src/services/upgrade-binary';
 import { NodeOs } from 'src/services/node-os';
 import { TriggersRealtime } from 'src/services/triggers-realtime';
+import type { ToolExecuteResponse } from '@composio/core';
+import { ToolsExecutor } from 'src/services/tools-executor';
+import { Stdin } from 'src/services/stdin';
 
 export interface TestLiveInput {
   /**
@@ -95,6 +98,25 @@ export interface TestLiveInput {
    */
   realtimeData?: {
     events?: ReadonlyArray<Record<string, unknown>>;
+  };
+
+  /**
+   * Mock stdin for commands that read input.
+   */
+  stdin?: {
+    isTTY: boolean;
+    data: string;
+  };
+
+  /**
+   * Override tools executor behavior for tests.
+   *
+   * - `failWith`: The executor rejects with this value (hard failure, e.g. API throw).
+   * - `respondWith`: The executor resolves with this response (for soft failures like `{ successful: false }`).
+   */
+  toolsExecutor?: {
+    failWith?: unknown;
+    respondWith?: ToolExecuteResponse;
   };
 }
 
@@ -199,6 +221,17 @@ export const TestLayer = (input?: TestLiveInput) =>
             triggers = triggers.filter(t => prefixes.some(p => t.slug.toUpperCase().startsWith(p)));
           }
           return Effect.succeed(triggers);
+        },
+        getTriggerTypeDetailed: (slug: string) => {
+          const found = toolkitsData.triggerTypes.find(
+            trigger => trigger.slug.toUpperCase() === slug.toUpperCase()
+          );
+          if (!found) {
+            return Effect.fail(
+              new HttpServerError({ cause: `Trigger type "${slug}" not found`, status: 404 })
+            );
+          }
+          return Effect.succeed(found);
         },
         getTools: (toolkitSlugs?: ReadonlyArray<string>) => {
           let tools = toolkitsData.tools;
@@ -650,6 +683,33 @@ export const TestLayer = (input?: TestLiveInput) =>
       Layer.mergeAll(BunFileSystem.layer, FetchHttpClient.layer)
     );
 
+    const ToolsExecutorTest = Layer.succeed(
+      ToolsExecutor,
+      ToolsExecutor.of({
+        execute: (slug, params) => {
+          if (input?.toolsExecutor?.failWith) {
+            return Effect.fail(input.toolsExecutor.failWith);
+          }
+          if (input?.toolsExecutor?.respondWith) {
+            return Effect.succeed(input.toolsExecutor.respondWith);
+          }
+          return Effect.succeed({
+            data: { slug, params },
+            error: null,
+            successful: true,
+          });
+        },
+      })
+    );
+
+    const StdinTest = Layer.succeed(
+      Stdin,
+      Stdin.of({
+        isTTY: () => input?.stdin?.isTTY ?? true,
+        readAll: () => Effect.succeed(input?.stdin?.data ?? ''),
+      })
+    );
+
     const CliConfigLive = CliConfig.layer(ComposioCliConfig);
 
     const _console = yield* MockConsole.make;
@@ -665,10 +725,12 @@ export const TestLayer = (input?: TestLiveInput) =>
       ComposioToolkitsRepositoryTest,
       EnvLangDetector.Default,
       JsPackageManagerDetector.Default,
+      ToolsExecutorTest,
       BunFileSystem.layer,
       BunContext.layer,
       MockTerminal.layer,
       BunPath.layer,
+      StdinTest,
       TerminalUITest
     ) satisfies RequiredLayer;
 

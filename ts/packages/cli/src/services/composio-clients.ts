@@ -1216,6 +1216,18 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
               )
             ),
           /**
+           * Retrieves detailed info about a single trigger type by slug.
+           * @param slug - Trigger type slug (e.g. "GMAIL_NEW_GMAIL_MESSAGE")
+           */
+          retrieve: (slug: string) =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client => client.triggersTypes.retrieve(slug),
+                TriggerType
+              )
+            ),
+          /**
            * Retrieve a list of trigger types, automatically handling pagination.
            * @param toolkitSlugs - Optional array of toolkit slugs to filter by
            */
@@ -1379,6 +1391,11 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
             )
           ),
         getTriggerTypesAsEnums: () => client.triggersTypes.retrieveEnum(),
+        /**
+         * Retrieves detailed info about a single trigger type by slug.
+         * @param slug - Trigger type slug (e.g. "GMAIL_NEW_GMAIL_MESSAGE")
+         */
+        getTriggerTypeDetailed: (slug: string) => client.triggersTypes.retrieve(slug),
         /**
          * Fetches trigger types with optional toolkit filtering.
          * When toolkitSlugs is provided, fetches all matching trigger types.

@@ -180,6 +180,9 @@ export const ComposioToolkitsRepositoryCached = Layer.effect(
         );
       },
 
+      // Trigger type detail should NOT be cached (single-item fetch, should be fresh)
+      getTriggerTypeDetailed: slug => underlyingRepository.getTriggerTypeDetailed(slug),
+
       getTriggerTypes: (toolkitSlugs?: ReadonlyArray<string>) => {
         const cacheFilter =
           toolkitSlugs && toolkitSlugs.length > 0
