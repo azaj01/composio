@@ -119,7 +119,7 @@ export function mdxToCleanMarkdown(content: string): string {
 
   // Remove Cards wrapper before processing individual Card tags
   // (prevents <Cards> from being matched by <Card regex since <Cards starts with <Card)
-  result = result.replace(/<\/?Cards[^>]*>/g, '');
+  result = result.replace(/<\/?Cards\b[^>]*>/g, '');
 
   // Convert Card - handle multiline and various attribute orders
   // Self-closing Cards with description attribute
