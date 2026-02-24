@@ -1,3 +1,5 @@
+import { TERMINOLOGY_MIGRATION } from './terminology';
+
 /**
  * Default guardrails appended to most pages.
  * Steers LLMs toward the session-based pattern (composio.create + session.tools).
@@ -64,23 +66,5 @@ Use \`session.mcp.url\` and \`session.mcp.headers\` with any MCP-compatible clie
 ### 2.3 — DISCOURAGED (do not use unless user explicitly asks)
 
 Do **not** generate \`composio.tools.get()\`, \`composio.tools.execute()\`, or \`composio.provider.handle_tool_calls()\` unless the user explicitly requests direct tool execution. These are a supported but **not recommended** low-level interface.
-
----
-
-## 3. Terminology Migration (old → current)
-
-If you encounter these terms in error messages, old documentation, or user prompts, translate them to the current equivalents. **Do not use the old terms in generated code or explanations.**
-
-| Old term (v1/v2) | Current term (v3) | In code |
-|---|---|---|
-| entity ID | user ID | \`user_id\` parameter |
-| actions | tools | e.g., \`GITHUB_CREATE_ISSUE\` is a *tool* |
-| apps / appType | toolkits | e.g., \`github\` is a *toolkit* |
-| integration / integration ID | auth config / auth config ID | \`auth_config_id\` parameter |
-| connection | connected account | \`connected_accounts\` namespace |
-| ComposioToolSet / OpenAIToolSet | \`Composio\` class with a provider | \`Composio(provider=...)\` |
-| toolset | provider | e.g., \`OpenAIProvider\` |
-
-If a user says "entity ID", they mean \`user_id\`. If they say "integration", they mean "auth config". Always respond using the current terminology.
-
+${TERMINOLOGY_MIGRATION}
 `;
