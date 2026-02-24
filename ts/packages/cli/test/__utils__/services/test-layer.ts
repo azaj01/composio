@@ -40,6 +40,7 @@ import type { ToolkitVersionSpec } from 'src/effects/toolkit-version-overrides';
 import { ComposioUserContextLive } from 'src/services/user-context';
 import { UpgradeBinary } from 'src/services/upgrade-binary';
 import { NodeOs } from 'src/services/node-os';
+import { TriggersRealtime } from 'src/services/triggers-realtime';
 import type { ToolExecuteResponse } from '@composio/core';
 import { ToolsExecutor } from 'src/services/tools-executor';
 import { Stdin } from 'src/services/stdin';
@@ -82,6 +83,13 @@ export interface TestLiveInput {
   connectedAccountsData?: {
     items?: ConnectedAccountItem[];
     linkResponse?: LinkCreateResponse;
+  };
+
+  /**
+   * Mock realtime trigger data to use in test.
+   */
+  realtimeData?: {
+    events?: ReadonlyArray<Record<string, unknown>>;
   };
 
   /**
@@ -153,6 +161,14 @@ export const TestLayer = (input?: TestLiveInput) =>
     const connectedAccountsData = {
       ...defaultConnectedAccountsData,
       ...(input?.connectedAccountsData ?? {}),
+    };
+
+    const defaultRealtimeData = {
+      events: [] as ReadonlyArray<Record<string, unknown>>,
+    } satisfies TestLiveInput['realtimeData'];
+    const realtimeData = {
+      ...defaultRealtimeData,
+      ...(input?.realtimeData ?? {}),
     };
 
     const tempDir = tempy.temporaryDirectory({ prefix: 'test' });
@@ -523,6 +539,16 @@ export const TestLayer = (input?: TestLiveInput) =>
       })
     );
     const ComposioSessionRepositoryTest = yield* setupComposioSessionRepository();
+    const TriggersRealtimeTest = Layer.succeed(
+      TriggersRealtime,
+      new TriggersRealtime({
+        listen: onEvent =>
+          Effect.gen(function* () {
+            yield* Effect.forEach(realtimeData.events, event => Effect.sync(() => onEvent(event)));
+            return yield* Effect.never;
+          }),
+      })
+    );
 
     // Mock `node:os`
     const NodeOsTest = Layer.succeed(
@@ -592,6 +618,7 @@ export const TestLayer = (input?: TestLiveInput) =>
       UpgradeBinaryTest,
       ComposioUserContextTest,
       ComposioSessionRepositoryTest,
+      TriggersRealtimeTest,
       ComposioToolkitsRepositoryTest,
       EnvLangDetector.Default,
       JsPackageManagerDetector.Default,
@@ -797,6 +824,17 @@ function setupComposioSessionRepository() {
           expiresAt,
           status: 'pending',
           api_key: null,
+        }),
+      getRealtimeCredentials: () =>
+        Effect.succeed({
+          project_id: 'proj_test',
+          pusher_key: 'pusher_test_key',
+          pusher_cluster: 'mt1',
+        }),
+      authRealtimeChannel: () =>
+        Effect.succeed({
+          auth: 'mock:auth',
+          channel_data: undefined,
         }),
     });
     const ComposioSessionRepositoryTest = Layer.succeed(

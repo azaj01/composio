@@ -221,6 +221,21 @@ export type CliCreateSessionResponse = Schema.Schema.Type<typeof CliCreateSessio
 export const CliGetSessionResponse = RetrievedSession;
 export type CliRetrieveSessionResponse = Schema.Schema.Type<typeof CliGetSessionResponse>;
 
+export const CliRealtimeCredentialsResponse = Schema.Struct({
+  project_id: Schema.String,
+  pusher_key: Schema.String,
+  pusher_cluster: Schema.String,
+}).annotations({ identifier: 'CliRealtimeCredentialsResponse' });
+export type CliRealtimeCredentialsResponse = Schema.Schema.Type<
+  typeof CliRealtimeCredentialsResponse
+>;
+
+export const CliRealtimeAuthResponse = Schema.Struct({
+  auth: Schema.String,
+  channel_data: Schema.optional(Schema.String),
+}).annotations({ identifier: 'CliRealtimeAuthResponse' });
+export type CliRealtimeAuthResponse = Schema.Schema.Type<typeof CliRealtimeAuthResponse>;
+
 export const ToolkitsResponse = Schema.Struct({
   items: Toolkits,
   total_pages: Schema.Int,
@@ -1110,6 +1125,22 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
                 CliGetSessionResponse
               )
             ),
+          getRealtimeCredentials: () =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client => client.cli.realtime.credentials(),
+                CliRealtimeCredentialsResponse
+              )
+            ),
+          authRealtimeChannel: (params: { channel_name: string; socket_id: string }) =>
+            withMetrics(
+              callClient(
+                clientSingleton,
+                client => client.cli.realtime.auth(params),
+                CliRealtimeAuthResponse
+              )
+            ),
         },
         authConfigs: buildAuthConfigsNamespace(clientSingleton, withMetrics),
         connectedAccounts: buildConnectedAccountsNamespace(clientSingleton, withMetrics),
@@ -1375,6 +1406,9 @@ export class ComposioSessionRepository extends Effect.Service<ComposioSessionRep
       return {
         createSession: () => client.cli.createSession(),
         getSession: (session: { id: string }) => client.cli.getSession({ id: session.id }),
+        getRealtimeCredentials: () => client.cli.getRealtimeCredentials(),
+        authRealtimeChannel: (params: { channel_name: string; socket_id: string }) =>
+          client.cli.authRealtimeChannel(params),
       };
     }),
     dependencies: [ComposioClientLive.Default],

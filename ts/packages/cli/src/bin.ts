@@ -21,6 +21,7 @@ import { JsPackageManagerDetector } from 'src/services/js-package-manager-detect
 import { ComposioUserContextLive as _ComposioUserContextLive } from 'src/services/user-context';
 import { UpgradeBinary } from 'src/services/upgrade-binary';
 import { TerminalUILive } from 'src/services/terminal-ui';
+import { TriggersRealtime } from 'src/services/triggers-realtime';
 import { ToolsExecutorLive as _ToolsExecutorLive } from 'src/services/tools-executor';
 import { StdinLive } from 'src/services/stdin';
 
@@ -67,6 +68,11 @@ export const UpgradeBinaryLive = Layer.provide(
   Layer.mergeAll(BunFileSystem.layer, FetchHttpClient.layer)
 ) satisfies RequiredLayer;
 
+export const TriggersRealtimeLive = Layer.provide(
+  TriggersRealtime.Default,
+  Layer.mergeAll(BunFileSystem.layer, NodeOs.Default)
+) satisfies RequiredLayer;
+
 export const ToolsExecutorLive = Layer.provide(
   _ToolsExecutorLive,
   ComposioUserContextLive
@@ -83,6 +89,7 @@ const layers = Layer.mergeAll(
   ToolsExecutorLive,
   EnvLangDetector.Default,
   JsPackageManagerDetector.Default,
+  TriggersRealtimeLive,
   BunContext.layer,
   BunFileSystem.layer,
   StdinLive,
