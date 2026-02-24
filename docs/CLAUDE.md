@@ -70,6 +70,10 @@ Detailed documentation for Claude is organized in `.claude/`:
    - Dynamic toolkit pages are validated against slugs from `public/data/toolkits.json`
    - Non-Fumadocs `.md` files (like FAQ snippets) are picked up via `content/**/*.md` glob
 
+## Code Review Guidelines
+
+**`docs/examples/` is tutorial code.** Review for correctness and clarity, not production-readiness. Skip accessibility (aria attributes, focus management), error boundaries, i18n, comprehensive error handling, and similar concerns that add noise to a teaching example. The goal is to teach Composio integration with minimal code.
+
 ## AI-Native Documentation
 
 **Prefer cURL over "click"** - Most docs traffic comes from AI crawlers. When documenting API interactions, prefer showing cURL commands over UI instructions like "click this button" or "navigate to settings". cURL is machine-readable and can be directly executed by AI agents.
