@@ -70,7 +70,7 @@ const TRIGGER_STATUS_TABLE = {
 const toStatus = (item: TriggerInstanceItem): string =>
   item.disabled_at === null ? 'ACTIVE' : 'DISABLED';
 
-const toToolkitSlug = (triggerName: string): string => {
+export const toolkitSlugFromTriggerName = (triggerName: string): string => {
   const prefix = triggerName.split('_')[0];
   return prefix ? prefix.toLowerCase() : '-';
 };
@@ -92,7 +92,7 @@ export const formatTriggersStatusTable = (items: ReadonlyArray<TriggerInstanceIt
       truncate(item.trigger_name, TRIGGER_STATUS_TABLE.triggerName).padEnd(
         TRIGGER_STATUS_TABLE.triggerName
       ),
-      truncate(toToolkitSlug(item.trigger_name), TRIGGER_STATUS_TABLE.toolkit).padEnd(
+      truncate(toolkitSlugFromTriggerName(item.trigger_name), TRIGGER_STATUS_TABLE.toolkit).padEnd(
         TRIGGER_STATUS_TABLE.toolkit
       ),
       truncate(item.user_id || '-', TRIGGER_STATUS_TABLE.userId).padEnd(
@@ -114,7 +114,7 @@ export const formatTriggersStatusJson = (items: ReadonlyArray<TriggerInstanceIte
       id: item.id,
       uuid: item.uuid || undefined,
       trigger_name: item.trigger_name,
-      toolkit_slug: toToolkitSlug(item.trigger_name),
+      toolkit_slug: toolkitSlugFromTriggerName(item.trigger_name),
       user_id: item.user_id || undefined,
       connected_account_id: item.connected_account_id || undefined,
       status: toStatus(item),

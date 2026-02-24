@@ -1,10 +1,15 @@
 import { Command, Options } from '@effect/cli';
 import { Effect, Option } from 'effect';
+import { handleHttpServerError } from 'src/effects/handle-http-error';
 import { requireAuth } from 'src/effects/require-auth';
 import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { clampLimit } from 'src/ui/clamp-limit';
-import { formatTriggersStatusJson, formatTriggersStatusTable } from '../format';
+import {
+  formatTriggersStatusJson,
+  formatTriggersStatusTable,
+  toolkitSlugFromTriggerName,
+} from '../format';
 
 const userIds = Options.text('user-ids').pipe(
   Options.withDescription('Filter by user IDs, comma-separated'),
@@ -71,11 +76,6 @@ const mergeCsvOptions = (
   return merged.length > 0 ? merged : undefined;
 };
 
-const deriveToolkitSlug = (triggerName: string): string => {
-  const prefix = triggerName.split('_')[0];
-  return prefix ? prefix.toLowerCase() : '';
-};
-
 /**
  * Display active trigger instances with optional filters.
  */
@@ -114,22 +114,41 @@ export const triggersCmd$Status = Command.make(
       const triggerNamesList = csvOption(triggerNames)?.map(name => name.toUpperCase());
       const toolkitsList = csvOption(toolkits)?.map(slug => slug.toLowerCase());
 
-      const result = yield* ui.withSpinner(
-        'Fetching trigger status...',
-        repo.listActiveTriggers({
-          user_ids: csvOption(userIds),
-          connected_account_ids: connectedAccountIdsList,
-          trigger_ids: csvOption(triggerIds),
-          trigger_names: triggerNamesList,
-          show_disabled: showDisabled,
-          deprecatedConnectedAccountUuids: csvOption(deprecatedConnectedAccountUuids),
-          limit: clampLimit(limit),
-        })
-      );
+      const resultOpt = yield* ui
+        .withSpinner(
+          'Fetching trigger status...',
+          repo.listActiveTriggers({
+            user_ids: csvOption(userIds),
+            connected_account_ids: connectedAccountIdsList,
+            trigger_ids: csvOption(triggerIds),
+            trigger_names: triggerNamesList,
+            show_disabled: showDisabled,
+            limit: clampLimit(limit),
+          })
+        )
+        .pipe(
+          Effect.asSome,
+          Effect.catchTag(
+            'services/HttpServerError',
+            handleHttpServerError(ui, {
+              fallbackMessage: 'Failed to fetch trigger status.',
+              hint: 'Retry with:\n> composio triggers status --show-disabled',
+              fallbackValue: Option.none(),
+            })
+          )
+        );
+
+      if (Option.isNone(resultOpt)) {
+        return;
+      }
+
+      const result = resultOpt.value;
 
       const filteredItems =
         toolkitsList && toolkitsList.length > 0
-          ? result.items.filter(item => toolkitsList.includes(deriveToolkitSlug(item.trigger_name)))
+          ? result.items.filter(item =>
+              toolkitsList.includes(toolkitSlugFromTriggerName(item.trigger_name))
+            )
           : result.items;
 
       if (filteredItems.length === 0) {
@@ -142,7 +161,8 @@ export const triggersCmd$Status = Command.make(
       }
 
       const showing = filteredItems.length;
-      const total = filteredItems.length;
+      const total =
+        toolkitsList && toolkitsList.length > 0 ? result.items.length : result.total_items;
 
       yield* ui.log.info(
         `Listing ${showing} of ${total} triggers\n\n${formatTriggersStatusTable(filteredItems)}`

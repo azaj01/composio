@@ -136,7 +136,7 @@ describe('CLI: composio triggers status', () => {
 
           expect(output).toContain('trg_active_2');
           expect(output).not.toContain('trg_active_1');
-          expect(output).toContain('Listing 1 of 1 triggers');
+          expect(output).toContain('Listing 1 of 2 triggers');
         })
       );
     }
