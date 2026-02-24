@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Bot, FileText, Copy, Check, ExternalLink } from 'lucide-react';
 
-function CopyButton({ text }: { text: string }) {
+function CopyableCommand({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   return (
@@ -14,13 +14,15 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className="shrink-0 rounded-md p-1 text-fd-muted-foreground/60 hover:text-fd-foreground transition-colors"
-      aria-label="Copy to clipboard"
+      aria-label={`Copy command: ${text}`}
+      className="mb-3 flex w-full cursor-pointer items-center gap-2 rounded-lg border border-fd-border bg-fd-background dark:bg-fd-background/50 px-3.5 py-2.5 font-mono text-[13px] text-fd-foreground transition-colors hover:border-[var(--composio-orange)]/40"
     >
+      <span className="select-none text-fd-muted-foreground">$</span>
+      <span className="flex-1 text-left">{text}</span>
       {copied ? (
-        <Check className="h-3.5 w-3.5 text-green-500" />
+        <Check className="h-3.5 w-3.5 shrink-0 text-green-500" />
       ) : (
-        <Copy className="h-3.5 w-3.5" />
+        <Copy className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground/60" />
       )}
     </button>
   );
@@ -30,10 +32,10 @@ export function AIToolsBanner() {
   const skillsCommand = 'npx skills add composiohq/skills';
 
   return (
-    <div className="not-prose relative mt-6 overflow-hidden rounded-xl border border-fd-border bg-gradient-to-br from-fd-card via-fd-card to-fd-muted/50 dark:from-fd-muted/20 dark:via-fd-card dark:to-fd-muted/40">
+    <div className="not-prose relative mt-6 mb-6 overflow-hidden rounded-xl border border-fd-border bg-gradient-to-br from-fd-card via-fd-card to-fd-muted/50 dark:from-fd-muted/20 dark:via-fd-card dark:to-fd-muted/40">
       {/* Subtle grid pattern */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04]"
+        className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.02]"
         style={{
           backgroundImage:
             'linear-gradient(var(--color-fd-foreground) 1px, transparent 1px), linear-gradient(90deg, var(--color-fd-foreground) 1px, transparent 1px)',
@@ -52,11 +54,7 @@ export function AIToolsBanner() {
         </div>
 
         {/* Skills command */}
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-fd-border bg-fd-background dark:bg-fd-background/50 px-3.5 py-2.5 font-mono text-[13px] text-fd-foreground">
-          <span className="select-none text-fd-muted-foreground">$</span>
-          <span className="flex-1 select-all">{skillsCommand}</span>
-          <CopyButton text={skillsCommand} />
-        </div>
+        <CopyableCommand text={skillsCommand} />
 
         {/* Skills links */}
         <div className="mb-4 flex items-center gap-3 text-xs">
