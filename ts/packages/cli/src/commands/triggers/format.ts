@@ -2,6 +2,7 @@ import type { TriggerType } from 'src/models/trigger-types';
 import type { TriggerListenEvent } from './types';
 import { bold, gray } from 'src/ui/colors';
 import { truncate } from 'src/ui/truncate';
+import { extractSchemaProperties } from 'src/ui/extract-schema-properties';
 
 export const formatTriggerListenSummary = (event: TriggerListenEvent): string => {
   const userId = event.userId || '-';
@@ -79,7 +80,9 @@ export const formatTriggerTypesTable = (triggerTypes: ReadonlyArray<TriggerType>
     const name = truncate(triggerType.name, TRIGGER_TYPES_TABLE.name).padEnd(
       TRIGGER_TYPES_TABLE.name
     );
-    const type = triggerType.type.padEnd(TRIGGER_TYPES_TABLE.type);
+    const type = truncate(triggerType.type, TRIGGER_TYPES_TABLE.type).padEnd(
+      TRIGGER_TYPES_TABLE.type
+    );
     const description = gray(truncate(triggerType.description, 50));
     return `${slug} ${name} ${type} ${description}`;
   });
@@ -100,22 +103,10 @@ export const formatTriggerTypesJson = (triggerTypes: ReadonlyArray<TriggerType>)
   );
 
 function formatSchemaProperties(schema: Record<string, unknown>): string {
-  const properties = schema['properties'] as Record<string, Record<string, unknown>> | undefined;
-  if (!properties || Object.keys(properties).length === 0) {
+  const entries = extractSchemaProperties(schema);
+  if (entries.length === 0) {
     return '  (none)';
   }
-
-  const requiredArr = (schema['required'] as string[] | undefined) ?? [];
-  const requiredSet = new Set(requiredArr);
-
-  const entries = Object.entries(properties).map(([name, prop]) => {
-    const type = (prop['type'] as string) ?? 'unknown';
-    const label = requiredSet.has(name) ? 'required' : 'optional';
-    const description = prop['description'] as string | undefined;
-    const hasDefault = Object.prototype.hasOwnProperty.call(prop, 'default');
-    const defaultValue = hasDefault ? prop['default'] : undefined;
-    return { name, type, label, description, hasDefault, defaultValue };
-  });
 
   const typeWidth = Math.max(...entries.map(e => e.type.length));
   const labelWidth = Math.max(...entries.map(e => e.label.length));

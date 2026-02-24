@@ -57,7 +57,7 @@ export const triggersCmd$Info = Command.make('info', { slug }, ({ slug }) =>
 
     yield* ui.log.info(formatTriggerTypeInfo(triggerType));
 
-    const toolkitSlug = triggerType.slug.split('_')[0]?.toLowerCase();
+    const toolkitSlug = triggerType.toolkit?.slug?.toLowerCase();
     if (toolkitSlug) {
       yield* ui.log.step(
         `To list more trigger types in this toolkit:\n> composio triggers list --toolkits "${toolkitSlug}"`

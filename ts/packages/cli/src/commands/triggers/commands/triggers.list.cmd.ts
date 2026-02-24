@@ -5,6 +5,7 @@ import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { clampLimit } from 'src/ui/clamp-limit';
 import { formatTriggerTypesJson, formatTriggerTypesTable } from '../format';
+import { parseCsv } from '../parse-csv';
 
 const toolkits = Options.text('toolkits').pipe(
   Options.withDescription(
@@ -17,12 +18,6 @@ const limit = Options.integer('limit').pipe(
   Options.withDefault(30),
   Options.withDescription('Maximum number of trigger types to show (1-1000)')
 );
-
-const parseCsv = (value: string): ReadonlyArray<string> =>
-  value
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean);
 
 /**
  * List available trigger types with optional toolkit filters.

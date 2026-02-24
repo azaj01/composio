@@ -11,6 +11,7 @@ const testTriggerTypes: TriggerTypes = [
     name: 'NEW_GMAIL_MESSAGE',
     description: 'Fires when a new message arrives in Gmail',
     instructions: 'Connect Gmail and subscribe to this trigger',
+    toolkit: { name: 'Gmail', slug: 'gmail' },
     type: 'webhook',
     config: {
       type: 'object',
@@ -38,6 +39,7 @@ const testTriggerTypes: TriggerTypes = [
     name: 'NEW_MESSAGE',
     description: 'Fires when a new message is posted in Slack',
     instructions: 'Connect Slack and subscribe to this trigger',
+    toolkit: { name: 'Slack', slug: 'slack' },
     type: 'webhook',
     config: { type: 'object', properties: {} },
     payload: { type: 'object', properties: {} },
