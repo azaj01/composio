@@ -18,6 +18,8 @@ const IGNORED_PATHS = [
   '/api/v3/cli/get-session',
   '/api/v3/cli/create-session',
   '/api/v3/auth/session/logout',
+  '/api/v3/cli/realtime/credentials',
+  '/api/v3/cli/realtime/auth',
 ];
 
 // Tags to ignore (internal/admin)
@@ -25,6 +27,7 @@ const IGNORED_TAGS = [
   'CLI',
   'Admin',
   'Profiling',
+  'User',
 ];
 
 async function fetchAndFilterSpec() {
