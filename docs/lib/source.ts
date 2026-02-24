@@ -117,28 +117,35 @@ export function mdxToCleanMarkdown(content: string): string {
     (_, content) => `> ${content.trim()}`
   );
 
+  // Remove Cards wrapper before processing individual Card tags
+  // (prevents <Cards> from being matched by <Card regex since <Cards starts with <Card)
+  result = result.replace(/<\/?Cards\b[^>]*>/g, '');
+
   // Convert Card - handle multiline and various attribute orders
   // Self-closing Cards with description attribute
   result = result.replace(
-    /<Card[\s\S]*?title="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?description="([^"]*)"[\s\S]*?\/>/g,
+    /<Card\b[\s\S]*?title="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?description="([^"]*)"[\s\S]*?\/>/g,
     '- [$1]($2): $3'
   );
   // Cards with children content (non-self-closing)
   result = result.replace(
-    /<Card[\s\S]*?title="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Card>/g,
+    /<Card\b[\s\S]*?title="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Card>/g,
     '- [$1]($2): $3'
   );
   // Cards with href before title
   result = result.replace(
-    /<Card[\s\S]*?href="([^"]*)"[\s\S]*?title="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Card>/g,
+    /<Card\b[\s\S]*?href="([^"]*)"[\s\S]*?title="([^"]*)"[\s\S]*?>([\s\S]*?)<\/Card>/g,
     '- [$2]($1): $3'
   );
-
   // Convert ProviderCard to markdown link
   result = result.replace(
     /<ProviderCard[\s\S]*?name="([^"]*)"[\s\S]*?href="([^"]*)"[\s\S]*?languages=\{\[([^\]]*)\]\}[\s\S]*?\/>/g,
     (_, name, href, langs) => `- [${name}](${href}) (${langs.replace(/"/g, '')})`
   );
+
+  // Strip orphaned indentation from converted list items
+  // (Cards/ProviderCards nested inside wrapper components had JSX indentation that persists after wrapper removal)
+  result = result.replace(/^[ \t]+(- \[)/gm, '$1');
 
   // Convert Tabs/Tab content - keep inner content
   result = result.replace(/<TabsList>[\s\S]*?<\/TabsList>/g, '');
@@ -239,8 +246,9 @@ export function mdxToCleanMarkdown(content: string): string {
     '- [llms-full.txt](/llms-full.txt) — Complete documentation in one file'
   );
 
-  // Remove wrapper components (Cards, ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, TemplateGrid, etc.)
-  result = result.replace(/<\/?(Cards|ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding|TemplateGrid)[^>]*>/g, '');
+  // Remove wrapper components (ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, TemplateGrid, etc.)
+  // Note: Cards wrapper is removed earlier (before Card conversion) to prevent regex conflicts
+  result = result.replace(/<\/?(ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding|TemplateGrid)[^>]*>/g, '');
 
   // Remove remaining self-closing JSX tags (including those with JSX expressions)
   result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
