@@ -1,5 +1,10 @@
 import { Command } from '@effect/cli';
 import { triggersCmd$Listen } from './commands/triggers.listen.cmd';
+import { triggersCmd$Status } from './commands/triggers.status.cmd';
+import { triggersCmd$Create } from './commands/triggers.create.cmd';
+import { triggersCmd$Enable } from './commands/triggers.enable.cmd';
+import { triggersCmd$Disable } from './commands/triggers.disable.cmd';
+import { triggersCmd$Delete } from './commands/triggers.delete.cmd';
 
 /**
  * CLI entry point for realtime trigger commands.
@@ -10,6 +15,13 @@ import { triggersCmd$Listen } from './commands/triggers.listen.cmd';
  * ```
  */
 export const triggersCmd = Command.make('triggers').pipe(
-  Command.withDescription('Subscribe to realtime trigger events.'),
-  Command.withSubcommands([triggersCmd$Listen])
+  Command.withDescription('Inspect and subscribe to trigger events.'),
+  Command.withSubcommands([
+    triggersCmd$Listen,
+    triggersCmd$Status,
+    triggersCmd$Create,
+    triggersCmd$Enable,
+    triggersCmd$Disable,
+    triggersCmd$Delete,
+  ])
 );

@@ -1,0 +1,152 @@
+import { Command, Options } from '@effect/cli';
+import { Effect, Option } from 'effect';
+import { requireAuth } from 'src/effects/require-auth';
+import { ComposioToolkitsRepository } from 'src/services/composio-clients';
+import { TerminalUI } from 'src/services/terminal-ui';
+import { clampLimit } from 'src/ui/clamp-limit';
+import { formatTriggersStatusJson, formatTriggersStatusTable } from '../format';
+
+const userIds = Options.text('user-ids').pipe(
+  Options.withDescription('Filter by user IDs, comma-separated'),
+  Options.optional
+);
+
+const connectedAccountIds = Options.text('connected-account-ids').pipe(
+  Options.withDescription('Filter by connected account IDs, comma-separated'),
+  Options.optional
+);
+
+const toolkits = Options.text('toolkits').pipe(
+  Options.withDescription(
+    'Filter by toolkit slugs, comma-separated (e.g. "gmail" or "gmail,slack")'
+  ),
+  Options.optional
+);
+
+const triggerIds = Options.text('trigger-ids').pipe(
+  Options.withDescription('Filter by trigger instance IDs, comma-separated'),
+  Options.optional
+);
+
+const triggerNames = Options.text('trigger-names').pipe(
+  Options.withDescription(
+    'Filter by trigger names, comma-separated (case-insensitive; normalized to uppercase)'
+  ),
+  Options.optional
+);
+
+const showDisabled = Options.boolean('show-disabled').pipe(
+  Options.withDefault(false),
+  Options.withDescription('Include disabled triggers in the response')
+);
+
+const deprecatedConnectedAccountUuids = Options.text('deprecated-connected-account-uuids').pipe(
+  Options.withDescription(
+    'DEPRECATED: Use --connected-account-ids instead. Filter by connected account UUIDs, comma-separated'
+  ),
+  Options.optional
+);
+
+const limit = Options.integer('limit').pipe(
+  Options.withDefault(30),
+  Options.withDescription('Number of results per page (1-1000)')
+);
+
+const parseCsv = (value: string): string[] =>
+  value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+
+const csvOption = (opt: Option.Option<string>): string[] | undefined =>
+  Option.isSome(opt) ? parseCsv(opt.value) : undefined;
+
+const mergeCsvOptions = (
+  preferred: Option.Option<string>,
+  deprecated: Option.Option<string>
+): string[] | undefined => {
+  const preferredValues = csvOption(preferred) ?? [];
+  const deprecatedValues = csvOption(deprecated) ?? [];
+  const merged = [...preferredValues, ...deprecatedValues];
+  return merged.length > 0 ? merged : undefined;
+};
+
+const deriveToolkitSlug = (triggerName: string): string => {
+  const prefix = triggerName.split('_')[0];
+  return prefix ? prefix.toLowerCase() : '';
+};
+
+/**
+ * Display active trigger instances with optional filters.
+ */
+export const triggersCmd$Status = Command.make(
+  'status',
+  {
+    userIds,
+    connectedAccountIds,
+    toolkits,
+    triggerIds,
+    triggerNames,
+    showDisabled,
+    deprecatedConnectedAccountUuids,
+    limit,
+  },
+  ({
+    userIds,
+    connectedAccountIds,
+    toolkits,
+    triggerIds,
+    triggerNames,
+    showDisabled,
+    deprecatedConnectedAccountUuids,
+    limit,
+  }) =>
+    Effect.gen(function* () {
+      if (!(yield* requireAuth)) return;
+
+      const ui = yield* TerminalUI;
+      const repo = yield* ComposioToolkitsRepository;
+
+      const connectedAccountIdsList = mergeCsvOptions(
+        connectedAccountIds,
+        deprecatedConnectedAccountUuids
+      );
+      const triggerNamesList = csvOption(triggerNames)?.map(name => name.toUpperCase());
+      const toolkitsList = csvOption(toolkits)?.map(slug => slug.toLowerCase());
+
+      const result = yield* ui.withSpinner(
+        'Fetching trigger status...',
+        repo.listActiveTriggers({
+          user_ids: csvOption(userIds),
+          connected_account_ids: connectedAccountIdsList,
+          trigger_ids: csvOption(triggerIds),
+          trigger_names: triggerNamesList,
+          show_disabled: showDisabled,
+          deprecatedConnectedAccountUuids: csvOption(deprecatedConnectedAccountUuids),
+          limit: clampLimit(limit),
+        })
+      );
+
+      const filteredItems =
+        toolkitsList && toolkitsList.length > 0
+          ? result.items.filter(item => toolkitsList.includes(deriveToolkitSlug(item.trigger_name)))
+          : result.items;
+
+      if (filteredItems.length === 0) {
+        yield* ui.log.warn(
+          showDisabled
+            ? 'No triggers found for the provided filters.'
+            : 'No active triggers found for the provided filters.'
+        );
+        return;
+      }
+
+      const showing = filteredItems.length;
+      const total = filteredItems.length;
+
+      yield* ui.log.info(
+        `Listing ${showing} of ${total} triggers\n\n${formatTriggersStatusTable(filteredItems)}`
+      );
+      yield* ui.output(formatTriggersStatusJson(filteredItems));
+    })
+).pipe(Command.withDescription('Show active triggers with optional filters.'));
