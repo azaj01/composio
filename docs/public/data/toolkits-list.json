@@ -6032,6 +6032,14 @@
     "triggerCount": 0
   },
   {
+    "slug": "postiz_mcp",
+    "name": "Postiz",
+    "logo": "https://logos.composio.dev/postiz",
+    "category": "social media marketing",
+    "toolCount": 9,
+    "triggerCount": 0
+  },
+  {
     "slug": "postman",
     "name": "Postman",
     "logo": "https://logos.composio.dev/api/postman",
