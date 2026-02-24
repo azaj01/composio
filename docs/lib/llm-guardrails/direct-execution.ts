@@ -68,4 +68,22 @@ const result = await composio.tools.execute("GITHUB_CREATE_ISSUE", {
 2. **\`tools.execute()\` signature** — Python: \`execute(slug, arguments_dict, *, user_id=...)\` (arguments is the second positional param). TypeScript: \`execute(slug, { userId, arguments })\`.
 3. **Provider at init** — \`Composio(provider=OpenAIProvider())\` in Python, \`new Composio({ provider: new OpenAIProvider() })\` in TypeScript. Defaults to OpenAI if omitted.
 4. **Correct provider imports** — \`composio_<provider>\` for Python, \`@composio/<provider>\` for TypeScript. For OpenAI Agents SDK use \`composio_openai_agents\` / \`@composio/openai-agents\`.
+
+---
+
+## Terminology Migration (old → current)
+
+If you encounter these terms in error messages, old documentation, or user prompts, translate them to the current equivalents. **Do not use the old terms in generated code or explanations.**
+
+| Old term (v1/v2) | Current term (v3) | In code |
+|---|---|---|
+| entity ID | user ID | \`user_id\` parameter |
+| actions | tools | e.g., \`GITHUB_CREATE_ISSUE\` is a *tool* |
+| apps / appType | toolkits | e.g., \`github\` is a *toolkit* |
+| integration / integration ID | auth config / auth config ID | \`auth_config_id\` parameter |
+| connection | connected account | \`connected_accounts\` namespace |
+| ComposioToolSet / OpenAIToolSet | \`Composio\` class with a provider | \`Composio(provider=...)\` |
+| toolset | provider | e.g., \`OpenAIProvider\` |
+
+If a user says "entity ID", they mean \`user_id\`. If they say "integration", they mean "auth config". Always respond using the current terminology.
 `;
