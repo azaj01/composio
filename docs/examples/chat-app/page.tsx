@@ -58,14 +58,22 @@ export default function Chat() {
           sendMessage({ text: input });
           setInput("");
         }}
+        className="flex gap-2"
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask me anything..."
           disabled={isLoading}
-          className="w-full p-3 border border-gray-300 rounded-lg"
+          className="flex-1 p-3 border border-gray-300 rounded-lg"
         />
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="px-4 py-3 bg-black text-white rounded-lg disabled:opacity-50"
+        >
+          Send
+        </button>
       </form>
     </main>
   );
