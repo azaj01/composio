@@ -54,7 +54,7 @@ export const triggersCmd$Info = Command.make('info', { slug }, ({ slug }) =>
       return;
     }
 
-    yield* ui.note(formatTriggerTypeInfo(triggerType), `Trigger: ${triggerType.name}`);
+    yield* ui.log.info(formatTriggerTypeInfo(triggerType));
 
     const toolkitSlug = triggerType.slug.split('_')[0]?.toLowerCase();
     if (toolkitSlug) {
