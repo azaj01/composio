@@ -34,25 +34,26 @@ export const triggersCmd$Info = Command.make('info', { slug }, ({ slug }) =>
     }
 
     const slugValue = slug.value;
-    const triggerTypes = yield* ui.withSpinner('Fetching trigger types...', repo.getTriggerTypes());
-    const normalizedSlug = slugValue.toUpperCase();
-    const triggerType = triggerTypes.find(item => item.slug.toUpperCase() === normalizedSlug);
+    const triggerType = yield* ui
+      .withSpinner('Fetching trigger type details...', repo.getTriggerTypeDetailed(slugValue))
+      .pipe(
+        Effect.catchTag('services/HttpServerError', e =>
+          Effect.if(e.status === 404, {
+            onTrue: () =>
+              ui.log
+                .error(`Trigger "${slugValue}" not found.`)
+                .pipe(
+                  Effect.zipRight(
+                    ui.log.step('Browse available trigger types:\n> composio triggers list')
+                  ),
+                  Effect.as(undefined)
+                ),
+            onFalse: () => Effect.fail(e),
+          })
+        )
+      );
 
-    if (!triggerType) {
-      yield* ui.log.error(`Trigger "${slugValue}" not found.`);
-      const suggestions = triggerTypes
-        .filter(item => item.slug.toUpperCase().includes(normalizedSlug))
-        .slice(0, 3);
-      if (suggestions.length > 0) {
-        yield* ui.log.step('Did you mean:');
-        yield* Effect.forEach(suggestions, item =>
-          ui.log.step(`> composio triggers info "${item.slug}"`)
-        );
-      } else {
-        yield* ui.log.step('Browse available trigger types:\n> composio triggers list');
-      }
-      return;
-    }
+    if (!triggerType) return;
 
     yield* ui.log.info(formatTriggerTypeInfo(triggerType));
 
