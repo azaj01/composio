@@ -70,7 +70,7 @@ export default function Chat() {
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-3 bg-black text-white rounded-lg disabled:opacity-50"
+          className="px-6 py-3 bg-white text-black font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
         >
           Send
         </button>

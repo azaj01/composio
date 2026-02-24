@@ -15,7 +15,7 @@ Give your AI agent access to Gmail, GitHub, Slack, Notion, and 1000+ other apps.
 
 ## Prerequisites
 
-- Node.js 18+
+- [Bun](https://bun.sh) (or Node.js 18+)
 - [Composio API key](https://platform.composio.dev/settings)
 - [OpenAI API key](https://platform.openai.com/api-keys)
 
@@ -26,9 +26,9 @@ Give your AI agent access to Gmail, GitHub, Slack, Notion, and 1000+ other apps.
 Create a new Next.js app and install the dependencies:
 
 ```bash
-pnpm create next-app composio-chat --yes
+bunx create-next-app composio-chat --yes
 cd composio-chat
-pnpm install @composio/core @composio/vercel @ai-sdk/openai ai @ai-sdk/react
+bun add @composio/core @composio/vercel @ai-sdk/openai ai @ai-sdk/react
 ```
 
 <Callout type="info">
@@ -45,7 +45,7 @@ OPENAI_API_KEY=your_openai_api_key
 Start the dev server:
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 ## Build the backend
