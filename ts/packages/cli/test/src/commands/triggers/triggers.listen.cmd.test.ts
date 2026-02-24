@@ -130,6 +130,37 @@ describe('CLI: composio triggers listen', () => {
     );
   });
 
+  layer(
+    TestLive({
+      baseConfigProvider: testConfigProvider,
+      realtimeData: {
+        events: [mockV3TriggerEvent],
+      },
+    })
+  )('[Given] --table [Then] prints compact table rows', it => {
+    it.scoped('prints table header and event row', () =>
+      Effect.gen(function* () {
+        yield* cli(['triggers', 'listen', '--table', '--max-events', '1']);
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const output = lines.join('\n');
+
+        expect(output).toContain('timestamp');
+        expect(output).toContain('trigger_id');
+        expect(output).toContain('trigger_slug');
+        expect(output).toContain('toolkit');
+        expect(output).toContain('user_id');
+        expect(output).toContain('connected_account_id');
+        expect(output).not.toContain('Event #1');
+        expect(output).not.toContain('Trigger:');
+        expect(output).toContain('trg_123');
+        expect(output).toContain('GMAIL_NEW_GMAIL_MESSAGE');
+        expect(output).toContain('GMAIL');
+        expect(output).toContain('user_123');
+        expect(output).toContain('con_123');
+      })
+    );
+  });
+
   layer(TestLive())('[Given] no API key [Then] warns user to login', it => {
     it.scoped('warns user to login', () =>
       Effect.gen(function* () {

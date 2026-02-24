@@ -44,6 +44,13 @@ const json = Options.boolean('json').pipe(
   Options.withDescription('Show raw event payload as JSON in interactive mode')
 );
 
+const table = Options.boolean('table').pipe(
+  Options.withDefault(false),
+  Options.withDescription(
+    'Show compact table rows: timestamp, trigger_id, trigger_slug, toolkit, user_id, connected_account_id'
+  )
+);
+
 const maxEvents = Options.integer('max-events').pipe(
   Options.withDescription('Stop after receiving N matching events'),
   Options.optional
@@ -120,6 +127,24 @@ const detectWebhookPayloadVersion = (eventData: Record<string, unknown>): 'V1' |
   return 'V1';
 };
 
+const TABLE_COLUMNS = [
+  { key: 'timestamp', width: 25 },
+  { key: 'trigger_id', width: 16 },
+  { key: 'trigger_slug', width: 28 },
+  { key: 'toolkit', width: 12 },
+  { key: 'user_id', width: 24 },
+  { key: 'connected_account_id', width: 24 },
+] as const;
+
+const formatTableCell = (value: string, width: number): string => {
+  if (value.length <= width) return value.padEnd(width, ' ');
+  if (width <= 1) return value.slice(0, width);
+  return `${value.slice(0, width - 1)}…`;
+};
+
+const formatTableRow = (columns: ReadonlyArray<{ value: string; width: number }>): string =>
+  columns.map(col => formatTableCell(col.value, col.width)).join(' | ');
+
 export const triggersCmd$Listen = Command.make(
   'listen',
   {
@@ -129,6 +154,7 @@ export const triggersCmd$Listen = Command.make(
     triggerSlug,
     userId,
     json,
+    table,
     maxEvents,
     forward,
     out,
@@ -140,6 +166,7 @@ export const triggersCmd$Listen = Command.make(
     triggerSlug,
     userId,
     json,
+    table,
     maxEvents,
     forward,
     out,
@@ -184,6 +211,7 @@ export const triggersCmd$Listen = Command.make(
       const maxEventsLimit = Option.getOrUndefined(maxEvents);
       const stopWhenDone = yield* Deferred.make<void>();
       let matchingEvents = 0;
+      let tableHeaderPrinted = false;
 
       yield* ui.intro('composio triggers listen');
       if (forwardUrl) {
@@ -223,14 +251,43 @@ export const triggersCmd$Listen = Command.make(
             }
 
             matchingEvents += 1;
-            yield* ui.note(formatTriggerListenSummary(parsed), `Event #${matchingEvents}`);
+            if (table) {
+              if (!tableHeaderPrinted) {
+                yield* ui.log.message(
+                  formatTableRow(TABLE_COLUMNS.map(col => ({ value: col.key, width: col.width })))
+                );
+                tableHeaderPrinted = true;
+              }
 
-            if (json) {
+              const tableLine = formatTableRow([
+                {
+                  value:
+                    typeof eventData.timestamp === 'string'
+                      ? eventData.timestamp
+                      : new Date().toISOString(),
+                  width: TABLE_COLUMNS[0].width,
+                },
+                { value: parsed.id, width: TABLE_COLUMNS[1].width },
+                { value: parsed.triggerSlug, width: TABLE_COLUMNS[2].width },
+                { value: parsed.toolkitSlug, width: TABLE_COLUMNS[3].width },
+                { value: parsed.userId || '-', width: TABLE_COLUMNS[4].width },
+                {
+                  value: parsed.metadata.connectedAccount.id || '-',
+                  width: TABLE_COLUMNS[5].width,
+                },
+              ]);
+
+              yield* ui.log.message(tableLine);
+              yield* ui.output(tableLine);
+            } else if (json) {
+              yield* ui.note(formatTriggerListenSummary(parsed), `Event #${matchingEvents}`);
               yield* ui.log.message(JSON.stringify(eventData, null, 2));
+              yield* ui.output(JSON.stringify(eventData));
             } else {
+              yield* ui.note(formatTriggerListenSummary(parsed), `Event #${matchingEvents}`);
               yield* ui.log.message(JSON.stringify(parsed.payload, null, 2));
+              yield* ui.output(JSON.stringify(eventData));
             }
-            yield* ui.output(JSON.stringify(eventData));
 
             const payloadForForwarding = JSON.stringify(eventData);
             const logLine = `${payloadForForwarding}\n`;
