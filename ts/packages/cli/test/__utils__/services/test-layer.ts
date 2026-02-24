@@ -206,6 +206,17 @@ export const TestLayer = (input?: TestLiveInput) =>
           }
           return Effect.succeed(triggers);
         },
+        getTriggerTypeDetailed: (slug: string) => {
+          const found = toolkitsData.triggerTypes.find(
+            trigger => trigger.slug.toUpperCase() === slug.toUpperCase()
+          );
+          if (!found) {
+            return Effect.fail(
+              new HttpServerError({ cause: `Trigger type "${slug}" not found`, status: 404 })
+            );
+          }
+          return Effect.succeed(found);
+        },
         getTools: (toolkitSlugs?: ReadonlyArray<string>) => {
           let tools = toolkitsData.tools;
           if (toolkitSlugs && toolkitSlugs.length > 0) {

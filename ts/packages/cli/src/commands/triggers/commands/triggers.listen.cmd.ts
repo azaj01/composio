@@ -11,6 +11,7 @@ import {
   formatTriggerListenTableHeader,
   formatTriggerListenTableRow,
 } from '../format';
+import { parseCsv } from '../parse-csv';
 import { parseTriggerListenEvent } from '../parse';
 import type { TriggerListenFilters } from '../types';
 
@@ -71,12 +72,6 @@ const out = Options.text('out').pipe(
   Options.withDescription('Append each matching event to this file'),
   Options.optional
 );
-
-const parseCsv = (value: string): ReadonlyArray<string> =>
-  value
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean);
 
 const randomUUID = () => crypto.randomUUID();
 
