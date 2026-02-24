@@ -63,6 +63,12 @@ async function fetchAndFilterSpec() {
         continue;
       }
 
+      // Skip if marked as internal
+      if (operation['x-internal'] === true) {
+        removedCount++;
+        continue;
+      }
+
       // Keep only the first tag to avoid duplicates in sidebar
       if (tags.length > 1) {
         operation.tags = [tags[0]];
