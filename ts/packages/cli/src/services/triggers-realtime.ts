@@ -22,6 +22,7 @@ type PusherChannel = {
   bind: (event: string, callback: (data: unknown) => void) => void;
   bind_global?: (callback: (eventName: string, data: unknown) => void) => void;
   unbind?: (event?: string, callback?: (data: unknown) => void) => void;
+  unbind_all?: () => void;
 };
 
 type PusherClient = {
@@ -228,7 +229,7 @@ export class TriggersRealtime extends Effect.Service<TriggersRealtime>()(
             return {
               shutdown: async () => {
                 clearInterval(cleanupInterval);
-                channel.unbind?.();
+                channel.unbind_all?.();
                 pusher.unsubscribe(channelName);
                 pusher.disconnect();
               },
