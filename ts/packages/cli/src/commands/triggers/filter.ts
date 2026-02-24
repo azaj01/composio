@@ -2,16 +2,16 @@ import type { TriggerListenEvent, TriggerListenFilters } from './types';
 
 /**
  * Check if a trigger event matches the provided filters.
- *
- * IMPORTANT: `filters.toolkits` and `filters.triggerSlug` must be pre-normalized
- * to lowercase at construction time. This avoids per-event allocation from
- * repeated `.map(x => x.toLowerCase())` calls in long-running listen sessions.
+ * All string comparisons on `toolkits` and `triggerSlug` are case-insensitive.
  */
 export const matchesTriggerListenFilters = (
   filters: TriggerListenFilters,
   data: TriggerListenEvent
 ): boolean => {
-  if (filters.toolkits?.length && !filters.toolkits.includes(data.toolkitSlug.toLowerCase())) {
+  if (
+    filters.toolkits?.length &&
+    !filters.toolkits.some(t => t.toLowerCase() === data.toolkitSlug.toLowerCase())
+  ) {
     return false;
   }
 
@@ -28,7 +28,7 @@ export const matchesTriggerListenFilters = (
 
   if (
     filters.triggerSlug?.length &&
-    !filters.triggerSlug.includes(data.triggerSlug.toLowerCase())
+    !filters.triggerSlug.some(s => s.toLowerCase() === data.triggerSlug.toLowerCase())
   ) {
     return false;
   }

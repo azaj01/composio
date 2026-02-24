@@ -569,14 +569,7 @@ export const TestLayer = (input?: TestLiveInput) =>
           auth_config_ids?: string[];
           trigger_ids?: string[];
           trigger_names?: string[];
-          connectedAccountIds?: string[];
-          authConfigIds?: string[];
-          triggerIds?: string[];
-          triggerNames?: string[];
           show_disabled?: boolean;
-          showDisabled?: boolean;
-          deprecatedConnectedAccountUuids?: string[];
-          deprecatedAuthConfigUuids?: string[];
           limit?: number;
         }) => {
           let results = [...triggersData.items];

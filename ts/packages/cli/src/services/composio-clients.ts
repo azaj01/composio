@@ -342,14 +342,7 @@ export interface TriggerInstancesListActiveParams {
   auth_config_ids?: string[];
   trigger_ids?: string[];
   trigger_names?: string[];
-  connectedAccountIds?: string[];
-  authConfigIds?: string[];
-  triggerIds?: string[];
-  triggerNames?: string[];
   show_disabled?: boolean;
-  showDisabled?: boolean;
-  deprecatedConnectedAccountUuids?: string[];
-  deprecatedAuthConfigUuids?: string[];
   limit?: number;
 }
 
@@ -380,14 +373,7 @@ function buildTriggerInstancesNamespace(
               auth_config_ids: params.auth_config_ids,
               trigger_ids: params.trigger_ids,
               trigger_names: params.trigger_names,
-              connectedAccountIds: params.connectedAccountIds,
-              authConfigIds: params.authConfigIds,
-              triggerIds: params.triggerIds,
               show_disabled: params.show_disabled,
-              triggerNames: params.triggerNames,
-              showDisabled: params.showDisabled,
-              deprecatedConnectedAccountUuids: params.deprecatedConnectedAccountUuids,
-              deprecatedAuthConfigUuids: params.deprecatedAuthConfigUuids,
               limit: params.limit,
             }),
           TriggerInstancesListActiveResponse
