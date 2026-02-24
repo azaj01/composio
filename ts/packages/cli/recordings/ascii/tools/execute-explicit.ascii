@@ -424,10 +424,10 @@
 >   --toolkit-version 20250909_00
 │
 ◒  Executing tool "GMAIL_CREATE_EMAIL_DRAFT"...
-▲  Execution failed (logId: log_<REDACTED>)
-│
-■  Failed to fetch user profile: 403
+◇  Execution successful (logId: log_<REDACTED>)
 >
+
+
 
 
 

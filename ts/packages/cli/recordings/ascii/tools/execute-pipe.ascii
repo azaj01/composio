@@ -424,33 +424,33 @@
 >   | jq
 {
   "data": {
-    "message": "Failed to get sender information: Failed to fetch user profile: For
-bidden (403). Access denied. You may not have permission to access this user's prof
-ile or the required Gmail API scope is missing. Details: {\n  \"error\": {\n    \"c
-ode\": 403,\n    \"message\": \"Request had insufficient authentication scopes.\",\
-n    \"errors\": [\n      {\n        \"message\": \"Insufficient Permission\",\n
-     \"domain\": \"global\",\n        \"reason\": \"insufficientPermissions\"\n
-  }\n    ],\n    \"status\": \"PERMISSION_DENIED\",\n    \"details\": [\n      {\n
-       \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n        \"reason\"
-: \"ACCESS_TOKEN_SCOPE_INSUFFICIENT\",\n        \"domain\": \"googleapis.com\",\n
-      \"metadata\": {\n          \"service\": \"gmail.googleapis.com\",\n
-\"method\": \"caribou.api.proto.MailboxService.GetProfile\"\n        }\n      }\n
-  ]\n  }\n}\n",
-    "status_code": 403
+    "id": "<REDACTED>",
+    "labelIds": [
+      "SENT"
+    ],
+    "threadId": "<REDACTED>"
   },
-  "error": "Failed to get sender information: Failed to fetch user profile: Forbidd
-en (403). Access denied. You may not have permission to access this user's profile
-or the required Gmail API scope is missing. Details: {\n  \"error\": {\n    \"code\
-": 403,\n    \"message\": \"Request had insufficient authentication scopes.\",\n
- \"errors\": [\n      {\n        \"message\": \"Insufficient Permission\",\n
- \"domain\": \"global\",\n        \"reason\": \"insufficientPermissions\"\n      }\
-n    ],\n    \"status\": \"PERMISSION_DENIED\",\n    \"details\": [\n      {\n
-   \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n        \"reason\": \"
-ACCESS_TOKEN_SCOPE_INSUFFICIENT\",\n        \"domain\": \"googleapis.com\",\n
-  \"metadata\": {\n          \"service\": \"gmail.googleapis.com\",\n          \"me
-thod\": \"caribou.api.proto.MailboxService.GetProfile\"\n        }\n      }\n    ]\
-n  }\n}\n",
-  "successful": false,
+  "error": null,
+  "successful": true,
   "logId": "log_<REDACTED>"
 }
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ────────────────────────────────────────────────────────────────────────────────
