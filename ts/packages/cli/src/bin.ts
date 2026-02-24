@@ -21,6 +21,7 @@ import { JsPackageManagerDetector } from 'src/services/js-package-manager-detect
 import { ComposioUserContextLive as _ComposioUserContextLive } from 'src/services/user-context';
 import { UpgradeBinary } from 'src/services/upgrade-binary';
 import { TerminalUILive } from 'src/services/terminal-ui';
+import { TriggersRealtime } from 'src/services/triggers-realtime';
 
 /**
  * Concrete Effect layer compositions for the Composio CLI runtime.
@@ -65,6 +66,11 @@ export const UpgradeBinaryLive = Layer.provide(
   Layer.mergeAll(BunFileSystem.layer, FetchHttpClient.layer)
 ) satisfies RequiredLayer;
 
+export const TriggersRealtimeLive = Layer.provide(
+  TriggersRealtime.Default,
+  Layer.mergeAll(BunFileSystem.layer, NodeOs.Default)
+) satisfies RequiredLayer;
+
 const layers = Layer.mergeAll(
   CliConfigLive.pipe(Layer.provide(ConfigLive)),
   NodeOs.Default,
@@ -75,6 +81,7 @@ const layers = Layer.mergeAll(
   ComposioToolkitsRepositoryCachedLive, // Use the cached layer instead of the regular one
   EnvLangDetector.Default,
   JsPackageManagerDetector.Default,
+  TriggersRealtimeLive,
   BunContext.layer,
   BunFileSystem.layer,
   TerminalUILive,
