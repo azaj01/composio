@@ -122,7 +122,11 @@ describe('CLI: composio', () => {
 
             - connected-accounts link --auth-config text [--user-id text] [--no-browser]                                                                                                                          Link an external account via OAuth redirect.
 
-            - triggers                                                                                                                                                                                            Subscribe to realtime trigger events.
+            - triggers                                                                                                                                                                                            List trigger types and subscribe to realtime trigger events.
+
+            - triggers list [--toolkits text] [--limit integer]                                                                                                                                                   List available trigger types.
+
+            - triggers info [<slug>]                                                                                                                                                                              View details of a specific trigger type.
 
             - triggers listen [--toolkits text] [--trigger-id text] [--connected-account-id text] [--trigger-slug text] [--user-id text] [--json] [--table] [--max-events integer] [--forward text] [--out text]  Listen to realtime trigger events for your project.
           "
