@@ -48,6 +48,10 @@ Detailed documentation for Claude is organized in `.claude/`:
 - [feedback.md](.claude/decisions/feedback.md) - Feedback system
 - [llm-guardrails.md](.claude/decisions/llm-guardrails.md) - LLM guardrails system (frontmatter-scoped, pipeline-injected)
 
+## Git Workflow
+
+**Docs branches are always based off `next` and PRs target `next`** (not `master`). When creating a new branch for docs work, branch from `next`. When opening a PR, set the base to `next`.
+
 ## Key Rules
 
 1. **TypeScript code blocks are type-checked** - All TS code in MDX is validated at build time. See [twoslash.md](.claude/context/twoslash.md).
