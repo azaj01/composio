@@ -144,16 +144,16 @@ describe('CLI: composio triggers listen', () => {
         const lines = yield* MockConsole.getLines({ stripAnsi: true });
         const output = lines.join('\n');
 
-        expect(output).toContain('timestamp');
-        expect(output).toContain('trigger_id');
-        expect(output).toContain('trigger_slug');
-        expect(output).toContain('toolkit');
-        expect(output).toContain('user_id');
-        expect(output).toContain('connected_account_id');
+        expect(output).toContain('Timestamp');
+        expect(output).toContain('Trigger Id');
+        expect(output).toContain('Trigger Slug');
+        expect(output).toContain('Toolkit');
+        expect(output).toContain('User Id');
+        expect(output).toContain('Connected Account Id');
         expect(output).not.toContain('Event #1');
         expect(output).not.toContain('Trigger:');
         expect(output).toContain('trg_123');
-        expect(output).toContain('GMAIL_NEW_GMAIL_MESSAGE');
+        expect(output).toContain('GMAIL_NEW_GMAIL_');
         expect(output).toContain('GMAIL');
         expect(output).toContain('user_123');
         expect(output).toContain('con_123');

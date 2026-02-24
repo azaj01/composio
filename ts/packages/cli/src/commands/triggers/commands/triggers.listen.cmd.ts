@@ -1,12 +1,17 @@
 import { Command, Options } from '@effect/cli';
 import { Deferred, Effect, Option, Runtime } from 'effect';
 import path from 'node:path';
+import process from 'node:process';
 import { promises as fs } from 'node:fs';
 import { requireAuth } from 'src/effects/require-auth';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { TriggersRealtime } from 'src/services/triggers-realtime';
 import { matchesTriggerListenFilters } from '../filter';
-import { formatTriggerListenSummary } from '../format';
+import {
+  formatTriggerListenSummary,
+  formatTriggerListenTableHeader,
+  formatTriggerListenTableRow,
+} from '../format';
 import { parseTriggerListenEvent } from '../parse';
 import type { TriggerListenFilters } from '../types';
 
@@ -127,23 +132,16 @@ const detectWebhookPayloadVersion = (eventData: Record<string, unknown>): 'V1' |
   return 'V1';
 };
 
-const TABLE_COLUMNS = [
-  { key: 'timestamp', width: 25 },
-  { key: 'trigger_id', width: 16 },
-  { key: 'trigger_slug', width: 28 },
-  { key: 'toolkit', width: 12 },
-  { key: 'user_id', width: 24 },
-  { key: 'connected_account_id', width: 24 },
-] as const;
-
-const formatTableCell = (value: string, width: number): string => {
-  if (value.length <= width) return value.padEnd(width, ' ');
-  if (width <= 1) return value.slice(0, width);
-  return `${value.slice(0, width - 1)}…`;
-};
-
-const formatTableRow = (columns: ReadonlyArray<{ value: string; width: number }>): string =>
-  columns.map(col => formatTableCell(col.value, col.width)).join(' | ');
+const emitTableLine = (line: string, ui: TerminalUI): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    if (process.stdout.isTTY) {
+      yield* Effect.sync(() => {
+        process.stderr.write(`${line}\n`);
+      });
+      return;
+    }
+    yield* ui.output(line);
+  });
 
 export const triggersCmd$Listen = Command.make(
   'listen',
@@ -253,32 +251,19 @@ export const triggersCmd$Listen = Command.make(
             matchingEvents += 1;
             if (table) {
               if (!tableHeaderPrinted) {
-                yield* ui.log.message(
-                  formatTableRow(TABLE_COLUMNS.map(col => ({ value: col.key, width: col.width })))
-                );
+                yield* emitTableLine(formatTriggerListenTableHeader(), ui);
                 tableHeaderPrinted = true;
               }
 
-              const tableLine = formatTableRow([
-                {
-                  value:
-                    typeof eventData.timestamp === 'string'
-                      ? eventData.timestamp
-                      : new Date().toISOString(),
-                  width: TABLE_COLUMNS[0].width,
-                },
-                { value: parsed.id, width: TABLE_COLUMNS[1].width },
-                { value: parsed.triggerSlug, width: TABLE_COLUMNS[2].width },
-                { value: parsed.toolkitSlug, width: TABLE_COLUMNS[3].width },
-                { value: parsed.userId || '-', width: TABLE_COLUMNS[4].width },
-                {
-                  value: parsed.metadata.connectedAccount.id || '-',
-                  width: TABLE_COLUMNS[5].width,
-                },
-              ]);
+              const tableLine = formatTriggerListenTableRow({
+                timestamp:
+                  typeof eventData.timestamp === 'string'
+                    ? eventData.timestamp
+                    : new Date().toISOString(),
+                event: parsed,
+              });
 
-              yield* ui.log.message(tableLine);
-              yield* ui.output(tableLine);
+              yield* emitTableLine(tableLine, ui);
             } else if (json) {
               yield* ui.note(formatTriggerListenSummary(parsed), `Event #${matchingEvents}`);
               yield* ui.log.message(JSON.stringify(eventData, null, 2));
