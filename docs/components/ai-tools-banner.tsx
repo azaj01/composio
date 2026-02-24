@@ -14,6 +14,7 @@ function CopyableCommand({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
+      aria-label={`Copy command: ${text}`}
       className="mb-3 flex w-full cursor-pointer items-center gap-2 rounded-lg border border-fd-border bg-fd-background dark:bg-fd-background/50 px-3.5 py-2.5 font-mono text-[13px] text-fd-foreground transition-colors hover:border-[var(--composio-orange)]/40"
     >
       <span className="select-none text-fd-muted-foreground">$</span>
