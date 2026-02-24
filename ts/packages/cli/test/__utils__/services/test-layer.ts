@@ -35,6 +35,7 @@ import type { Tools } from 'src/models/tools';
 import type { TriggerTypes, TriggerTypesAsEnums } from 'src/models/trigger-types';
 import type { AuthConfigItem } from 'src/models/auth-configs';
 import type { ConnectedAccountItem } from 'src/models/connected-accounts';
+import type { TriggerInstanceItem } from 'src/models/triggers';
 import type { AuthConfigCreateResponse, LinkCreateResponse } from 'src/services/composio-clients';
 import type { ToolkitVersionSpec } from 'src/effects/toolkit-version-overrides';
 import { ComposioUserContextLive } from 'src/services/user-context';
@@ -83,6 +84,13 @@ export interface TestLiveInput {
   connectedAccountsData?: {
     items?: ConnectedAccountItem[];
     linkResponse?: LinkCreateResponse;
+  };
+
+  /**
+   * Mock trigger instance data to use in test.
+   */
+  triggersData?: {
+    items?: TriggerInstanceItem[];
   };
 
   /**
@@ -169,6 +177,14 @@ export const TestLayer = (input?: TestLiveInput) =>
     const realtimeData = {
       ...defaultRealtimeData,
       ...(input?.realtimeData ?? {}),
+    };
+
+    const defaultTriggersData = {
+      items: [] as TriggerInstanceItem[],
+    } satisfies TestLiveInput['triggersData'];
+    const triggersData = {
+      ...defaultTriggersData,
+      ...(input?.triggersData ?? {}),
     };
 
     const tempDir = tempy.temporaryDirectory({ prefix: 'test' });
@@ -547,6 +563,75 @@ export const TestLayer = (input?: TestLiveInput) =>
             redirect_url: `https://app.composio.dev/link?token=lt_test_token`,
           } satisfies LinkCreateResponse);
         },
+        listActiveTriggers: (params: {
+          user_ids?: string[];
+          connected_account_ids?: string[];
+          auth_config_ids?: string[];
+          trigger_ids?: string[];
+          trigger_names?: string[];
+          show_disabled?: boolean;
+          limit?: number;
+        }) => {
+          let results = [...triggersData.items];
+
+          const userIds = params.user_ids;
+          if (userIds && userIds.length > 0) {
+            const set = new Set(userIds);
+            results = results.filter(item => set.has(item.user_id));
+          }
+
+          const connectedAccountIds = params.connected_account_ids;
+          if (connectedAccountIds && connectedAccountIds.length > 0) {
+            const set = new Set(connectedAccountIds);
+            results = results.filter(item => set.has(item.connected_account_id));
+          }
+
+          const authConfigIds = params.auth_config_ids;
+          if (authConfigIds && authConfigIds.length > 0) {
+            const set = new Set(authConfigIds);
+            results = results.filter(item => set.has(item.auth_config_id));
+          }
+
+          const triggerIds = params.trigger_ids;
+          if (triggerIds && triggerIds.length > 0) {
+            const set = new Set(triggerIds);
+            results = results.filter(item => set.has(item.id));
+          }
+
+          const triggerNames = params.trigger_names;
+          if (triggerNames && triggerNames.length > 0) {
+            const set = new Set(triggerNames.map(name => name.toUpperCase()));
+            results = results.filter(item => set.has(item.trigger_name.toUpperCase()));
+          }
+
+          const includeDisabled = params.show_disabled ?? false;
+          if (!includeDisabled) {
+            results = results.filter(item => item.disabled_at === null);
+          }
+
+          const limit = params.limit ?? 30;
+          const items = results.slice(0, limit);
+          return Effect.succeed({
+            items,
+            total_items: results.length,
+            total_pages: Math.ceil(results.length / limit),
+            current_page: 1,
+            next_cursor: null,
+          });
+        },
+        createTrigger: (
+          triggerSlug: string,
+          params?: {
+            connected_account_id?: string;
+            trigger_config?: Record<string, unknown>;
+          }
+        ) =>
+          Effect.succeed({
+            trigger_id: `trg_${triggerSlug.toLowerCase()}_${params?.connected_account_id ?? 'new'}`,
+          }),
+        enableTrigger: () => Effect.succeed({ status: 'success' as const }),
+        disableTrigger: () => Effect.succeed({ status: 'success' as const }),
+        deleteTrigger: triggerId => Effect.succeed({ trigger_id: triggerId }),
       })
     );
     const ComposioSessionRepositoryTest = yield* setupComposioSessionRepository();

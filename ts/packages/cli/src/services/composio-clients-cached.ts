@@ -259,6 +259,14 @@ export const ComposioToolkitsRepositoryCached = Layer.effect(
       getConnectedAccount: nanoid => underlyingRepository.getConnectedAccount(nanoid),
       deleteConnectedAccount: nanoid => underlyingRepository.deleteConnectedAccount(nanoid),
       createConnectedAccountLink: params => underlyingRepository.createConnectedAccountLink(params),
+      // Trigger instance listing should NOT be cached (status can change frequently)
+      listActiveTriggers: params => underlyingRepository.listActiveTriggers(params),
+      // Trigger instance mutations should NOT be cached
+      createTrigger: (triggerSlug, params) =>
+        underlyingRepository.createTrigger(triggerSlug, params),
+      enableTrigger: triggerId => underlyingRepository.enableTrigger(triggerId),
+      disableTrigger: triggerId => underlyingRepository.disableTrigger(triggerId),
+      deleteTrigger: triggerId => underlyingRepository.deleteTrigger(triggerId),
     });
   })
 ).pipe(

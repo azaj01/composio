@@ -17,6 +17,7 @@ import type { AuthConfigCreateParams } from '@composio/client/resources/auth-con
 import { Toolkit, Toolkits, ToolkitDetailed, type ToolkitSearchResult } from 'src/models/toolkits';
 import { AuthConfigItem, AuthConfigItems } from 'src/models/auth-configs';
 import { ConnectedAccountItem, ConnectedAccountItems } from 'src/models/connected-accounts';
+import { TriggerInstanceItems } from 'src/models/triggers';
 import { ToolsAsEnums, Tools, Tool } from 'src/models/tools';
 import {
   groupByVersion,
@@ -301,6 +302,123 @@ export const TriggerTypesResponse = Schema.Struct({
   total_pages: Schema.Int,
   next_cursor: Schema.NullOr(Schema.String),
 }).annotations({ identifier: 'TriggerTypesResponse' });
+export type TriggerTypesResponse = Schema.Schema.Type<typeof TriggerTypesResponse>;
+
+export const TriggerInstancesListActiveResponse = Schema.Struct({
+  items: TriggerInstanceItems,
+  total_items: Schema.optionalWith(Schema.Int, { default: () => 0 }),
+  total_pages: Schema.optionalWith(Schema.Int, { default: () => 1 }),
+  current_page: Schema.optionalWith(Schema.Int, { default: () => 1 }),
+  next_cursor: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
+}).annotations({ identifier: 'TriggerInstancesListActiveResponse' });
+export type TriggerInstancesListActiveResponse = Schema.Schema.Type<
+  typeof TriggerInstancesListActiveResponse
+>;
+
+export const TriggerInstanceUpsertResponse = Schema.Struct({
+  trigger_id: Schema.String,
+}).annotations({ identifier: 'TriggerInstanceUpsertResponse' });
+export type TriggerInstanceUpsertResponse = Schema.Schema.Type<
+  typeof TriggerInstanceUpsertResponse
+>;
+
+export const TriggerInstanceManageUpdateResponse = Schema.Struct({
+  status: Schema.Literal('success'),
+}).annotations({ identifier: 'TriggerInstanceManageUpdateResponse' });
+export type TriggerInstanceManageUpdateResponse = Schema.Schema.Type<
+  typeof TriggerInstanceManageUpdateResponse
+>;
+
+export const TriggerInstanceManageDeleteResponse = Schema.Struct({
+  trigger_id: Schema.String,
+}).annotations({ identifier: 'TriggerInstanceManageDeleteResponse' });
+export type TriggerInstanceManageDeleteResponse = Schema.Schema.Type<
+  typeof TriggerInstanceManageDeleteResponse
+>;
+
+export interface TriggerInstancesListActiveParams {
+  user_ids?: string[];
+  connected_account_ids?: string[];
+  auth_config_ids?: string[];
+  trigger_ids?: string[];
+  trigger_names?: string[];
+  show_disabled?: boolean;
+  limit?: number;
+}
+
+export interface TriggerInstanceUpsertParams {
+  connected_account_id?: string;
+  trigger_config?: Record<string, unknown>;
+}
+
+function buildTriggerInstancesNamespace(
+  clientSingleton: ComposioClientSingleton,
+  withMetrics: <A, E, R>(
+    effect: Effect.Effect<{ data: A; metrics: Metrics }, E, R>
+  ) => Effect.Effect<A, E, R>
+) {
+  return {
+    /**
+     * Lists active trigger instances with optional filters.
+     * Returns a single page of results.
+     */
+    listActive: (params: TriggerInstancesListActiveParams) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client =>
+            client.triggerInstances.listActive({
+              user_ids: params.user_ids,
+              connected_account_ids: params.connected_account_ids,
+              auth_config_ids: params.auth_config_ids,
+              trigger_ids: params.trigger_ids,
+              trigger_names: params.trigger_names,
+              show_disabled: params.show_disabled,
+              limit: params.limit,
+            }),
+          TriggerInstancesListActiveResponse
+        )
+      ),
+    upsert: (triggerSlug: string, params?: TriggerInstanceUpsertParams) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.triggerInstances.upsert(triggerSlug, params),
+          TriggerInstanceUpsertResponse
+        )
+      ),
+    manageUpdate: (triggerId: string, params: { status: 'enable' | 'disable' }) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.triggerInstances.manage.update(triggerId, params),
+          TriggerInstanceManageUpdateResponse
+        )
+      ),
+    manageDelete: (triggerId: string) =>
+      withMetrics(
+        callClient(
+          clientSingleton,
+          client => client.triggerInstances.manage.delete(triggerId),
+          TriggerInstanceManageDeleteResponse
+        )
+      ),
+  };
+}
+
+function buildTriggerInstanceRepositoryOperations(client: ComposioClientLive) {
+  return {
+    listActiveTriggers: (params: TriggerInstancesListActiveParams) =>
+      client.triggerInstances.listActive(params),
+    createTrigger: (triggerSlug: string, params?: TriggerInstanceUpsertParams) =>
+      client.triggerInstances.upsert(triggerSlug, params),
+    enableTrigger: (triggerId: string) =>
+      client.triggerInstances.manageUpdate(triggerId, { status: 'enable' }),
+    disableTrigger: (triggerId: string) =>
+      client.triggerInstances.manageUpdate(triggerId, { status: 'disable' }),
+    deleteTrigger: (triggerId: string) => client.triggerInstances.manageDelete(triggerId),
+  };
+}
 
 // Single-page search response (includes total_items for "Listing X of Y" display)
 export const ToolkitSearchResponse = Schema.Struct({
@@ -1113,6 +1231,7 @@ export class ComposioClientLive extends Effect.Service<ComposioClientLive>()(
               )
             ),
         },
+        triggerInstances: buildTriggerInstancesNamespace(clientSingleton, withMetrics),
         cli: {
           /**
            * Generates a new CLI session with a random 6-character code.
@@ -1408,6 +1527,7 @@ export class ComposioToolkitsRepository extends Effect.Service<ComposioToolkitsR
         deleteConnectedAccount: (nanoid: string) => client.connectedAccounts.delete(nanoid),
         createConnectedAccountLink: (params: { auth_config_id: string; user_id: string }) =>
           client.connectedAccounts.createLink(params),
+        ...buildTriggerInstanceRepositoryOperations(client),
       };
     }),
     dependencies: [ComposioClientLive.Default],

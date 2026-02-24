@@ -1,12 +1,16 @@
 import type { TriggerListenEvent, TriggerListenFilters } from './types';
 
+/**
+ * Check if a trigger event matches the provided filters.
+ * All string comparisons on `toolkits` and `triggerSlug` are case-insensitive.
+ */
 export const matchesTriggerListenFilters = (
   filters: TriggerListenFilters,
   data: TriggerListenEvent
 ): boolean => {
   if (
     filters.toolkits?.length &&
-    !filters.toolkits.map(x => x.toLowerCase()).includes(data.toolkitSlug.toLowerCase())
+    !filters.toolkits.some(t => t.toLowerCase() === data.toolkitSlug.toLowerCase())
   ) {
     return false;
   }
@@ -24,7 +28,7 @@ export const matchesTriggerListenFilters = (
 
   if (
     filters.triggerSlug?.length &&
-    !filters.triggerSlug.map(x => x.toLowerCase()).includes(data.triggerSlug.toLowerCase())
+    !filters.triggerSlug.some(s => s.toLowerCase() === data.triggerSlug.toLowerCase())
   ) {
     return false;
   }

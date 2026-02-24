@@ -124,13 +124,23 @@ describe('CLI: composio', () => {
 
             - connected-accounts link --auth-config text [--user-id text] [--no-browser]                                                                                                                          Link an external account via OAuth redirect.
 
-            - triggers                                                                                                                                                                                            List trigger types and subscribe to realtime trigger events.
+            - triggers                                                                                                                                                                                            Inspect and subscribe to trigger events.
 
             - triggers list [--toolkits text] [--limit integer]                                                                                                                                                   List available trigger types.
 
             - triggers info [<slug>]                                                                                                                                                                              View details of a specific trigger type.
 
             - triggers listen [--toolkits text] [--trigger-id text] [--connected-account-id text] [--trigger-slug text] [--user-id text] [--json] [--table] [--max-events integer] [--forward text] [--out text]  Listen to realtime trigger events for your project.
+
+            - triggers status [--user-ids text] [--connected-account-ids text] [--toolkits text] [--trigger-ids text] [--trigger-names text] [--show-disabled] [--limit integer]                                  Show active triggers with optional filters.
+
+            - triggers create [--connected-account-id text] [--trigger-config text] [<trigger-name>]                                                                                                              Create a new trigger instance.
+
+            - triggers enable [<id>]                                                                                                                                                                              Enable a trigger instance.
+
+            - triggers disable [<id>]                                                                                                                                                                             Disable a trigger instance.
+
+            - triggers delete [(-y, --yes)] [<id>]                                                                                                                                                                Delete a trigger instance.
           "
         `);
       })
