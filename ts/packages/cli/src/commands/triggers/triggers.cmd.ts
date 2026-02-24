@@ -1,4 +1,6 @@
 import { Command } from '@effect/cli';
+import { triggersCmd$Info } from './commands/triggers.info.cmd';
+import { triggersCmd$List } from './commands/triggers.list.cmd';
 import { triggersCmd$Listen } from './commands/triggers.listen.cmd';
 
 /**
@@ -10,6 +12,6 @@ import { triggersCmd$Listen } from './commands/triggers.listen.cmd';
  * ```
  */
 export const triggersCmd = Command.make('triggers').pipe(
-  Command.withDescription('Subscribe to realtime trigger events.'),
-  Command.withSubcommands([triggersCmd$Listen])
+  Command.withDescription('List trigger types and subscribe to realtime trigger events.'),
+  Command.withSubcommands([triggersCmd$List, triggersCmd$Info, triggersCmd$Listen])
 );
