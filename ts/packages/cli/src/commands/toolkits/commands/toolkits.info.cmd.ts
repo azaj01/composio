@@ -1,9 +1,9 @@
-import { Args, Command } from '@effect/cli';
+import { Args, Command, Options } from '@effect/cli';
 import { Effect, Option } from 'effect';
-import { ComposioToolkitsRepository } from 'src/services/composio-clients';
+import { ComposioClientSingleton } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
-import { handleHttpServerError } from 'src/effects/handle-http-error';
+import { createToolRouterSession } from 'src/effects/create-tool-router-session';
 import { formatToolkitInfo } from '../format';
 
 const slug = Args.text({ name: 'slug' }).pipe(
@@ -11,20 +11,25 @@ const slug = Args.text({ name: 'slug' }).pipe(
   Args.optional
 );
 
+const userId = Options.text('user-id').pipe(
+  Options.withDefault('default'),
+  Options.withDescription('User ID for connection status (default: "default")')
+);
+
 /**
- * View details of a specific toolkit including auth schemes and required fields.
+ * View details of a specific toolkit including connection status.
  *
  * @example
  * ```bash
  * composio toolkits info "gmail"
+ * composio toolkits info "github" --user-id "alice"
  * ```
  */
-export const toolkitsCmd$Info = Command.make('info', { slug }, ({ slug }) =>
+export const toolkitsCmd$Info = Command.make('info', { slug, userId }, ({ slug, userId }) =>
   Effect.gen(function* () {
     if (!(yield* requireAuth)) return;
 
     const ui = yield* TerminalUI;
-    const repo = yield* ComposioToolkitsRepository;
 
     // Missing slug guard
     if (Option.isNone(slug)) {
@@ -35,25 +40,35 @@ export const toolkitsCmd$Info = Command.make('info', { slug }, ({ slug }) =>
 
     const slugValue = slug.value;
 
+    const clientSingleton = yield* ComposioClientSingleton;
+    const client = yield* clientSingleton.get();
+
     const toolkitOpt = yield* ui
-      .withSpinner(`Fetching toolkit "${slugValue}"...`, repo.getToolkitDetailed(slugValue))
+      .withSpinner(
+        `Fetching toolkit "${slugValue}"...`,
+        Effect.gen(function* () {
+          const sessionId = yield* createToolRouterSession(client, userId);
+          const result = yield* Effect.tryPromise(() =>
+            client.toolRouter.session.toolkits(sessionId, {
+              toolkits: [slugValue],
+            })
+          );
+          const item = result.items[0];
+          if (!item) {
+            return yield* Effect.fail(new Error(`Toolkit "${slugValue}" not found.`));
+          }
+          return item;
+        })
+      )
       .pipe(
         Effect.asSome,
-        Effect.catchTag(
-          'services/HttpServerError',
-          handleHttpServerError(ui, {
-            fallbackMessage: `Failed to fetch toolkit "${slugValue}".`,
-            hint: 'Browse available toolkits:\n> composio toolkits list',
-            fallbackValue: Option.none(),
-            searchForSuggestions: () =>
-              repo.searchToolkits({ search: slugValue, limit: 3 }).pipe(
-                Effect.map(r =>
-                  r.items.map(s => ({
-                    label: `${s.slug} — ${s.meta.description}`,
-                    command: `> composio toolkits info "${s.slug}"`,
-                  }))
-                )
-              ),
+        Effect.catchAll(error =>
+          Effect.gen(function* () {
+            const message =
+              error instanceof Error ? error.message : `Failed to fetch toolkit "${slugValue}".`;
+            yield* ui.log.error(message);
+            yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');
+            return Option.none();
           })
         )
       );
