@@ -119,18 +119,22 @@ function formatSchemaProperties(schema: Record<string, unknown>): string {
 
   const typeWidth = Math.max(...entries.map(e => e.type.length));
   const labelWidth = Math.max(...entries.map(e => e.label.length));
+  const metadataLabels = ['description:', 'type:', 'required:', 'default:'] as const;
+  const metadataLabelWidth = Math.max(...metadataLabels.map(label => label.length));
 
   return entries
     .map(e => {
       const lines: string[] = [];
       lines.push(`  ${bold(e.name)}`);
       lines.push(
-        `    ${bold('description:')} ${e.description ? gray(truncate(e.description, 70)) : '-'}`
+        `    ${'description:'.padEnd(metadataLabelWidth)} ${e.description ? gray(truncate(e.description, 70)) : '-'}`
       );
-      lines.push(`    ${bold('type:')} ${e.type.padEnd(typeWidth)}`);
-      lines.push(`    ${bold('required:')} ${e.label.padEnd(labelWidth)}`);
+      lines.push(`    ${'type:'.padEnd(metadataLabelWidth)} ${e.type.padEnd(typeWidth)}`);
+      lines.push(`    ${'required:'.padEnd(metadataLabelWidth)} ${e.label.padEnd(labelWidth)}`);
       if (e.hasDefault) {
-        lines.push(`    ${bold('default:')} ${gray(truncate(JSON.stringify(e.defaultValue), 40))}`);
+        lines.push(
+          `    ${'default:'.padEnd(metadataLabelWidth)} ${gray(truncate(JSON.stringify(e.defaultValue), 40))}`
+        );
       }
       return lines.join('\n');
     })
@@ -147,10 +151,12 @@ export const formatTriggerTypeInfo = (triggerType: TriggerType): string => {
   lines.push(`${bold('Instructions:')} ${triggerType.instructions}`);
 
   lines.push('');
+  lines.push(gray('------------------------------'));
   lines.push(bold('Config Fields:'));
   lines.push(formatSchemaProperties(triggerType.config));
 
   lines.push('');
+  lines.push(gray('------------------------------'));
   lines.push(bold('Payload Fields:'));
   lines.push(formatSchemaProperties(triggerType.payload));
 

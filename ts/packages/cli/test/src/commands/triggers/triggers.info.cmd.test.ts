@@ -69,7 +69,8 @@ describe('CLI: composio triggers info', () => {
           expect(output).toContain('required');
           expect(output).toContain('Payload Fields');
           expect(output).toContain('subject');
-          expect(output).toContain('default: false');
+          expect(output).toContain('default:');
+          expect(output).toContain('false');
           expect(output).toContain('composio triggers list --toolkits "gmail"');
         })
       );
