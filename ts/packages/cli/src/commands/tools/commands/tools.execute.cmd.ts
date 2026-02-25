@@ -9,7 +9,6 @@ import { requireAuth } from 'src/effects/require-auth';
 import { TerminalUI } from 'src/services/terminal-ui';
 import {
   ActionExecuteConnectedAccountNotFoundError,
-  isNoConnectionSlug,
   ToolsExecutor,
 } from 'src/services/tools-executor';
 import type { ToolExecuteParams } from 'src/services/tools-executor';
@@ -210,8 +209,10 @@ const handleExecutionError = (
       yield* ui.note(formatUnknownObject(redactRequestId(detailsObject)), 'Error details');
     }
 
-    // No-connection tips — show for both legacy and Tool Router error slugs
-    if (isNoConnectionSlug(slugValue)) {
+    // No-connection tips — the executor already classifies these into
+    // ActionExecuteConnectedAccountNotFoundError, so check the typed error
+    // instead of re-inspecting the slug.
+    if (normalized instanceof ActionExecuteConnectedAccountNotFoundError) {
       yield* ui.note(connectionTips(context.toolSlug, context.userId), 'Tips');
     }
 
