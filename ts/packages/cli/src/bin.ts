@@ -10,6 +10,7 @@ import * as constants from 'src/constants';
 import { ComposioCliConfig } from 'src/cli-config';
 import { BaseConfigProviderLive, ConfigLive, extendConfigProvider } from 'src/services/config';
 import {
+  ComposioClientSingleton,
   ComposioSessionRepository,
   ComposioToolkitsRepository,
 } from 'src/services/composio-clients';
@@ -73,9 +74,14 @@ export const TriggersRealtimeLive = Layer.provide(
   Layer.mergeAll(BunFileSystem.layer, NodeOs.Default)
 ) satisfies RequiredLayer;
 
+export const ComposioClientSingletonLive = Layer.provide(
+  ComposioClientSingleton.Default,
+  Layer.mergeAll(BunFileSystem.layer, NodeOs.Default, ConfigLive)
+) satisfies RequiredLayer;
+
 export const ToolsExecutorLive = Layer.provide(
   _ToolsExecutorLive,
-  ComposioUserContextLive
+  ComposioClientSingletonLive
 ) satisfies RequiredLayer;
 
 const layers = Layer.mergeAll(
@@ -85,6 +91,7 @@ const layers = Layer.mergeAll(
   UpgradeBinaryLive,
   ComposioUserContextLive,
   ComposioSessionRepositoryLive,
+  ComposioClientSingletonLive, // Expose ComposioClientSingleton for commands that use Tool Router directly
   ComposioToolkitsRepositoryCachedLive, // Use the cached layer instead of the regular one
   ToolsExecutorLive,
   EnvLangDetector.Default,
