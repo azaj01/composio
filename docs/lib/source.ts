@@ -392,7 +392,7 @@ ${page.data.description || ''}`;
   const cleanContent = mdxToCleanMarkdown(content);
 
   const footer = includeFooter
-    ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Glossary](https://docs.composio.dev/docs/glossary.md) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
+    ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Glossary](https://docs.composio.dev/llms.mdx/docs/glossary) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
     : '';
 
   const guardrails = includeGuardrails ? getGuardrails(page.data.llmGuardrails) : '';
