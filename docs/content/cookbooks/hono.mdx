@@ -20,7 +20,7 @@ Create a new project and install dependencies:
 ```bash
 mkdir composio-hono && cd composio-hono
 npm init -y
-npm install hono @hono/node-server openai @composio/core @composio/openai tsx
+npm install hono @hono/node-server openai @composio/core @composio/openai tsx dotenv
 ```
 
 Add your API keys to a `.env` file:
@@ -175,7 +175,7 @@ app.post("/connect/:toolkit", async (c) => {
 
 Here's everything together:
 
-<include>../../examples/hono/server.ts</include>
+<include meta='title="server.ts"'>../../examples/hono/server.ts</include>
 
 ## Running the server
 
