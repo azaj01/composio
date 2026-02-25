@@ -205,13 +205,16 @@ export const connectedAccountsCmd$Link = Command.make(
           return;
         }
 
-        yield* waitForActiveConnection(
-          ui,
-          repo,
-          linkOpt.value.connected_account_id,
-          linkOpt.value.redirect_url,
-          noBrowser
-        );
+        const { connected_account_id: connAccountId, redirect_url: redirectUrl } = linkOpt.value;
+        if (!connAccountId || !redirectUrl) {
+          yield* ui.log.error(
+            'The API returned an incomplete link response (missing connected_account_id or redirect_url).'
+          );
+          yield* Effect.logDebug('Link response:', linkOpt.value);
+          return;
+        }
+
+        yield* waitForActiveConnection(ui, repo, connAccountId, redirectUrl, noBrowser);
       }
     })
 ).pipe(Command.withDescription('Link an external account via OAuth redirect.'));

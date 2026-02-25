@@ -65,27 +65,29 @@ export const toolkitsCmd$List = Command.make(
         })
       );
 
-      if (result.items.length === 0) {
+      const items = Array.isArray(result.items) ? result.items : [];
+
+      if (items.length === 0) {
         yield* ui.log.warn('No toolkits found. Try broadening your search.');
         yield* ui.output('[]');
         return;
       }
 
-      const showing = result.items.length;
+      const showing = items.length;
       const total = result.total_items;
 
       yield* ui.log.info(
-        `Listing ${showing} of ${total} toolkits\n\n${formatToolkitsTable(result.items)}`
+        `Listing ${showing} of ${total} toolkits\n\n${formatToolkitsTable(items)}`
       );
 
       // Next step hint
-      const firstSlug = result.items[0]?.slug;
+      const firstSlug = items[0]?.slug;
       if (firstSlug) {
         yield* ui.log.step(
           `To view details of a toolkit:\n> composio toolkits info "${firstSlug}"`
         );
       }
 
-      yield* ui.output(formatToolkitsJson(result.items));
+      yield* ui.output(formatToolkitsJson(items));
     })
 ).pipe(Command.withDescription('List available toolkits with connection status.'));
