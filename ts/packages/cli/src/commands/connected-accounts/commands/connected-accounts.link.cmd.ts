@@ -1,11 +1,12 @@
 import { Args, Command, Options } from '@effect/cli';
 import { Effect, Option, Schedule } from 'effect';
 import open from 'open';
-import { ComposioClientSingleton, ComposioToolkitsRepository } from 'src/services/composio-clients';
+import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
 import { handleHttpServerError } from 'src/effects/handle-http-error';
-import { createToolRouterSession } from 'src/effects/create-tool-router-session';
+import { resolveToolRouterSession } from 'src/effects/create-tool-router-session';
+import { extractMessage } from 'src/utils/api-error-extraction';
 
 const toolkit = Args.text({ name: 'toolkit' }).pipe(
   Args.withDescription('Toolkit slug to link (e.g. "github", "gmail")'),
@@ -180,14 +181,12 @@ export const connectedAccountsCmd$Link = Command.make(
       } else {
         // Path B: Tool Router flow — toolkit is guaranteed Some (validated above)
         const toolkitSlug = Option.getOrThrow(toolkit);
-        const clientSingleton = yield* ComposioClientSingleton;
-        const client = yield* clientSingleton.get();
 
         const linkOpt = yield* ui
           .withSpinner(
             `Linking ${toolkitSlug}...`,
             Effect.gen(function* () {
-              const sessionId = yield* createToolRouterSession(client, userId, {
+              const { client, sessionId } = yield* resolveToolRouterSession(userId, {
                 manageConnections: true,
               });
               return yield* Effect.tryPromise(() =>
@@ -199,14 +198,8 @@ export const connectedAccountsCmd$Link = Command.make(
             Effect.asSome,
             Effect.catchAll(error =>
               Effect.gen(function* () {
-                // Surface the API error message when available
                 const message =
-                  error instanceof Error
-                    ? error.message
-                    : typeof error === 'object' && error !== null && 'message' in error
-                      ? String((error as { message: unknown }).message)
-                      : `Failed to create link for toolkit "${toolkitSlug}".`;
-
+                  extractMessage(error) ?? `Failed to create link for toolkit "${toolkitSlug}".`;
                 yield* ui.log.error(message);
                 yield* Effect.logDebug('Link error:', error);
                 yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');

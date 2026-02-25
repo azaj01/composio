@@ -1,9 +1,8 @@
 import { Command, Options } from '@effect/cli';
 import { Effect, Option } from 'effect';
-import { ComposioClientSingleton } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
-import { createToolRouterSession } from 'src/effects/create-tool-router-session';
+import { resolveToolRouterSession } from 'src/effects/create-tool-router-session';
 import { clampLimit } from 'src/ui/clamp-limit';
 import { formatToolkitsTable, formatToolkitsJson } from '../format';
 
@@ -46,15 +45,13 @@ export const toolkitsCmd$List = Command.make(
       if (!(yield* requireAuth)) return;
 
       const ui = yield* TerminalUI;
-      const clientSingleton = yield* ComposioClientSingleton;
-      const client = yield* clientSingleton.get();
 
       const clampedLimit = clampLimit(limit);
 
       const result = yield* ui.withSpinner(
         'Fetching toolkits...',
         Effect.gen(function* () {
-          const sessionId = yield* createToolRouterSession(client, userId);
+          const { client, sessionId } = yield* resolveToolRouterSession(userId);
           return yield* Effect.tryPromise(() =>
             client.toolRouter.session.toolkits(sessionId, {
               search: Option.getOrUndefined(query),
@@ -65,7 +62,7 @@ export const toolkitsCmd$List = Command.make(
         })
       );
 
-      const items = Array.isArray(result.items) ? result.items : [];
+      const { items } = result;
 
       if (items.length === 0) {
         yield* ui.log.warn('No toolkits found. Try broadening your search.');

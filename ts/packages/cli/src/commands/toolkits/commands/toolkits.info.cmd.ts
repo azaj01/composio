@@ -1,9 +1,10 @@
 import { Args, Command, Options } from '@effect/cli';
 import { Effect, Option } from 'effect';
-import { ComposioClientSingleton, ComposioToolkitsRepository } from 'src/services/composio-clients';
+import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
-import { createToolRouterSession } from 'src/effects/create-tool-router-session';
+import { resolveToolRouterSession } from 'src/effects/create-tool-router-session';
+import { extractMessage } from 'src/utils/api-error-extraction';
 import { formatToolkitInfo, formatToolkitInfoJson } from '../format';
 
 const slug = Args.text({ name: 'slug' }).pipe(
@@ -40,14 +41,11 @@ export const toolkitsCmd$Info = Command.make('info', { slug, userId }, ({ slug, 
 
     const slugValue = slug.value;
 
-    const clientSingleton = yield* ComposioClientSingleton;
-    const client = yield* clientSingleton.get();
-
     const resultOpt = yield* ui
       .withSpinner(
         `Fetching toolkit "${slugValue}"...`,
         Effect.gen(function* () {
-          const sessionId = yield* createToolRouterSession(client, userId);
+          const { client, sessionId } = yield* resolveToolRouterSession(userId);
           return yield* Effect.tryPromise(() =>
             client.toolRouter.session.toolkits(sessionId, {
               toolkits: [slugValue],
@@ -59,9 +57,9 @@ export const toolkitsCmd$Info = Command.make('info', { slug, userId }, ({ slug, 
         Effect.asSome,
         Effect.catchAll(error =>
           Effect.gen(function* () {
-            const message =
-              error instanceof Error ? error.message : `Failed to fetch toolkit "${slugValue}".`;
+            const message = extractMessage(error) ?? `Failed to fetch toolkit "${slugValue}".`;
             yield* ui.log.error(message);
+            yield* Effect.logDebug('Toolkit info error:', error);
             yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');
             return Option.none();
           })
@@ -73,8 +71,7 @@ export const toolkitsCmd$Info = Command.make('info', { slug, userId }, ({ slug, 
     }
 
     const result = resultOpt.value;
-    const items = Array.isArray(result.items) ? result.items : [];
-    const toolkit = items[0];
+    const toolkit = result.items[0];
 
     if (!toolkit) {
       yield* ui.log.warn(`Toolkit "${slugValue}" not found.`);
