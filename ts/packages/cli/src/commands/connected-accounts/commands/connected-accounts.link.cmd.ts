@@ -43,15 +43,29 @@ const waitForActiveConnection = (
     yield* ui.output(redirectUrl);
 
     if (!noBrowser) {
-      yield* Effect.tryPromise(() => open(redirectUrl, { wait: false })).pipe(
-        Effect.catchAll(error =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('Failed to open browser:', error);
-            yield* ui.log.warn('Could not open the browser automatically.');
-            yield* ui.log.info('Tip: try using `--no-browser` and open the URL manually.');
-          })
-        )
-      );
+      // Validate URL scheme before opening — prevent non-HTTPS redirects
+      let urlSchemeValid = false;
+      try {
+        const parsed = new URL(redirectUrl);
+        urlSchemeValid = parsed.protocol === 'https:' || parsed.protocol === 'http:';
+      } catch {
+        // Malformed URL — fall through to the warning below
+      }
+
+      if (!urlSchemeValid) {
+        yield* ui.log.warn(`Redirect URL has an unexpected scheme: ${redirectUrl}`);
+        yield* ui.log.info('Open the URL manually if you trust the source.');
+      } else {
+        yield* Effect.tryPromise(() => open(redirectUrl, { wait: false })).pipe(
+          Effect.catchAll(error =>
+            Effect.gen(function* () {
+              yield* Effect.logDebug('Failed to open browser:', error);
+              yield* ui.log.warn('Could not open the browser automatically.');
+              yield* ui.log.info('Tip: try using `--no-browser` and open the URL manually.');
+            })
+          )
+        );
+      }
     }
 
     // Poll until the connected account becomes ACTIVE

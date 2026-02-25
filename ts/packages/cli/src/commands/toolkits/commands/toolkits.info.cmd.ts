@@ -4,7 +4,7 @@ import { ComposioClientSingleton, ComposioToolkitsRepository } from 'src/service
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
 import { createToolRouterSession } from 'src/effects/create-tool-router-session';
-import { formatToolkitInfo } from '../format';
+import { formatToolkitInfo, formatToolkitInfoJson } from '../format';
 
 const slug = Args.text({ name: 'slug' }).pipe(
   Args.withDescription('Toolkit slug (e.g. "gmail")'),
@@ -108,6 +108,6 @@ export const toolkitsCmd$Info = Command.make('info', { slug, userId }, ({ slug, 
       `To list tools in this toolkit:\n> composio tools list --toolkits "${toolkit.slug}"`
     );
 
-    yield* ui.output(JSON.stringify(toolkit, null, 2));
+    yield* ui.output(formatToolkitInfoJson(toolkit));
   })
 ).pipe(Command.withDescription('View details of a specific toolkit.'));
