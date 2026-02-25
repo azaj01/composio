@@ -43,41 +43,24 @@ export const toolkitsCmd$Info = Command.make('info', { slug, userId }, ({ slug, 
     const clientSingleton = yield* ComposioClientSingleton;
     const client = yield* clientSingleton.get();
 
-    const toolkitOpt = yield* ui
-      .withSpinner(
-        `Fetching toolkit "${slugValue}"...`,
-        Effect.gen(function* () {
-          const sessionId = yield* createToolRouterSession(client, userId);
-          const result = yield* Effect.tryPromise(() =>
-            client.toolRouter.session.toolkits(sessionId, {
-              toolkits: [slugValue],
-            })
-          );
-          const item = result.items[0];
-          if (!item) {
-            return yield* Effect.fail(new Error(`Toolkit "${slugValue}" not found.`));
-          }
-          return item;
-        })
-      )
-      .pipe(
-        Effect.asSome,
-        Effect.catchAll(error =>
-          Effect.gen(function* () {
-            const message =
-              error instanceof Error ? error.message : `Failed to fetch toolkit "${slugValue}".`;
-            yield* ui.log.error(message);
-            yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');
-            return Option.none();
+    const result = yield* ui.withSpinner(
+      `Fetching toolkit "${slugValue}"...`,
+      Effect.gen(function* () {
+        const sessionId = yield* createToolRouterSession(client, userId);
+        return yield* Effect.tryPromise(() =>
+          client.toolRouter.session.toolkits(sessionId, {
+            toolkits: [slugValue],
           })
-        )
-      );
+        );
+      })
+    );
 
-    if (Option.isNone(toolkitOpt)) {
+    const toolkit = result.items[0];
+    if (!toolkit) {
+      yield* ui.log.warn(`Toolkit "${slugValue}" not found.`);
+      yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');
       return;
     }
-
-    const toolkit = toolkitOpt.value;
 
     yield* ui.note(formatToolkitInfo(toolkit), `Toolkit: ${toolkit.name}`);
 
