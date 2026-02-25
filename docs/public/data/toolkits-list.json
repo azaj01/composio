@@ -3272,6 +3272,14 @@
     "triggerCount": 0
   },
   {
+    "slug": "devin_mcp",
+    "name": "Devin MCP",
+    "logo": "https://logos.composio.dev/api/devin_mcp",
+    "category": "model context protocol",
+    "toolCount": 4,
+    "triggerCount": 0
+  },
+  {
     "slug": "dialmycalls",
     "name": "Dialmycalls",
     "logo": "https://logos.composio.dev/api/dialmycalls",
