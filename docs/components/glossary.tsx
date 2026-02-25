@@ -23,7 +23,7 @@ export function Glossary({ children }: { children: ReactNode }) {
 
   return (
     <FilterContext.Provider value={filter.toLowerCase()}>
-      <div className="not-prose mt-6">
+      <div className="not-prose">
         <div className="hidden sm:grid grid-cols-[minmax(180px,1fr)_2fr] gap-4 border-b border-fd-border pb-3 mb-0">
           <div className="text-xs font-semibold text-fd-muted-foreground tracking-wider uppercase">
             Glossary Term
