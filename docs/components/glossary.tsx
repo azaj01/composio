@@ -40,6 +40,7 @@ export function Glossary({ children }: { children: ReactNode }) {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -51,6 +52,7 @@ export function Glossary({ children }: { children: ReactNode }) {
             <input
               type="text"
               placeholder="Filter..."
+              aria-label="Filter glossary terms"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-sm border border-fd-border rounded-md bg-fd-background text-fd-foreground placeholder:text-fd-muted-foreground focus:outline-none focus:ring-2 focus:ring-fd-ring"
