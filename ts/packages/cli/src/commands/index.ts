@@ -17,6 +17,7 @@ import { toolsCmd } from './tools/tools.cmd';
 import { authConfigsCmd } from './auth-configs/auth-configs.cmd';
 import { connectedAccountsCmd } from './connected-accounts/connected-accounts.cmd';
 import { triggersCmd } from './triggers/triggers.cmd';
+import { logsCmd } from './logs-cmd/logs.cmd';
 
 const $cmd = $defaultCmd.pipe(
   Command.withSubcommands([
@@ -34,6 +35,7 @@ const $cmd = $defaultCmd.pipe(
     authConfigsCmd,
     connectedAccountsCmd,
     triggersCmd,
+    logsCmd,
   ])
 );
 
