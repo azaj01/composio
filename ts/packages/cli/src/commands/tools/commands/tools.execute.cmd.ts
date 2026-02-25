@@ -83,14 +83,24 @@ const parseArguments = (raw: string) =>
 /**
  * Derive the toolkit slug from a tool slug.
  * e.g. "GMAIL_CREATE_EMAIL_DRAFT" → "gmail", "GITHUB_GET_REPOS" → "github"
+ *
+ * Returns `undefined` for meta tool slugs (COMPOSIO_*) since they don't map
+ * to a real toolkit and would produce misleading connection tips.
  */
-const toolkitFromToolSlug = (toolSlug: string): string => {
+const toolkitFromToolSlug = (toolSlug: string): string | undefined => {
   const idx = toolSlug.indexOf('_');
-  return idx > 0 ? toolSlug.slice(0, idx).toLowerCase() : toolSlug.toLowerCase();
+  if (idx <= 0) return toolSlug.toLowerCase();
+  const prefix = toolSlug.slice(0, idx).toLowerCase();
+  // Meta tools (COMPOSIO_*) are internal and don't correspond to a real toolkit.
+  if (prefix === 'composio') return undefined;
+  return prefix;
 };
 
 const connectionTips = (toolSlug: string, userId: string) => {
   const toolkit = toolkitFromToolSlug(toolSlug);
+  if (!toolkit) {
+    return `Retry: ${bold(`composio tools execute ${toolSlug} ...`)}`;
+  }
   return [
     `Link the toolkit first: ${bold(`composio connected-accounts link ${toolkit} --user-id ${userId}`)}`,
     `Then retry:             ${bold(`composio tools execute ${toolSlug} ...`)}`,
