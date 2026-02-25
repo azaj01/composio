@@ -114,10 +114,13 @@ export function formatToolkitInfoJson(toolkit: SessionToolkitItem): string {
     {
       name: toolkit.name,
       slug: toolkit.slug,
-      description: toolkit.meta.description,
+      meta: {
+        description: toolkit.meta.description,
+        logo: toolkit.meta.logo,
+      },
       is_no_auth: toolkit.is_no_auth,
       enabled: toolkit.enabled,
-      connected: toolkit.connected_account
+      connected_account: toolkit.connected_account
         ? {
             status: toolkit.connected_account.status,
             id: toolkit.connected_account.id,
