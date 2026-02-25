@@ -3272,6 +3272,14 @@
     "triggerCount": 0
   },
   {
+    "slug": "devin_mcp",
+    "name": "Devin MCP",
+    "logo": "https://logos.composio.dev/api/devin_mcp",
+    "category": "model context protocol",
+    "toolCount": 4,
+    "triggerCount": 0
+  },
+  {
     "slug": "dialmycalls",
     "name": "Dialmycalls",
     "logo": "https://logos.composio.dev/api/dialmycalls",
@@ -6029,6 +6037,14 @@
     "logo": "https://logos.composio.dev/api/postgrid_verify",
     "category": "developer tools",
     "toolCount": 13,
+    "triggerCount": 0
+  },
+  {
+    "slug": "postiz_mcp",
+    "name": "Postiz",
+    "logo": "https://logos.composio.dev/postiz",
+    "category": "social media marketing",
+    "toolCount": 9,
     "triggerCount": 0
   },
   {
