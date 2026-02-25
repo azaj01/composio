@@ -312,6 +312,11 @@
               "devops"
             ]
           },
+          "human_description": {
+            "type": "string",
+            "description": "Human-friendly description of the tool, if available",
+            "example": "Create a new issue in a GitHub repository"
+          },
           "is_deprecated": {
             "type": "boolean",
             "description": "Indicates if this tool is deprecated and may be removed in the future",
