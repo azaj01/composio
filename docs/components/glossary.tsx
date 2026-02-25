@@ -2,10 +2,9 @@
 
 import {
   useState,
+  useCallback,
   createContext,
   useContext,
-  useRef,
-  useEffect,
   type ReactNode,
 } from 'react';
 import { cn } from '@/lib/utils';
@@ -73,13 +72,12 @@ export function GlossaryTerm({
   children: ReactNode;
 }) {
   const filter = useContext(FilterContext);
-  const definitionRef = useRef<HTMLDivElement>(null);
   const [definitionText, setDefinitionText] = useState('');
   const id = slugify(name);
 
-  useEffect(() => {
-    if (definitionRef.current) {
-      setDefinitionText(definitionRef.current.textContent?.toLowerCase() || '');
+  const definitionRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      setDefinitionText(node.textContent?.toLowerCase() || '');
     }
   }, []);
 
