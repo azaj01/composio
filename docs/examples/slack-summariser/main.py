@@ -1,10 +1,10 @@
 import sys
 
+# region setup
 from agents import Agent, Runner
 from composio import Composio
 from composio_openai_agents import OpenAIAgentsProvider
 
-# region setup
 composio = Composio(provider=OpenAIAgentsProvider())
 # endregion setup
 
