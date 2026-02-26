@@ -5,12 +5,14 @@ import { OpenAI } from "openai";
 import { Composio } from "@composio/core";
 import { OpenAIProvider } from "@composio/openai";
 
+// #region setup
 const composio = new Composio({ provider: new OpenAIProvider() });
 const openai = new OpenAI();
 
 const app = new Hono();
+// #endregion setup
 
-// Send a message to an AI agent with access to all tools.
+// #region chat
 app.post("/chat", async (c) => {
   const { userId, message } = await c.req.json();
 
@@ -39,8 +41,9 @@ app.post("/chat", async (c) => {
     messages.push(...toolResults);
   }
 });
+// #endregion chat
 
-// List all toolkits and their connection status for a user.
+// #region list-connections
 app.get("/connections/:userId", async (c) => {
   const userId = c.req.param("userId");
 
@@ -54,8 +57,9 @@ app.get("/connections/:userId", async (c) => {
     }))
   );
 });
+// #endregion list-connections
 
-// Check if a specific toolkit is connected for a user.
+// #region check-connection
 app.get("/connections/:userId/:toolkit", async (c) => {
   const userId = c.req.param("userId");
   const toolkit = c.req.param("toolkit");
@@ -66,8 +70,9 @@ app.get("/connections/:userId/:toolkit", async (c) => {
 
   return c.json({ toolkit, connected: match?.connection?.isActive ?? false });
 });
+// #endregion check-connection
 
-// Start OAuth for a toolkit. Returns a URL to redirect the user to.
+// #region connect
 app.post("/connect/:toolkit", async (c) => {
   const toolkit = c.req.param("toolkit");
   const { userId } = await c.req.json();
@@ -77,6 +82,7 @@ app.post("/connect/:toolkit", async (c) => {
 
   return c.json({ redirectUrl: connectionRequest.redirectUrl });
 });
+// #endregion connect
 
 serve({ fetch: app.fetch, port: 8000 });
 console.log("Server running on http://localhost:8000");

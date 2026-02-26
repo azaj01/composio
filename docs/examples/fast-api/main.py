@@ -1,3 +1,4 @@
+# region setup
 from agents import Agent, Runner
 from composio import Composio
 from composio_openai_agents import OpenAIAgentsProvider
@@ -7,15 +8,13 @@ from pydantic import BaseModel
 composio = Composio(provider=OpenAIAgentsProvider())
 
 app = FastAPI()
+# endregion setup
 
 
+# region chat
 class ChatRequest(BaseModel):
     user_id: str
     message: str
-
-
-class ConnectRequest(BaseModel):
-    user_id: str
 
 
 @app.post("/chat")
@@ -32,8 +31,10 @@ def chat(request: ChatRequest):
 
     result = Runner.run_sync(starting_agent=agent, input=request.message)
     return {"response": result.final_output}
+# endregion chat
 
 
+# region list-connections
 @app.get("/connections/{user_id}")
 def list_connections(user_id: str):
     """List all toolkits and their connection status for a user."""
@@ -43,8 +44,10 @@ def list_connections(user_id: str):
         {"toolkit": t.slug, "connected": t.connection.is_active if t.connection else False}
         for t in toolkits.items
     ]
+# endregion list-connections
 
 
+# region check-connection
 @app.get("/connections/{user_id}/{toolkit}")
 def check_connection(user_id: str, toolkit: str):
     """Check if a specific toolkit is connected for a user."""
@@ -54,6 +57,12 @@ def check_connection(user_id: str, toolkit: str):
         if t.slug == toolkit:
             return {"toolkit": toolkit, "connected": t.connection.is_active if t.connection else False}
     return {"toolkit": toolkit, "connected": False}
+# endregion check-connection
+
+
+# region connect
+class ConnectRequest(BaseModel):
+    user_id: str
 
 
 @app.post("/connect/{toolkit}")
@@ -62,3 +71,4 @@ def connect_toolkit(toolkit: str, request: ConnectRequest):
     session = composio.create(user_id=request.user_id, toolkits=[toolkit])
     connection_request = session.authorize(toolkit)
     return {"redirect_url": connection_request.redirect_url}
+# endregion connect

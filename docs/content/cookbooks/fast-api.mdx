@@ -3,7 +3,7 @@ title: Basic FastAPI Server
 description: Build an AI agent with access to 1000+ tools using Composio and FastAPI
 ---
 
-[View source on GitHub](https://github.com/ComposioHQ/composio/tree/next/docs/example/fast-api)
+[View source on GitHub](https://github.com/ComposioHQ/composio/tree/next/docs/examples/fast-api)
 
 This cookbook builds a FastAPI server where users can chat with an AI agent that has access to over 1000 tools like Gmail, GitHub, Slack, Notion, and more. Along the way we'll add endpoints to manage which apps a user has connected.
 
@@ -34,17 +34,7 @@ OPENAI_API_KEY=your_openai_api_key
 
 `Composio` takes an `OpenAIAgentsProvider` so that when we ask for tools later, they come back in the format the OpenAI Agents SDK expects.
 
-```python
-from agents import Agent, Runner
-from composio import Composio
-from composio_openai_agents import OpenAIAgentsProvider
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-composio = Composio(provider=OpenAIAgentsProvider())
-
-app = FastAPI()
-```
+<include>../../examples/fast-api/main.py#setup</include>
 
 ## Chat endpoint
 
@@ -52,26 +42,7 @@ The core of the server is a `/chat` endpoint. A user sends a message, and the ag
 
 `composio.create()` creates a **session** scoped to a user. Calling `session.tools()` returns a set of meta tools that let the agent discover tools across all apps, handle OAuth when needed, and execute actions. We pass these to an `Agent` and let `Runner.run_sync` handle the agentic loop.
 
-```python
-class ChatRequest(BaseModel):
-    user_id: str
-    message: str
-
-
-@app.post("/chat")
-def chat(request: ChatRequest):
-    session = composio.create(user_id=request.user_id)
-    tools = session.tools()
-
-    agent = Agent(
-        name="Assistant",
-        instructions="You are a helpful assistant. Use tools to help the user.",
-        tools=tools,
-    )
-
-    result = Runner.run_sync(starting_agent=agent, input=request.message)
-    return {"response": result.final_output}
-```
+<include>../../examples/fast-api/main.py#chat</include>
 
 <Callout>
 If the user hasn't connected the app they're trying to use, the agent will automatically
@@ -84,51 +55,23 @@ That's a working agent. But in most apps you'll also want to manage connections 
 
 `session.toolkits()` returns every toolkit in the session along with its connection status. We can expose this as a simple GET endpoint so your frontend can render a connections UI.
 
-```python
-@app.get("/connections/{user_id}")
-def list_connections(user_id: str):
-    session = composio.create(user_id=user_id)
-    toolkits = session.toolkits()
-    return [
-        {"toolkit": t.slug, "connected": t.connection.is_active if t.connection else False}
-        for t in toolkits.items
-    ]
-```
+<include>../../examples/fast-api/main.py#list-connections</include>
 
 If you just need to check a single toolkit, say before kicking off a workflow that requires Gmail, you can scope the session to that toolkit:
 
-```python
-@app.get("/connections/{user_id}/{toolkit}")
-def check_connection(user_id: str, toolkit: str):
-    session = composio.create(user_id=user_id, toolkits=[toolkit])
-    toolkits = session.toolkits()
-    for t in toolkits.items:
-        if t.slug == toolkit:
-            return {"toolkit": toolkit, "connected": t.connection.is_active if t.connection else False}
-    return {"toolkit": toolkit, "connected": False}
-```
+<include>../../examples/fast-api/main.py#check-connection</include>
 
 ## Connecting an app
 
 When a user wants to connect a new app, `session.authorize()` starts the OAuth flow and returns a redirect URL. Your frontend sends the user there, and once they complete auth, they're connected.
 
-```python
-class ConnectRequest(BaseModel):
-    user_id: str
-
-
-@app.post("/connect/{toolkit}")
-def connect_toolkit(toolkit: str, request: ConnectRequest):
-    session = composio.create(user_id=request.user_id, toolkits=[toolkit])
-    connection_request = session.authorize(toolkit)
-    return {"redirect_url": connection_request.redirect_url}
-```
+<include>../../examples/fast-api/main.py#connect</include>
 
 ## Complete app
 
 Here's everything together:
 
-<include>../../example/fast-api/main.py</include>
+<include>../../examples/fast-api/main.py</include>
 
 ## Running the server
 
