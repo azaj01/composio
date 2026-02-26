@@ -74,7 +74,7 @@ def export(toolkit_slug: str, output_file: str):
             "no_auth": getattr(tool, "no_auth", False),
         })
 
-    with open(output_file, "w") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, default=str)
 
     print(f"Exported {len(data)} tools to {output_file}")
