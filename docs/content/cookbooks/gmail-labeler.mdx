@@ -5,7 +5,7 @@ description: Build a Python script that listens for new Gmail messages and label
 
 [View source on GitHub](https://github.com/ComposioHQ/composio/tree/next/docs/examples/gmail-labeler)
 
-This cookbook builds a standalone Python script that connects to Gmail, listens for incoming messages via Composio triggers, and uses Claude to automatically label each email. We'll use **scoped sessions** to limit the agent to Gmail tools only.
+This cookbook builds a Python script that connects to Gmail, listens for new messages using Composio triggers, and uses Claude to label each email automatically. The agent is scoped to Gmail tools only using a **scoped session**.
 
 ## Prerequisites
 
@@ -38,19 +38,19 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 
 ## Connecting to Gmail
 
-Before labeling, we need to make sure the user has connected their Gmail account. The `connect` function creates a scoped session with `toolkits=["gmail"]` and checks the connection status via `session.toolkits()`. If Gmail is not connected, `session.authorize("gmail")` starts the OAuth flow and returns a URL for the user to visit. `wait_for_connection()` blocks until they complete it.
+Before labeling emails, the user needs to connect their Gmail account. The `connect` function creates a scoped session with `toolkits=["gmail"]` and checks the connection status with `session.toolkits()`. If Gmail is not connected, `session.authorize("gmail")` starts the OAuth flow and returns a URL for the user to visit. `wait_for_connection()` blocks until they complete it.
 
 <include>../../examples/gmail-labeler/main.py#connect</include>
 
 ## Labeling with Claude
 
-For each incoming email, `label_email` gets Gmail tools from `session.tools()`, wraps them in an MCP server with `create_sdk_mcp_server()`, and hands them to a Claude agent. The agent lists existing labels, picks the best fit (or creates a new one), and applies it.
+For each incoming email, `label_email` fetches Gmail tools from `session.tools()`, wraps them in an MCP server using `create_sdk_mcp_server()`, and passes them to a Claude agent. The agent lists existing labels, picks the best fit or creates a new one, and applies it to the email.
 
 <include>../../examples/gmail-labeler/main.py#label</include>
 
 ## Listening for emails
 
-The `listen` function creates a trigger for new Gmail messages and subscribes to events via WebSocket. When a new email arrives, the handler calls `label_email` to classify and label it.
+The `listen` function creates a trigger for new Gmail messages and subscribes to events over WebSocket. When a new email arrives, the handler calls `label_email` to classify and label it.
 
 <include>../../examples/gmail-labeler/main.py#listen</include>
 
@@ -72,7 +72,7 @@ First, connect your Gmail account:
 uv run --env-file .env python main.py connect default
 ```
 
-If Gmail is not connected yet, you'll get an OAuth URL. Open it in your browser and authorize the app. If you've already connected, the script will print "Gmail is already connected."
+If Gmail is not connected yet, you will get an OAuth URL. Open it in your browser and authorize the app. If already connected, the script prints "Gmail is already connected."
 
 Then start the listener:
 
@@ -80,4 +80,4 @@ Then start the listener:
 uv run --env-file .env python main.py listen default
 ```
 
-Send yourself an email and watch the terminal — the agent will receive the event, inspect the email, and apply an appropriate label.
+Send yourself an email and watch the terminal. The agent will receive the event, inspect the email, and apply a label.
