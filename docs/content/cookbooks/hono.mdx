@@ -34,17 +34,7 @@ OPENAI_API_KEY=your_openai_api_key
 
 `Composio` takes an `OpenAIProvider` so that when we ask for tools later, they come back in the format OpenAI expects.
 
-```typescript
-import { Hono } from 'hono';
-import { OpenAI } from 'openai';
-import { Composio } from '@composio/core';
-import { OpenAIProvider } from '@composio/openai';
-
-const composio = new Composio({ provider: new OpenAIProvider() });
-const openai = new OpenAI();
-
-const app = new Hono();
-```
+<include meta="no-twoslash">../../examples/hono/server.ts#setup</include>
 
 ## Chat endpoint
 
@@ -52,45 +42,7 @@ The core of the server is a `/chat` endpoint. A user sends a message, and the ag
 
 `composio.create()` creates a **session** scoped to a user. Calling `session.tools()` returns a set of meta tools that let the agent discover tools across all apps, handle OAuth when needed, and execute actions. We pass these to OpenAI and loop until the model stops calling tools.
 
-```typescript
-import { Hono } from 'hono';
-import { OpenAI } from 'openai';
-import { Composio } from '@composio/core';
-import { OpenAIProvider } from '@composio/openai';
-
-declare const composio: Composio<OpenAIProvider>;
-declare const openai: OpenAI;
-const app = new Hono();
-// ---cut---
-app.post("/chat", async (c) => {
-  const { userId, message } = await c.req.json();
-
-  const session = await composio.create(userId);
-  const tools = await session.tools();
-
-  const messages: OpenAI.ChatCompletionMessageParam[] = [
-    { role: "system", content: "You are a helpful assistant. Use tools to help the user." },
-    { role: "user", content: message },
-  ];
-
-  while (true) {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1",
-      tools,
-      messages,
-    });
-
-    const choice = response.choices[0];
-    if (!choice.message.tool_calls?.length) {
-      return c.json({ response: choice.message.content });
-    }
-
-    messages.push(choice.message);
-    const toolResults = await composio.provider.handleToolCalls(userId, response);
-    messages.push(...toolResults);
-  }
-});
-```
+<include meta="no-twoslash">../../examples/hono/server.ts#chat</include>
 
 <Callout>
 If the user hasn't connected the app they're trying to use, the agent will automatically
@@ -103,73 +55,17 @@ That's a working agent. But in most apps you'll also want to manage connections 
 
 `session.toolkits()` returns every toolkit in the session along with its connection status. We can expose this as a simple GET endpoint so your frontend can render a connections UI.
 
-```typescript
-import { Hono } from 'hono';
-import { Composio } from '@composio/core';
-import { OpenAIProvider } from '@composio/openai';
-
-declare const composio: Composio<OpenAIProvider>;
-const app = new Hono();
-// ---cut---
-app.get("/connections/:userId", async (c) => {
-  const userId = c.req.param("userId");
-
-  const session = await composio.create(userId);
-  const toolkits = await session.toolkits();
-
-  return c.json(
-    toolkits.items.map((t) => ({
-      toolkit: t.slug,
-      connected: t.connection?.isActive ?? false,
-    }))
-  );
-});
-```
+<include meta="no-twoslash">../../examples/hono/server.ts#list-connections</include>
 
 If you just need to check a single toolkit, say before kicking off a workflow that requires Gmail, you can scope the session to that toolkit:
 
-```typescript
-import { Hono } from 'hono';
-import { Composio } from '@composio/core';
-import { OpenAIProvider } from '@composio/openai';
-
-declare const composio: Composio<OpenAIProvider>;
-const app = new Hono();
-// ---cut---
-app.get("/connections/:userId/:toolkit", async (c) => {
-  const userId = c.req.param("userId");
-  const toolkit = c.req.param("toolkit");
-
-  const session = await composio.create(userId, { toolkits: [toolkit] });
-  const result = await session.toolkits();
-  const match = result.items.find((t) => t.slug === toolkit);
-
-  return c.json({ toolkit, connected: match?.connection?.isActive ?? false });
-});
-```
+<include meta="no-twoslash">../../examples/hono/server.ts#check-connection</include>
 
 ## Connecting an app
 
 When a user wants to connect a new app, `session.authorize()` starts the OAuth flow and returns a redirect URL. Your frontend sends the user there, and once they complete auth, they're connected.
 
-```typescript
-import { Hono } from 'hono';
-import { Composio } from '@composio/core';
-import { OpenAIProvider } from '@composio/openai';
-
-declare const composio: Composio<OpenAIProvider>;
-const app = new Hono();
-// ---cut---
-app.post("/connect/:toolkit", async (c) => {
-  const toolkit = c.req.param("toolkit");
-  const { userId } = await c.req.json();
-
-  const session = await composio.create(userId, { toolkits: [toolkit] });
-  const connectionRequest = await session.authorize(toolkit);
-
-  return c.json({ redirectUrl: connectionRequest.redirectUrl });
-});
-```
+<include meta="no-twoslash">../../examples/hono/server.ts#connect</include>
 
 ## Complete app
 
