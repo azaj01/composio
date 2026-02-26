@@ -5,7 +5,7 @@ import asyncio
 
 from composio import Composio
 from composio_claude_agent_sdk import ClaudeAgentSDKProvider
-from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, create_sdk_mcp_server
+from claude_agent_sdk import query, ClaudeAgentOptions, create_sdk_mcp_server
 
 composio = Composio(provider=ClaudeAgentSDKProvider())
 # endregion setup
@@ -52,10 +52,8 @@ Steps:
         mcp_servers={"composio": tool_server},
     )
 
-    async with ClaudeSDKClient(options=options) as client:
-        await client.query(prompt)
-        async for msg in client.receive_response():
-            print(msg)
+    async for message in query(prompt=prompt, options=options):
+        print(message)
 # endregion label
 
 
