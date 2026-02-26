@@ -42,16 +42,6 @@ Before labeling, we need to make sure the user has connected their Gmail account
 
 <include>../../examples/gmail-labeler/main.py#connect</include>
 
-## Creating a trigger
-
-The `create_trigger` function sets up a `GMAIL_NEW_GMAIL_MESSAGE` trigger that fires whenever a new email arrives. It prints the trigger ID you'll need for the listener.
-
-<include>../../examples/gmail-labeler/main.py#trigger</include>
-
-<Callout>
-When you pass a `user_id`, the SDK automatically resolves the user's connected account for Gmail. You can also pass a `connected_account_id` directly for more control.
-</Callout>
-
 ## Labeling with Claude
 
 For each incoming email, `label_email` gets Gmail tools from `session.tools()`, wraps them in an MCP server with `create_sdk_mcp_server()`, and hands them to a Claude agent. The agent lists existing labels, picks the best fit (or creates a new one), and applies it.
@@ -60,7 +50,7 @@ For each incoming email, `label_email` gets Gmail tools from `session.tools()`, 
 
 ## Listening for emails
 
-`composio.triggers.subscribe()` opens a WebSocket connection. When a new email arrives, the handler calls `label_email` to classify and label it.
+The `listen` function creates a trigger for new Gmail messages and subscribes to events via WebSocket. When a new email arrives, the handler calls `label_email` to classify and label it.
 
 <include>../../examples/gmail-labeler/main.py#listen</include>
 
@@ -84,16 +74,10 @@ uv run --env-file .env python main.py connect default
 
 If Gmail is not connected yet, you'll get an OAuth URL. Open it in your browser and authorize the app. If you've already connected, the script will print "Gmail is already connected."
 
-Next, create a trigger:
+Then start the listener:
 
 ```bash
-uv run --env-file .env python main.py trigger default
-```
-
-Then start the listener with the trigger ID from the previous step:
-
-```bash
-uv run --env-file .env python main.py listen default <trigger_id>
+uv run --env-file .env python main.py listen default
 ```
 
 Send yourself an email and watch the terminal — the agent will receive the event, inspect the email, and apply an appropriate label.

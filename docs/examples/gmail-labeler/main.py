@@ -29,19 +29,6 @@ def connect(user_id: str):
 # endregion connect
 
 
-# region trigger
-def create_trigger(user_id: str):
-    """Create a trigger for new Gmail messages."""
-    trigger = composio.triggers.create(
-        slug="GMAIL_NEW_GMAIL_MESSAGE",
-        user_id=user_id,
-        trigger_config={},
-    )
-    print(f"Trigger created: {trigger.trigger_id}")
-    return trigger.trigger_id
-# endregion trigger
-
-
 # region label
 async def label_email(session, message_id: str, subject: str, body: str):
     """Use Claude to label an incoming email."""
@@ -73,22 +60,34 @@ Steps:
 
 
 # region listen
-def listen(user_id: str, trigger_id: str):
-    """Subscribe to trigger events and label incoming emails."""
+def listen(user_id: str):
+    """Create a trigger, subscribe to events, and label incoming emails."""
     session = composio.create(user_id=user_id, toolkits=["gmail"])
+
+    trigger = composio.triggers.create(
+        slug="GMAIL_NEW_GMAIL_MESSAGE",
+        user_id=user_id,
+        trigger_config={},
+    )
+    print(f"Trigger created: {trigger.trigger_id}")
+
+    loop = asyncio.new_event_loop()
     subscription = composio.triggers.subscribe()
 
-    @subscription.handle(trigger_id=trigger_id)
+    @subscription.handle(trigger_id=trigger.trigger_id)
     def handle_event(data):
         print(f"New email: {data.get('subject', 'No subject')}")
-        asyncio.run(
-            label_email(
-                session,
-                message_id=data.get("id", ""),
-                subject=data.get("subject", ""),
-                body=data.get("message_text", ""),
+        try:
+            loop.run_until_complete(
+                label_email(
+                    session,
+                    message_id=data.get("id", ""),
+                    subject=data.get("subject", ""),
+                    body=data.get("message_text", ""),
+                )
             )
-        )
+        except Exception as e:
+            print(f"Error labeling email: {e}")
 
     print("Listening for new emails...")
     subscription.wait_forever()
@@ -99,8 +98,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage:")
         print("  python main.py connect <user_id>")
-        print("  python main.py trigger <user_id>")
-        print("  python main.py listen <user_id> <trigger_id>")
+        print("  python main.py listen <user_id>")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -108,17 +106,10 @@ if __name__ == "__main__":
     if command == "connect":
         uid = sys.argv[2] if len(sys.argv) > 2 else "default"
         connect(uid)
-    elif command == "trigger":
-        uid = sys.argv[2] if len(sys.argv) > 2 else "default"
-        create_trigger(uid)
     elif command == "listen":
         uid = sys.argv[2] if len(sys.argv) > 2 else "default"
-        tid = sys.argv[3] if len(sys.argv) > 3 else None
-        if not tid:
-            print("Error: trigger_id is required. Run 'python main.py trigger <user_id>' first.")
-            sys.exit(1)
-        listen(uid, tid)
+        listen(uid)
     else:
         print(f"Unknown command: {command}")
-        print("Use 'connect', 'trigger', or 'listen'.")
+        print("Use 'connect' or 'listen'.")
         sys.exit(1)
