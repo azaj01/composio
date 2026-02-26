@@ -76,14 +76,15 @@ def listen(user_id: str):
 
     @subscription.handle(trigger_id=trigger.trigger_id)
     def handle_event(data):
-        print(f"New email: {data.get('subject', 'No subject')}")
+        payload = data.get("payload", {})
+        print(f"New email: {payload.get('subject', 'No subject')}")
         try:
             loop.run_until_complete(
                 label_email(
                     session,
-                    message_id=data.get("id", ""),
-                    subject=data.get("subject", ""),
-                    body=data.get("message_text", ""),
+                    message_id=payload.get("id", ""),
+                    subject=payload.get("subject", ""),
+                    body=payload.get("message_text", ""),
                 )
             )
         except Exception as e:
