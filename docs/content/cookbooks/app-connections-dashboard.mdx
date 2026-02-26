@@ -39,6 +39,8 @@ Create `app/api/connections/route.ts`. Initialize the Composio client and set `d
 
 <include meta='no-twoslash title="app/api/connections/route.ts"'>../../examples/app-connections-dashboard/connections-route.ts#setup</include>
 
+`"user_123"` is a placeholder. In production, replace it with the authenticated user's ID from your auth system.
+
 ## List connections
 
 The `GET` handler creates a session and returns every toolkit's name, logo, and connection status. Toolkits where `isNoAuth` is `true` don't require authentication, so we filter them out.
