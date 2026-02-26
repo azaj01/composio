@@ -180,7 +180,7 @@
     "name": "Slackbot",
     "logo": "https://logos.composio.dev/api/slackbot",
     "category": "team chat",
-    "toolCount": 88,
+    "toolCount": 89,
     "triggerCount": 9
   },
   {
@@ -444,7 +444,7 @@
     "name": "ClickUp",
     "logo": "https://logos.composio.dev/api/clickup",
     "category": "productivity",
-    "toolCount": 162,
+    "toolCount": 163,
     "triggerCount": 0
   },
   {
