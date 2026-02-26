@@ -5,9 +5,11 @@ import { extendConfigProvider } from 'src/services/config';
 import { ActionExecuteConnectedAccountNotFoundError } from 'src/services/tools-executor';
 import * as redactModule from 'src/ui/redact';
 import { cli, TestLive, MockConsole } from 'test/__utils__';
+import type { TestLiveInput } from 'test/__utils__/services/test-layer';
+import { showToolsExecuteInputHelp } from 'src/commands/tools/commands/tools.execute.cmd';
 
 const testConfigProvider = ConfigProvider.fromMap(
-  new Map([['COMPOSIO_API_KEY', 'test_api_key']])
+  new Map([['COMPOSIO_USER_API_KEY', 'test_api_key']])
 ).pipe(extendConfigProvider);
 
 const parseLastJson = (lines: ReadonlyArray<string>) => {
@@ -65,6 +67,96 @@ describe('CLI: composio tools execute', () => {
         expect(output.data.tool_slug).toBe('GMAIL_SEND_EMAIL');
         expect(output.data.arguments).toEqual({ recipient: 'a' });
         expect(output.logId).toBe('log_test');
+      })
+    );
+  });
+
+  layer(
+    TestLive({
+      baseConfigProvider: testConfigProvider,
+      toolkitsData: {
+        tools: [
+          {
+            name: 'Send Email',
+            slug: 'GMAIL_SEND_EMAIL',
+            description: 'Send an email',
+            tags: ['email'],
+            available_versions: ['20260101_00'],
+            input_parameters: {
+              type: 'object',
+              required: ['recipient'],
+              properties: {
+                recipient: { type: 'string', description: 'Recipient email' },
+                subject: { type: 'string', description: 'Subject line' },
+              },
+            },
+            output_parameters: {
+              type: 'object',
+              properties: {
+                message_id: { type: 'string' },
+              },
+            },
+          },
+        ],
+      } satisfies TestLiveInput['toolkitsData'],
+      stdin: { isTTY: true, data: '' },
+    })
+  )('[Given] execute-help helper [Then] prints input parameters only', it => {
+    it.scoped('prints execute input schema help for the provided slug', () =>
+      Effect.gen(function* () {
+        yield* showToolsExecuteInputHelp('GMAIL_SEND_EMAIL');
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const output = lines.join('\n');
+
+        expect(output).toContain('Data Parameters:');
+        expect(output).toContain('recipient');
+        expect(output).toContain('subject');
+        expect(output).not.toContain('Output Parameters:');
+      })
+    );
+  });
+
+  layer(
+    TestLive({
+      baseConfigProvider: testConfigProvider,
+      toolkitsData: {
+        tools: [
+          {
+            name: 'Send Email',
+            slug: 'GMAIL_SEND_EMAIL',
+            description: 'Send an email',
+            tags: ['email'],
+            available_versions: ['20260101_00'],
+            input_parameters: {
+              type: 'object',
+              required: ['recipient'],
+              properties: {
+                recipient: { type: 'string', description: 'Recipient email' },
+                subject: { type: 'string', description: 'Subject line' },
+              },
+            },
+            output_parameters: {
+              type: 'object',
+              properties: {
+                message_id: { type: 'string' },
+              },
+            },
+          },
+        ],
+      } satisfies TestLiveInput['toolkitsData'],
+      stdin: { isTTY: true, data: '' },
+    })
+  )('[Given] execute-help with options before slug [Then] resolves correct slug', it => {
+    it.scoped('does not treat --user-id value as slug', () =>
+      Effect.gen(function* () {
+        yield* cli(['tools', 'execute', '--user-id', 'default', 'GMAIL_SEND_EMAIL', '--help']);
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const output = lines.join('\n');
+
+        expect(output).toContain('Slug: GMAIL_SEND_EMAIL');
+        expect(output).toContain('Data Parameters:');
+        expect(output).toContain('recipient');
+        expect(output).not.toContain('default');
       })
     );
   });

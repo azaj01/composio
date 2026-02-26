@@ -18,6 +18,7 @@ import { authConfigsCmd } from './auth-configs/auth-configs.cmd';
 import { connectedAccountsCmd } from './connected-accounts/connected-accounts.cmd';
 import { triggersCmd } from './triggers/triggers.cmd';
 import { logsCmd } from './logs-cmd/logs.cmd';
+import { showToolsExecuteInputHelp } from './tools/commands/tools.execute.cmd';
 
 const $cmd = $defaultCmd.pipe(
   Command.withSubcommands([
@@ -41,14 +42,75 @@ const $cmd = $defaultCmd.pipe(
 
 export const rootCommand = $cmd;
 
+const parseExecuteInputHelpSlug = (argv: ReadonlyArray<string>): string | undefined => {
+  const args = argv.slice(2);
+  if (args.length < 3) return undefined;
+  if (args[0] !== 'tools' || args[1] !== 'execute') return undefined;
+
+  const hasHelp = args.includes('--help') || args.includes('-h');
+  if (!hasHelp) return undefined;
+
+  const tail = args.slice(2);
+  for (let i = 0; i < tail.length; i += 1) {
+    const token = tail[i];
+    if (!token) continue;
+
+    // Stop option parsing after "--" and treat next positional as slug.
+    if (token === '--') {
+      const candidate = tail[i + 1];
+      return candidate && !candidate.startsWith('-') ? candidate : undefined;
+    }
+
+    // Ignore help flags.
+    if (token === '--help' || token === '-h') {
+      continue;
+    }
+
+    // Skip known execute option values.
+    if (token === '--data' || token === '-d' || token === '--user-id') {
+      i += 1;
+      continue;
+    }
+    if (token.startsWith('--data=') || token.startsWith('-d=') || token.startsWith('--user-id=')) {
+      continue;
+    }
+
+    // Skip unknown flags.
+    if (token.startsWith('-')) {
+      continue;
+    }
+
+    // First positional token is the slug.
+    return token;
+  }
+
+  return undefined;
+};
+
+const normalizeVersionShortFlag = (argv: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const args = argv.slice(2);
+  if (args.length === 1 && args[0] === '-v') {
+    return [...argv.slice(0, 2), '--version'];
+  }
+  return argv;
+};
+
 export const runWithConfig = Effect.gen(function* () {
   const version = yield* getVersion;
-
-  return Command.run($cmd, {
+  const run = Command.run($cmd, {
     name: 'composio',
     executable: 'composio',
     version,
   });
+
+  return (argv: ReadonlyArray<string>) => {
+    const normalizedArgv = normalizeVersionShortFlag(argv);
+    const executeHelpSlug = parseExecuteInputHelpSlug(normalizedArgv);
+    if (executeHelpSlug) {
+      return showToolsExecuteInputHelp(executeHelpSlug);
+    }
+    return run(normalizedArgv);
+  };
 });
 
 export const run = Command.run($cmd, {
