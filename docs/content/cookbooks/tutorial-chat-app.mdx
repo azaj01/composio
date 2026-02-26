@@ -288,6 +288,7 @@ export function ToolCallDisplay({
 Now update `app/page.tsx` to render tool calls:
 
 ```tsx title="app/page.tsx"
+// @errors: 2307
 import React from "react";
 declare function ToolCallDisplay(props: { toolName: string; input: unknown; output?: unknown; isLoading: boolean }): React.ReactElement;
 // ---cut---
@@ -296,7 +297,6 @@ declare function ToolCallDisplay(props: { toolName: string; input: unknown; outp
 import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
-// @ts-ignore
 import { ToolCallDisplay } from "../components/ToolCallDisplay";
 
 export default function Chat() {

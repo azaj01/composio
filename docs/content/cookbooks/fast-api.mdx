@@ -133,7 +133,7 @@ Here's everything together:
 ## Running the server
 
 ```bash
-uv run uvicorn main:app --reload
+uv run --env-file .env uvicorn main:app --reload
 ```
 
 The server runs at `http://localhost:8000`. Visit `/docs` for the interactive Swagger UI.
