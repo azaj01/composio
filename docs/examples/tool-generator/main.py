@@ -18,8 +18,9 @@ def list_tools(toolkit_slug: str):
         print(f"Name: {tool.name}")
         print(f"Description: {tool.description}")
 
-        required = tool.input_parameters.get("required", [])
-        for name, schema in tool.input_parameters.get("properties", {}).items():
+        params = tool.input_parameters or {}
+        required = params.get("required", [])
+        for name, schema in params.get("properties", {}).items():
             tag = "required" if name in required else "optional"
             print(f"  [{tag}] {name}: {schema.get('type', 'any')} - {schema.get('description', '')}")
 # endregion list-tools
@@ -40,19 +41,24 @@ def toolkit_info(toolkit_slug: str):
     for scheme in toolkit.auth_config_details:
         print(f"\nAuth scheme: {scheme.mode}")
 
-        creation_fields = scheme.fields.auth_config_creation
-        print("  Auth config creation:")
-        for field in creation_fields.required:
-            print(f"    [required] {field.name}: {field.description}")
-        for field in creation_fields.optional:
-            print(f"    [optional] {field.name}: {field.description}")
+        if not scheme.fields:
+            continue
 
-        connection_fields = scheme.fields.connected_account_initiation
-        print("  Account connection:")
-        for field in connection_fields.required:
-            print(f"    [required] {field.name}: {field.description}")
-        for field in connection_fields.optional:
-            print(f"    [optional] {field.name}: {field.description}")
+        creation = scheme.fields.auth_config_creation
+        if creation:
+            print("  Auth config creation:")
+            for field in creation.required or []:
+                print(f"    [required] {field.name}: {field.description}")
+            for field in creation.optional or []:
+                print(f"    [optional] {field.name}: {field.description}")
+
+        connection = scheme.fields.connected_account_initiation
+        if connection:
+            print("  Account connection:")
+            for field in connection.required or []:
+                print(f"    [required] {field.name}: {field.description}")
+            for field in connection.optional or []:
+                print(f"    [optional] {field.name}: {field.description}")
 # endregion toolkit-info
 
 
@@ -67,8 +73,8 @@ def export(toolkit_slug: str, output_file: str):
             "slug": tool.slug,
             "name": tool.name,
             "description": tool.description,
-            "input_parameters": tool.input_parameters,
-            "output_parameters": tool.output_parameters,
+            "input_parameters": tool.input_parameters or {},
+            "output_parameters": tool.output_parameters or {},
             "scopes": getattr(tool, "scopes", []),
             "tags": getattr(tool, "tags", []),
             "no_auth": getattr(tool, "no_auth", False),
