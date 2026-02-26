@@ -95,6 +95,10 @@ const storeCredentials = (params: {
     // identifiers rather than the actual org/project IDs).
     const orgId = sessionInfo?.project.org.id ?? initialOrgId;
     const projectId = sessionInfo?.project.nano_id ?? initialProjectId;
+    const sessionUserId = sessionInfo?.org_member.user_id ?? sessionInfo?.org_member.id;
+    const testUserId = sessionUserId
+      ? `pg-test-${sessionUserId}`
+      : Option.getOrUndefined(ctx.data.testUserId);
 
     if (sessionInfo) {
       if (initialOrgId !== orgId) {
@@ -108,7 +112,7 @@ const storeCredentials = (params: {
     }
 
     // Store UAK + org/project IDs in user_data.json
-    yield* ctx.login(uakApiKey, orgId, projectId);
+    yield* ctx.login(uakApiKey, orgId, projectId, testUserId);
 
     const email = sessionInfo?.org_member.email || fallbackEmail || undefined;
     yield* ui.log.success(email ? `Logged in as ${email}` : 'Logged in successfully');

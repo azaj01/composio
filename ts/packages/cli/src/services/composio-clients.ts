@@ -1103,13 +1103,21 @@ export class ComposioClientSingleton extends Effect.Service<ComposioClientSingle
           const apiKey =
             typeof rawApiKey === 'string' && rawApiKey.trim().length > 0 ? rawApiKey : undefined;
           const baseURL = ctx.data.baseURL;
+          const globalOrgId = Option.getOrUndefined(ctx.data.orgId);
+          const globalProjectId = Option.getOrUndefined(ctx.data.projectId);
           const resolvedProjectContext = yield* Option.match(projectContextOpt, {
             onNone: () => Effect.succeed(Option.none()),
             onSome: projectContext =>
               projectContext.resolve.pipe(Effect.catchAll(() => Effect.succeed(Option.none()))),
           });
           const defaultHeaders = Option.match(resolvedProjectContext, {
-            onNone: () => undefined,
+            onNone: () =>
+              globalOrgId && globalProjectId
+                ? ({
+                    'x-org-id': globalOrgId,
+                    'x-project-id': globalProjectId,
+                  } satisfies Record<string, string>)
+                : undefined,
             onSome: keys =>
               ({
                 'x-org-id': keys.orgId,
