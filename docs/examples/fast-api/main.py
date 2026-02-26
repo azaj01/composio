@@ -11,16 +11,12 @@ app = FastAPI()
 # endregion setup
 
 
+# region chat
 class ChatRequest(BaseModel):
     user_id: str
     message: str
 
 
-class ConnectRequest(BaseModel):
-    user_id: str
-
-
-# region chat
 @app.post("/chat")
 def chat(request: ChatRequest):
     """Send a message to an AI agent with access to all tools."""
@@ -65,6 +61,10 @@ def check_connection(user_id: str, toolkit: str):
 
 
 # region connect
+class ConnectRequest(BaseModel):
+    user_id: str
+
+
 @app.post("/connect/{toolkit}")
 def connect_toolkit(toolkit: str, request: ConnectRequest):
     """Start OAuth for a toolkit. Returns a URL to redirect the user to."""
