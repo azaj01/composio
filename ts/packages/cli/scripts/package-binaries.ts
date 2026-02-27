@@ -1,3 +1,19 @@
+#!/usr/bin/env bun
+
+/**
+ * Package each raw binary in `dist/binaries/` into a `.zip` archive.
+ *
+ * Usage: `bun scripts/package-binaries.ts`
+ *
+ * Creates a nested directory structure inside each zip:
+ *   composio-<target>/composio
+ *
+ * This matches the structure expected by `install.sh`.
+ *
+ * Input:  `dist/binaries/composio-{platform-arch}` (raw binaries)
+ * Output: `dist/binaries/composio-{platform-arch}.zip`
+ */
+
 import process from 'node:process';
 import {
   Cause,
@@ -28,16 +44,6 @@ const ARTIFACT_NAMES = [
   'composio-linux-aarch64',
 ];
 
-/**
- * Package each raw binary in dist/binaries/ into a .zip archive.
- *
- * Creates a nested directory structure inside the zip:
- *   composio-<target>/composio
- *
- * This matches the structure expected by install.sh.
- *
- * Usage: `bun scripts/package-binaries.ts`
- */
 export function packageBinaries() {
   return Effect.gen(function* () {
     const entries = yield* Effect.tryPromise(() => readdir(BINARIES_DIR));

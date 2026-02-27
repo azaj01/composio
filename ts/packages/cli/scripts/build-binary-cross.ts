@@ -1,3 +1,19 @@
+#!/usr/bin/env bun
+
+/**
+ * Cross-compile a CLI binary for a specific Bun target.
+ *
+ * Usage: `bun scripts/build-binary-cross.ts --target <target>`
+ *
+ * Valid targets:
+ *   bun-darwin-arm64  → composio-darwin-aarch64
+ *   bun-darwin-x64    → composio-darwin-x64
+ *   bun-linux-x64     → composio-linux-x64
+ *   bun-linux-arm64   → composio-linux-aarch64
+ *
+ * Output: `dist/binaries/<artifact-name>`
+ */
+
 import process from 'node:process';
 import {
   Cause,
@@ -46,12 +62,6 @@ function parseTarget(): { target: string; artifact: string } {
   return { target, artifact };
 }
 
-/**
- * Cross-compile a CLI binary for a specific Bun target.
- *
- * Usage: `bun scripts/build-binary-cross.ts --target bun-darwin-arm64`
- * Output: `dist/binaries/composio-darwin-aarch64`
- */
 export function buildBinaryCross() {
   const { target, artifact } = parseTarget();
 

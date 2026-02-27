@@ -1,3 +1,19 @@
+#!/usr/bin/env bun
+
+/**
+ * Generate `checksums.txt` from all `.zip` files in `dist/binaries/`.
+ *
+ * Usage: `bun scripts/generate-checksums.ts`
+ *
+ * Output format (sha256sum-compatible):
+ *   <sha256hex>  composio-darwin-aarch64.zip
+ *   <sha256hex>  composio-darwin-x64.zip
+ *   <sha256hex>  composio-linux-x64.zip
+ *   <sha256hex>  composio-linux-aarch64.zip
+ *
+ * Output: `dist/binaries/checksums.txt`
+ */
+
 import process from 'node:process';
 import {
   Cause,
@@ -17,14 +33,6 @@ import path from 'node:path';
 
 const BINARIES_DIR = './dist/binaries';
 
-/**
- * Generate checksums.txt from all .zip files in dist/binaries/.
- *
- * Output format (sha256sum compatible):
- *   <sha256hex>  <filename>
- *
- * Usage: `bun scripts/generate-checksums.ts`
- */
 export function generateChecksums() {
   return Effect.gen(function* () {
     const entries = yield* Effect.tryPromise(() => readdir(BINARIES_DIR));

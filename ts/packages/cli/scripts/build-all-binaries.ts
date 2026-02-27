@@ -1,3 +1,17 @@
+#!/usr/bin/env bun
+
+/**
+ * Build all platform binaries via Bun cross-compilation.
+ *
+ * Usage: `bun scripts/build-all-binaries.ts`
+ *
+ * Builds all 4 targets sequentially:
+ *   composio-darwin-aarch64, composio-darwin-x64,
+ *   composio-linux-x64, composio-linux-aarch64
+ *
+ * Output: `dist/binaries/composio-*`
+ */
+
 import process from 'node:process';
 import {
   Cause,
@@ -71,12 +85,6 @@ function runBunBuild(target: string, outfile: string) {
   });
 }
 
-/**
- * Build all platform binaries via cross-compilation.
- *
- * Usage: `bun scripts/build-all-binaries.ts`
- * Output: `dist/binaries/composio-{darwin-aarch64,darwin-x64,linux-x64,linux-aarch64}`
- */
 export function buildAllBinaries() {
   return Effect.gen(function* () {
     yield* Console.log(`Building ${TARGETS.length} platform binaries...`);
