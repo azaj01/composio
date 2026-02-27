@@ -260,6 +260,86 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
       });
 
     /**
+     * Fetch checksums.txt from a release, if available.
+     * Returns the parsed map of filename -> expected SHA-256 hash, or None if not found.
+     */
+    const fetchChecksums = (
+      release: GitHubRelease
+    ): Effect.Effect<Option.Option<Map<string, string>>, never, never> =>
+      Effect.gen(function* () {
+        const checksumsAsset = release.assets.find(a => a.name === 'checksums.txt');
+        if (!checksumsAsset) {
+          yield* Effect.logDebug('No checksums.txt found in release assets');
+          return Option.none();
+        }
+
+        const response = yield* httpClient
+          .get(checksumsAsset.browser_download_url)
+          .pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+        if (!response || response.status < 200 || response.status >= 300) {
+          yield* Effect.logDebug('Failed to download checksums.txt');
+          return Option.none();
+        }
+
+        const text = yield* response.text.pipe(Effect.catchAll(() => Effect.succeed('')));
+        if (!text) {
+          return Option.none();
+        }
+
+        const checksums = new Map<string, string>();
+        for (const line of text.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          // Format: "<hash>  <filename>" (two spaces, sha256sum compatible)
+          const parts = trimmed.split(/\s+/);
+          if (parts.length >= 2) {
+            checksums.set(parts[1], parts[0]);
+          }
+        }
+
+        return Option.some(checksums);
+      });
+
+    /**
+     * Verify SHA-256 checksum of downloaded data against expected hash.
+     */
+    const verifyChecksum = (
+      data: Uint8Array,
+      expectedHash: string,
+      fileName: string
+    ): Effect.Effect<void, UpgradeBinaryError> =>
+      Effect.gen(function* () {
+        const hashBuffer = yield* Effect.tryPromise({
+          try: () => {
+            // Copy into a fresh ArrayBuffer to avoid SharedArrayBuffer type incompatibility
+            const buf = new ArrayBuffer(data.byteLength);
+            new Uint8Array(buf).set(data);
+            return crypto.subtle.digest('SHA-256', buf);
+          },
+          catch: error =>
+            new UpgradeBinaryError({
+              cause: error as Error,
+              message: 'Failed to compute SHA-256 checksum',
+            }),
+        });
+
+        const actual = Array.from(new Uint8Array(hashBuffer))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        if (actual !== expectedHash) {
+          return yield* Effect.fail(
+            new UpgradeBinaryError({
+              message: `Checksum mismatch for ${fileName}\n  Expected: ${expectedHash}\n  Actual:   ${actual}`,
+            })
+          );
+        }
+
+        yield* Effect.logDebug(`Checksum verified for ${fileName}`);
+      });
+
+    /**
      * Extract binary from zip archive using FileSystem
      */
     const extractBinary = (
@@ -420,6 +500,20 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
 
             const platformArch = yield* detectPlatform;
             const { name, data } = yield* downloadBinary(release, platformArch);
+
+            yield* spinner.message('Verifying checksum...');
+
+            const checksums = yield* fetchChecksums(release);
+            if (Option.isSome(checksums)) {
+              const expectedHash = checksums.value.get(name);
+              if (expectedHash) {
+                yield* verifyChecksum(data, expectedHash, name);
+              } else {
+                yield* Effect.logDebug(
+                  `No checksum entry found for ${name} — skipping verification`
+                );
+              }
+            }
 
             yield* spinner.message('Extracting...');
 

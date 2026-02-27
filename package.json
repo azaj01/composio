@@ -12,6 +12,8 @@
   "scripts": {
     "build": "turbo build",
     "build:binary": "turbo build:binary --filter=./ts/packages/cli",
+    "build:binary:all": "turbo build:binary:all --filter=./ts/packages/cli",
+    "build:binary:checksums": "turbo build:binary:checksums --filter=./ts/packages/cli",
     "install:binary": "turbo install:binary --filter=./ts/packages/cli",
     "build:packages": "turbo build --filter=./ts/packages/**",
     "cli:record": "turbo run record --filter=./ts/packages/cli",
