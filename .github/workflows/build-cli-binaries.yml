@@ -74,6 +74,8 @@ jobs:
       - name: Create archive
         working-directory: ts/packages/cli/dist/binaries
         run: |
+          # Create subdirectory structure expected by install script
+          # Use a temp directory name to avoid name collision with the binary file
           temp_dir="archive-${{ matrix.artifact }}"
           rm -rf "$temp_dir"
           mkdir -p "$temp_dir/${{ matrix.artifact }}"
