@@ -1335,10 +1335,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Search auth configs by name"
+              "description": "Search auth configs by name or id"
             },
             "required": false,
-            "description": "Search auth configs by name",
+            "description": "Search auth configs by name or id",
             "name": "search",
             "in": "query"
           },
@@ -2809,7 +2809,7 @@
                           "status_reason": {
                             "type": "string",
                             "nullable": true,
-                            "description": "The reason the connection is disabled"
+                            "description": "The reason the connection status changed. Possible reasons: Connection initiation did not complete within 10 minutes, Permanent auth error during token refresh, Max auth failures reached, OAuth callback failed during token exchange, Connection status updated by user, Auth config is disabled"
                           },
                           "is_disabled": {
                             "type": "boolean",
@@ -3731,7 +3731,7 @@
                     "status_reason": {
                       "type": "string",
                       "nullable": true,
-                      "description": "The reason the connection is disabled"
+                      "description": "The reason the connection status changed. Possible reasons: Connection initiation did not complete within 10 minutes, Permanent auth error during token refresh, Max auth failures reached, OAuth callback failed during token exchange, Connection status updated by user, Auth config is disabled"
                     },
                     "is_disabled": {
                       "type": "boolean",
