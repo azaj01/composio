@@ -4,7 +4,7 @@ description: Install the Composio CLI to manage toolkits, execute tools, handle 
 keywords: [cli, command line, terminal, toolkits, tools, authentication, generate types]
 ---
 
-The Composio CLI gives you full control over your Composio workspace from the terminal — discover toolkits, execute tools, manage authentication, subscribe to triggers, inspect logs, and generate type-safe code.
+The Composio CLI lets you manage toolkits, execute tools, handle auth, inspect logs, and generate type-safe code from the terminal.
 
 ## Installation
 
@@ -12,15 +12,7 @@ The Composio CLI gives you full control over your Composio workspace from the te
 curl -fsSL https://composio.dev/install | bash
 ```
 
-Or using wget:
-
-```bash
-wget -qO- https://composio.dev/install | bash
-```
-
 ## Getting started
-
-Log in, initialize a project, and verify your setup:
 
 ```bash
 # Authenticate with Composio
@@ -29,709 +21,115 @@ composio login
 # Initialize a project in the current directory
 composio init
 
-# Verify your identity
-composio whoami
-
-# Check CLI version
-composio version
-```
-
-## Command reference
-
-| Command | Description |
-| --- | --- |
-| [`login`](#login) | Authenticate with your Composio account |
-| [`logout`](#logout) | Remove stored authentication |
-| [`whoami`](#whoami) | Display your account information |
-| [`init`](#init) | Initialize a Composio project |
-| [`toolkits`](#toolkits) | Discover and inspect toolkits |
-| [`tools`](#tools) | Discover, inspect, and execute tools |
-| [`connected-accounts`](#connected-accounts) | Manage connected accounts |
-| [`auth-configs`](#auth-configs) | Manage auth configurations |
-| [`triggers`](#triggers) | Inspect and subscribe to trigger events |
-| [`logs`](#logs) | Inspect tool and trigger execution logs |
-| [`generate`](#generate) | Generate type stubs (auto-detects language) |
-| [`ts generate`](#ts-generate) | Generate TypeScript type stubs |
-| [`py generate`](#py-generate) | Generate Python type stubs |
-| [`upgrade`](#upgrade) | Upgrade CLI to the latest version |
-| [`version`](#version) | Display the current CLI version |
-
----
-
-## Authentication & setup
-
-### login
-
-Authenticate with your Composio account.
-
-```bash
-composio login
-```
-
-This opens your browser to complete authentication and stores your API key locally.
-
-| Flag | Description |
-| --- | --- |
-| `--no-browser` | Login without opening a browser (displays a URL to open manually) |
-| `--api-key <key>` | API key for non-interactive login (CI/agents) |
-| `--org-id <id>` | Organization ID (required with `--api-key`) |
-| `--project-id <id>` | Project ID (required with `--api-key`) |
-
-```bash
-# Remote/SSH sessions
-composio login --no-browser
-
-# Non-interactive (CI/agents)
-composio login --api-key "sk_..." --org-id "org_..." --project-id "proj_..."
-```
-
-### logout
-
-Remove stored authentication.
-
-```bash
-composio logout
-```
-
-### whoami
-
-Display your account information and API key.
-
-```bash
+# Check your account
 composio whoami
 ```
 
-### init
-
-Initialize a Composio project in the current directory. Creates `.composio/project.json` with your org and project IDs.
+## Search and execute a tool
 
 ```bash
-composio init
-```
-
-| Flag | Description |
-| --- | --- |
-| `--org-id <id>` | Organization ID (skip interactive picker) |
-| `--project-id <id>` | Project ID (skip interactive picker) |
-| `-y`, `--yes` | Auto-select default org and project |
-| `--no-browser` | Skip auto-opening the browser |
-
-```bash
-# Auto-select defaults
-composio init --yes
-
-# Specify org and project directly
-composio init --org-id "org_..." --project-id "proj_..."
-```
-
----
-
-## Toolkits
-
-Discover and inspect Composio toolkits.
-
-### toolkits list
-
-List available toolkits with connection status.
-
-```bash
-composio toolkits list
-```
-
-| Flag | Description |
-| --- | --- |
-| `--query <text>` | Search by name, slug, or description |
-| `--connected` | Show only connected toolkits |
-| `--user-id <id>` | User ID for connection status |
-| `--limit <n>` | Results per page (default: 30) |
-
-```bash
-composio toolkits list --query "email" --connected
-```
-
-### toolkits info
-
-View details of a specific toolkit.
-
-```bash
-composio toolkits info <slug>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--user-id <id>` | User ID for connection status |
-| `-a`, `--all` | Show all details including auth config fields |
-
-```bash
-composio toolkits info github --all
-```
-
-### toolkits search
-
-Search toolkits by use case.
-
-```bash
-composio toolkits search <query>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--limit <n>` | Results per page (default: 10) |
-
-```bash
-composio toolkits search "send emails"
-```
-
-### toolkits version
-
-Show latest and recent versions for a toolkit.
-
-```bash
-composio toolkits version <slug>
-```
-
-```bash
-composio toolkits version gmail
-```
-
----
-
-## Tools
-
-Discover, inspect, and execute Composio tools.
-
-### tools list
-
-List available tools.
-
-```bash
-composio tools list --toolkits "gmail"
-```
-
-| Flag | Description |
-| --- | --- |
-| `--query <text>` | Search by name, slug, or description |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--tags <tags>` | Filter by tags |
-| `--limit <n>` | Results per page (default: 30) |
-
-```bash
-composio tools list --toolkits "gmail,slack" --query "send"
-```
-
-### tools info
-
-View details of a specific tool, including its input schema.
-
-```bash
-composio tools info <slug>
-```
-
-```bash
-composio tools info GMAIL_SEND_EMAIL
-```
-
-### tools search
-
-Semantically search tools by use case. Returns the most relevant tools plus recommended usage guidance.
-
-```bash
-composio tools search <query>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--limit <n>` | Results per page (default: 10) |
-
-```bash
-composio tools search "onboard a new GitHub repo and notify Slack"
-```
-
-### tools execute
-
-Execute a tool with JSON arguments.
-
-```bash
-composio tools execute <slug> --data '<json>'
-```
-
-| Flag | Description |
-| --- | --- |
-| `-d`, `--data <json>` | JSON arguments, `@file`, or `-` for stdin |
-| `--user-id <id>` | User ID to execute as |
-
-```bash
-# Inline JSON
-composio tools execute GITHUB_GET_REPOS -d '{"owner":"composio"}'
-
-# From file
-composio tools execute GMAIL_SEND_EMAIL -d @payload.json
-
-# From stdin
-echo '{"owner":"composio"}' | composio tools execute GITHUB_GET_REPOS
-```
-
----
-
-## Connected accounts
-
-Manage authenticated connections to external services.
-
-### connected-accounts list
-
-List connected accounts.
-
-```bash
-composio connected-accounts list
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--user-id <id>` | Filter by user ID |
-| `--status <status>` | Filter by status: `ACTIVE`, `FAILED`, `EXPIRED`, `INITIALIZING`, `INITIATED`, `INACTIVE` |
-| `--limit <n>` | Results per page (default: 30) |
-
-```bash
-composio connected-accounts list --toolkits "gmail" --status ACTIVE
-```
-
-### connected-accounts info
-
-View details of a specific connected account.
-
-```bash
-composio connected-accounts info <id>
-```
-
-```bash
-composio connected-accounts info con_1a2b3c4d5e6f
-```
-
-### connected-accounts whoami
-
-Show the external account profile for a connected account.
-
-```bash
-composio connected-accounts whoami <id>
-```
-
-```bash
-composio connected-accounts whoami con_1a2b3c4d5e6f
-```
-
-### connected-accounts link
-
-Link an external account via OAuth redirect.
-
-```bash
-composio connected-accounts link <toolkit>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--auth-config <id>` | Auth config ID (uses legacy flow, mutually exclusive with `<toolkit>`) |
-| `--user-id <id>` | User ID for the connection |
-| `--no-browser` | Skip auto-opening the browser |
-
-```bash
-# Link using Tool Router (default)
+# Connect your GitHub account
 composio connected-accounts link github
 
-# Link with specific auth config
-composio connected-accounts link --auth-config "ac_..." --user-id "alice"
+# Search for tools
+composio tools search "star a github repo"
+
+# Look up a tool's input schema
+composio tools info GITHUB_STAR_A_REPOSITORY_FOR_THE_AUTHENTICATED_USER
+
+# Execute a tool (star the Composio repo!)
+composio tools execute GITHUB_STAR_A_REPOSITORY_FOR_THE_AUTHENTICATED_USER -d '{"owner":"composiohq","repo":"composio"}'
 ```
 
-### connected-accounts delete
-
-Delete a connected account.
+## Set up and listen to triggers
 
 ```bash
-composio connected-accounts delete <id>
+# Find your connected account ID
+composio connected-accounts list --toolkits github
+
+# Create a trigger for star events on your repo
+composio triggers create GITHUB_STAR_ADDED_EVENT --connected-account-id your-connected-account-id --trigger-config '{"owner":"your-username","repo":"your-repo"}'
+
+# Listen to all GitHub trigger events on your account in real time
+composio triggers listen --toolkits github --table
 ```
 
-| Flag | Description |
-| --- | --- |
-| `-y`, `--yes` | Skip confirmation prompt |
-
----
-
-## Auth configs
-
-Manage auth configurations for toolkits.
-
-### auth-configs list
-
-List auth configs.
-
-```bash
-composio auth-configs list
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--query <text>` | Search by auth config name |
-| `--limit <n>` | Results per page (default: 30) |
-
-```bash
-composio auth-configs list --toolkits "gmail"
-```
-
-### auth-configs info
-
-View details of a specific auth config.
-
-```bash
-composio auth-configs info <id>
-```
-
-```bash
-composio auth-configs info ac_1232323
-```
-
-### auth-configs create
-
-Create a new auth config.
-
-```bash
-composio auth-configs create <name> --toolkit <toolkit>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkit <slug>` | Toolkit slug (required) |
-| `--auth-scheme <scheme>` | Auth scheme: `OAUTH2`, `API_KEY`, `BEARER_TOKEN`, etc. |
-| `--scopes <scopes>` | Comma-separated OAuth scopes |
-| `--custom-credentials <json>` | Custom credentials JSON (for white-labeling) |
-
-```bash
-# Composio-managed defaults
-composio auth-configs create "my-gmail-config" --toolkit "gmail"
-
-# Custom OAuth with scopes
-composio auth-configs create "custom-gmail" --toolkit "gmail" --auth-scheme "OAUTH2" --scopes "send_email,read_email"
-
-# White-labeled with custom credentials
-composio auth-configs create "custom-gmail" --toolkit "gmail" --auth-scheme "OAUTH2" \
-  --custom-credentials '{"client_id":"...","client_secret":"..."}'
-```
-
-### auth-configs delete
-
-Delete an auth config.
-
-```bash
-composio auth-configs delete <id>
-```
-
-| Flag | Description |
-| --- | --- |
-| `-y`, `--yes` | Skip confirmation prompt |
-
----
-
-## Triggers
-
-Subscribe to external events and manage trigger instances.
-
-### triggers list
-
-List available trigger types.
-
-```bash
-composio triggers list
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--limit <n>` | Max results (default: 30) |
-
-```bash
-composio triggers list --toolkits "gmail,slack"
-```
-
-### triggers info
-
-View details of a specific trigger type.
-
-```bash
-composio triggers info <slug>
-```
-
-```bash
-composio triggers info GMAIL_NEW_GMAIL_MESSAGE
-```
-
-### triggers create
-
-Create a new trigger instance.
-
-```bash
-composio triggers create <trigger-name>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--connected-account-id <id>` | Connected account ID |
-| `--trigger-config <json>` | Trigger config as JSON |
-
-```bash
-composio triggers create GMAIL_NEW_GMAIL_MESSAGE --connected-account-id "con_123"
-
-composio triggers create SLACK_NEW_MESSAGE --connected-account-id "con_456" \
-  --trigger-config '{"channel":"#general"}'
-```
-
-### triggers status
-
-Show active trigger instances with optional filters.
-
-```bash
-composio triggers status
-```
-
-| Flag | Description |
-| --- | --- |
-| `--user-ids <ids>` | Filter by user IDs (comma-separated) |
-| `--connected-account-ids <ids>` | Filter by connected account IDs (comma-separated) |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--trigger-ids <ids>` | Filter by trigger instance IDs (comma-separated) |
-| `--trigger-names <names>` | Filter by trigger names (comma-separated) |
-| `--show-disabled` | Include disabled triggers |
-| `--limit <n>` | Results per page (default: 30) |
-
-```bash
-composio triggers status --user-ids "alice,bob" --show-disabled
-```
-
-### triggers listen
-
-Listen to realtime trigger events.
-
-```bash
-composio triggers listen
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkits <slugs>` | Filter by toolkit slugs (comma-separated) |
-| `--trigger-id <id>` | Filter by trigger ID |
-| `--trigger-slug <slugs>` | Filter by trigger slug (comma-separated) |
-| `--connected-account-id <id>` | Filter by connected account ID |
-| `--user-id <id>` | Filter by user ID |
-| `--json` | Show raw event payload as JSON |
-| `--table` | Show compact table rows |
-| `--max-events <n>` | Stop after N matching events |
-| `--forward <url>` | Forward each event to a URL |
-| `--out <file>` | Append each event to a file |
-
-```bash
-# Stream Gmail events as a table
-composio triggers listen --toolkits gmail --table
-
-# Forward events to a local server
-composio triggers listen --forward "http://localhost:8080/webhook"
-
-# Capture events to a file
-composio triggers listen --trigger-slug GMAIL_NEW_GMAIL_MESSAGE --out events.jsonl --max-events 10
-```
-
-### triggers enable
-
-Enable a trigger instance.
-
-```bash
-composio triggers enable <id>
-```
-
-### triggers disable
-
-Disable a trigger instance.
-
-```bash
-composio triggers disable <id>
-```
-
-### triggers delete
-
-Delete a trigger instance.
-
-```bash
-composio triggers delete <id>
-```
-
-| Flag | Description |
-| --- | --- |
-| `-y`, `--yes` | Skip confirmation prompt |
-
----
-
-## Logs
-
-Inspect tool and trigger execution logs.
-
-### logs tools
-
-List tool execution logs.
-
-```bash
-composio logs tools
-```
-
-Pass a log ID to fetch a specific log:
-
-```bash
-composio logs tools <log_id>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--toolkit <slugs>` | Filter by toolkit (comma-separated) |
-| `--tool <slugs>` | Filter by tool (comma-separated) |
-| `--user-id <ids>` | Filter by user ID (comma-separated) |
-| `--connected-account-id <ids>` | Filter by connected account ID (comma-separated) |
-| `--auth-config-id <ids>` | Filter by auth config ID (comma-separated) |
-| `--status <values>` | Filter by execution status (comma-separated) |
-| `--from <ms>` | Start timestamp (epoch milliseconds) |
-| `--to <ms>` | End timestamp (epoch milliseconds) |
-| `--limit <n>` | Number of logs (default: 30) |
-| `--cursor <cursor>` | Cursor for pagination |
-
-```bash
-composio logs tools --toolkit gmail --status success --limit 50
-```
-
-### logs triggers
-
-List trigger logs.
-
-```bash
-composio logs triggers
-```
-
-Pass a log ID to fetch a specific log:
-
-```bash
-composio logs triggers <log_id>
-```
-
-| Flag | Description |
-| --- | --- |
-| `--trigger <name>` | Filter by trigger name |
-| `--trigger-id <id>` | Filter by trigger ID |
-| `--user-id <id>` | Filter by user ID |
-| `--connected-account-id <id>` | Filter by connected account ID |
-| `--from <ms>` | Start timestamp (epoch milliseconds) |
-| `--to <ms>` | End timestamp (epoch milliseconds) |
-| `--time <window>` | Relative time window: `5m`, `30m`, `6h`, `1d`, `1w`, `1month`, `1y` |
-| `--search <query>` | Full-text search |
-| `--include-payload` | Include payload fields |
-| `--limit <n>` | Number of logs (default: 30) |
-| `--cursor <cursor>` | Cursor for pagination |
-
-```bash
-composio logs triggers --trigger GMAIL_NEW_GMAIL_MESSAGE --time 1d
-```
-
----
-
-## Type generation
-
-Generate type-safe definitions for toolkits, tools, and triggers. These types provide autocomplete and type safety when using direct tool execution (`composio.tools.execute()`).
-
-### generate
-
-Auto-detect project language and generate types.
-
-```bash
-composio generate
-```
-
-| Flag | Description |
-| --- | --- |
-| `-o`, `--output-dir <dir>` | Output directory |
-| `--type-tools` | Generate typed schemas for each tool (TypeScript only, slower) |
-| `--toolkits <names>` | Only generate for specific toolkits (repeatable) |
-
-```bash
-composio generate --toolkits gmail --toolkits slack
-```
-
-### ts generate
-
-Generate TypeScript type stubs.
-
-```bash
-composio ts generate
-```
-
-| Flag | Description |
-| --- | --- |
-| `-o`, `--output-dir <dir>` | Output directory |
-| `--compact` | Emit a single TypeScript file |
-| `--transpiled` | Emit transpiled JavaScript alongside TypeScript |
-| `--type-tools` | Generate typed schemas for each tool (slower) |
-| `--toolkits <names>` | Only generate for specific toolkits (repeatable) |
-
-```bash
-composio ts generate --compact --type-tools
-```
-
-### py generate
-
-Generate Python type stubs.
-
-```bash
-composio py generate
-```
-
-| Flag | Description |
-| --- | --- |
-| `-o`, `--output-dir <dir>` | Output directory |
-| `--toolkits <names>` | Only generate for specific toolkits (repeatable) |
-
-```bash
-composio py generate --output-dir ./my_types
-```
-
----
-
-## Maintenance
-
-### upgrade
-
-Upgrade the CLI to the latest version.
-
-```bash
-composio upgrade
-```
-
-### version
-
-Display the current CLI version.
-
-```bash
-composio version
-```
-
----
-
-## Global options
+## Available commands
+
+Run `composio <command> --help` for detailed usage and flags.
+
+<div className="cli-commands">
+
+| Command | Subcommands | Description |
+| --- | --- | --- |
+| `composio login` | | Authenticate with your Composio account |
+| `composio logout` | | Remove stored authentication |
+| `composio whoami` | | Display your account information |
+| `composio init` | | Initialize a Composio project in the current directory |
+| `composio toolkits` | `list`, `search`, `info`, `version` | Discover and inspect toolkits |
+| `composio tools` | `list`, `search`, `info`, `execute` | Discover, inspect, and execute tools |
+| `composio connected-accounts` | `list`, `info`, `whoami`, `link`, `delete` | Manage connected accounts |
+| `composio auth-configs` | `list`, `info`, `create`, `delete` | Manage auth configurations |
+| `composio triggers` | `list`, `info`, `create`, `status`, `listen`, `enable`, `disable`, `delete` | Subscribe to events and manage trigger instances |
+| `composio logs` | `tools`, `triggers` | Inspect tool and trigger execution logs |
+| `composio generate` | | Generate type stubs (auto-detects language) |
+| `composio ts` | `generate` | Generate TypeScript type stubs |
+| `composio py` | `generate` | Generate Python type stubs |
+| `composio upgrade` | | Upgrade CLI to the latest version |
+| `composio version` | | Display the current CLI version |
+
+</div>
+
+## Global flags
 
 | Flag | Description |
 | --- | --- |
 | `--log-level <level>` | Set log level: `silent`, `error`, `warn`, `info`, `debug` |
+| `--help` | Show help for any command |
 
 ## Environment variables
 
 | Variable | Description |
 | --- | --- |
-| `COMPOSIO_API_KEY` | Your Composio API key (required for most commands) |
+| `COMPOSIO_API_KEY` | Your Composio API key |
 | `COMPOSIO_BASE_URL` | Custom API base URL |
 | `COMPOSIO_LOG_LEVEL` | Logging level: `silent`, `error`, `warn`, `info`, `debug` |
 | `COMPOSIO_DISABLE_TELEMETRY` | Set to `"true"` to disable telemetry |
-| `COMPOSIO_TOOLKIT_VERSION_<TOOLKIT>` | Override toolkit version (e.g., `COMPOSIO_TOOLKIT_VERSION_GMAIL=20250901_00`) |
+| `COMPOSIO_TOOLKIT_VERSION_{TOOLKIT}` | Override toolkit version (e.g., `COMPOSIO_TOOLKIT_VERSION_GMAIL=20250901_00`) |
 | `COMPOSIO_WEBHOOK_SECRET` | Signing secret for trigger webhook forwarding |
+
+## Generate type definitions
+
+Generate TypeScript or Python type definitions for Composio tools. These types provide autocomplete and type safety when using direct tool execution (`composio.tools.execute()`).
+
+```bash
+composio generate
+```
+
+The CLI auto-detects your project language. For explicit control, use `composio ts generate` or `composio py generate`.
+
+<Tabs items={['TypeScript', 'Python']}>
+  <Tab value="TypeScript">
+    ```bash
+    composio ts generate
+    ```
+
+    | Flag | Description |
+    | --- | --- |
+    | `-o`, `--output-dir <dir>` | Output directory |
+    | `--compact` | Emit a single TypeScript file |
+    | `--transpiled` | Emit transpiled JavaScript alongside TypeScript |
+    | `--type-tools` | Generate typed schemas for each tool (slower) |
+    | `--toolkits <names>` | Only generate for specific toolkits (repeatable) |
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    composio py generate
+    ```
+
+    | Flag | Description |
+    | --- | --- |
+    | `-o`, `--output-dir <dir>` | Output directory |
+    | `--toolkits <names>` | Only generate for specific toolkits (repeatable) |
+  </Tab>
+</Tabs>
