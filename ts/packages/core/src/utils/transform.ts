@@ -12,7 +12,6 @@
  * ```
  */
 import { ZodTypeAny, z } from 'zod/v3';
-import { ValidationError } from '../errors';
 import { logger } from '..';
 
 export function transform<RawInput>(raw: RawInput) {
@@ -27,14 +26,11 @@ export function transform<RawInput>(raw: RawInput) {
           const result = schema.safeParse(transformed);
 
           if (!result.success) {
-            // @TODO:send telemetry here
-            // throw new ValidationError(
-            //   `Failed to transform${options?.label ? ` ${options.label}` : ''}`,
-            //   {
-            //     cause: result.error,
-            //   }
-            // );
-            logger.error(result.error);
+            const label = options?.label ? ` ${options.label}` : '';
+            const issues = result.error.issues
+              .map(issue => `  - ${issue.path.join('.')}: ${issue.message}`)
+              .join('\n');
+            logger.warn(`Transform validation failed${label}:\n${issues}`);
             return transformed;
           }
 
