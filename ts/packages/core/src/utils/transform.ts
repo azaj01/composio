@@ -26,9 +26,9 @@ export function transform<RawInput>(raw: RawInput) {
           const result = schema.safeParse(transformed);
 
           if (!result.success) {
-            const label = options?.label ? ` ${options.label}` : '';
+            const label = options?.label ? ` for ${options.label}` : '';
             const issues = result.error.issues
-              .map(issue => `  - ${issue.path.join('.')}: ${issue.message}`)
+              .map(issue => `  - ${issue.path.join('.') || 'parameter'}: ${issue.message}`)
               .join('\n');
             logger.warn(`Transform validation failed${label}:\n${issues}`);
             return transformed;
