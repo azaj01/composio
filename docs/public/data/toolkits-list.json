@@ -972,7 +972,7 @@
     "name": "LaunchDarkly",
     "logo": "https://logos.composio.dev/api/launch_darkly",
     "category": "developer tools",
-    "toolCount": 7,
+    "toolCount": 258,
     "triggerCount": 0
   },
   {
@@ -5988,7 +5988,7 @@
     "name": "Postiz",
     "logo": "https://logos.composio.dev/api/postiz_mcp",
     "category": "social media marketing",
-    "toolCount": 9,
+    "toolCount": 0,
     "triggerCount": 0
   },
   {
@@ -7324,7 +7324,7 @@
     "name": "TinyFish MCP",
     "logo": "https://logos.composio.dev/api/tinyfish_mcp",
     "category": "model context protocol",
-    "toolCount": 4,
+    "toolCount": 8,
     "triggerCount": 0
   },
   {
