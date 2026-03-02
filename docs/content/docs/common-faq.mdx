@@ -90,6 +90,19 @@ Composio toolkits are versioned using date-based identifiers (e.g., `20251027_00
 This applies to direct tool execution only. Sessions with meta tools always use the latest version. See [Toolkit versioning](/docs/tools-direct/toolkit-versioning).
 </Accordion>
 
+<Accordion title="Why does the API return fewer tools than the platform UI?">
+When calling the Get Tools API (`GET /api/v3/tools`) without specifying a `toolkit_versions` parameter, the API defaults to the base version (`00000000_00`), which only includes tools from the initial release. The platform UI shows tools from the latest version.
+
+To get all available tools, pass `toolkit_versions=latest`:
+
+```bash
+curl 'https://backend.composio.dev/api/v3/tools?toolkit_slug=googledrive&toolkit_versions=latest' \
+  -H 'x-api-key: YOUR_API_KEY'
+```
+
+For production use, pin to a specific version instead of `latest` to avoid breaking changes. See [Toolkit versioning](/docs/tools-direct/toolkit-versioning).
+</Accordion>
+
 <Accordion title="Can a user connect multiple accounts for the same app?">
 Yes. For example, a user can connect both a personal and work Gmail account. Call `session.authorize()` multiple times for the same toolkit. Each session uses the most recently connected account by default, but you can pin a specific account when creating the session.
 
