@@ -143,8 +143,8 @@ toolkit_versions = {"github": "20251027_00"}
 toolkit_versions = {"github": "latest"}
 ```
 
-<Callout type="info">
-If you omit `toolkit_versions` entirely, the API uses the base version (`00000000_00`). This is the oldest version and may not include all tools available for a toolkit. Always specify a version explicitly.
+<Callout type="warn">
+Never use `latest` in production. It can introduce breaking changes. Pin to a specific version instead.
 </Callout>
 
 ## Version resolution order
