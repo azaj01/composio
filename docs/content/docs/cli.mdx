@@ -100,6 +100,10 @@ Run `composio <command> --help` for detailed usage and flags.
 
 ## Generate type definitions
 
+<Callout type="info">
+Type generation is only useful if you're using [direct tool execution](/docs/tools-direct/executing-tools). If you're using sessions with meta tools, you don't need this.
+</Callout>
+
 Generate TypeScript or Python type definitions for Composio tools. These types provide autocomplete and type safety when using direct tool execution (`composio.tools.execute()`).
 
 ```bash
@@ -133,3 +137,4 @@ The CLI auto-detects your project language. For explicit control, use `composio 
     | `--toolkits <names>` | Only generate for specific toolkits (repeatable) |
   </Tab>
 </Tabs>
+

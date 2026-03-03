@@ -23,6 +23,8 @@
     "using-custom-auth-configuration",
     "webhook-verification",
     "subscribing-to-connection-expiry-events",
+    "native-tools-vs-mcp",
+    "sessions-vs-direct-execution",
     "---Features---",
     "projects",
     "single-toolkit-mcp",

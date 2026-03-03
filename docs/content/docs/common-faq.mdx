@@ -70,6 +70,18 @@ The User ID is how Composio identifies your end users. It maps each user to thei
 When you create a session with `composio.create(user_id="user_123")`, all connected accounts and tool executions are scoped to that user. See [Users and sessions](/docs/users-and-sessions).
 </Accordion>
 
+<Accordion title="What is the difference between an auth config and an MCP config in the dashboard?">
+An **auth config** defines how users authenticate with a toolkit (OAuth credentials, scopes, API keys). You need one whenever you want users to connect to an app.
+
+An **MCP config** creates a hosted MCP server that exposes specific tools over the Model Context Protocol. It's only needed if you're connecting to Composio from an MCP client like Claude Desktop, Cursor, or OpenAI's Responses API via MCP.
+
+**If you're using the Composio SDK** (sessions or direct execution), you only need auth configs. The SDK handles tool delivery natively. You don't need to create an MCP config.
+
+**If you're using an MCP client**, you need both: an auth config (so users can authenticate) and an MCP config (so the client can discover and call tools over the MCP protocol).
+
+See [Native Tools vs MCP](/docs/native-tools-vs-mcp) for a full comparison.
+</Accordion>
+
 <Accordion title="What is an auth config?">
 An auth config is a blueprint that defines how authentication works for a toolkit. It specifies the auth method (OAuth2, API Key, etc.), the scopes to request, and the credentials to use.
 
