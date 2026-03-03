@@ -130,7 +130,7 @@ tools = composio.tools.get(
 # Or by toolkit
 tools = composio.tools.get(
     user_id="user_123",
-    toolkits=["GITHUB"],
+    toolkits=["github"],
     limit=50
 )
 
@@ -159,7 +159,7 @@ const tools = await composio.tools.get("user_123", {
 
 // Or by toolkit
 const allTools = await composio.tools.get("user_123", {
-  toolkits: ["GITHUB"],
+  toolkits: ["github"],
   limit: 50,
 });
 
@@ -173,7 +173,7 @@ const result = await composio.tools.execute("GITHUB_CREATE_ISSUE", {
 </Tabs>
 
 <Callout type="warn">
-`tools.get()` returns 20 tools by default. When fetching from multiple toolkits (e.g., `toolkits=["GMAIL", "GITHUB", "TAVILY"]`), the limit may cut off tools from later toolkits. Increase `limit` or fetch each toolkit separately.
+`tools.get()` returns 20 tools by default. When fetching from multiple toolkits (e.g., `toolkits=["gmail", "github", "tavily"]`), the limit may cut off tools from later toolkits. Increase `limit` or fetch each toolkit separately.
 </Callout>
 
 With direct execution, you manage [auth configs](/docs/auth-configuration/custom-auth-configs), [connect links](/docs/tools-direct/authenticating-tools), and [toolkit versioning](/docs/tools-direct/toolkit-versioning) yourself.
