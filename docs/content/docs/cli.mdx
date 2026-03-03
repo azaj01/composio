@@ -61,7 +61,11 @@ composio logout
 
 ## Generate type definitions
 
-Generate TypeScript or Python type definitions for all Composio tools. These types provide type safety when using direct tool execution (`composio.tools.execute()`), helping you pass the correct parameters and catch errors early.
+<Callout type="info">
+Type generation is only useful if you're using [direct tool execution](/docs/tools-direct/executing-tools). If you're using sessions with meta tools, you don't need this.
+</Callout>
+
+Generate TypeScript or Python type definitions for all Composio tools. These types provide type safety when using `composio.tools.execute()`, helping you pass the correct parameters and catch errors early.
 
 ### Auto-detect and generate
 
@@ -130,3 +134,4 @@ For explicit control, use language-specific commands:
     ```
   </Tab>
 </Tabs>
+
