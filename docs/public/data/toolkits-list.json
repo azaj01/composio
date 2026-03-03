@@ -5988,7 +5988,7 @@
     "name": "Postiz",
     "logo": "https://logos.composio.dev/api/postiz_mcp",
     "category": "social media marketing",
-    "toolCount": 0,
+    "toolCount": 9,
     "triggerCount": 0
   },
   {
@@ -7180,7 +7180,7 @@
     "name": "Tavily MCP",
     "logo": "https://logos.composio.dev/api/tavily_mcp",
     "category": "model context protocol",
-    "toolCount": 0,
+    "toolCount": 5,
     "triggerCount": 0
   },
   {
