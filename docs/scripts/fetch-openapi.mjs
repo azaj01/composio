@@ -117,19 +117,6 @@ async function fetchAndFilterSpec() {
   console.log(`Removed ${removedCount} endpoints/operations`);
   console.log(`Final spec has ${Object.keys(filteredPaths).length} paths`);
 
-  // Enhance toolkit_versions parameter description for clarity
-  for (const methods of Object.values(spec.paths)) {
-    for (const operation of Object.values(methods)) {
-      if (operation.parameters) {
-        for (const param of operation.parameters) {
-          if (param.name === 'toolkit_versions') {
-            param.description = 'Toolkit version specification. **When not specified, defaults to the base version (`00000000_00`), which may return fewer tools than the latest version.** Use `"latest"` to get all available tools, or use bracket notation for specific versions per toolkit (e.g., `toolkit_versions[gmail]=20250930_00`). For production, pin to a specific version instead of `"latest"` to avoid breaking changes.';
-          }
-        }
-      }
-    }
-  }
-
   // Normalize overly complex anyOf/oneOf schemas (e.g., connection_data with 68 object variants)
   // Merges similar object schemas into a single object with all properties
   let unionNormalizedCount = 0;
