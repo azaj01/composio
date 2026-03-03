@@ -115,7 +115,11 @@ options = ClaudeAgentOptions(
 </Tab>
 <Tab value="Vercel AI SDK (TypeScript)">
 ```typescript
+import { Composio } from "@composio/core";
 import { createMCPClient } from "@ai-sdk/mcp";
+
+const composio = new Composio();
+const { mcp } = await composio.create("user_123");
 
 const client = await createMCPClient({
   transport: {
