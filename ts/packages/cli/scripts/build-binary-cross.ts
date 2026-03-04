@@ -1,3 +1,19 @@
+#!/usr/bin/env bun
+
+/**
+ * Cross-compile a CLI binary for a specific Bun target.
+ *
+ * Usage: `bun scripts/build-binary-cross.ts --target <target>`
+ *
+ * Valid targets:
+ *   bun-darwin-arm64  → composio-darwin-aarch64
+ *   bun-darwin-x64    → composio-darwin-x64
+ *   bun-linux-x64     → composio-linux-x64
+ *   bun-linux-arm64   → composio-linux-aarch64
+ *
+ * Output: `dist/binaries/<artifact-name>`
+ */
+
 import process from 'node:process';
 import { Config, ConfigProvider, Console, Effect, Stream, Logger, Layer, LogLevel } from 'effect';
 import { Command } from '@effect/platform';
@@ -5,38 +21,57 @@ import { BunContext, BunRuntime } from '@effect/platform-bun';
 import { teardown } from './_shared';
 
 /**
- * Usage: `bun scripts/build-binary.ts`
+ * Maps Bun cross-compilation targets to Composio artifact names.
  */
-export function buildBinary() {
+const TARGET_MAP: Record<string, string> = {
+  'bun-darwin-arm64': 'composio-darwin-aarch64',
+  'bun-darwin-x64': 'composio-darwin-x64',
+  'bun-linux-x64': 'composio-linux-x64',
+  'bun-linux-arm64': 'composio-linux-aarch64',
+};
+
+const VALID_TARGETS = Object.keys(TARGET_MAP);
+
+function parseTarget(): { target: string; artifact: string } {
+  const targetIdx = process.argv.indexOf('--target');
+  if (targetIdx === -1 || !process.argv[targetIdx + 1]) {
+    process.stderr.write(`Usage: bun scripts/build-binary-cross.ts --target <target>\n`);
+    process.stderr.write(`Valid targets: ${VALID_TARGETS.join(', ')}\n`);
+    process.exit(1);
+  }
+
+  const target = process.argv[targetIdx + 1];
+  const artifact = TARGET_MAP[target];
+  if (!artifact) {
+    process.stderr.write(`Invalid target: ${target}\n`);
+    process.stderr.write(`Valid targets: ${VALID_TARGETS.join(', ')}\n`);
+    process.exit(1);
+  }
+
+  return { target, artifact };
+}
+
+export function buildBinaryCross() {
+  const { target, artifact } = parseTarget();
+
   return Effect.gen(function* () {
     const cwd = process.cwd();
-    yield* Effect.logDebug(`Building binary in ${cwd}`);
+    yield* Effect.logDebug(`Cross-compiling binary in ${cwd} for target ${target}`);
+
+    const outfile = `./dist/binaries/${artifact}`;
 
     const args = [
       'bun',
-      /**
-       * Transpile and bundle the CLI app.
-       */
       'build',
       './src/bin.ts',
-
-      /**
-       * Statically inline any environment variable that matches `DEBUG_OVERRIDE_*`.
-       */
       '--env',
       'DEBUG_OVERRIDE_*',
-
-      /**
-       * Generate a standalone Bun executable containing your bundled code.
-       */
       '--compile',
       '--production',
-
-      /**
-       * Output file destination.
-       */
+      '--target',
+      target,
       '--outfile',
-      './dist/composio',
+      outfile,
     ] as const satisfies ReadonlyArray<string>;
 
     const cmd = Command.make(...args);
@@ -68,10 +103,10 @@ export function buildBinary() {
     process.exitCode = exitCode;
 
     if (exitCode !== 0) {
-      return yield* Effect.fail(new Error('Failed to build binary'));
+      return yield* Effect.fail(new Error(`Failed to cross-compile binary for ${target}`));
     }
 
-    yield* Effect.logDebug('', 'Binary built successfully');
+    yield* Console.log(`Binary cross-compiled: ${outfile}`);
   });
 }
 
@@ -84,7 +119,7 @@ const ConfigLive = Effect.gen(function* () {
 }).pipe(Layer.unwrapEffect, Layer.merge(Layer.setConfigProvider(ConfigProvider.fromEnv())));
 
 if (require.main === module) {
-  buildBinary().pipe(
+  buildBinaryCross().pipe(
     Effect.provide(ConfigLive),
     Effect.provide(Logger.pretty),
     Effect.provide(BunContext.layer),

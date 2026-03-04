@@ -1,3 +1,17 @@
+#!/usr/bin/env bun
+
+/**
+ * Build all platform binaries via Bun cross-compilation.
+ *
+ * Usage: `bun scripts/build-all-binaries.ts`
+ *
+ * Builds all 4 targets sequentially:
+ *   composio-darwin-aarch64, composio-darwin-x64,
+ *   composio-linux-x64, composio-linux-aarch64
+ *
+ * Output: `dist/binaries/composio-*`
+ */
+
 import process from 'node:process';
 import { Config, ConfigProvider, Console, Effect, Stream, Logger, Layer, LogLevel } from 'effect';
 import { Command } from '@effect/platform';
@@ -5,43 +19,32 @@ import { BunContext, BunRuntime } from '@effect/platform-bun';
 import { teardown } from './_shared';
 
 /**
- * Usage: `bun scripts/build-binary.ts`
+ * All cross-compilation targets and their artifact names.
  */
-export function buildBinary() {
-  return Effect.gen(function* () {
-    const cwd = process.cwd();
-    yield* Effect.logDebug(`Building binary in ${cwd}`);
+const TARGETS = [
+  { target: 'bun-darwin-arm64', artifact: 'composio-darwin-aarch64' },
+  { target: 'bun-darwin-x64', artifact: 'composio-darwin-x64' },
+  { target: 'bun-linux-x64', artifact: 'composio-linux-x64' },
+  { target: 'bun-linux-arm64', artifact: 'composio-linux-aarch64' },
+] as const;
 
+function runBunBuild(target: string, outfile: string) {
+  return Effect.gen(function* () {
     const args = [
       'bun',
-      /**
-       * Transpile and bundle the CLI app.
-       */
       'build',
       './src/bin.ts',
-
-      /**
-       * Statically inline any environment variable that matches `DEBUG_OVERRIDE_*`.
-       */
       '--env',
       'DEBUG_OVERRIDE_*',
-
-      /**
-       * Generate a standalone Bun executable containing your bundled code.
-       */
       '--compile',
       '--production',
-
-      /**
-       * Output file destination.
-       */
+      '--target',
+      target,
       '--outfile',
-      './dist/composio',
+      outfile,
     ] as const satisfies ReadonlyArray<string>;
 
     const cmd = Command.make(...args);
-
-    yield* Effect.logDebug('Running build command with', args.join(' '), '');
 
     const { exitCode } = yield* cmd.pipe(
       Command.start,
@@ -65,13 +68,24 @@ export function buildBinary() {
       )
     );
 
-    process.exitCode = exitCode;
-
     if (exitCode !== 0) {
-      return yield* Effect.fail(new Error('Failed to build binary'));
+      return yield* Effect.fail(new Error(`Failed to build binary for ${target}`));
+    }
+  });
+}
+
+export function buildAllBinaries() {
+  return Effect.gen(function* () {
+    yield* Console.log(`Building ${TARGETS.length} platform binaries...`);
+
+    for (const { target, artifact } of TARGETS) {
+      const outfile = `./dist/binaries/${artifact}`;
+      yield* Console.log(`\nBuilding ${artifact} (${target})...`);
+      yield* runBunBuild(target, outfile);
+      yield* Console.log(`Built: ${outfile}`);
     }
 
-    yield* Effect.logDebug('', 'Binary built successfully');
+    yield* Console.log(`\nAll ${TARGETS.length} binaries built successfully.`);
   });
 }
 
@@ -84,7 +98,7 @@ const ConfigLive = Effect.gen(function* () {
 }).pipe(Layer.unwrapEffect, Layer.merge(Layer.setConfigProvider(ConfigProvider.fromEnv())));
 
 if (require.main === module) {
-  buildBinary().pipe(
+  buildAllBinaries().pipe(
     Effect.provide(ConfigLive),
     Effect.provide(Logger.pretty),
     Effect.provide(BunContext.layer),
