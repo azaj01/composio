@@ -15,7 +15,7 @@ describe('CLI: composio', () => {
         expect(result).toEqual(
           ValidationError.commandMismatch(
             HelpDoc.p(
-              "Invalid subcommand for composio - use one of 'version', 'upgrade', 'whoami', 'login', 'logout', 'init', 'generate', 'py', 'ts', 'toolkits', 'tools', 'auth-configs', 'connected-accounts', 'triggers', 'logs'"
+              "Invalid subcommand for composio - use one of 'version', 'upgrade', 'whoami', 'login', 'logout', 'init', 'generate', 'py', 'ts', 'toolkits', 'tools', 'auth-configs', 'connected-accounts', 'triggers', 'logs', 'orgs', 'projects'"
             )
           )
         );
@@ -28,7 +28,7 @@ describe('CLI: composio', () => {
       Effect.gen(function* () {
         const args = ['--help'];
         yield* cli(args);
-        const lines = yield* MockConsole.getLines();
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
         const output = lines.join('\n');
         expect(yield* sanitize(output)).toMatchSnapshot();
       })

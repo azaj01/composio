@@ -2,6 +2,8 @@
 Shared utils.
 """
 
+import copy
+import keyword
 import typing as t
 import uuid
 from inspect import Parameter
@@ -32,9 +34,85 @@ __all__ = [
     "get_signature_format_from_schema_params",
     "get_pydantic_signature_format_from_schema_params",
     "generate_request_id",
+    "substitute_reserved_python_keywords",
+    "reinstate_reserved_python_keywords",
 ]
 
 reserved_names = ["validate"]
+
+_OBJ_MARKER = "-_object_-"
+
+
+def _make_safe_name(name: str) -> str:
+    """Append ``_rs`` to a Python keyword so it can be used as a parameter name."""
+    return f"{name}_rs"
+
+
+def substitute_reserved_python_keywords(
+    schema: t.Dict,
+) -> t.Tuple[dict, dict]:
+    """Replace Python reserved keywords in a JSON schema's property names.
+
+    Returns a ``(schema, keywords)`` tuple where *schema* has safe property
+    names and *keywords* maps each safe name back to the original.  Nested
+    object schemas are processed recursively.
+
+    The schema is deep-copied before any mutation so the caller's original
+    is never modified.
+    """
+    if "properties" not in schema:
+        return schema, {}
+
+    schema = copy.deepcopy(schema)
+
+    keywords: t.Dict[str, t.Any] = {}
+    for p_name in list(schema["properties"]):
+        if not keyword.iskeyword(p_name):
+            continue
+
+        _nested_kw: t.Dict[str, t.Any] = {}
+        p_val = schema["properties"].pop(p_name)
+        if p_val.get("type") == "object":
+            p_val, _nested_kw = substitute_reserved_python_keywords(schema=p_val)
+
+        safe = _make_safe_name(p_name)
+        schema["properties"][safe] = p_val
+        keywords[safe] = p_name
+        keywords[f"{safe}{_OBJ_MARKER}"] = _nested_kw
+
+    # Also rename entries in the ``required`` list.
+    if keywords and "required" in schema:
+        reverse = {v: k for k, v in keywords.items() if not k.endswith(_OBJ_MARKER)}
+        schema["required"] = [reverse.get(r, r) for r in schema["required"]]
+
+    return schema, keywords
+
+
+def reinstate_reserved_python_keywords(
+    request: dict,
+    keywords: dict,
+) -> dict:
+    """Reverse the substitution performed by :func:`substitute_reserved_python_keywords`.
+
+    Modifies *request* **in-place** and returns it.
+    """
+    for clean_key in sorted(list(keywords), reverse=True):
+        subkeys = None
+        if clean_key.endswith(_OBJ_MARKER):
+            subkeys = keywords[clean_key]
+            clean_key, _ = clean_key.split(_OBJ_MARKER, maxsplit=1)
+
+        if clean_key not in request:
+            continue
+
+        original_value = request.pop(clean_key)
+        if subkeys:
+            original_value = reinstate_reserved_python_keywords(
+                request=original_value,
+                keywords=subkeys,
+            )
+        request[keywords[clean_key]] = original_value
+    return request
 
 
 def _coerce_default_value(
