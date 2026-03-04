@@ -162,6 +162,7 @@ const githubConn = await composio.connectedAccounts.initiate(
   {
     config: {
       authScheme: "OAUTH2",
+      // val fields use snake_case — they're sent to the API as-is
       val: { status: "INITIALIZING", long_redirect_url: true },
     },
   },
