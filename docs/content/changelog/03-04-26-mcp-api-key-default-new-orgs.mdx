@@ -31,11 +31,11 @@ Nothing changes for existing organizations. If your organization was created bef
 
 If you need to disable API key enforcement for a new project, you can set it explicitly during project creation or update the setting afterward:
 
-```bash
-curl -X PATCH "https://backend.composio.dev/api/v3/org/project/config" \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: ak_your_api_key" \
-  -d '{"require_mcp_api_key": false}'
+```http
+PATCH /api/v3/org/project/config
+Content-Type: application/json
+
+{"require_mcp_api_key": false}
 ```
 
 <Callout type="info">
