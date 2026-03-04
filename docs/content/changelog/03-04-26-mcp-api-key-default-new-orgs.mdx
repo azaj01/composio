@@ -1,0 +1,43 @@
+---
+title: "MCP API Key Enforcement Now Default for New Organizations"
+description: "Organizations created on or after March 5, 2026 will have require_mcp_api_key enabled by default"
+date: "2026-03-04"
+---
+
+As announced in our [Optional API Key Enforcement for MCP Servers](/docs/changelog/2026/01/08) changelog, **MCP API key enforcement is now enabled by default for all newly created organizations**.
+
+### What's Changed
+
+Starting **March 5, 2026**, every new organization created on Composio will automatically have `require_mcp_api_key` set to `true` for all new projects. This means MCP server requests must include a valid API key in the `x-api-key` header.
+
+| Setting | Previous Default | New Default (orgs created March 5+) |
+|---------|-----------------|--------------------------------------|
+| `require_mcp_api_key` | `false` | `true` |
+
+### For New Organizations
+
+- All new projects require API key authentication for MCP server requests out of the box
+- Requests without a valid `x-api-key` header receive `401 Unauthorized`
+- You can opt out by explicitly setting `require_mcp_api_key: false` in your project configuration
+
+### For Existing Organizations
+
+Nothing changes for existing organizations. If your organization was created before March 5, 2026:
+
+- Your current `require_mcp_api_key` setting remains unchanged
+- You can opt in at any time through your [project settings](https://platform.composio.dev) or via the API
+
+### Opting Out (New Organizations)
+
+If you need to disable API key enforcement for a new project, you can set it explicitly during project creation or update the setting afterward:
+
+```bash
+curl -X PATCH "https://backend.composio.dev/api/v3/org/project/config" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: ak_your_api_key" \
+  -d '{"require_mcp_api_key": false}'
+```
+
+<Callout type="info">
+We strongly recommend keeping MCP API key enforcement enabled to prevent unauthorized access to your MCP servers. See the [original announcement](/docs/changelog/2026/01/08) for setup details and usage examples.
+</Callout>
