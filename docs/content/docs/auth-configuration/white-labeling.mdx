@@ -127,6 +127,14 @@ For toolkits you haven't white-labeled, use the auth config ID from **Authentica
 
 For development and testing, Composio's managed auth works fine. No OAuth app setup required.
 
+### Switching from Composio-managed to your own OAuth app
+
+Existing connected accounts are permanently tied to the auth config they were created with. Switching to a custom auth config does not affect them.
+
+- Existing connections keep working. Tokens continue refreshing using the original auth config's credentials.
+- New connections use your custom auth config. Users who connect after the switch will see your app name on the consent screen.
+- To fully migrate a user, delete their old connected account and have them re-authenticate through your OAuth app.
+
 ## Sending users directly to the OAuth provider
 
 By default, when you initiate a connection, Composio returns a shortened redirect URL (`backend.composio.dev/api/v3/s/...`). The user's browser hits this URL first, then gets redirected to the OAuth provider. This means `backend.composio.dev` briefly appears in the browser.
