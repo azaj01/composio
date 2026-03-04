@@ -1,10 +1,10 @@
 ---
-title: "Polling Trigger Interval Changes - Lookahead Announcement"
+title: "Polling Trigger Interval Changes"
 description: "Default polling interval increasing from 1 minute to 15 minutes, with silent clamping during transition"
 date: "2026-03-03"
 ---
 
-We're updating **polling trigger intervals** to improve platform reliability and reduce unnecessary API load. This change affects how frequently polling triggers execute.
+We're updating **polling trigger intervals** to improve platform reliability and avoid rate limiting. This change affects how frequently polling triggers execute.
 
 ## What's Changing?
 
@@ -18,8 +18,6 @@ If you don't specify an `interval` in your trigger configuration, your triggers 
 
 A new **minimum polling interval of 15 minutes** is being introduced. Triggers configured with intervals shorter than 15 minutes will be automatically clamped to 15 minutes.
 
-**Example:**
-
 ```python
 # Before: this would poll every 5 minutes
 composio.triggers.enable(
@@ -28,7 +26,7 @@ composio.triggers.enable(
     config={"interval": 5}
 )
 
-# After: interval is silently clamped to 15 minutes
+# Now: interval is silently clamped to 15 minutes
 composio.triggers.enable(
     trigger_name="GMAIL_NEW_GMAIL_MESSAGE",
     connected_account_id="ca_xxx",
@@ -38,14 +36,14 @@ composio.triggers.enable(
 
 ### Current Behavior (Transition Period)
 
-During the transition period, intervals below the minimum are **silently clamped** — your triggers will continue to work without errors, but they will run at the minimum interval instead of your requested interval. A warning is logged when clamping occurs.
+During the transition period, intervals below the minimum are **silently clamped** — your triggers will continue to work without errors, but they will run at the minimum interval instead of your requested interval.
 
-### Upcoming Enforcement (~2 Weeks)
+### Enforcement (April 1, 2026)
 
-After the transition period, requesting an interval below the minimum will return an **API error** instead of silently clamping. You will need to update your trigger configurations to use an interval of 15 minutes or higher.
+Starting **April 1, 2026**, requesting an interval below the minimum will return an **API error** instead of silently clamping. Update your trigger configurations to use an interval of 15 minutes or higher before this date.
 
 ```python
-# This will return an error after enforcement begins
+# This will return an error after April 1, 2026
 composio.triggers.enable(
     trigger_name="GMAIL_NEW_GMAIL_MESSAGE",
     connected_account_id="ca_xxx",
@@ -53,31 +51,18 @@ composio.triggers.enable(
 )
 ```
 
-## Why This Change?
-
-1. **Platform Reliability**: Reducing polling frequency decreases load on both Composio infrastructure and third-party APIs
-2. **Rate Limit Protection**: Many third-party APIs have rate limits that are easily hit with 1-minute polling across many triggers
-3. **Cost Efficiency**: Less frequent polling reduces infrastructure costs, keeping the platform sustainable
-
 ## What You Need to Do
 
 1. **Review your trigger configurations** — check if any triggers use intervals shorter than 15 minutes
-2. **Update intervals** to 15 minutes or higher before enforcement begins
+2. **Update intervals** to 15 minutes or higher before **April 1, 2026**
 3. **If you need near-real-time events**, consider using **webhook triggers** instead of polling triggers where available
 
 ## Rollout Timeline
 
-- **March 2026**: Silent clamping enabled — intervals below 15 minutes are automatically raised to 15 minutes
-- **Mid-March 2026**: API enforcement — intervals below 15 minutes will return an error
-- **Frontend enforcement**: The dashboard will prevent setting intervals below 15 minutes
+- **March 3, 2026**: Silent clamping enabled — intervals below 15 minutes are automatically raised to 15 minutes
+- **April 1, 2026**: API enforcement — intervals below 15 minutes will return an error
+- **April 1, 2026**: Dashboard enforcement — the UI will prevent setting intervals below 15 minutes
 
 <Callout type="info">
-Existing triggers with intervals below 15 minutes will continue to function during the transition period, but at the clamped 15-minute interval. We recommend updating your configurations proactively.
+Existing triggers with intervals below 15 minutes will continue to function during the transition period, but at the clamped 15-minute interval. Update your configurations before April 1 to avoid errors.
 </Callout>
-
-## Need Help?
-
-If you have questions about this change or need assistance:
-- Join our [Discord community](https://discord.gg/composio)
-- Check our [documentation](https://docs.composio.dev)
-- Contact support at support@composio.dev
