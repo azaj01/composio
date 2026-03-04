@@ -4,7 +4,13 @@ description: Set up auth configs for toolkits without Composio managed authentic
 keywords: [custom credentials, no managed auth]
 ---
 
-Some toolkits don't have Composio managed authentication and require you to provide your own credentials. When sessions try to use these toolkits, an error will be thrown asking you to create an auth config.
+You create a custom auth config when you need to provide your own credentials for a toolkit. Common reasons:
+
+- **Toolkit has no managed auth**: PostHog, Tavily, Perplexity, etc. require your own credentials
+- **White-labeling**: Show your app name on OAuth consent screens instead of "Composio". See [White-labeling authentication](/docs/white-labeling-authentication)
+- **Rate limits**: Composio's default OAuth app shares quota across all users. Your own app gets a dedicated quota
+- **Custom scopes**: You need permissions beyond what Composio's default app has approved
+- **Custom instance**: Connecting to a self-hosted or regional variant (e.g., custom Salesforce subdomain)
 
 <Steps>
 <Step>
