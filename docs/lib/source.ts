@@ -397,7 +397,29 @@ ${page.data.description || ''}`;
 ${page.data.description || ''}`;
   }
 
-  const cleanContent = mdxToCleanMarkdown(content);
+  // Split content at Mermaid tags, process each segment separately, then rejoin
+  // with mermaid code blocks. This prevents JSX regexes with [\s\S]*? from
+  // matching across mermaid boundaries and consuming diagram content.
+  const mermaidRegex = /<Mermaid\s+chart="([\s\S]*?)"\s*\/>/g;
+  const segments: string[] = [];
+  const mermaidCharts: string[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = mermaidRegex.exec(content)) !== null) {
+    segments.push(content.slice(lastIndex, match.index));
+    mermaidCharts.push(match[1]);
+    lastIndex = match.index + match[0].length;
+  }
+  segments.push(content.slice(lastIndex));
+
+  const cleanSegments = segments.map(s => mdxToCleanMarkdown(s));
+  let cleanContent = cleanSegments[0];
+  for (let i = 0; i < mermaidCharts.length; i++) {
+    // Decode HTML entities that fumadocs encodes in JSX attributes
+    const chart = mermaidCharts[i].replace(/&#x22;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
+    cleanContent += `\n\n\`\`\`mermaid\n${chart}\n\`\`\`\n\n${cleanSegments[i + 1]}`;
+  }
 
   const footer = includeFooter
     ? `\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Glossary](https://docs.composio.dev/llms.mdx/docs/glossary) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)`
