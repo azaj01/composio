@@ -82,7 +82,7 @@ Copy the auth config ID (e.g., `ac_1234abcd`).
 <Step>
 <StepTitle>Pass the auth config ID when initiating a connection</StepTitle>
 
-Use your custom auth config ID for white-labeled toolkits. For everything else, use a Composio-managed auth config ID:
+Pass your custom auth config ID when initiating a connection:
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
@@ -91,17 +91,12 @@ from composio import Composio
 
 composio = Composio(api_key="your_api_key")
 
-# White-labeled: uses your OAuth app
+# White-labeled: users see your brand on the consent screen
 github_conn = composio.connected_accounts.initiate(
     user_id="user_123",
     auth_config_id="ac_your_github_config",
 )
-
-# Composio-managed: uses Composio's default OAuth app
-gmail_conn = composio.connected_accounts.initiate(
-    user_id="user_123",
-    auth_config_id="ac_composio_gmail_config",
-)
+print(f"Redirect to: {github_conn.redirect_url}")
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -109,22 +104,17 @@ gmail_conn = composio.connected_accounts.initiate(
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 // ---cut---
-// White-labeled: uses your OAuth app
+// White-labeled: users see your brand on the consent screen
 const githubConn = await composio.connectedAccounts.initiate(
   "user_123",
   "ac_your_github_config",
 );
-
-// Composio-managed: uses Composio's default OAuth app
-const gmailConn = await composio.connectedAccounts.initiate(
-  "user_123",
-  "ac_composio_gmail_config",
-);
+console.log("Redirect to:", githubConn.redirectUrl);
 ```
 </Tab>
 </Tabs>
 
-Now when users connect GitHub, they'll see your app name on the consent screen. For Gmail, Composio's default app handles it.
+For toolkits you haven't white-labeled, use the auth config ID from **Authentication management** in your dashboard.
 </Step>
 </Steps>
 
