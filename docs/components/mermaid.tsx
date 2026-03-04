@@ -1,21 +1,32 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import mermaid from 'mermaid';
 import Zoom from 'react-medium-image-zoom';
 import 'react-medium-image-zoom/dist/styles.css';
+
+const MOBILE_BREAKPOINT = 768;
+
+function useIsMobile() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+      mql.addEventListener('change', cb);
+      return () => mql.removeEventListener('change', cb);
+    },
+    () => window.innerWidth < MOBILE_BREAKPOINT,
+    () => false,
+  );
+}
 
 function getCssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-function svgToDataUrl(svg: string): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
 export function Mermaid({ chart }: { chart: string }) {
   const renderCount = useRef(0);
   const baseId = useRef(`mermaid-${Math.random().toString(36).slice(2, 9)}`);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState('');
 
   useEffect(() => {
@@ -65,17 +76,19 @@ export function Mermaid({ chart }: { chart: string }) {
     return () => observer.disconnect();
   }, [chart]);
 
+  const isMobile = useIsMobile();
+
   if (!svg) return null;
 
-  return (
-    <div className="my-4 max-w-full mx-auto">
-      <Zoom>
-        <img
-          src={svgToDataUrl(svg)}
-          alt="Mermaid diagram"
-          className="mx-auto"
-        />
-      </Zoom>
-    </div>
+  const diagram = (
+    <div
+      ref={containerRef}
+      className="my-4 overflow-x-auto max-w-full mx-auto [&>svg]:mx-auto"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
   );
+
+  if (isMobile) return diagram;
+
+  return <Zoom wrapElement="div">{diagram}</Zoom>;
 }
