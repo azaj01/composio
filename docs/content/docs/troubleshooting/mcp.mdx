@@ -23,6 +23,15 @@ Verify your URL format matches one of these patterns:
 - `https://apollo-<randomID>-composio.vercel.app/v3/mcp/<UUID>`
 - `https://apollo.composio.dev/v3/mcp/<UUID>`
 
+## Getting 401 Unauthorized errors
+
+If your MCP client gets `401 Unauthorized`, include your Composio project API key in request headers:
+
+- Header name: `x-api-key`
+- Value: your project API key from the Composio dashboard
+
+When `require_mcp_api_key` is enabled on your project, requests without this header are rejected.
+
 ## Testing and debugging
 
 If experiencing issues, test your MCP server with:
