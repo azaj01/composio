@@ -4,11 +4,11 @@ description: "Organizations created on or after March 5, 2026 will have require_
 date: "2026-03-04"
 ---
 
-As announced in our [Optional API Key Enforcement for MCP Servers](/docs/changelog/2026/01/08) changelog, **MCP API key enforcement is now enabled by default for all newly created organizations**.
+As announced in our [Optional API Key Enforcement for MCP Servers](/docs/changelog/2026/01/08) entry, **MCP API key enforcement is now enabled by default for all newly created organizations**.
 
 ### What's Changed
 
-Starting **March 5, 2026**, every new organization created on Composio will automatically have `require_mcp_api_key` set to `true` for all new projects. This means MCP server requests must include a valid API key in the `x-api-key` header.
+From **March 5, 2026**, all projects in newly created organizations will have `require_mcp_api_key` set to `true` by default. Any MCP server request without a valid `x-api-key` header will be rejected with `401 Unauthorized`.
 
 | Setting | Previous Default | New Default (orgs created March 5+) |
 |---------|-----------------|--------------------------------------|
@@ -16,9 +16,7 @@ Starting **March 5, 2026**, every new organization created on Composio will auto
 
 ### For New Organizations
 
-- All new projects require API key authentication for MCP server requests out of the box
-- Requests without a valid `x-api-key` header receive `401 Unauthorized`
-- You can opt out by explicitly setting `require_mcp_api_key: false` in your project configuration
+- You can opt out by setting `require_mcp_api_key: false` in your project configuration
 
 ### For Existing Organizations
 
@@ -29,7 +27,7 @@ Nothing changes for existing organizations. If your organization was created bef
 
 ### Opting Out (New Organizations)
 
-If you need to disable API key enforcement for a new project, you can set it explicitly during project creation or update the setting afterward:
+If you need to disable API key enforcement, set `require_mcp_api_key: false` during project creation or update it afterward:
 
 ```bash
 curl -X PATCH https://backend.composio.dev/api/v3/org/project/config \
