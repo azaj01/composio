@@ -17,10 +17,10 @@
 import process from 'node:process';
 import path from 'node:path';
 import os from 'node:os';
-import { Cause, Config, ConfigProvider, Effect, Exit, Logger, Layer, LogLevel, Ref } from 'effect';
+import { Config, ConfigProvider, Effect, Logger, Layer, LogLevel, Ref } from 'effect';
 import { BunContext, BunFileSystem, BunRuntime } from '@effect/platform-bun';
 import { FileSystem } from '@effect/platform';
-import type { Teardown } from '@effect/platform/Runtime';
+import { teardown } from './_shared';
 import { $ } from 'bun';
 import * as p from '@clack/prompts';
 import color from 'picocolors';
@@ -455,12 +455,6 @@ function recordAll() {
 }
 
 // --- Bootstrap ---
-
-export const teardown: Teardown = <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void) => {
-  const shouldFail = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause);
-  const errorCode = Number(process.exitCode ?? 1);
-  onExit(shouldFail ? errorCode : 0);
-};
 
 const ConfigLive = Effect.gen(function* () {
   const logLevel = yield* Config.logLevel('COMPOSIO_LOG_LEVEL').pipe(

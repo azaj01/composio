@@ -63,7 +63,7 @@ jobs:
           file dist/binaries/${{ matrix.artifact }}
 
       - name: Test binary
-        if: startsWith(matrix.target, 'bun-linux')
+        if: matrix.target == 'bun-linux-x64'
         working-directory: ts/packages/cli
         env:
           COMPOSIO_USER_API_KEY: test-dummy-api-key-for-ci

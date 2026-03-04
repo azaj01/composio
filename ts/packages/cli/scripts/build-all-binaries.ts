@@ -13,21 +13,10 @@
  */
 
 import process from 'node:process';
-import {
-  Cause,
-  Config,
-  ConfigProvider,
-  Console,
-  Effect,
-  Exit,
-  Stream,
-  Logger,
-  Layer,
-  LogLevel,
-} from 'effect';
+import { Config, ConfigProvider, Console, Effect, Stream, Logger, Layer, LogLevel } from 'effect';
 import { Command } from '@effect/platform';
 import { BunContext, BunRuntime } from '@effect/platform-bun';
-import type { Teardown } from '@effect/platform/Runtime';
+import { teardown } from './_shared';
 
 /**
  * All cross-compilation targets and their artifact names.
@@ -99,12 +88,6 @@ export function buildAllBinaries() {
     yield* Console.log(`\nAll ${TARGETS.length} binaries built successfully.`);
   });
 }
-
-export const teardown: Teardown = <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void) => {
-  const shouldFail = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause);
-  const errorCode = Number(process.exitCode ?? 1);
-  onExit(shouldFail ? errorCode : 0);
-};
 
 const ConfigLive = Effect.gen(function* () {
   const logLevel = yield* Config.logLevel('COMPOSIO_LOG_LEVEL').pipe(
