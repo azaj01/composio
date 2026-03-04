@@ -114,7 +114,7 @@ export function buildBinaryCross() {
     process.exitCode = exitCode;
 
     if (exitCode !== 0) {
-      return yield* Effect.logInfo(`Failed to cross-compile binary for ${target}`);
+      return yield* Effect.fail(new Error(`Failed to cross-compile binary for ${target}`));
     }
 
     yield* Console.log(`Binary cross-compiled: ${outfile}`);

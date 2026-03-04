@@ -103,6 +103,9 @@ jobs:
       - name: Setup Node.js, pnpm, Bun
         uses: ./.github/actions/setup-node-pnpm-bun
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Download all artifacts
         uses: actions/download-artifact@v6
         with:
