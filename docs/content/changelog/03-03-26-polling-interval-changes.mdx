@@ -51,11 +51,15 @@ composio.triggers.enable(
 )
 ```
 
+### Using Custom Auth?
+
+If you're using **custom auth** (your own API keys), the 15-minute minimum does not apply. You can set polling intervals as low as **1 minute**.
+
 ## What You Need to Do
 
 1. **Review your trigger configurations** — check if any triggers use intervals shorter than 15 minutes
 2. **Update intervals** to 15 minutes or higher before **April 1, 2026**
-3. **If you need near-real-time events**, consider using **webhook triggers** instead of polling triggers where available
+3. **If you need near-real-time events**, consider using **webhook triggers** instead of polling triggers, or use **custom auth** for intervals as low as 1 minute
 
 ## Rollout Timeline
 
