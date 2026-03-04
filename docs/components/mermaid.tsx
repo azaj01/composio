@@ -2,15 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 
 function getCssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+function svgToDataUrl(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 export function Mermaid({ chart }: { chart: string }) {
   const renderCount = useRef(0);
   const baseId = useRef(`mermaid-${Math.random().toString(36).slice(2, 9)}`);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState('');
 
   useEffect(() => {
@@ -60,11 +65,17 @@ export function Mermaid({ chart }: { chart: string }) {
     return () => observer.disconnect();
   }, [chart]);
 
+  if (!svg) return null;
+
   return (
-    <div
-      ref={containerRef}
-      className="my-4 overflow-x-auto max-w-full mx-auto [&>svg]:mx-auto"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="my-4 max-w-full mx-auto">
+      <Zoom>
+        <img
+          src={svgToDataUrl(svg)}
+          alt="Mermaid diagram"
+          className="mx-auto"
+        />
+      </Zoom>
+    </div>
   );
 }
