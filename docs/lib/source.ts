@@ -416,7 +416,9 @@ ${page.data.description || ''}`;
   const cleanSegments = segments.map(s => mdxToCleanMarkdown(s));
   let cleanContent = cleanSegments[0];
   for (let i = 0; i < mermaidCharts.length; i++) {
-    cleanContent += `\n\n\`\`\`mermaid\n${mermaidCharts[i]}\n\`\`\`\n\n${cleanSegments[i + 1]}`;
+    // Decode HTML entities that fumadocs encodes in JSX attributes
+    const chart = mermaidCharts[i].replace(/&#x22;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
+    cleanContent += `\n\n\`\`\`mermaid\n${chart}\n\`\`\`\n\n${cleanSegments[i + 1]}`;
   }
 
   const footer = includeFooter
