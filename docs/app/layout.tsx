@@ -12,6 +12,7 @@ const defaultLinkSlugs = [
   ['quickstart'],
   ['authentication'],
   ['configuring-sessions'],
+  ['white-labeling-authentication'],
   ['glossary'],
   ['common-faq'],
   ['troubleshooting'],
