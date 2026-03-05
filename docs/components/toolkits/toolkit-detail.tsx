@@ -353,13 +353,13 @@ export function ToolkitDetail({ toolkit, tools, triggers, path, faq }: ToolkitDe
           </div>
       </div>
 
-      {/* FAQ */}
-      {faq && faq.length > 0 && <FaqSection faq={faq} />}
-
       {/* Authentication Details */}
       {toolkit.authConfigDetails && toolkit.authConfigDetails.length > 0 && (
-        <AuthDetailsSection authConfigDetails={toolkit.authConfigDetails} />
+        <AuthDetailsSection authConfigDetails={toolkit.authConfigDetails} authSchemes={toolkit.authSchemes} composioManagedAuthSchemes={toolkit.composioManagedAuthSchemes} />
       )}
+
+      {/* FAQ */}
+      {faq && faq.length > 0 && <FaqSection faq={faq} />}
 
       {/* Tools & Triggers */}
       {(tools.length > 0 || triggers.length > 0) && (
