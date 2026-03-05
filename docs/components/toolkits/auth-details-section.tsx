@@ -7,6 +7,7 @@ import type { AuthConfigDetail, AuthConfigField } from '@/types/toolkit';
 
 interface AuthDetailsSectionProps {
   authConfigDetails: AuthConfigDetail[];
+  authSchemes?: string[];
   composioManagedAuthSchemes?: string[];
 }
 
@@ -57,7 +58,7 @@ function getAllFields(detail: AuthConfigDetail): AuthConfigField[] {
   ];
 }
 
-export function AuthDetailsSection({ authConfigDetails, composioManagedAuthSchemes }: AuthDetailsSectionProps) {
+export function AuthDetailsSection({ authConfigDetails, authSchemes, composioManagedAuthSchemes }: AuthDetailsSectionProps) {
   if (!authConfigDetails || authConfigDetails.length === 0) {
     return null;
   }
@@ -71,7 +72,7 @@ export function AuthDetailsSection({ authConfigDetails, composioManagedAuthSchem
     return null;
   }
 
-  const hasOAuth = validDetails.some((d) => d.mode.toLowerCase().includes('oauth'));
+  const hasOAuth = authSchemes?.some((s) => s.toUpperCase().includes('OAUTH')) ?? false;
 
   return (
     <div className="space-y-3">

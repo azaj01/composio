@@ -355,7 +355,7 @@ export function ToolkitDetail({ toolkit, tools, triggers, path, faq }: ToolkitDe
 
       {/* Authentication Details */}
       {toolkit.authConfigDetails && toolkit.authConfigDetails.length > 0 && (
-        <AuthDetailsSection authConfigDetails={toolkit.authConfigDetails} composioManagedAuthSchemes={toolkit.composioManagedAuthSchemes} />
+        <AuthDetailsSection authConfigDetails={toolkit.authConfigDetails} authSchemes={toolkit.authSchemes} composioManagedAuthSchemes={toolkit.composioManagedAuthSchemes} />
       )}
 
       {/* FAQ */}
