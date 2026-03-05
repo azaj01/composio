@@ -24,7 +24,39 @@ interface IntegrationTabsProps {
   tabs?: TabConfig[];
 }
 
-function IntegrationTabsHeader({ tabs }: { tabs: TabConfig[] }) {
+function TabsHeader({ tabs }: { tabs: TabConfig[] }) {
+  return (
+    <div className="flex items-center gap-3">
+      <TabsList>
+        {tabs.map((tab) => (
+          <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
+            {tab.icon && tab.iconDark && (
+              <div className="flex h-4 w-4 shrink-0 items-center justify-center">
+                <Image
+                  src={tab.icon}
+                  alt={tab.label}
+                  width={16}
+                  height={16}
+                  className="h-4 w-4 dark:hidden"
+                />
+                <Image
+                  src={tab.iconDark}
+                  alt={tab.label}
+                  width={16}
+                  height={16}
+                  className="hidden h-4 w-4 dark:block"
+                />
+              </div>
+            )}
+            {tab.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </div>
+  );
+}
+
+function PortaledTabsHeader({ tabs }: { tabs: TabConfig[] }) {
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -48,33 +80,7 @@ function IntegrationTabsHeader({ tabs }: { tabs: TabConfig[] }) {
   const header = (
     <div className="mt-4 border-t border-fd-border pt-4">
       <p className="mb-3 text-sm font-medium text-fd-muted-foreground">Choose your integration type · <Link href="/docs/native-tools-vs-mcp" className="text-fd-muted-foreground hover:text-fd-foreground transition-colors underline underline-offset-2">Use this guide to decide</Link></p>
-      <div className="flex items-center gap-3">
-        <TabsList>
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
-              {tab.icon && tab.iconDark && (
-                <div className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Image
-                    src={tab.icon}
-                    alt={tab.label}
-                    width={16}
-                    height={16}
-                    className="h-4 w-4 dark:hidden"
-                  />
-                  <Image
-                    src={tab.iconDark}
-                    alt={tab.label}
-                    width={16}
-                    height={16}
-                    className="hidden h-4 w-4 dark:block"
-                  />
-                </div>
-              )}
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </div>
+      <TabsHeader tabs={tabs} />
     </div>
   );
 
@@ -87,9 +93,17 @@ function IntegrationTabsHeader({ tabs }: { tabs: TabConfig[] }) {
 }
 
 export function IntegrationTabs({ children, defaultValue, tabs = defaultTabs }: IntegrationTabsProps) {
+  const isQuickstart = tabs === defaultTabs;
+
   return (
     <Tabs defaultValue={defaultValue ?? tabs[0]?.value ?? 'native'} className="not-prose">
-      <IntegrationTabsHeader tabs={tabs} />
+      {isQuickstart ? (
+        <PortaledTabsHeader tabs={tabs} />
+      ) : (
+        <div className="mb-5">
+          <TabsHeader tabs={tabs} />
+        </div>
+      )}
       {children}
     </Tabs>
   );
