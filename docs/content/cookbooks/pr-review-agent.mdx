@@ -85,12 +85,25 @@ your-repo/
 └── CLAUDE.md (optional)
 ```
 
-Then add your secrets to the repo:
+Then set up your repo:
 
 1. Go to **Settings > Secrets and variables > Actions**
 2. Add `COMPOSIO_API_KEY` and `OPENAI_API_KEY` as repository secrets
+3. **Connect GitHub to Composio** (one-time setup). The agent runs as `user_123` in CI, so that user needs a GitHub connection before the workflow can post reviews:
 
-That's it. Every time a PR is opened or updated, the agent will review it and post a comment.
+```bash
+python -c "
+from composio import Composio
+composio = Composio()
+session = composio.create(user_id='user_123', toolkits=['github'])
+connection = session.authorize('github')
+print('Visit this URL to connect GitHub:', connection.redirect_url)
+connection.wait_for_connection()
+print('Connected!')
+"
+```
+
+After you authorize once, the connection persists. The GitHub Action will work for all future PRs.
 
 ## How it works
 
