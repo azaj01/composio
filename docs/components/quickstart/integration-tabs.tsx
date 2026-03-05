@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TabConfig {
   value: string;
@@ -23,10 +24,17 @@ interface IntegrationTabsProps {
   tabs?: TabConfig[];
 }
 
-export function IntegrationTabs({ children, defaultValue, tabs = defaultTabs }: IntegrationTabsProps) {
-  return (
-    <Tabs defaultValue={defaultValue ?? tabs[0]?.value ?? 'native'} className="not-prose -mt-2">
-      <div className="mb-5 flex items-center gap-3">
+function IntegrationTabsHeader({ tabs }: { tabs: TabConfig[] }) {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setPortalTarget(document.getElementById('integration-tabs-portal'));
+  }, []);
+
+  const header = (
+    <div className="mt-4 border-t border-fd-border pt-4">
+      <p className="mb-3 text-sm font-medium text-fd-muted-foreground">Choose your integration type · <Link href="/docs/native-tools-vs-mcp" className="text-fd-muted-foreground hover:text-fd-foreground transition-colors underline underline-offset-2">Use this guide to decide</Link></p>
+      <div className="flex items-center gap-3">
         <TabsList>
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
@@ -52,10 +60,22 @@ export function IntegrationTabs({ children, defaultValue, tabs = defaultTabs }: 
             </TabsTrigger>
           ))}
         </TabsList>
-        <Link href="/docs/native-tools-vs-mcp" className="text-xs text-fd-muted-foreground hover:text-fd-foreground transition-colors">
-          Which should I use?
-        </Link>
       </div>
+    </div>
+  );
+
+  if (portalTarget) {
+    return createPortal(header, portalTarget);
+  }
+
+  // Fallback: render inline if portal target not found
+  return <div className="mb-5">{header}</div>;
+}
+
+export function IntegrationTabs({ children, defaultValue, tabs = defaultTabs }: IntegrationTabsProps) {
+  return (
+    <Tabs defaultValue={defaultValue ?? tabs[0]?.value ?? 'native'} className="not-prose">
+      <IntegrationTabsHeader tabs={tabs} />
       {children}
     </Tabs>
   );
