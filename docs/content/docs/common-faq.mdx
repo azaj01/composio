@@ -12,6 +12,18 @@ Yes. By default, OAuth consent screens show "Composio" as the app name. If you c
 You can also proxy the OAuth redirect through your own domain so users never see `backend.composio.dev` in the URL bar. See [White-labeling authentication](/docs/white-labeling-authentication).
 </Accordion>
 
+<Accordion title="Is white labeling available on the free plan?">
+Yes. White labeling works on all plans, including free. You can create custom auth configs with your own OAuth credentials on any account. See [White-labeling authentication](/docs/white-labeling-authentication).
+</Accordion>
+
+<Accordion title="How do I hide the Composio logo during authentication?">
+Go to your [project settings](https://platform.composio.dev/settings) and upload your own logo and app title. This replaces Composio branding on the Connect Link page. To also remove "Composio" from OAuth consent screens (Google, GitHub, Slack, etc.), create a custom auth config with your own OAuth credentials. See [White-labeling authentication](/docs/white-labeling-authentication) for the full guide.
+</Accordion>
+
+<Accordion title="I changed my branding but still see 'Secured by Composio'">
+The Connect Link logo and app title customization does not remove the "Secured by Composio" badge. To remove it, you need to set up your own OAuth app by creating a [custom auth config](/docs/white-labeling-authentication#using-your-own-oauth-apps) with your own client ID and secret.
+</Accordion>
+
 <Accordion title="What is the difference between a tool and a toolkit?">
 A **toolkit** is a collection of related tools grouped by app, for example the GitHub toolkit or the Gmail toolkit. A **tool** is a single action within a toolkit, like `GITHUB_CREATE_ISSUE` or `GMAIL_SEND_EMAIL`.
 

@@ -8,6 +8,8 @@
     "app-connections-dashboard",
     "fast-api",
     "hono",
+    "---Developer Tools---",
+    "pr-review-agent",
     "---Productivity & Automation---",
     "background-agent",
     "support-agent",
