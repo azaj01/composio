@@ -176,7 +176,7 @@ export function QuickstartFlow({ children }: QuickstartFlowProps) {
             ))}
             <Link
               href="/docs/providers"
-              className="flex items-center gap-3 rounded-lg border border-dashed border-fd-border px-3 py-2.5 text-left transition-all hover:bg-fd-accent/50 hover:border-fd-muted-foreground"
+              className="flex items-center gap-3 rounded-lg border border-dashed border-fd-border px-3 py-2.5 transition-all hover:bg-fd-accent/50 hover:border-fd-muted-foreground"
             >
               <span className="flex h-6 w-6 shrink-0 items-center justify-center text-fd-muted-foreground">→</span>
               <span className="text-sm font-medium text-fd-muted-foreground">Other providers</span>

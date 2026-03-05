@@ -28,7 +28,21 @@ function IntegrationTabsHeader({ tabs }: { tabs: TabConfig[] }) {
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    setPortalTarget(document.getElementById('integration-tabs-portal'));
+    const target = document.getElementById('integration-tabs-portal');
+    if (target) {
+      setPortalTarget(target);
+      return;
+    }
+    // Portal target may not exist yet (frameworks register asynchronously via useEffect)
+    const observer = new MutationObserver(() => {
+      const el = document.getElementById('integration-tabs-portal');
+      if (el) {
+        setPortalTarget(el);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, []);
 
   const header = (
