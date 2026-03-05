@@ -188,13 +188,13 @@ export function mdxToCleanMarkdown(content: string): string {
       while ((match = labelRegex.exec(tabsContent)) !== null) {
         tabLabelMap[match[1]] = match[2];
       }
-      return '\n> Which should I use? See [Native Tools vs MCP](/docs/native-tools-vs-mcp)\n';
+      return '\n> Choose your integration type · [Use this guide to decide](/docs/native-tools-vs-mcp)\n';
     }
   );
   // Also handle IntegrationTabs without explicit tabs prop
   result = result.replace(
     /<IntegrationTabs(?![^>]*tabs=)[\s\S]*?>/g,
-    '\n> Which should I use? See [Native Tools vs MCP](/docs/native-tools-vs-mcp)\n'
+    '\n> Choose your integration type · [Use this guide to decide](/docs/native-tools-vs-mcp)\n'
   );
 
   // Convert IntegrationContent to labeled section
