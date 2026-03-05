@@ -774,7 +774,7 @@ const config = {
         destination: '/reference/api-reference',
         permanent: true,
       },
-      // White-labeling direct execution page redirect
+      // Legacy /docs/white-labeling → sessions white-labeling page
       {
         source: '/docs/white-labeling',
         destination: '/docs/white-labeling-authentication',
