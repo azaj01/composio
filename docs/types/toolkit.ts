@@ -77,6 +77,7 @@ export interface ToolkitSummary {
 export interface Toolkit extends ToolkitSummary {
   description: string;
   authSchemes: string[];
+  composioManagedAuthSchemes?: string[];
   version: string | null;
   tools: Tool[];
   triggers: Trigger[];

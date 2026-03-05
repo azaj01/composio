@@ -627,6 +627,13 @@ function toolkitToMarkdown(toolkit: Toolkit, detailedTools?: Tool[], detailedTri
     '',
     `- **Category:** ${toolkit.category || 'Uncategorized'}`,
     `- **Auth:** ${toolkit.authSchemes.join(', ') || 'None'}`,
+    `- **Composio Managed App Available?** ${
+      toolkit.authSchemes?.some((s) => s.toUpperCase().includes('OAUTH'))
+        ? (toolkit.composioManagedAuthSchemes && toolkit.composioManagedAuthSchemes.length > 0
+            ? 'Yes'
+            : 'No')
+        : 'N/A'
+    }`,
     `- **Tools:** ${toolkit.toolCount}`,
     `- **Triggers:** ${toolkit.triggerCount}`,
     `- **Slug:** \`${toolkit.slug.toUpperCase()}\``,
@@ -713,15 +720,19 @@ async function generateToolkitsIndex(): Promise<string> {
     '',
     '## All Toolkits',
     '',
-    '| Toolkit | Slug | Tools | Triggers | Auth |',
-    '|---------|------|-------|----------|------|',
+    '| Toolkit | Slug | Tools | Triggers | Auth | Managed App |',
+    '|---------|------|-------|----------|------|-------------|',
   ];
 
   for (const toolkit of sorted) {
     const name = toolkit.name?.trim() || toolkit.slug;
     const auth = toolkit.authSchemes?.join(', ') || 'None';
+    const hasOAuth = toolkit.authSchemes?.some((s) => s.toUpperCase().includes('OAUTH'));
+    const managedApp = hasOAuth
+      ? (toolkit.composioManagedAuthSchemes && toolkit.composioManagedAuthSchemes.length > 0 ? 'Yes' : 'No')
+      : '—';
     lines.push(
-      `| [${name}](/toolkits/${toolkit.slug}.md) | \`${toolkit.slug.toUpperCase()}\` | ${toolkit.toolCount} | ${toolkit.triggerCount} | ${auth} |`
+      `| [${name}](/toolkits/${toolkit.slug}.md) | \`${toolkit.slug.toUpperCase()}\` | ${toolkit.toolCount} | ${toolkit.triggerCount} | ${auth} | ${managedApp} |`
     );
   }
 
