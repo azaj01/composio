@@ -180,6 +180,28 @@ describe('CLI: composio tools search', () => {
   );
 
   layer(TestLive(testLiveOptions))(
+    '[Given] search with empty schema [Then] CTA execute uses -d "{}"',
+    it => {
+      it.scoped('CTA uses -d "{}" when no schema properties', () =>
+        Effect.gen(function* () {
+          yield* cli(['tools', 'search', 'send']);
+          const lines = yield* MockConsole.getLines({ stripAnsi: true });
+          const output = lines.join('\n');
+
+          const ctaMatch = output.match(/"CTA":\s*\[([\s\S]*?)\]/);
+          expect(ctaMatch).toBeTruthy();
+          const ctaJson = `[${ctaMatch![1]}]`;
+          const cta = JSON.parse(ctaJson) as Array<{ action: string; command: string }>;
+
+          const executeCta = cta.find(c => c.action === 'Execute a tool');
+          expect(executeCta).toBeTruthy();
+          expect(executeCta!.command).toContain('-d "{}"');
+        })
+      );
+    }
+  );
+
+  layer(TestLive(testLiveOptions))(
     '[Given] --toolkits filter [Then] it is passed to session create as enabled toolkits',
     it => {
       it.scoped('passes toolkit filter into tool router session', () =>

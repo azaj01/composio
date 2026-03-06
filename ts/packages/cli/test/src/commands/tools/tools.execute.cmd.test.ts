@@ -599,22 +599,22 @@ describe('CLI: composio tools execute', () => {
     TestLive({
       baseConfigProvider: testConfigProvider,
       stdin: { isTTY: true, data: '' },
+      toolsExecutor: {
+        respondWith: {
+          data: { executed: true },
+          error: null,
+          successful: true,
+        },
+      },
     })
-  )('[Given] no -d and TTY stdin [Then] fails with missing input error', it => {
-    it.scoped('fails with missing input error', () =>
+  )('[Given] no -d and TTY stdin [Then] defaults to empty object and executes', it => {
+    it.scoped('defaults to {} when no data provided', () =>
       Effect.gen(function* () {
-        const result = yield* cli([
-          'tools',
-          'execute',
-          'GMAIL_SEND_EMAIL',
-          '--user-id',
-          'default',
-        ]).pipe(Effect.catchAll(e => Effect.succeed(e)));
-
-        expect(result).toBeDefined();
-        expect(result instanceof Error ? result.message : String(result)).toContain(
-          'Missing JSON input'
-        );
+        yield* cli(['tools', 'execute', 'GMAIL_SEND_EMAIL', '--user-id', 'default']);
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const output = lines.join('\n');
+        expect(output).toContain('successful');
+        expect(output).toContain('executed');
       })
     );
   });
