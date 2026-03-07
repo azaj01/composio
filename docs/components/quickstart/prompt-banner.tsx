@@ -11,6 +11,22 @@ export function PromptBanner({ children }: PromptBannerProps) {
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const detectLang = (pre: Element): string => {
+    // Check data-language on <pre> or <code>
+    const code = pre.querySelector('code');
+    const dataLang = pre.getAttribute('data-language') ?? code?.getAttribute('data-language');
+    if (dataLang) return dataLang;
+    // Check class="language-xxx"
+    const cls = Array.from(code?.classList ?? []).find(c => c.startsWith('language-'));
+    if (cls) return cls.replace('language-', '');
+    // Guess from content
+    const text = code?.textContent ?? '';
+    if (text.includes('pip install') || text.includes('npm install')) return 'bash';
+    if (text.includes('import ') && text.includes('from ')) return 'python';
+    if (text.includes('import ') && text.includes('from "')) return 'typescript';
+    return '';
+  };
+
   const extractSteps = (stepsEl: Element): string => {
     const parts: string[] = [];
     const steps = stepsEl.querySelectorAll('.fd-step');
@@ -20,20 +36,22 @@ export function PromptBanner({ children }: PromptBannerProps) {
       const title = step.querySelector('h3, h4, [class*="StepTitle"]');
       if (title) parts.push(`### ${title.textContent?.trim()}`);
 
-      // Code blocks — preserve as fenced code
-      const codeBlocks = step.querySelectorAll('pre code');
-      codeBlocks.forEach((code) => {
-        // Try to detect language from class (e.g. "language-python")
-        const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
-        const lang = langClass?.replace('language-', '') ?? '';
-        parts.push(`\`\`\`${lang}\n${code.textContent?.trim()}\n\`\`\``);
-      });
+      // Find code blocks, checking if they're inside tabs
+      const pres = step.querySelectorAll('pre');
+      pres.forEach((pre) => {
+        const lang = detectLang(pre);
+        const code = pre.querySelector('code')?.textContent?.trim() ?? '';
+        if (!code) return;
 
-      // Callouts / prose text (skip if it's just whitespace)
-      const paragraphs = step.querySelectorAll(':scope > p, :scope > div:not(:has(pre)) > p');
-      paragraphs.forEach((p) => {
-        const text = p.textContent?.trim();
-        if (text) parts.push(text);
+        // Check if inside a tab panel — use tab name as label
+        const tabPanel = pre.closest('[role="tabpanel"]');
+        const tabId = tabPanel?.getAttribute('data-value') ?? tabPanel?.getAttribute('aria-labelledby');
+        if (tabId) {
+          const label = tabId.replace(/-/g, ' ');
+          parts.push(`**${label}**\n\n\`\`\`${lang}\n${code}\n\`\`\``);
+        } else {
+          parts.push(`\`\`\`${lang}\n${code}\n\`\`\``);
+        }
       });
     });
 
