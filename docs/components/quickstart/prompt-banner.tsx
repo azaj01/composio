@@ -113,7 +113,7 @@ export function PromptBanner({ children }: PromptBannerProps) {
 
   return (
     <div className="not-prose mb-6">
-      <div className="relative flex items-center justify-between gap-6 overflow-hidden rounded-xl border border-fd-border bg-fd-card px-5 py-4">
+      <div className="relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-xl border border-fd-border bg-fd-card px-5 py-4 sm:flex-nowrap sm:gap-6">
         {/* Shader gradient blobs */}
         <div
           className="pointer-events-none absolute -left-16 -top-24 h-64 w-64 rounded-full"
@@ -129,7 +129,7 @@ export function PromptBanner({ children }: PromptBannerProps) {
         />
 
         {/* Sparkle */}
-        <svg className="relative shrink-0" width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <svg className="relative shrink-0" aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none">
           <path d="M14 2L16.1 11.9L26 14L16.1 16.1L14 26L11.9 16.1L2 14L11.9 11.9L14 2Z" fill="var(--composio-orange)" opacity="0.25"/>
         </svg>
 
