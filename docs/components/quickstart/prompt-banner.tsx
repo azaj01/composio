@@ -114,7 +114,7 @@ export function PromptBanner({ children }: PromptBannerProps) {
         </div>
       </div>
       {/* Hidden prompt content for copy button */}
-      <div ref={contentRef} className="hidden">{children}</div>
+      <div ref={contentRef} className="sr-only">{children}</div>
     </div>
   );
 }
