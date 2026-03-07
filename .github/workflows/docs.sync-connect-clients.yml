@@ -18,13 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          ref: next
           fetch-depth: 1
 
       - name: Sync Connect clients
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          direct_prompt: |
+          prompt: |
             Sync the Composio Connect clients page from the dashboard repo.
 
             1. Read docs/.claude/agents/connect-clients-sync.md for full instructions
