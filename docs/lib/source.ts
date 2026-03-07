@@ -260,6 +260,12 @@ export function mdxToCleanMarkdown(content: string): string {
     '- [llms-full.txt](/llms-full.txt) — Complete documentation in one file'
   );
 
+  // Convert ConnectClientOption opening tags to headings for LLM output
+  result = result.replace(
+    /<ConnectClientOption[^>]*\bname="([^"]*)"[^>]*>/g,
+    (_, name) => `## ${name}\n`
+  );
+
   // Remove wrapper components (ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, TemplateGrid, etc.)
   // Note: Cards wrapper is removed earlier (before Card conversion) to prevent regex conflicts
   result = result.replace(/<\/?(ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding|TemplateGrid|Glossary|ConnectFlow|ConnectClientOption)[^>]*>/g, '');

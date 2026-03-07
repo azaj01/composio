@@ -2,10 +2,10 @@
   "pages": [
     "---Get Started---",
     "index",
-    "composio-connect",
     "quickstart",
     "providers",
     "cli",
+    "composio-connect",
     "---Core Concepts---",
     "how-composio-works",
     "users-and-sessions",
