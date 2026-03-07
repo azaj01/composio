@@ -12,7 +12,7 @@ import { getGuardrails } from './llm-guardrails';
 const defaultOpenTransformer = {
   folder(node: { name: string; defaultOpen?: boolean }, folderPath: string) {
     // Set defaultOpen for API Reference and SDK Reference folders
-    if (folderPath === 'api-reference' || folderPath === 'sdk-reference') {
+    if (folderPath === 'api-reference' || folderPath === 'sdk-reference' || folderPath === 'meta-tools') {
       return { ...node, defaultOpen: true };
     }
     return node;
