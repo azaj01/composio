@@ -12,18 +12,43 @@ export function PromptBanner({ children }: PromptBannerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const detectLang = (pre: Element): string => {
-    // Check data-language on <pre> or <code>
     const code = pre.querySelector('code');
-    const dataLang = pre.getAttribute('data-language') ?? code?.getAttribute('data-language');
-    if (dataLang) return dataLang;
+    // Check data-language attribute (set by Shiki)
+    for (const el of [pre, code]) {
+      const lang = el?.getAttribute('data-language') ?? el?.getAttribute('data-lang');
+      if (lang) return lang;
+    }
     // Check class="language-xxx"
     const cls = Array.from(code?.classList ?? []).find(c => c.startsWith('language-'));
     if (cls) return cls.replace('language-', '');
     // Guess from content
     const text = code?.textContent ?? '';
-    if (text.includes('pip install') || text.includes('npm install')) return 'bash';
-    if (text.includes('import ') && text.includes('from ')) return 'python';
-    if (text.includes('import ') && text.includes('from "')) return 'typescript';
+    if (/^(pip|npm|npx|bun|yarn|pnpm) /.test(text.trim())) return 'bash';
+    if (text.includes('from dotenv') || text.includes('import asyncio')) return 'python';
+    if (text.includes('from "') || text.includes('from "@')) return 'typescript';
+    if (text.includes('COMPOSIO_API_KEY=')) return 'bash';
+    return '';
+  };
+
+  const getTabLabel = (pre: Element, step: Element): string => {
+    // Find the nearest tab panel that is INSIDE the step (not an ancestor)
+    let el: Element | null = pre.parentElement;
+    while (el && el !== step) {
+      if (el.getAttribute('role') === 'tabpanel') {
+        // Found a tab panel inside the step — find its trigger button
+        const tablist = el.parentElement?.querySelector('[role="tablist"]');
+        if (tablist) {
+          const tabs = tablist.querySelectorAll('[role="tab"]');
+          const panels = el.parentElement?.querySelectorAll(':scope > [role="tabpanel"]');
+          if (panels) {
+            const idx = Array.from(panels).indexOf(el);
+            if (idx >= 0 && tabs[idx]) return tabs[idx].textContent?.trim() ?? '';
+          }
+        }
+        return '';
+      }
+      el = el.parentElement;
+    }
     return '';
   };
 
@@ -32,25 +57,20 @@ export function PromptBanner({ children }: PromptBannerProps) {
     const steps = stepsEl.querySelectorAll('.fd-step');
 
     steps.forEach((step) => {
-      // Step title
-      const title = step.querySelector('h3, h4, [class*="StepTitle"]');
-      if (title) parts.push(`### ${title.textContent?.trim()}`);
+      // Step title — try multiple selectors
+      const title = step.querySelector('h3, h4, h2, [class*="step-title"], [class*="StepTitle"]');
+      const titleText = title?.textContent?.trim();
+      if (titleText) parts.push(`### ${titleText}`);
 
-      // Find code blocks, checking if they're inside tabs
+      // Extract code blocks with tab labels
       const pres = step.querySelectorAll('pre');
       pres.forEach((pre) => {
-        const lang = detectLang(pre);
         const code = pre.querySelector('code')?.textContent?.trim() ?? '';
         if (!code) return;
 
-        // Check if inside a tab panel — find the matching tab trigger for the label
-        const tabPanel = pre.closest('[role="tabpanel"]');
-        let tabLabel = '';
-        if (tabPanel) {
-          const labelledBy = tabPanel.getAttribute('aria-labelledby') ?? '';
-          const trigger = labelledBy ? document.getElementById(labelledBy) : null;
-          tabLabel = trigger?.textContent?.trim() ?? '';
-        }
+        const lang = detectLang(pre);
+        const tabLabel = getTabLabel(pre, step);
+
         if (tabLabel) {
           parts.push(`**${tabLabel}**\n\n\`\`\`${lang}\n${code}\n\`\`\``);
         } else {
