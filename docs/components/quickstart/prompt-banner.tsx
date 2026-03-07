@@ -1,7 +1,71 @@
 'use client';
 
-import { useState, useRef, type ReactNode } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { Copy, Check } from 'lucide-react';
+
+function detectLang(pre: Element, code: Element | null): string {
+  for (const el of [pre, code]) {
+    const lang = el?.getAttribute('data-language') ?? el?.getAttribute('data-lang');
+    if (lang) return lang;
+  }
+  const cls = Array.from(code?.classList ?? []).find(c => c.startsWith('language-'));
+  if (cls) return cls.replace('language-', '');
+  const text = code?.textContent ?? '';
+  if (/^(pip|npm|npx|bun|yarn|pnpm) /.test(text.trim())) return 'bash';
+  if (text.includes('from dotenv') || text.includes('import asyncio')) return 'python';
+  if (text.includes('from "') || text.includes('from "@')) return 'typescript';
+  if (text.includes('COMPOSIO_API_KEY=')) return 'bash';
+  return '';
+}
+
+function getTabLabel(pre: Element, step: Element): string {
+  let el: Element | null = pre.parentElement;
+  while (el && el !== step) {
+    if (el.getAttribute('role') === 'tabpanel') {
+      const tablist = el.parentElement?.querySelector('[role="tablist"]');
+      if (tablist) {
+        const tabs = tablist.querySelectorAll('[role="tab"]');
+        const panels = el.parentElement?.querySelectorAll(':scope > [role="tabpanel"]');
+        if (panels) {
+          const idx = Array.from(panels).indexOf(el);
+          if (idx >= 0 && tabs[idx]) return tabs[idx].textContent?.trim() ?? '';
+        }
+      }
+      return '';
+    }
+    el = el.parentElement;
+  }
+  return '';
+}
+
+function extractSteps(stepsEl: Element): string {
+  const parts: string[] = [];
+  const steps = stepsEl.querySelectorAll('.fd-step');
+
+  steps.forEach((step) => {
+    const title = step.querySelector('h3, h4, h2, [class*="step-title"], [class*="StepTitle"]');
+    const titleText = title?.textContent?.trim();
+    if (titleText) parts.push(`### ${titleText}`);
+
+    const pres = step.querySelectorAll('pre');
+    pres.forEach((pre) => {
+      const codeEl = pre.querySelector('code');
+      const code = codeEl?.textContent?.trim() ?? '';
+      if (!code) return;
+
+      const lang = detectLang(pre, codeEl);
+      const tabLabel = getTabLabel(pre, step);
+
+      if (tabLabel) {
+        parts.push(`**${tabLabel}**\n\n\`\`\`${lang}\n${code}\n\`\`\``);
+      } else {
+        parts.push(`\`\`\`${lang}\n${code}\n\`\`\``);
+      }
+    });
+  });
+
+  return parts.join('\n\n');
+}
 
 interface PromptBannerProps {
   children: ReactNode;
@@ -10,88 +74,18 @@ interface PromptBannerProps {
 export function PromptBanner({ children }: PromptBannerProps) {
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const detectLang = (pre: Element): string => {
-    const code = pre.querySelector('code');
-    // Check data-language attribute (set by Shiki)
-    for (const el of [pre, code]) {
-      const lang = el?.getAttribute('data-language') ?? el?.getAttribute('data-lang');
-      if (lang) return lang;
-    }
-    // Check class="language-xxx"
-    const cls = Array.from(code?.classList ?? []).find(c => c.startsWith('language-'));
-    if (cls) return cls.replace('language-', '');
-    // Guess from content
-    const text = code?.textContent ?? '';
-    if (/^(pip|npm|npx|bun|yarn|pnpm) /.test(text.trim())) return 'bash';
-    if (text.includes('from dotenv') || text.includes('import asyncio')) return 'python';
-    if (text.includes('from "') || text.includes('from "@')) return 'typescript';
-    if (text.includes('COMPOSIO_API_KEY=')) return 'bash';
-    return '';
-  };
+  useEffect(() => () => { clearTimeout(timerRef.current); }, []);
 
-  const getTabLabel = (pre: Element, step: Element): string => {
-    // Find the nearest tab panel that is INSIDE the step (not an ancestor)
-    let el: Element | null = pre.parentElement;
-    while (el && el !== step) {
-      if (el.getAttribute('role') === 'tabpanel') {
-        // Found a tab panel inside the step — find its trigger button
-        const tablist = el.parentElement?.querySelector('[role="tablist"]');
-        if (tablist) {
-          const tabs = tablist.querySelectorAll('[role="tab"]');
-          const panels = el.parentElement?.querySelectorAll(':scope > [role="tabpanel"]');
-          if (panels) {
-            const idx = Array.from(panels).indexOf(el);
-            if (idx >= 0 && tabs[idx]) return tabs[idx].textContent?.trim() ?? '';
-          }
-        }
-        return '';
-      }
-      el = el.parentElement;
-    }
-    return '';
-  };
-
-  const extractSteps = (stepsEl: Element): string => {
-    const parts: string[] = [];
-    const steps = stepsEl.querySelectorAll('.fd-step');
-
-    steps.forEach((step) => {
-      // Step title — try multiple selectors
-      const title = step.querySelector('h3, h4, h2, [class*="step-title"], [class*="StepTitle"]');
-      const titleText = title?.textContent?.trim();
-      if (titleText) parts.push(`### ${titleText}`);
-
-      // Extract code blocks with tab labels
-      const pres = step.querySelectorAll('pre');
-      pres.forEach((pre) => {
-        const code = pre.querySelector('code')?.textContent?.trim() ?? '';
-        if (!code) return;
-
-        const lang = detectLang(pre);
-        const tabLabel = getTabLabel(pre, step);
-
-        if (tabLabel) {
-          parts.push(`**${tabLabel}**\n\n\`\`\`${lang}\n${code}\n\`\`\``);
-        } else {
-          parts.push(`\`\`\`${lang}\n${code}\n\`\`\``);
-        }
-      });
-    });
-
-    return parts.join('\n\n');
-  };
-
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const fullMeta = contentRef.current?.innerText ?? '';
 
-    // Split prompt into context (before "Key concepts") and rules (from "Key concepts" onward)
     const splitMarker = 'Key concepts';
     const splitIdx = fullMeta.indexOf(splitMarker);
     const context = splitIdx > 0 ? fullMeta.slice(0, splitIdx).trim() : fullMeta;
     const rules = splitIdx > 0 ? fullMeta.slice(splitIdx).trim() : '';
 
-    // Walk siblings after the banner to find the .fd-steps element
     let sibling = contentRef.current?.closest('.not-prose')?.nextElementSibling;
     let stepsText = '';
     while (sibling) {
@@ -102,15 +96,19 @@ export function PromptBanner({ children }: PromptBannerProps) {
       sibling = sibling.nextElementSibling;
     }
 
-    // Order: context → code → rules
     const parts = [context];
     if (stepsText) parts.push(`## Code\n\n${stepsText}`);
     if (rules) parts.push(rules);
     const fullPrompt = parts.join('\n\n');
 
-    navigator.clipboard.writeText(fullPrompt);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(fullPrompt);
+      clearTimeout(timerRef.current);
+      setCopied(true);
+      timerRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard write failed (e.g. permission denied) — don't show success
+    }
   };
 
   return (
