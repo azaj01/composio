@@ -38,6 +38,7 @@ Detailed documentation for Claude is organized in `.claude/`:
 - [twoslash.md](.claude/context/twoslash.md) - TypeScript code block type checking
 - [sdk-reference.md](.claude/context/sdk-reference.md) - SDK doc generation
 - [api-reference.md](.claude/context/api-reference.md) - API reference customizations (schema rendering, CSS overrides, upgrade notes)
+- [pipelines.md](.claude/context/pipelines.md) - CI/CD workflows reference (cron jobs, auto-PR, AI agents)
 
 ### Guides (How-To)
 - [changelog.md](.claude/guides/changelog.md) - Writing changelog entries
