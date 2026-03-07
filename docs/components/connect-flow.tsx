@@ -15,6 +15,7 @@ interface ClientData {
   name: string;
   description: string;
   icon?: string;
+  iconDark?: string;
   category: 'popular' | 'ide' | 'other';
 }
 
@@ -26,6 +27,21 @@ interface ConnectContextValue {
 }
 
 const ConnectContext = createContext<ConnectContextValue | null>(null);
+
+function ClientIcon({ icon, iconDark, name, size = 16 }: { icon?: string; iconDark?: string; name: string; size?: number }) {
+  if (!icon) return null;
+
+  if (iconDark) {
+    return (
+      <>
+        <Image src={icon} alt={`${name} logo`} width={size} height={size} className="h-4 w-4 shrink-0 dark:hidden" />
+        <Image src={iconDark} alt={`${name} logo`} width={size} height={size} className="h-4 w-4 shrink-0 hidden dark:block" />
+      </>
+    );
+  }
+
+  return <Image src={icon} alt={`${name} logo`} width={size} height={size} className="h-4 w-4 shrink-0" />;
+}
 
 function PopularTab({
   client,
@@ -44,20 +60,12 @@ function PopularTab({
         flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all whitespace-nowrap
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500
         ${selected
-          ? 'bg-fd-background text-fd-foreground shadow-sm'
+          ? 'bg-fd-background text-fd-foreground shadow-sm dark:bg-fd-accent/60 dark:shadow-none'
           : 'text-fd-muted-foreground hover:text-fd-foreground'
         }
       `}
     >
-      {client.icon && (
-        <Image
-          src={client.icon}
-          alt={`${client.name} logo`}
-          width={16}
-          height={16}
-          className="h-4 w-4 shrink-0"
-        />
-      )}
+      <ClientIcon icon={client.icon} iconDark={client.iconDark} name={client.name} />
       {client.name}
     </button>
   );
@@ -121,7 +129,7 @@ export function ConnectFlow({ children }: ConnectFlowProps) {
         <div className="not-prose mb-8 rounded-xl border border-fd-border bg-fd-card/50">
           <div className="flex items-center justify-between gap-3 p-3">
             {/* Popular tabs */}
-            <div className={`flex items-center gap-1 overflow-x-auto rounded-lg p-1 transition-all ${selectedIsOther ? 'bg-fd-muted/30 opacity-40' : 'bg-fd-muted/50'}`}>
+            <div className={`flex items-center gap-1 overflow-x-auto rounded-lg p-1 transition-all ${selectedIsOther ? 'bg-fd-muted/30 opacity-40' : 'bg-fd-muted/50 dark:bg-fd-muted/30'}`}>
               {popular.map((client) => (
                 <PopularTab
                   key={client.id}
@@ -153,14 +161,8 @@ export function ConnectFlow({ children }: ConnectFlowProps) {
                     }
                   `}
                 >
-                  {selectedIsOther && selectedOtherClient?.icon && (
-                    <Image
-                      src={selectedOtherClient.icon}
-                      alt={`${selectedOtherClient.name} logo`}
-                      width={16}
-                      height={16}
-                      className="h-4 w-4 shrink-0"
-                    />
+                  {selectedIsOther && selectedOtherClient && (
+                    <ClientIcon icon={selectedOtherClient.icon} iconDark={selectedOtherClient.iconDark} name={selectedOtherClient.name} />
                   )}
                   {selectedIsOther ? selectedOtherClient?.name : 'More clients'}
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 opacity-60">
@@ -187,15 +189,7 @@ export function ConnectFlow({ children }: ConnectFlowProps) {
                           }
                         `}
                       >
-                        {client.icon && (
-                          <Image
-                            src={client.icon}
-                            alt={`${client.name} logo`}
-                            width={16}
-                            height={16}
-                            className="h-4 w-4 shrink-0"
-                          />
-                        )}
+                        <ClientIcon icon={client.icon} iconDark={client.iconDark} name={client.name} />
                         <div>
                           <span className="block font-medium">{client.name}</span>
                           <span className="block text-xs text-fd-muted-foreground">{client.description}</span>
@@ -220,6 +214,7 @@ interface ConnectClientOptionProps {
   name: string;
   description: string;
   icon?: string;
+  iconDark?: string;
   category?: 'popular' | 'ide' | 'other';
   children: ReactNode;
 }
@@ -229,6 +224,7 @@ export function ConnectClientOption({
   name,
   description,
   icon,
+  iconDark,
   category = 'other',
   children,
 }: ConnectClientOptionProps) {
@@ -237,10 +233,10 @@ export function ConnectClientOption({
 
   useEffect(() => {
     if (context && !hasRegistered.current) {
-      context.registerClient({ id, name, description, icon, category });
+      context.registerClient({ id, name, description, icon, iconDark, category });
       hasRegistered.current = true;
     }
-  }, [context, id, name, description, icon, category]);
+  }, [context, id, name, description, icon, iconDark, category]);
 
   if (!context || context.selectedId !== id) {
     return null;
