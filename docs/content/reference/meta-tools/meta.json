@@ -1,0 +1,12 @@
+{
+  "title": "Meta Tools",
+  "defaultOpen": true,
+  "pages": [
+    "get_tool_schemas",
+    "search_tools",
+    "multi_execute_tool",
+    "manage_connections",
+    "remote_bash_tool",
+    "remote_workbench"
+  ]
+}

@@ -6,6 +6,7 @@
     "rate-limits",
     "errors",
     "api-reference",
+    "meta-tools",
     "sdk-reference"
   ]
 }
