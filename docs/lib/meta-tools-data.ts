@@ -1,5 +1,4 @@
 import { readFile } from 'fs/promises';
-import { readFileSync } from 'fs';
 import { join } from 'path';
 
 export interface MetaToolParameter {
@@ -61,10 +60,4 @@ export async function getMetaToolBySlug(slug: string): Promise<MetaTool | null> 
   if (cached) return cached.bySlug.get(slug) ?? null;
   const data = await readFile(META_TOOLS_PATH, 'utf-8');
   return buildCache(parse(data)).bySlug.get(slug) ?? null;
-}
-
-export function getAllMetaToolsSync(): MetaTool[] {
-  if (cached) return cached.list;
-  const data = readFileSync(META_TOOLS_PATH, 'utf-8');
-  return buildCache(parse(data)).list;
 }
