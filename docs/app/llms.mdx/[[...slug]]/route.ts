@@ -892,9 +892,10 @@ export async function GET(
         });
       }
       if (rest.length === 2) {
-        // Individual tool page — match by page slug (e.g., "search_tools")
+        // Individual tool page — match by page slug (e.g., "search_tools" or "search_tools.md")
+        const pageSlug = rest[1].replace(/\.md$/, '');
         const tools = await getAllMetaTools();
-        const tool = tools.find(t => t.slug.toLowerCase().replace('composio_', '') === rest[1]);
+        const tool = tools.find(t => t.slug.toLowerCase().replace('composio_', '') === pageSlug);
         if (tool) {
           return new Response(metaToolToMarkdown(tool), {
             headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
