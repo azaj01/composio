@@ -43,12 +43,16 @@ export function PromptBanner({ children }: PromptBannerProps) {
         const code = pre.querySelector('code')?.textContent?.trim() ?? '';
         if (!code) return;
 
-        // Check if inside a tab panel — use tab name as label
+        // Check if inside a tab panel — find the matching tab trigger for the label
         const tabPanel = pre.closest('[role="tabpanel"]');
-        const tabId = tabPanel?.getAttribute('data-value') ?? tabPanel?.getAttribute('aria-labelledby');
-        if (tabId) {
-          const label = tabId.replace(/-/g, ' ');
-          parts.push(`**${label}**\n\n\`\`\`${lang}\n${code}\n\`\`\``);
+        let tabLabel = '';
+        if (tabPanel) {
+          const labelledBy = tabPanel.getAttribute('aria-labelledby') ?? '';
+          const trigger = labelledBy ? document.getElementById(labelledBy) : null;
+          tabLabel = trigger?.textContent?.trim() ?? '';
+        }
+        if (tabLabel) {
+          parts.push(`**${tabLabel}**\n\n\`\`\`${lang}\n${code}\n\`\`\``);
         } else {
           parts.push(`\`\`\`${lang}\n${code}\n\`\`\``);
         }
