@@ -10,7 +10,7 @@ import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { Heading } from '@/components/heading';
 import { YouTube } from '@/components/youtube';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
-import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
+import { FrameworkSelector, QuickstartFlow, FrameworkOption, PromptBanner } from '@/components/quickstart';
 import { IntegrationTabs, IntegrationContent } from '@/components/quickstart/integration-tabs';
 import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
 import { ConnectFlow, ConnectClientOption } from '@/components/connect-flow';
@@ -80,6 +80,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     FrameworkOption,
     IntegrationTabs,
     IntegrationContent,
+    PromptBanner,
     ToolTypeFlow,
     ToolTypeOption,
     ConnectFlow,

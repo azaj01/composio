@@ -245,6 +245,9 @@ export function mdxToCleanMarkdown(content: string): string {
     (_, name, content) => `### ${name}\n\n${content.trim()}`
   );
 
+  // Strip PromptBanner and its children (UI-only copy-prompt widget)
+  result = result.replace(/<PromptBanner[\s\S]*?<\/PromptBanner>/g, '');
+
   // Convert AIToolsBanner to plain text
   result = result.replace(
     /<AIToolsBanner\s*\/>/g,
