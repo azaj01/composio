@@ -13,6 +13,7 @@ import { ProviderCard, ProviderGrid } from '@/components/provider-card';
 import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
 import { IntegrationTabs, IntegrationContent } from '@/components/quickstart/integration-tabs';
 import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
+import { ConnectFlow, ConnectClientOption } from '@/components/connect-flow';
 import { Figure } from '@/components/figure';
 import { StepTitle } from '@/components/step-title';
 import { Video } from '@/components/video';
@@ -80,6 +81,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     IntegrationContent,
     ToolTypeFlow,
     ToolTypeOption,
+    ConnectFlow,
+    ConnectClientOption,
     Figure,
     Video,
     CapabilityCard,

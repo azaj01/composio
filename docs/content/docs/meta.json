@@ -2,6 +2,7 @@
   "pages": [
     "---Get Started---",
     "index",
+    "composio-connect",
     "quickstart",
     "providers",
     "cli",
