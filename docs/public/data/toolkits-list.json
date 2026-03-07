@@ -5720,6 +5720,14 @@
     "triggerCount": 0
   },
   {
+    "slug": "parsio_io",
+    "name": "Parsio.io",
+    "logo": "https://logos.composio.dev/api/parsio_io",
+    "category": "ai document extraction",
+    "toolCount": 24,
+    "triggerCount": 0
+  },
+  {
     "slug": "passcreator",
     "name": "Passcreator",
     "logo": "https://logos.composio.dev/api/passcreator",

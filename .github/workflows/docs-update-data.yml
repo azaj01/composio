@@ -49,18 +49,21 @@ jobs:
       - name: Generate API index pages
         run: bun run generate:api-index
 
+      - name: Generate meta tools reference
+        run: bun run generate:meta-tools
+
       - name: Check for changes
         id: changes
         run: |
           cd ..
-          git add -N docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ 2>/dev/null || true
-          if git diff --quiet docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ 2>/dev/null; then
+          git add -N docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ docs/content/reference/meta-tools/ 2>/dev/null || true
+          if git diff --quiet docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ docs/content/reference/meta-tools/ 2>/dev/null; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No changes detected"
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "Changes detected:"
-            git diff --stat docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ 2>/dev/null || true
+            git diff --stat docs/public/data/ docs/public/openapi.json docs/content/reference/api-reference/ docs/content/reference/meta-tools/ 2>/dev/null || true
           fi
 
       - name: Create Pull Request
@@ -77,6 +80,8 @@ jobs:
             - `docs/public/data/toolkits-list.json` - Light toolkit list
             - `docs/public/openapi.json` - OpenAPI specification
             - `docs/content/reference/api-reference/*.mdx` - API index pages
+            - `docs/public/data/meta-tools.json` - Meta tools schemas
+            - `docs/content/reference/meta-tools/*.mdx` - Meta tools reference pages
 
             ${{ github.event_name == 'repository_dispatch' && format('Hermes commit: {0}', github.event.client_payload.hermes_commit) || '' }}
           branch: docs/auto-update-data
@@ -85,3 +90,4 @@ jobs:
             docs/public/data/
             docs/public/openapi.json
             docs/content/reference/api-reference/
+            docs/content/reference/meta-tools/

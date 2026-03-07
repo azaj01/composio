@@ -14,6 +14,8 @@ import { notFound } from 'next/navigation';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { getAllToolkits, getToolkitBySlug } from '@/lib/toolkit-data';
+import { getAllMetaTools, getMetaToolBySlug } from '@/lib/meta-tools-data';
+import type { MetaTool, MetaToolParameter } from '@/lib/meta-tools-data';
 import type { Toolkit, Tool, Trigger, ParameterSchema } from '@/types/toolkit';
 import { processSchema, toolFromApi } from '@/lib/toolkit-schema';
 
@@ -742,6 +744,96 @@ async function generateToolkitsIndex(): Promise<string> {
   return lines.join('\n');
 }
 
+const LLM_FOOTER = '\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Glossary](https://docs.composio.dev/llms.mdx/docs/glossary) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)';
+
+// Render meta tool parameters as markdown
+function renderMetaToolParams(properties: Record<string, MetaToolParameter>, requiredFields: string[] = [], indent = 0): string[] {
+  const lines: string[] = [];
+  const prefix = '  '.repeat(indent);
+
+  for (const [name, param] of Object.entries(properties)) {
+    const typeStr = param.type === 'array' && param.items && typeof param.items === 'object' && (param.items as Record<string, unknown>).type
+      ? `array<${(param.items as Record<string, unknown>).type}>`
+      : param.type;
+    const reqMark = requiredFields.includes(name) ? ' *(required)*' : '';
+    const desc = param.description
+      ? `: ${param.description.replace(/\*\*/g, '').replace(/__/g, '').replace(/\n+/g, ' ').trim()}`
+      : '';
+    const defaultStr = param.default !== undefined && param.default !== null && param.default !== ''
+      ? ` (default: \`${String(param.default)}\`)`
+      : '';
+    const enumStr = param.enum && param.enum.length > 0
+      ? ` — values: ${param.enum.map(v => `\`${v}\``).join(', ')}`
+      : '';
+
+    lines.push(`${prefix}- \`${name}\` (${typeStr})${reqMark}${desc}${defaultStr}${enumStr}`);
+
+    if (param.properties && Object.keys(param.properties).length > 0) {
+      const nestedRequired = Array.isArray(param.required) ? param.required : [];
+      lines.push(...renderMetaToolParams(param.properties, nestedRequired, indent + 1));
+    }
+
+    const items = param.items && typeof param.items === 'object' ? param.items as Record<string, unknown> : null;
+    if (items?.properties && typeof items.properties === 'object' && Object.keys(items.properties as object).length > 0) {
+      const itemsRequired = Array.isArray(items.required) ? items.required as string[] : [];
+      lines.push(`${prefix}  - Array items:`);
+      lines.push(...renderMetaToolParams(items.properties as Record<string, MetaToolParameter>, itemsRequired, indent + 2));
+    }
+  }
+
+  return lines;
+}
+
+// Generate markdown for a single meta tool
+function metaToolToMarkdown(tool: MetaTool): string {
+  const lines: string[] = [
+    `# ${tool.displayName}`,
+    '',
+    `**Slug:** \`${tool.slug}\``,
+  ];
+
+  if (tool.tags.length > 0) {
+    lines.push(`**Tags:** ${tool.tags.join(', ')}`);
+  }
+
+  lines.push('');
+
+  const inputProps = tool.inputParameters?.properties || {};
+  if (Object.keys(inputProps).length > 0) {
+    lines.push('## Input Parameters', '');
+    lines.push(...renderMetaToolParams(inputProps, tool.inputParameters?.required || []));
+    lines.push('');
+  }
+
+  const responseProps = tool.responseSchema?.properties || {};
+  if (Object.keys(responseProps).length > 0) {
+    lines.push('## Response', '');
+    lines.push(...renderMetaToolParams(responseProps, tool.responseSchema?.required || []));
+    lines.push('');
+  }
+
+  return lines.join('\n') + LLM_FOOTER;
+}
+
+// Generate markdown index for all meta tools
+function metaToolsIndexToMarkdown(tools: MetaTool[]): string {
+  const lines: string[] = [
+    '# Meta Tools',
+    '',
+    'Meta tools are system-level tools available in sessions. They handle tool discovery, execution, authentication, and sandboxing.',
+    '',
+    '| Tool | Tags |',
+    '|------|------|',
+  ];
+
+  for (const tool of tools) {
+    const tags = tool.tags.length > 0 ? tool.tags.join(', ') : '—';
+    lines.push(`| [\`${tool.slug}\`](/reference/meta-tools/${tool.slug.toLowerCase().replace('composio_', '')}.md) | ${tags} |`);
+  }
+
+  return lines.join('\n') + LLM_FOOTER;
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ slug?: string[] }> }
@@ -788,6 +880,28 @@ export async function GET(
       }
       // If no entries found, fall through to notFound
       notFound();
+    }
+
+    // Special handling for meta tools - /reference/meta-tools and /reference/meta-tools/{slug}
+    if (prefix === 'reference' && rest[0] === 'meta-tools') {
+      if (rest.length === 1) {
+        // Index page
+        const tools = await getAllMetaTools();
+        return new Response(metaToolsIndexToMarkdown(tools), {
+          headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
+        });
+      }
+      if (rest.length === 2) {
+        // Individual tool page — match by page slug (e.g., "search_tools" or "search_tools.md")
+        const pageSlug = rest[1].replace(/\.md$/, '');
+        const tools = await getAllMetaTools();
+        const tool = tools.find(t => t.slug.toLowerCase().replace('composio_', '') === pageSlug);
+        if (tool) {
+          return new Response(metaToolToMarkdown(tool), {
+            headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
+          });
+        }
+      }
     }
 
     // Handle 'reference' specially - uses async getReferenceSource() for OpenAPI pages
