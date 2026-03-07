@@ -141,6 +141,9 @@ export function ConnectFlow({ children }: ConnectFlowProps) {
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="listbox"
+                  onKeyDown={(e) => { if (e.key === 'Escape') setDropdownOpen(false); }}
                   className={`
                     flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500
