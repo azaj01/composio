@@ -41,7 +41,13 @@ export function PromptBanner({ children }: PromptBannerProps) {
   };
 
   const handleCopy = () => {
-    const promptMeta = contentRef.current?.innerText ?? '';
+    const fullMeta = contentRef.current?.innerText ?? '';
+
+    // Split prompt into context (before "Key concepts") and rules (from "Key concepts" onward)
+    const splitMarker = 'Key concepts';
+    const splitIdx = fullMeta.indexOf(splitMarker);
+    const context = splitIdx > 0 ? fullMeta.slice(0, splitIdx).trim() : fullMeta;
+    const rules = splitIdx > 0 ? fullMeta.slice(splitIdx).trim() : '';
 
     // Walk siblings after the banner to find the .fd-steps element
     let sibling = contentRef.current?.closest('.not-prose')?.nextElementSibling;
@@ -54,9 +60,11 @@ export function PromptBanner({ children }: PromptBannerProps) {
       sibling = sibling.nextElementSibling;
     }
 
-    const fullPrompt = stepsText
-      ? `${promptMeta}\n\n## Code from tutorial\n\n${stepsText}`
-      : promptMeta;
+    // Order: context → code → rules
+    const parts = [context];
+    if (stepsText) parts.push(`## Code\n\n${stepsText}`);
+    if (rules) parts.push(rules);
+    const fullPrompt = parts.join('\n\n');
 
     navigator.clipboard.writeText(fullPrompt);
     setCopied(true);
