@@ -245,5 +245,10 @@ export function ConnectClientOption({
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <h2 className="text-2xl font-semibold tracking-tight mt-8 mb-4">{name}</h2>
+      {children}
+    </>
+  );
 }
