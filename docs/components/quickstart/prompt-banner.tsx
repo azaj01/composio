@@ -11,9 +11,54 @@ export function PromptBanner({ children }: PromptBannerProps) {
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const extractSteps = (stepsEl: Element): string => {
+    const parts: string[] = [];
+    const steps = stepsEl.querySelectorAll('.fd-step');
+
+    steps.forEach((step) => {
+      // Step title
+      const title = step.querySelector('h3, h4, [class*="StepTitle"]');
+      if (title) parts.push(`### ${title.textContent?.trim()}`);
+
+      // Code blocks — preserve as fenced code
+      const codeBlocks = step.querySelectorAll('pre code');
+      codeBlocks.forEach((code) => {
+        // Try to detect language from class (e.g. "language-python")
+        const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
+        const lang = langClass?.replace('language-', '') ?? '';
+        parts.push(`\`\`\`${lang}\n${code.textContent?.trim()}\n\`\`\``);
+      });
+
+      // Callouts / prose text (skip if it's just whitespace)
+      const paragraphs = step.querySelectorAll(':scope > p, :scope > div:not(:has(pre)) > p');
+      paragraphs.forEach((p) => {
+        const text = p.textContent?.trim();
+        if (text) parts.push(text);
+      });
+    });
+
+    return parts.join('\n\n');
+  };
+
   const handleCopy = () => {
-    const text = contentRef.current?.innerText ?? '';
-    navigator.clipboard.writeText(text);
+    const promptMeta = contentRef.current?.innerText ?? '';
+
+    // Walk siblings after the banner to find the .fd-steps element
+    let sibling = contentRef.current?.closest('.not-prose')?.nextElementSibling;
+    let stepsText = '';
+    while (sibling) {
+      if (sibling.classList.contains('fd-steps')) {
+        stepsText = extractSteps(sibling);
+        break;
+      }
+      sibling = sibling.nextElementSibling;
+    }
+
+    const fullPrompt = stepsText
+      ? `${promptMeta}\n\n## Code from tutorial\n\n${stepsText}`
+      : promptMeta;
+
+    navigator.clipboard.writeText(fullPrompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
