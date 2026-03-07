@@ -40,7 +40,6 @@ import {
   BookOpen,
   Monitor,
   MessageCircle,
-  User,
 } from 'lucide-react';
 
 function slugify(text: string): string {
@@ -113,7 +112,6 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     BookOpen,
     Monitor,
     MessageCircle,
-    User,
     ...components,
   };
 }
