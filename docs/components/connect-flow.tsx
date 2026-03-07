@@ -142,7 +142,7 @@ export function ConnectFlow({ children }: ConnectFlowProps) {
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   aria-expanded={dropdownOpen}
-                  aria-haspopup="listbox"
+                  aria-haspopup="menu"
                   onKeyDown={(e) => { if (e.key === 'Escape') setDropdownOpen(false); }}
                   className={`
                     flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all
@@ -169,11 +169,12 @@ export function ConnectFlow({ children }: ConnectFlowProps) {
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-1 min-w-[220px] rounded-lg border border-fd-border bg-fd-card p-1 shadow-lg">
+                  <div role="menu" className="absolute right-0 top-full z-50 mt-1 min-w-[220px] rounded-lg border border-fd-border bg-fd-card p-1 shadow-lg">
                     {others.map((client) => (
                       <button
                         key={client.id}
                         type="button"
+                        role="menuitem"
                         onClick={() => {
                           setSelectedId(client.id);
                           setDropdownOpen(false);
