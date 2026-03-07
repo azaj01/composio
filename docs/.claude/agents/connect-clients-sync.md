@@ -4,7 +4,7 @@ Syncs AI client definitions from the dashboard repo (`ComposioHQ/composio_dashbo
 
 ## When This Runs
 
-Runs daily at 8 AM UTC via cron, or manually via workflow_dispatch. Creates a PR if client definitions have changed.
+Runs every 5 hours via cron, or manually via workflow_dispatch. Creates a PR if client definitions have changed.
 
 ## Source of Truth
 
@@ -91,11 +91,17 @@ Open the [Composio dashboard](https://dashboard.composio.dev) and click **AI Cli
 
 ### Client Logos
 
-Client logos live in `docs/public/images/clients/`. If a new client is added in the dashboard, download its logo from the dashboard repo. The dashboard stores logos at:
-- `public/images/clients/`
-- `public/images/logos/`
+Client logos live in `docs/public/images/clients/`. When syncing, **always check for new or updated logos**:
 
-Save all logos to `docs/public/images/clients/` and reference them as `/images/clients/filename.ext` in the MDX.
+1. Fetch the logo file list from the dashboard repo's `public/images/clients/` and `public/images/logos/` directories using the GitHub API
+2. For each client in the definitions, check if its logo already exists in `docs/public/images/clients/`
+3. If a logo is missing or has been updated, download it from the dashboard repo and save it to `docs/public/images/clients/`
+4. For clients that need dark mode variants (white-on-dark icons), check if a `-dark` variant exists in the dashboard. If not, check if the existing icon works on dark backgrounds. If it doesn't, create a dark variant by changing fills to white
+5. Reference logos as `/images/clients/filename.ext` in the MDX, and use `iconDark` prop when a dark variant is available
+
+The dashboard stores logos at:
+- `public/images/clients/` (primary location)
+- `public/images/logos/` (fallback location)
 
 ### Client Order
 
