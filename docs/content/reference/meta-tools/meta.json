@@ -3,10 +3,10 @@
   "defaultOpen": true,
   "pages": [
     "get_tool_schemas",
-    "search_tools",
-    "multi_execute_tool",
     "manage_connections",
+    "multi_execute_tool",
     "remote_bash_tool",
-    "remote_workbench"
+    "remote_workbench",
+    "search_tools"
   ]
 }

@@ -747,7 +747,7 @@ async function generateToolkitsIndex(): Promise<string> {
 const LLM_FOOTER = '\n\n---\n\n📚 **More documentation:** [View all docs](https://docs.composio.dev/llms.txt) | [Glossary](https://docs.composio.dev/llms.mdx/docs/glossary) | [Cookbooks](https://docs.composio.dev/llms.mdx/cookbooks) | [API Reference](https://docs.composio.dev/llms.mdx/reference)';
 
 // Render meta tool parameters as markdown
-function renderMetaToolParams(properties: Record<string, MetaToolParameter>, indent = 0): string[] {
+function renderMetaToolParams(properties: Record<string, MetaToolParameter>, requiredFields: string[] = [], indent = 0): string[] {
   const lines: string[] = [];
   const prefix = '  '.repeat(indent);
 
@@ -755,7 +755,7 @@ function renderMetaToolParams(properties: Record<string, MetaToolParameter>, ind
     const typeStr = param.type === 'array' && param.items && typeof param.items === 'object' && (param.items as Record<string, unknown>).type
       ? `array<${(param.items as Record<string, unknown>).type}>`
       : param.type;
-    const reqMark = param.required ? ' *(required)*' : '';
+    const reqMark = requiredFields.includes(name) ? ' *(required)*' : '';
     const desc = param.description
       ? `: ${param.description.replace(/\*\*/g, '').replace(/__/g, '').replace(/\n+/g, ' ').trim()}`
       : '';
@@ -769,13 +769,15 @@ function renderMetaToolParams(properties: Record<string, MetaToolParameter>, ind
     lines.push(`${prefix}- \`${name}\` (${typeStr})${reqMark}${desc}${defaultStr}${enumStr}`);
 
     if (param.properties && Object.keys(param.properties).length > 0) {
-      lines.push(...renderMetaToolParams(param.properties, indent + 1));
+      const nestedRequired = Array.isArray(param.required) ? param.required : [];
+      lines.push(...renderMetaToolParams(param.properties, nestedRequired, indent + 1));
     }
 
     const items = param.items && typeof param.items === 'object' ? param.items as Record<string, unknown> : null;
     if (items?.properties && typeof items.properties === 'object' && Object.keys(items.properties as object).length > 0) {
+      const itemsRequired = Array.isArray(items.required) ? items.required as string[] : [];
       lines.push(`${prefix}  - Array items:`);
-      lines.push(...renderMetaToolParams(items.properties as Record<string, MetaToolParameter>, indent + 2));
+      lines.push(...renderMetaToolParams(items.properties as Record<string, MetaToolParameter>, itemsRequired, indent + 2));
     }
   }
 
@@ -799,14 +801,14 @@ function metaToolToMarkdown(tool: MetaTool): string {
   const inputProps = tool.inputParameters?.properties || {};
   if (Object.keys(inputProps).length > 0) {
     lines.push('## Input Parameters', '');
-    lines.push(...renderMetaToolParams(inputProps));
+    lines.push(...renderMetaToolParams(inputProps, tool.inputParameters?.required || []));
     lines.push('');
   }
 
   const responseProps = tool.responseSchema?.properties || {};
   if (Object.keys(responseProps).length > 0) {
     lines.push('## Response', '');
-    lines.push(...renderMetaToolParams(responseProps));
+    lines.push(...renderMetaToolParams(responseProps, tool.responseSchema?.required || []));
     lines.push('');
   }
 

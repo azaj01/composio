@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { MetaTool, MetaToolParameter } from '@/lib/meta-tools-data';
+import type { MetaTool, MetaToolParameter, MetaToolSchema } from '@/lib/meta-tools-data';
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,6 +33,13 @@ const TAG_LABELS: Record<string, { label: string; className: string }> = {
   },
 };
 
+/** Extract the required field names array from a schema-like object */
+function getRequiredFields(schema: unknown): string[] {
+  if (!schema || typeof schema !== 'object') return [];
+  const req = (schema as Record<string, unknown>).required;
+  return Array.isArray(req) ? req : [];
+}
+
 function TagBadge({ tag }: { tag: string }) {
   const info = TAG_LABELS[tag];
   if (!info) return null;
@@ -43,7 +50,7 @@ function TagBadge({ tag }: { tag: string }) {
   );
 }
 
-function ParameterRow({ name, param, isLast, showRequired = true }: { name: string; param: MetaToolParameter; isLast: boolean; showRequired?: boolean }) {
+function ParameterRow({ name, param, isLast, showRequired = true, isRequired = false }: { name: string; param: MetaToolParameter; isLast: boolean; showRequired?: boolean; isRequired?: boolean }) {
   const hasNested = param.properties && Object.keys(param.properties).length > 0;
   const items = param.items && typeof param.items === 'object' ? param.items as Record<string, unknown> : null;
   const itemsHaveProperties = items && typeof items.properties === 'object' && Object.keys(items.properties as object).length > 0;
@@ -60,7 +67,7 @@ function ParameterRow({ name, param, isLast, showRequired = true }: { name: stri
         <div className="flex flex-wrap items-center gap-2">
           <code className="text-sm font-semibold font-mono text-fd-foreground">{name}</code>
           <span className="text-xs font-mono text-fd-muted-foreground">{typeLabel}</span>
-          {showRequired && param.required && (
+          {showRequired && isRequired && (
             <span className="text-xs font-medium text-red-500 dark:text-red-400">Required</span>
           )}
           {param.default !== undefined && param.default !== null && param.default !== '' && (
@@ -86,18 +93,6 @@ function ParameterRow({ name, param, isLast, showRequired = true }: { name: stri
             </span>
           </div>
         )}
-        {param.examples && param.examples.length > 0 && (
-          <div className="mt-2">
-            <span className="text-xs text-fd-muted-foreground">Example: </span>
-            <span className="inline-flex flex-wrap gap-1 mt-0.5">
-              {param.examples.map((ex, i) => (
-                <code key={i} className="rounded border border-fd-border px-1.5 py-0.5 text-xs font-mono text-fd-muted-foreground">
-                  {typeof ex === 'string' ? ex : JSON.stringify(ex)}
-                </code>
-              ))}
-            </span>
-          </div>
-        )}
         {(hasNested || itemsHaveProperties) && (
           <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-2">
             <CollapsibleTrigger className="flex items-center gap-1 text-xs text-fd-muted-foreground hover:text-fd-foreground font-medium transition-colors">
@@ -108,7 +103,11 @@ function ParameterRow({ name, param, isLast, showRequired = true }: { name: stri
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 pl-3 border-l-2 border-fd-border">
-                <ParameterList parameters={(hasNested ? param.properties! : items!.properties) as Record<string, MetaToolParameter>} showRequired={showRequired} />
+                <ParameterList
+                  parameters={(hasNested ? param.properties! : items!.properties) as Record<string, MetaToolParameter>}
+                  requiredFields={getRequiredFields(hasNested ? param : items)}
+                  showRequired={showRequired}
+                />
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -118,18 +117,18 @@ function ParameterRow({ name, param, isLast, showRequired = true }: { name: stri
   );
 }
 
-function ParameterList({ parameters, showRequired = true }: { parameters: Record<string, MetaToolParameter>; showRequired?: boolean }) {
+function ParameterList({ parameters, requiredFields = [], showRequired = true }: { parameters: Record<string, MetaToolParameter>; requiredFields?: string[]; showRequired?: boolean }) {
   const entries = Object.entries(parameters);
   return (
     <div>
       {entries.map(([name, param], idx) => (
-        <ParameterRow key={name} name={name} param={param} isLast={idx === entries.length - 1} showRequired={showRequired} />
+        <ParameterRow key={name} name={name} param={param} isLast={idx === entries.length - 1} showRequired={showRequired} isRequired={requiredFields.includes(name)} />
       ))}
     </div>
   );
 }
 
-function SchemaSection({ title, schema, showRequired = true }: { title: string; schema: { type: string; properties: Record<string, MetaToolParameter> }; showRequired?: boolean }) {
+function SchemaSection({ title, schema, showRequired = true }: { title: string; schema: MetaToolSchema; showRequired?: boolean }) {
   const properties = schema.properties || {};
   const entries = Object.entries(properties);
 
@@ -140,7 +139,7 @@ function SchemaSection({ title, schema, showRequired = true }: { title: string; 
       <h3 className="text-base font-semibold text-fd-foreground mb-3">{title}</h3>
       <div className="rounded-lg border border-fd-border bg-fd-card">
         <div className="px-4">
-          <ParameterList parameters={properties} showRequired={showRequired} />
+          <ParameterList parameters={properties} requiredFields={schema.required || []} showRequired={showRequired} />
         </div>
       </div>
     </div>

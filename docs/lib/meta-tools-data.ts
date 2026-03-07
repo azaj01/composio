@@ -4,12 +4,18 @@ import { join } from 'path';
 export interface MetaToolParameter {
   type: string;
   description: string;
-  required?: boolean;
+  required?: string[] | boolean;
   default?: unknown;
   enum?: string[];
   examples?: unknown[];
   items?: Record<string, unknown>;
   properties?: Record<string, MetaToolParameter>;
+}
+
+export interface MetaToolSchema {
+  type: string;
+  properties: Record<string, MetaToolParameter>;
+  required?: string[];
 }
 
 export interface MetaTool {
@@ -18,14 +24,8 @@ export interface MetaTool {
   displayName: string;
   description: string;
   tags: string[];
-  inputParameters: {
-    type: string;
-    properties: Record<string, MetaToolParameter>;
-  };
-  responseSchema: {
-    type: string;
-    properties: Record<string, MetaToolParameter>;
-  };
+  inputParameters: MetaToolSchema;
+  responseSchema: MetaToolSchema;
 }
 
 const META_TOOLS_PATH = join(process.cwd(), 'public/data/meta-tools.json');
