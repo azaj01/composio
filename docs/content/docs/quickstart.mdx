@@ -40,6 +40,7 @@ NEVER:
 
 **Deprecated (DO NOT use)**
 
+Python:
 ```
 # WRONG — old direct execution pattern
 tools = composio.tools.get(user_id, { toolkits: ['github'] })
@@ -47,6 +48,13 @@ result = composio.tools.execute('GITHUB_STAR_REPO', {...})
 
 # WRONG — old package name
 from composio_core import Composio
+```
+
+TypeScript:
+```
+// WRONG — old direct execution pattern
+const tools = composio.tools.get(userId, { toolkits: ['github'] });
+const result = composio.tools.execute('GITHUB_STAR_REPO', {...});
 ```
 
 **Verify before responding**
@@ -208,7 +216,7 @@ Give your OpenAI Agent access to 1000+ tools (Gmail, GitHub, Slack, Notion, etc.
 
 ALWAYS:
 - Use `session.mcp.url` and `session.mcp.headers` from the session — these are unique per session
-- Set `require_approval` to `"never"` in the Python tool_config
+- In Python, set `require_approval` to `"never"` in the tool_config
 - Create a session with a user ID before accessing `session.mcp`
 - Store API keys in .env, load with dotenv
 
@@ -220,6 +228,7 @@ NEVER:
 
 **Deprecated (DO NOT use)**
 
+Python:
 ```
 # WRONG — old direct execution pattern
 tools = composio.tools.get(user_id, { toolkits: ['github'] })
@@ -232,12 +241,21 @@ composio = Composio(provider=OpenAIAgentsProvider())
 from composio_core import Composio
 ```
 
+TypeScript:
+```
+// WRONG — old direct execution pattern
+const tools = composio.tools.get(userId, { toolkits: ['github'] });
+
+// WRONG — using a provider with MCP (not needed)
+const composio = new Composio({ provider: new OpenAIAgentsProvider() });
+```
+
 **Verify before responding**
 
 1. Is `Composio()` initialized WITHOUT a provider?
 2. Is a session created with `composio.create(user_id)`?
 3. Are `session.mcp.url` and `session.mcp.headers` used for the MCP connection?
-4. Is `require_approval` set to `"never"` in Python?
+4. In Python, is `require_approval` set to `"never"`?
 5. Are API keys in .env, not hardcoded?
 
 </PromptBanner>
@@ -423,6 +441,7 @@ NEVER:
 
 **Deprecated (DO NOT use)**
 
+Python:
 ```
 # WRONG — old direct execution pattern
 tools = composio.tools.get(user_id, { toolkits: ['github'] })
@@ -433,6 +452,15 @@ options = ClaudeAgentOptions(tools=tools)
 
 # WRONG — old package name
 from composio_core import Composio
+```
+
+TypeScript:
+```
+// WRONG — old direct execution pattern
+const tools = composio.tools.get(userId, { toolkits: ['github'] });
+
+// WRONG — passing tools directly without MCP server wrapper
+const options = new ClaudeAgentOptions({ tools });
 ```
 
 **Verify before responding**
@@ -619,7 +647,7 @@ Give your Claude agent access to 1000+ tools (Gmail, GitHub, Slack, Notion, etc.
 ALWAYS:
 - Use `session.mcp.url` and `session.mcp.headers` from the session — these are unique per session
 - Set MCP server type to `"http"` in the mcp_servers config
-- Set `permission_mode` to `"bypassPermissions"`
+- In Python, set `permission_mode` to `"bypassPermissions"` in the mcp_servers config
 - Use `async/await` — Claude Agent SDK is fully async
 - Store API keys in .env, load with dotenv
 
@@ -631,6 +659,7 @@ NEVER:
 
 **Deprecated (DO NOT use)**
 
+Python:
 ```
 # WRONG — old direct execution pattern
 tools = composio.tools.get(user_id, { toolkits: ['github'] })
@@ -641,6 +670,15 @@ composio = Composio(provider=ClaudeAgentSDKProvider())
 
 # WRONG — old package name
 from composio_core import Composio
+```
+
+TypeScript:
+```
+// WRONG — old direct execution pattern
+const tools = composio.tools.get(userId, { toolkits: ['github'] });
+
+// WRONG — using a provider with MCP (not needed)
+const composio = new Composio({ provider: new ClaudeAgentSDKProvider() });
 ```
 
 **Verify before responding**
