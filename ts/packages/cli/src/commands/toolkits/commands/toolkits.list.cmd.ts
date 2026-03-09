@@ -7,6 +7,7 @@ import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { ProjectContext } from 'src/services/project-context';
 import { ComposioUserContext } from 'src/services/user-context';
 import { clampLimit } from 'src/ui/clamp-limit';
+import { extractMessage } from 'src/utils/api-error-extraction';
 import {
   formatLegacyToolkitsJson,
   formatLegacyToolkitsTable,
@@ -151,5 +152,15 @@ export const toolkitsCmd$List = Command.make(
       }
 
       yield* ui.output(formatLegacyToolkitsJson(items));
-    })
+    }).pipe(
+      Effect.catchAll(error =>
+        Effect.gen(function* () {
+          const ui = yield* TerminalUI;
+          yield* ui.log.error(
+            extractMessage(error) ?? 'An error occurred while fetching toolkits.'
+          );
+          yield* ui.output('[]');
+        })
+      )
+    )
 ).pipe(Command.withDescription('List available toolkits with connection status.'));

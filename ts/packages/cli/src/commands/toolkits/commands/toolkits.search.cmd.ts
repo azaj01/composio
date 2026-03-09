@@ -4,6 +4,7 @@ import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
 import { clampLimit } from 'src/ui/clamp-limit';
+import { extractMessage } from 'src/utils/api-error-extraction';
 import { formatLegacyToolkitsTable, formatLegacyToolkitsJson } from '../format';
 
 const query = Args.text({ name: 'query' }).pipe(
@@ -60,5 +61,12 @@ export const toolkitsCmd$Search = Command.make('search', { query, limit }, ({ qu
     }
 
     yield* ui.output(formatLegacyToolkitsJson(result.items));
-  })
+  }).pipe(
+    Effect.catchAll(error =>
+      Effect.gen(function* () {
+        const ui = yield* TerminalUI;
+        yield* ui.log.error(extractMessage(error) ?? 'An error occurred while searching toolkits.');
+      })
+    )
+  )
 ).pipe(Command.withDescription('Search toolkits by use case.'));
