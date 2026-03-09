@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { Args, Command, Options } from '@effect/cli';
 import { Effect, Option } from 'effect';
 import { ComposioToolkitsRepository } from 'src/services/composio-clients';
@@ -68,6 +69,7 @@ export const toolkitsCmd$Search = Command.make('search', { query, limit }, ({ qu
         const ui = yield* TerminalUI;
         yield* ui.log.error(extractMessage(error) ?? 'An error occurred while searching toolkits.');
         yield* ui.output('[]');
+        process.exitCode = 1;
       })
     )
   )

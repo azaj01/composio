@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { Command, Options } from '@effect/cli';
 import { Effect, Option } from 'effect';
 import { TerminalUI } from 'src/services/terminal-ui';
@@ -118,6 +119,7 @@ export const toolkitsCmd$List = Command.make(
             import('@composio/client/resources/tool-router').SessionToolkitsResponse.Item
           >
         | undefined;
+      let sessionFailed = false;
       if (sessionContext) {
         const { client, sessionId } = sessionContext;
         sessionItems = yield* Effect.tryPromise(() =>
@@ -138,7 +140,13 @@ export const toolkitsCmd$List = Command.make(
             )
           )
         );
-        if (sessionItems.length === 0) sessionItems = undefined;
+        if (sessionItems.length === 0) {
+          sessionFailed = true;
+          sessionItems = undefined;
+        }
+      } else if (Option.isSome(resolvedUserId)) {
+        // Session creation itself failed (caught in parallel fetch above).
+        sessionFailed = true;
       }
 
       let unified = mergeToolkitData(catalogResult.items, sessionItems);
@@ -147,6 +155,8 @@ export const toolkitsCmd$List = Command.make(
       const isConnectedFilter = Option.getOrUndefined(connected);
       if (isConnectedFilter && sessionItems) {
         unified = unified.filter(t => t.connected?.status === 'ACTIVE');
+      } else if (isConnectedFilter && sessionFailed) {
+        yield* ui.log.warn('`--connected` filter could not be applied — session data unavailable.');
       }
 
       if (unified.length === 0) {
@@ -176,6 +186,7 @@ export const toolkitsCmd$List = Command.make(
             extractMessage(error) ?? 'An error occurred while fetching toolkits.'
           );
           yield* ui.output('[]');
+          process.exitCode = 1;
         })
       )
     )
