@@ -1,19 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Bot, FileText, Terminal, Copy, Check, ExternalLink } from 'lucide-react';
 
 function CopyableCommand({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => { clearTimeout(timerRef.current); }, []);
 
   return (
     <button
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text);
+          clearTimeout(timerRef.current);
           setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
+          timerRef.current = setTimeout(() => setCopied(false), 2000);
         } catch {
           // clipboard write failed
         }
@@ -52,7 +56,7 @@ export function AIToolsBanner() {
         {/* Header */}
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--composio-orange)]/10">
-            <Bot className="h-4 w-4 text-[var(--composio-orange)]" />
+            <Bot aria-hidden="true" className="h-4 w-4 text-[var(--composio-orange)]" />
           </div>
           <span className="text-sm font-semibold tracking-tight text-fd-foreground">
             For AI tools
@@ -73,7 +77,7 @@ export function AIToolsBanner() {
                 className="text-fd-muted-foreground hover:text-[var(--composio-orange)] transition-colors"
               >
                 Skills.sh
-                <ExternalLink className="ml-1 inline h-2.5 w-2.5" />
+                <ExternalLink aria-hidden="true" className="ml-1 inline h-2.5 w-2.5" />
               </Link>
               <Link
                 href="https://github.com/composiohq/skills"
@@ -82,7 +86,7 @@ export function AIToolsBanner() {
                 className="text-fd-muted-foreground hover:text-[var(--composio-orange)] transition-colors"
               >
                 GitHub
-                <ExternalLink className="ml-1 inline h-2.5 w-2.5" />
+                <ExternalLink aria-hidden="true" className="ml-1 inline h-2.5 w-2.5" />
               </Link>
             </div>
           </div>
@@ -96,7 +100,7 @@ export function AIToolsBanner() {
                 href="/docs/cli"
                 className="inline-flex items-center gap-1 text-fd-muted-foreground hover:text-[var(--composio-orange)] transition-colors"
               >
-                <Terminal className="h-2.5 w-2.5" />
+                <Terminal aria-hidden="true" className="h-2.5 w-2.5" />
                 CLI Reference
               </Link>
             </div>
@@ -110,7 +114,7 @@ export function AIToolsBanner() {
             href="/llms.txt"
             className="group flex items-center gap-1.5 rounded-lg border border-fd-border bg-fd-background dark:bg-fd-background/30 px-3 py-1.5 transition-all hover:border-[var(--composio-orange)]/40"
           >
-            <FileText className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground group-hover:text-[var(--composio-orange)] transition-colors" />
+            <FileText aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground group-hover:text-[var(--composio-orange)] transition-colors" />
             <span className="text-[12.5px] font-medium text-fd-foreground">llms.txt</span>
             <span className="text-[10px] text-fd-muted-foreground">Index</span>
           </Link>
@@ -118,7 +122,7 @@ export function AIToolsBanner() {
             href="/llms-full.txt"
             className="group flex items-center gap-1.5 rounded-lg border border-fd-border bg-fd-background dark:bg-fd-background/30 px-3 py-1.5 transition-all hover:border-[var(--composio-orange)]/40"
           >
-            <FileText className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground group-hover:text-[var(--composio-orange)] transition-colors" />
+            <FileText aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground group-hover:text-[var(--composio-orange)] transition-colors" />
             <span className="text-[12.5px] font-medium text-fd-foreground">llms-full.txt</span>
             <span className="text-[10px] text-fd-muted-foreground">Complete</span>
           </Link>
