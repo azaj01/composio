@@ -189,8 +189,8 @@ else
     case $shell_name in
     fish)
         commands=(
-            "set --export COMPOSIO_INSTALL_DIR $COMPOSIO_INSTALL_DIR"
-            "set --export PATH $COMPOSIO_INSTALL_DIR \$PATH"
+            "set --export COMPOSIO_INSTALL_DIR \"$COMPOSIO_INSTALL_DIR\""
+            "set --export PATH \$COMPOSIO_INSTALL_DIR \$PATH"
         )
         fish_config=$HOME/.config/fish/config.fish
         if [[ -w $fish_config ]] || [[ -w $(dirname "$fish_config") ]]; then
@@ -209,8 +209,8 @@ else
         ;;
     zsh)
         commands=(
-            "export COMPOSIO_INSTALL_DIR=$COMPOSIO_INSTALL_DIR"
-            "export PATH=\"$COMPOSIO_INSTALL_DIR:\$PATH\""
+            "export COMPOSIO_INSTALL_DIR=\"$COMPOSIO_INSTALL_DIR\""
+            "export PATH=\"\$COMPOSIO_INSTALL_DIR:\$PATH\""
         )
         zsh_config=$HOME/.zshrc
         if [[ ! -f $zsh_config && -w $(dirname "$zsh_config") ]]; then touch "$zsh_config"; fi

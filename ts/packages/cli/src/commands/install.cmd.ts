@@ -37,6 +37,10 @@ interface ShellConfig {
 const MARKER = '# Composio CLI';
 const COMPLETIONS_MARKER = '# Composio CLI completions';
 
+/** Reject install directory paths containing shell metacharacters to prevent injection into rc files. */
+const UNSAFE_PATH_CHARS = /[;`$|&"'()\n\r\\]/;
+const isUnsafePath = (p: string): boolean => UNSAFE_PATH_CHARS.test(p);
+
 const detectShell = (): Shell | undefined => {
   const shellEnv = process.env.SHELL ?? '';
   const base = path.basename(shellEnv);
@@ -62,13 +66,13 @@ const pathBlockForShell = (shell: Shell, installDir: string): string => {
     case 'fish':
       return [
         MARKER,
-        `set --export COMPOSIO_INSTALL_DIR ${installDir}`,
+        `set --export COMPOSIO_INSTALL_DIR "${installDir}"`,
         `set --export PATH $COMPOSIO_INSTALL_DIR $PATH`,
       ].join('\n');
     default:
       return [
         MARKER,
-        `export COMPOSIO_INSTALL_DIR=${installDir}`,
+        `export COMPOSIO_INSTALL_DIR="${installDir}"`,
         `export PATH="$COMPOSIO_INSTALL_DIR:$PATH"`,
       ].join('\n');
   }
@@ -110,6 +114,14 @@ export const installShellIntegration = (params: {
     // Detect install directory — either from env or default ~/.composio
     const installDir = process.env.COMPOSIO_INSTALL_DIR ?? path.join(os.homedir, '.composio');
 
+    if (isUnsafePath(installDir)) {
+      yield* ui.log.error(
+        'COMPOSIO_INSTALL_DIR contains unsafe characters and cannot be written to shell config.'
+      );
+      yield* ui.outro('Aborted.');
+      return;
+    }
+
     // Detect user shell
     const shell = detectShell();
     if (!shell) {
@@ -117,7 +129,7 @@ export const installShellIntegration = (params: {
         'Could not detect your shell. Manually add the following to your shell config:'
       );
       yield* ui.note(
-        `export COMPOSIO_INSTALL_DIR=${installDir}\nexport PATH="$COMPOSIO_INSTALL_DIR:$PATH"`,
+        `export COMPOSIO_INSTALL_DIR="${installDir}"\nexport PATH="$COMPOSIO_INSTALL_DIR:$PATH"`,
         'PATH setup'
       );
       yield* ui.outro('Manual setup required.');
