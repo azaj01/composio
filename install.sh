@@ -170,8 +170,9 @@ success "Composio CLI was installed successfully to $Bold_Green$(tildify "$exe")
 
 echo
 
-if COMPOSIO_INSTALL_DIR="$COMPOSIO_INSTALL_DIR" "$exe" install 2>/dev/null; then
-    : # CLI handled everything
+install_err=$(mktemp)
+if COMPOSIO_INSTALL_DIR="$COMPOSIO_INSTALL_DIR" "$exe" install 2>"$install_err"; then
+    cat "$install_err" >&2  # Show CLI's TerminalUI output on success
 else
     info "Setting up shell integration..."
 
@@ -261,14 +262,16 @@ else
         ;;
     esac
 
-    echo
-    info "To get started, run:"
-    echo
-
-    if [[ $refresh_command ]]; then
-        info_bold "  $refresh_command"
-    fi
-
-    info_bold "  composio --help"
-    info_bold "  composio login"
 fi
+rm -f "$install_err"
+
+echo
+info "To get started, run:"
+echo
+
+if [[ ${refresh_command:-} ]]; then
+    info_bold "  $refresh_command"
+fi
+
+info_bold "  composio --help"
+info_bold "  composio login"
