@@ -63,7 +63,7 @@ export default function CustomSearchDialog({
           <SearchDialogInput />
           <SearchDialogClose />
         </SearchDialogHeader>
-        <div className="search-scroll-container max-md:min-h-0 max-md:flex-1 max-md:overflow-hidden">
+        <div className="search-scroll-container max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto">
           {query.data === 'empty' && defaultLinks.length > 0 ? (
             <div className="flex flex-col p-2">
               {defaultLinks.map((link) => (
