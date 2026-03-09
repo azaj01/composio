@@ -8,12 +8,7 @@ import { ProjectContext } from 'src/services/project-context';
 import { ComposioUserContext } from 'src/services/user-context';
 import { clampLimit } from 'src/ui/clamp-limit';
 import { extractMessage } from 'src/utils/api-error-extraction';
-import {
-  formatLegacyToolkitsJson,
-  formatLegacyToolkitsTable,
-  formatToolkitsJson,
-  formatToolkitsTable,
-} from '../format';
+import { mergeToolkitData, formatToolkitsJson, formatToolkitsTable } from '../format';
 
 const query = Options.text('query').pipe(
   Options.withDescription('Text search by name, slug, or description'),
@@ -39,6 +34,10 @@ const userId = Options.text('user-id').pipe(
 
 /**
  * List available toolkits with connection status.
+ *
+ * Always fetches catalog data (tools_count, triggers_count, latest_version).
+ * When a user ID is available (explicit --user-id, project, or global config),
+ * also fetches session data to enrich with connection status.
  *
  * @example
  * ```bash
@@ -80,78 +79,72 @@ export const toolkitsCmd$List = Command.make(
         yield* ui.log.message('To show status for a specific user, use `--user-id`.');
       }
 
-      if (Option.isSome(resolvedUserId)) {
-        const result = yield* ui.withSpinner(
-          'Fetching toolkits...',
-          Effect.gen(function* () {
-            const { client, sessionId } = yield* resolveToolRouterSession(resolvedUserId.value);
-            return yield* Effect.tryPromise(() =>
-              client.toolRouter.session.toolkits(sessionId, {
-                search: Option.getOrUndefined(query),
-                limit: clampedLimit,
-                is_connected: Option.getOrUndefined(connected),
-              })
-            );
-          })
-        );
-
-        const { items } = result;
-        if (items.length === 0) {
-          yield* ui.log.warn('No toolkits found. Try broadening your search.');
-          yield* ui.output('[]');
-          return;
-        }
-
-        const showing = items.length;
-        const total = result.total_items;
-        yield* ui.log.info(
-          `Listing ${showing} of ${total} toolkits\n\n${formatToolkitsTable(items)}`
-        );
-
-        const firstSlug = items[0]?.slug;
-        if (firstSlug) {
-          yield* ui.log.step(
-            `To view details of a toolkit:\n> composio toolkits info "${firstSlug}"`
-          );
-        }
-        yield* ui.output(formatToolkitsJson(items));
-        return;
-      }
-
-      if (Option.isSome(connected)) {
+      if (Option.isSome(connected) && Option.isNone(resolvedUserId)) {
         yield* ui.log.warn(
           '`--connected` requires a user id. Use `--user-id` or run `composio init`.'
         );
       }
 
-      const result = yield* ui.withSpinner(
+      // Always fetch catalog data (has tools_count, triggers_count, versions).
+      const catalogResult = yield* ui.withSpinner(
         'Fetching toolkits...',
         repo.searchToolkits({
           search: Option.getOrUndefined(query),
           limit: clampedLimit,
         })
       );
-      const items = result.items;
-      if (items.length === 0) {
+
+      if (catalogResult.items.length === 0) {
         yield* ui.log.warn('No toolkits found. Try broadening your search.');
         yield* ui.output('[]');
         return;
       }
-      const showing = items.length;
-      const total = result.total_items;
+
+      // When a user ID is available, also fetch session data for connection status.
+      let sessionItems:
+        | ReadonlyArray<
+            import('@composio/client/resources/tool-router').SessionToolkitsResponse.Item
+          >
+        | undefined;
+      if (Option.isSome(resolvedUserId)) {
+        sessionItems = yield* resolveToolRouterSession(resolvedUserId.value).pipe(
+          Effect.flatMap(({ client, sessionId }) =>
+            Effect.tryPromise(() =>
+              client.toolRouter.session.toolkits(sessionId, {
+                search: Option.getOrUndefined(query),
+                limit: clampedLimit,
+                is_connected: Option.getOrUndefined(connected),
+              })
+            )
+          ),
+          Effect.map(r => r.items),
+          Effect.catchAll(error =>
+            Effect.gen(function* () {
+              yield* Effect.logDebug('Failed to fetch session data for connection status:', error);
+              return [] as ReadonlyArray<
+                import('@composio/client/resources/tool-router').SessionToolkitsResponse.Item
+              >;
+            })
+          )
+        );
+        if (sessionItems.length === 0) sessionItems = undefined;
+      }
+
+      const unified = mergeToolkitData(catalogResult.items, sessionItems);
+
+      const showing = unified.length;
+      const total = catalogResult.total_items;
       yield* ui.log.info(
-        `Listing ${showing} of ${total} toolkits\n\n${formatLegacyToolkitsTable(items)}`
+        `Listing ${showing} of ${total} toolkits\n\n${formatToolkitsTable(unified)}`
       );
 
-      // Next step hint
-      const firstSlug = items[0]?.slug;
+      const firstSlug = unified[0]?.slug;
       if (firstSlug) {
         yield* ui.log.step(
           `To view details of a toolkit:\n> composio toolkits info "${firstSlug}"`
         );
       }
-
-      yield* ui.output(formatLegacyToolkitsJson(items));
+      yield* ui.output(formatToolkitsJson(unified));
     }).pipe(
       Effect.catchAll(error =>
         Effect.gen(function* () {

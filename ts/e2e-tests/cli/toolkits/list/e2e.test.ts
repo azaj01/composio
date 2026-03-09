@@ -58,10 +58,12 @@ e2e(import.meta.url, {
         expect(item).toHaveProperty('name');
         expect(item).toHaveProperty('slug');
         expect(item).toHaveProperty('description');
-        // `toolkits list` without user-id uses legacy listing output.
         expect(item).toHaveProperty('latest_version');
         expect(item).toHaveProperty('tools_count');
         expect(item).toHaveProperty('triggers_count');
+        expect(item).toHaveProperty('is_no_auth');
+        expect(item).toHaveProperty('enabled');
+        expect(item).toHaveProperty('connected');
       });
     });
 
