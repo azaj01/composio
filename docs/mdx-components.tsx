@@ -10,9 +10,10 @@ import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { Heading } from '@/components/heading';
 import { YouTube } from '@/components/youtube';
 import { ProviderCard, ProviderGrid } from '@/components/provider-card';
-import { FrameworkSelector, QuickstartFlow, FrameworkOption } from '@/components/quickstart';
+import { FrameworkSelector, QuickstartFlow, FrameworkOption, PromptBanner } from '@/components/quickstart';
 import { IntegrationTabs, IntegrationContent } from '@/components/quickstart/integration-tabs';
 import { ToolTypeFlow, ToolTypeOption } from '@/components/tool-type-selector';
+import { ConnectFlow, ConnectClientOption } from '@/components/connect-flow';
 import { Figure } from '@/components/figure';
 import { StepTitle } from '@/components/step-title';
 import { Video } from '@/components/video';
@@ -39,6 +40,7 @@ import {
   BookOpen,
   Monitor,
   MessageCircle,
+  LayoutDashboard,
 } from 'lucide-react';
 
 function slugify(text: string): string {
@@ -78,8 +80,11 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     FrameworkOption,
     IntegrationTabs,
     IntegrationContent,
+    PromptBanner,
     ToolTypeFlow,
     ToolTypeOption,
+    ConnectFlow,
+    ConnectClientOption,
     Figure,
     Video,
     CapabilityCard,
@@ -109,6 +114,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     BookOpen,
     Monitor,
     MessageCircle,
+    LayoutDashboard,
     ...components,
   };
 }

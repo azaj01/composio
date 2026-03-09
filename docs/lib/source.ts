@@ -12,7 +12,7 @@ import { getGuardrails } from './llm-guardrails';
 const defaultOpenTransformer = {
   folder(node: { name: string; defaultOpen?: boolean }, folderPath: string) {
     // Set defaultOpen for API Reference and SDK Reference folders
-    if (folderPath === 'api-reference' || folderPath === 'sdk-reference') {
+    if (folderPath === 'api-reference' || folderPath === 'sdk-reference' || folderPath === 'meta-tools') {
       return { ...node, defaultOpen: true };
     }
     return node;
@@ -188,13 +188,13 @@ export function mdxToCleanMarkdown(content: string): string {
       while ((match = labelRegex.exec(tabsContent)) !== null) {
         tabLabelMap[match[1]] = match[2];
       }
-      return '\n> Which should I use? See [Native Tools vs MCP](/docs/native-tools-vs-mcp)\n';
+      return '\n> Choose your integration type · [Use this guide to decide](/docs/native-tools-vs-mcp)\n';
     }
   );
   // Also handle IntegrationTabs without explicit tabs prop
   result = result.replace(
     /<IntegrationTabs(?![^>]*tabs=)[\s\S]*?>/g,
-    '\n> Which should I use? See [Native Tools vs MCP](/docs/native-tools-vs-mcp)\n'
+    '\n> Choose your integration type · [Use this guide to decide](/docs/native-tools-vs-mcp)\n'
   );
 
   // Convert IntegrationContent to labeled section
@@ -245,6 +245,9 @@ export function mdxToCleanMarkdown(content: string): string {
     (_, name, content) => `### ${name}\n\n${content.trim()}`
   );
 
+  // Strip PromptBanner and its children (UI-only copy-prompt widget)
+  result = result.replace(/<PromptBanner[\s\S]*?<\/PromptBanner>/g, '');
+
   // Convert AIToolsBanner to plain text
   result = result.replace(
     /<AIToolsBanner\s*\/>/g,
@@ -260,9 +263,15 @@ export function mdxToCleanMarkdown(content: string): string {
     '- [llms-full.txt](/llms-full.txt) — Complete documentation in one file'
   );
 
+  // Convert ConnectClientOption opening tags to headings for LLM output
+  result = result.replace(
+    /<ConnectClientOption[^>]*\bname="([^"]*)"[^>]*>/g,
+    (_, name) => `## ${name}\n`
+  );
+
   // Remove wrapper components (ProviderGrid, Tabs, Frame, div, QuickstartFlow, IntegrationTabs, Accordions, ToolTypeFlow, ToolkitsLanding, TemplateGrid, etc.)
   // Note: Cards wrapper is removed earlier (before Card conversion) to prevent regex conflicts
-  result = result.replace(/<\/?(ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding|TemplateGrid|Glossary)[^>]*>/g, '');
+  result = result.replace(/<\/?(ProviderGrid|Tabs|Frame|div|QuickstartFlow|IntegrationTabs|Accordions|ToolTypeFlow|ToolkitsLanding|TemplateGrid|Glossary|ConnectFlow|ConnectClientOption)[^>]*>/g, '');
 
   // Remove remaining self-closing JSX tags (including those with JSX expressions)
   result = result.replace(/<[A-Z][a-zA-Z]*[\s\S]*?\/>/g, '');
@@ -270,8 +279,8 @@ export function mdxToCleanMarkdown(content: string): string {
   // Remove remaining JSX opening/closing tags but keep content
   result = result.replace(/<\/?[A-Z][a-zA-Z]*[^>]*>/g, '');
 
-  // Clean up leftover JSX artifacts like lone } or {
-  result = result.replace(/^\s*[{}]\s*$/gm, '');
+  // Note: lone brace cleanup is done inside the code-block-aware loop below
+  // to avoid stripping { and } from JSON code blocks.
 
   // Normalize indentation while preserving markdown structure
   // - Code blocks: normalize by stripping common indentation prefix
@@ -314,6 +323,10 @@ export function mdxToCleanMarkdown(content: string): string {
     } else {
       // Outside code blocks - smart whitespace handling
       const trimmedLine = line.trimStart();
+      // Clean up leftover JSX artifacts like lone } or { (only outside code blocks)
+      if (/^\s*[{}]\s*$/.test(line)) {
+        continue;
+      }
       // Preserve indentation for markdown list items (but not blockquotes at root level)
       if (trimmedLine.match(/^[-*+]\s/) || trimmedLine.match(/^\d+\.\s/)) {
         // For list items, normalize to 2-space indentation levels

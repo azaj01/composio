@@ -52,7 +52,7 @@
     "name": "Slack",
     "logo": "https://logos.composio.dev/api/slack",
     "category": "team chat",
-    "toolCount": 151,
+    "toolCount": 153,
     "triggerCount": 9
   },
   {
@@ -5717,6 +5717,14 @@
     "logo": "https://logos.composio.dev/api/parseur",
     "category": "ai document extraction",
     "toolCount": 31,
+    "triggerCount": 0
+  },
+  {
+    "slug": "parsio_io",
+    "name": "Parsio.io",
+    "logo": "https://logos.composio.dev/api/parsio_io",
+    "category": "ai document extraction",
+    "toolCount": 24,
     "triggerCount": 0
   },
   {
