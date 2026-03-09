@@ -563,14 +563,8 @@ p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
    ========================================================================== */
 
 @media (max-width: 767px) {
-  /* Let the list wrapper (SearchDialogList outer div) shrink within the flex column */
-  [role="dialog"].fixed > div[data-empty] {
-    min-height: 0;
-    flex: 1 1 0%;
-  }
-
-  /* Override the fixed max-h-[460px] on the inner scrollable div */
-  [role="dialog"].fixed > div[data-empty] > div {
+  /* Override the fixed max-h-[460px] on the inner scrollable div inside SearchDialogList */
+  .search-scroll-container > div > div {
     max-height: 100%;
   }
 }
