@@ -57,7 +57,7 @@ export default function CustomSearchDialog({
       {...props}
     >
       <SearchDialogOverlay />
-      <SearchDialogContent>
+      <SearchDialogContent className="max-md:max-h-[calc(100dvh-2rem)] max-md:flex max-md:flex-col">
         <SearchDialogHeader>
           <SearchDialogIcon />
           <SearchDialogInput />

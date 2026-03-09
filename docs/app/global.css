@@ -556,6 +556,25 @@ p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
   color: var(--color-green-500);
 }
 
+/* ==========================================================================
+   Search Dialog – Mobile Scroll Fix
+   On mobile, when the keyboard opens the viewport shrinks. Constrain the
+   search result list to the remaining space so it stays scrollable.
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  /* Let the list wrapper (SearchDialogList outer div) shrink within the flex column */
+  [role="dialog"].fixed > div[data-empty] {
+    min-height: 0;
+    flex: 1 1 0%;
+  }
+
+  /* Override the fixed max-h-[460px] on the inner scrollable div */
+  [role="dialog"].fixed > div[data-empty] > div {
+    max-height: 100%;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
