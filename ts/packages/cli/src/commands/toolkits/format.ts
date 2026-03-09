@@ -23,6 +23,16 @@ const formatAuthConfigField = (field: {
 
 // ---------- Unified toolkit list format ----------
 
+const TOOLKITS_TABLE = {
+  name: 20,
+  slug: 20,
+  version: 12,
+  tools: 7,
+  triggers: 10,
+  connected: 16,
+  description: 50,
+} as const;
+
 /**
  * Unified representation of a toolkit for list/search output.
  * Catalog data is always present; connection data is optional (requires a user session).
@@ -99,17 +109,19 @@ function connectionStatusParts(item: UnifiedToolkit): {
  * Format a list of unified toolkits as a human-readable table.
  */
 export function formatToolkitsTable(toolkits: ReadonlyArray<UnifiedToolkit>): string {
-  const header = `${bold('Name'.padEnd(20))} ${bold('Slug'.padEnd(20))} ${bold('Version'.padEnd(12))} ${bold('Tools'.padEnd(7))} ${bold('Triggers'.padEnd(10))} ${bold('Connected'.padEnd(16))} ${bold('Description')}`;
+  const header = `${bold('Name'.padEnd(TOOLKITS_TABLE.name))} ${bold('Slug'.padEnd(TOOLKITS_TABLE.slug))} ${bold('Version'.padEnd(TOOLKITS_TABLE.version))} ${bold('Tools'.padEnd(TOOLKITS_TABLE.tools))} ${bold('Triggers'.padEnd(TOOLKITS_TABLE.triggers))} ${bold('Connected'.padEnd(TOOLKITS_TABLE.connected))} ${bold('Description')}`;
 
   const rows = toolkits.map(t => {
-    const name = t.name.padEnd(20);
-    const slug = t.slug.padEnd(20);
-    const version = (t.latest_version ?? '-').padEnd(12);
-    const tools = String(t.tools_count).padEnd(7);
-    const triggers = String(t.triggers_count).padEnd(10);
+    const name = truncate(t.name, TOOLKITS_TABLE.name).padEnd(TOOLKITS_TABLE.name);
+    const slug = truncate(t.slug, TOOLKITS_TABLE.slug).padEnd(TOOLKITS_TABLE.slug);
+    const version = truncate(t.latest_version ?? '-', TOOLKITS_TABLE.version).padEnd(
+      TOOLKITS_TABLE.version
+    );
+    const tools = String(t.tools_count).padEnd(TOOLKITS_TABLE.tools);
+    const triggers = String(t.triggers_count).padEnd(TOOLKITS_TABLE.triggers);
     const { text: statusText, color: statusColor } = connectionStatusParts(t);
-    const status = statusColor(statusText.padEnd(16));
-    const desc = gray(truncate(t.description, 50));
+    const status = statusColor(statusText.padEnd(TOOLKITS_TABLE.connected));
+    const desc = gray(truncate(t.description, TOOLKITS_TABLE.description));
     return `${name} ${slug} ${version} ${tools} ${triggers} ${status} ${desc}`;
   });
 
