@@ -142,7 +142,11 @@ export const installShellIntegration = (params: {
     const rcPath = config.rcFile;
     const existing = yield* fs
       .readFileString(rcPath)
-      .pipe(Effect.catchAll(() => Effect.succeed('')));
+      .pipe(
+        Effect.catchAll(e =>
+          Effect.logDebug('RC file does not exist yet, will create:', e).pipe(Effect.as(''))
+        )
+      );
 
     // Build blocks to append (idempotently)
     const blocks: string[] = [];
@@ -169,7 +173,11 @@ export const installShellIntegration = (params: {
       // Ensure parent directory exists (for fish config)
       yield* fs
         .makeDirectory(path.dirname(rcPath), { recursive: true })
-        .pipe(Effect.catchAll(() => Effect.void));
+        .pipe(
+          Effect.catchAll(e =>
+            Effect.logDebug('Could not create parent directory (may already exist):', e)
+          )
+        );
 
       const appendContent = '\n' + blocks.join('\n\n') + '\n';
       yield* fs.writeFileString(rcPath, existing + appendContent);
