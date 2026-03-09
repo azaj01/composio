@@ -50,16 +50,36 @@ const detectShell = (): Shell | undefined => {
   return undefined;
 };
 
-const rcFileForShell = (shell: Shell, homedir: string): string => {
+/**
+ * Return candidate rc file paths for a shell, ordered by preference.
+ * For bash this mirrors the install.sh fallback: .bashrc then .bash_profile.
+ */
+const rcFileCandidates = (shell: Shell, homedir: string): string[] => {
   switch (shell) {
     case 'zsh':
-      return path.join(homedir, '.zshrc');
+      return [path.join(homedir, '.zshrc')];
     case 'bash':
-      return path.join(homedir, '.bashrc');
+      return [path.join(homedir, '.bashrc'), path.join(homedir, '.bash_profile')];
     case 'fish':
-      return path.join(homedir, '.config', 'fish', 'config.fish');
+      return [path.join(homedir, '.config', 'fish', 'config.fish')];
   }
 };
+
+/**
+ * Pick the first existing candidate, or fall back to the first candidate
+ * (which will be created).
+ */
+const resolveRcFile = (
+  candidates: string[],
+  fs: FileSystem.FileSystem
+): Effect.Effect<string, PlatformError> =>
+  Effect.gen(function* () {
+    for (const candidate of candidates) {
+      const exists = yield* fs.exists(candidate);
+      if (exists) return candidate;
+    }
+    return candidates[0]!;
+  });
 
 const pathBlockForShell = (shell: Shell, installDir: string): string => {
   switch (shell) {
@@ -80,12 +100,12 @@ const pathBlockForShell = (shell: Shell, installDir: string): string => {
 
 const buildShellConfig = (
   shell: Shell,
-  homedir: string,
+  rcFile: string,
   installDir: string,
   completionScript: string | undefined
 ): ShellConfig => ({
   shell,
-  rcFile: rcFileForShell(shell, homedir),
+  rcFile,
   pathBlock: pathBlockForShell(shell, installDir),
   completionBlock: completionScript ? `${COMPLETIONS_MARKER}\n${completionScript}` : undefined,
 });
@@ -148,7 +168,8 @@ export const installShellIntegration = (params: {
       completionScript = lines.length > 0 ? Arr.join(lines, '\n') : undefined;
     }
 
-    const config = buildShellConfig(shell, os.homedir, installDir, completionScript);
+    const rcFile = yield* resolveRcFile(rcFileCandidates(shell, os.homedir), fs);
+    const config = buildShellConfig(shell, rcFile, installDir, completionScript);
 
     // Read existing rc file (or empty if it doesn't exist yet)
     const rcPath = config.rcFile;
