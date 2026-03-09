@@ -194,7 +194,7 @@ else
         fish_config=$HOME/.config/fish/config.fish
         if [[ -w $fish_config ]] || [[ -w $(dirname "$fish_config") ]]; then
             mkdir -p "$(dirname "$fish_config")"
-            if ! grep -qF "$marker" "$fish_config" 2>/dev/null; then
+            if ! grep -qxF "$marker" "$fish_config" 2>/dev/null; then
                 { echo -e "\n$marker"; for cmd in "${commands[@]}"; do echo "$cmd"; done; } >>"$fish_config"
                 info "Added \"$(tildify "$COMPOSIO_INSTALL_DIR")\" to \$PATH in \"$(tildify "$fish_config")\""
             else
@@ -214,7 +214,7 @@ else
         zsh_config=$HOME/.zshrc
         if [[ ! -f $zsh_config && -w $(dirname "$zsh_config") ]]; then touch "$zsh_config"; fi
         if [[ -w $zsh_config ]]; then
-            if ! grep -qF "$marker" "$zsh_config" 2>/dev/null; then
+            if ! grep -qxF "$marker" "$zsh_config" 2>/dev/null; then
                 { echo -e "\n$marker"; for cmd in "${commands[@]}"; do echo "$cmd"; done; } >>"$zsh_config"
                 info "Added \"$(tildify "$COMPOSIO_INSTALL_DIR")\" to \$PATH in \"$(tildify "$zsh_config")\""
             else
@@ -238,7 +238,7 @@ else
         set_manually=true
         for bash_config in "${bash_configs[@]}"; do
             if [[ -w $bash_config ]]; then
-                if ! grep -qF "$marker" "$bash_config" 2>/dev/null; then
+                if ! grep -qxF "$marker" "$bash_config" 2>/dev/null; then
                     { echo -e "\n$marker"; for cmd in "${commands[@]}"; do echo "$cmd"; done; } >>"$bash_config"
                     info "Added \"$(tildify "$COMPOSIO_INSTALL_DIR")\" to \$PATH in \"$(tildify "$bash_config")\""
                 else
