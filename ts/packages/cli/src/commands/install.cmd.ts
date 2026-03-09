@@ -192,7 +192,12 @@ export const installShellIntegration = (params: {
         );
 
       const appendContent = '\n' + blocks.join('\n\n') + '\n';
-      yield* fs.writeFileString(rcPath, existing + appendContent);
+
+      // Atomic write: write to a temp file then rename, so a crash mid-write
+      // cannot leave the user's rc file truncated/corrupted.
+      const tmpPath = `${rcPath}.composio-tmp`;
+      yield* fs.writeFileString(tmpPath, existing + appendContent);
+      yield* fs.rename(tmpPath, rcPath);
 
       yield* ui.log.success(`Updated ${tildify(rcPath, os.homedir)}`);
       yield* ui.note(
