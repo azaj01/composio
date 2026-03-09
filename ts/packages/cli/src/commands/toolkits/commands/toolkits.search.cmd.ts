@@ -44,6 +44,7 @@ export const toolkitsCmd$Search = Command.make('search', { query, limit }, ({ qu
 
     if (result.items.length === 0) {
       yield* ui.log.warn(`No toolkits found matching "${query}". Try broadening your search.`);
+      yield* ui.output('[]');
       return;
     }
 
@@ -66,6 +67,7 @@ export const toolkitsCmd$Search = Command.make('search', { query, limit }, ({ qu
       Effect.gen(function* () {
         const ui = yield* TerminalUI;
         yield* ui.log.error(extractMessage(error) ?? 'An error occurred while searching toolkits.');
+        yield* ui.output('[]');
       })
     )
   )
