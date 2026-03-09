@@ -130,7 +130,19 @@ export const toolkitsCmd$List = Command.make(
         if (sessionItems.length === 0) sessionItems = undefined;
       }
 
-      const unified = mergeToolkitData(catalogResult.items, sessionItems);
+      let unified = mergeToolkitData(catalogResult.items, sessionItems);
+
+      // Apply --connected filter client-side: only keep toolkits with an active connection.
+      const isConnectedFilter = Option.getOrUndefined(connected);
+      if (isConnectedFilter && sessionItems) {
+        unified = unified.filter(t => t.connected?.status === 'ACTIVE');
+      }
+
+      if (unified.length === 0) {
+        yield* ui.log.warn('No connected toolkits found. Try without --connected.');
+        yield* ui.output('[]');
+        return;
+      }
 
       const showing = unified.length;
       const total = catalogResult.total_items;
