@@ -6,6 +6,24 @@ COMPOSIO_GITHUB_REPO=${COMPOSIO_GITHUB_REPO-"composio"}
 COMPOSIO_GITHUB_URL=${COMPOSIO_GITHUB_URL-"https://github.com"}
 COMPOSIO_INSTALL_DIR=${COMPOSIO_INSTALL_DIR:-$HOME/.composio}
 
+# --- Input validation ---
+
+# Only allow HTTPS URLs for the download source.
+if [[ ! "$COMPOSIO_GITHUB_URL" =~ ^https:// ]]; then
+    echo "error: COMPOSIO_GITHUB_URL must start with https:// (got \"$COMPOSIO_GITHUB_URL\")" >&2
+    exit 1
+fi
+
+# Owner and repo must be safe identifiers (alphanumeric, hyphens, underscores, dots).
+if [[ ! "$COMPOSIO_GITHUB_OWNER" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo "error: COMPOSIO_GITHUB_OWNER contains invalid characters (got \"$COMPOSIO_GITHUB_OWNER\")" >&2
+    exit 1
+fi
+if [[ ! "$COMPOSIO_GITHUB_REPO" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo "error: COMPOSIO_GITHUB_REPO contains invalid characters (got \"$COMPOSIO_GITHUB_REPO\")" >&2
+    exit 1
+fi
+
 github_repo="$COMPOSIO_GITHUB_URL/$COMPOSIO_GITHUB_OWNER/$COMPOSIO_GITHUB_REPO"
 
 # --- Colors (only when interactive) ---
