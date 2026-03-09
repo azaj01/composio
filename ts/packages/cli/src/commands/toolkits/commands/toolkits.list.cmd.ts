@@ -85,13 +85,25 @@ export const toolkitsCmd$List = Command.make(
         );
       }
 
-      // Always fetch catalog data (has tools_count, triggers_count, versions).
-      const catalogResult = yield* ui.withSpinner(
+      // Fetch catalog data (always) and session context (when user ID available) in parallel.
+      // The session toolkits call depends on the session ID, so it runs after session creation.
+      const catalogEffect = repo.searchToolkits({
+        search: Option.getOrUndefined(query),
+        limit: clampedLimit,
+      });
+
+      // Resolve session context in parallel with catalog fetch (saves one round trip).
+      const sessionContextEffect = Option.isSome(resolvedUserId)
+        ? resolveToolRouterSession(resolvedUserId.value).pipe(
+            Effect.catchAll(error =>
+              Effect.logDebug('Failed to create session:', error).pipe(Effect.as(undefined))
+            )
+          )
+        : Effect.succeed(undefined as undefined);
+
+      const [catalogResult, sessionContext] = yield* ui.withSpinner(
         'Fetching toolkits...',
-        repo.searchToolkits({
-          search: Option.getOrUndefined(query),
-          limit: clampedLimit,
-        })
+        Effect.all([catalogEffect, sessionContextEffect], { concurrency: 'unbounded' })
       );
 
       if (catalogResult.items.length === 0) {
@@ -100,31 +112,30 @@ export const toolkitsCmd$List = Command.make(
         return;
       }
 
-      // When a user ID is available, also fetch session data for connection status.
+      // When session context is available, fetch session toolkits for connection status.
       let sessionItems:
         | ReadonlyArray<
             import('@composio/client/resources/tool-router').SessionToolkitsResponse.Item
           >
         | undefined;
-      if (Option.isSome(resolvedUserId)) {
-        sessionItems = yield* resolveToolRouterSession(resolvedUserId.value).pipe(
-          Effect.flatMap(({ client, sessionId }) =>
-            Effect.tryPromise(() =>
-              client.toolRouter.session.toolkits(sessionId, {
-                search: Option.getOrUndefined(query),
-                limit: clampedLimit,
-                is_connected: Option.getOrUndefined(connected),
-              })
-            )
-          ),
+      if (sessionContext) {
+        const { client, sessionId } = sessionContext;
+        sessionItems = yield* Effect.tryPromise(() =>
+          client.toolRouter.session.toolkits(sessionId, {
+            search: Option.getOrUndefined(query),
+            limit: clampedLimit,
+            is_connected: Option.getOrUndefined(connected),
+          })
+        ).pipe(
           Effect.map(r => r.items),
           Effect.catchAll(error =>
-            Effect.gen(function* () {
-              yield* Effect.logDebug('Failed to fetch session data for connection status:', error);
-              return [] as ReadonlyArray<
-                import('@composio/client/resources/tool-router').SessionToolkitsResponse.Item
-              >;
-            })
+            Effect.logDebug('Failed to fetch session toolkits:', error).pipe(
+              Effect.as(
+                [] as ReadonlyArray<
+                  import('@composio/client/resources/tool-router').SessionToolkitsResponse.Item
+                >
+              )
+            )
           )
         );
         if (sessionItems.length === 0) sessionItems = undefined;
