@@ -127,8 +127,8 @@ e2e(import.meta.url, {
         expect(noResultsResult.stderr).toBe('');
       });
 
-      it('stdout is empty (no results)', () => {
-        expect(sanitizeOutput(noResultsResult.stdout)).toBe('');
+      it('stdout is an empty JSON array (no results)', () => {
+        expect(sanitizeOutput(noResultsResult.stdout)).toBe('[]');
       });
     });
   },
