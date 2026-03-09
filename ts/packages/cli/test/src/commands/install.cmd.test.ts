@@ -210,4 +210,27 @@ describe('CLI: composio install', () => {
       );
     });
   });
+
+  describe('[When] COMPOSIO_INSTALL_DIR is not set', () => {
+    layer(TestLive())(it => {
+      it.scoped('[Then] defaults to ~/.composio', () =>
+        Effect.gen(function* () {
+          const os = yield* NodeOs;
+          process.env.SHELL = '/bin/zsh';
+          delete process.env.COMPOSIO_INSTALL_DIR;
+
+          yield* cli(['install']);
+
+          const fs = yield* FileSystem.FileSystem;
+          const rcPath = path.join(os.homedir, '.zshrc');
+          const contents = yield* fs.readFileString(rcPath);
+
+          // Should use ~/.composio as the default install directory
+          expect(contents).toContain(
+            `export COMPOSIO_INSTALL_DIR=${path.join(os.homedir, '.composio')}`
+          );
+        })
+      );
+    });
+  });
 });
