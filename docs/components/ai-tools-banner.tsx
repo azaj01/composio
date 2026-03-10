@@ -38,7 +38,7 @@ function CopyableCommand({ text }: { text: string }) {
 
 export function AIToolsBanner() {
   return (
-    <div className="not-prose relative mt-4 mb-4 sm:mt-6 sm:mb-6 overflow-hidden rounded-xl border border-fd-border bg-fd-card">
+    <div className="not-prose relative mt-4 mb-4 sm:mt-6 sm:mb-6 overflow-hidden rounded-xl border border-fd-border bg-fd-card @container">
       {/* Shader gradient blobs — same as PromptBanner */}
       <div
         className="pointer-events-none absolute -left-16 -top-24 h-64 w-64 rounded-full"
@@ -64,7 +64,7 @@ export function AIToolsBanner() {
         </div>
 
         {/* Two-column: Skills + CLI */}
-        <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+        <div className="flex flex-col gap-3 @md:flex-row @md:gap-4">
           {/* Skills */}
           <div className="flex flex-1 flex-col gap-1">
             <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--composio-orange)]">Skills</span>
