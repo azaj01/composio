@@ -21,9 +21,9 @@ import {
   type CreateCustomToolParams,
   type CustomTool,
   type CustomToolExecuteFn,
-  type LocalToolsMap,
-  type LocalToolsMapEntry,
-  type LocalToolDefinition,
+  type CustomToolsMap,
+  type CustomToolsMapEntry,
+  type CustomToolDefinition,
   type InputParamsSchema,
 } from '../types/customTool.types';
 
@@ -128,7 +128,7 @@ export function createCustomTool<T extends z.ZodType>(
 }
 
 /**
- * Build a LocalToolsMap from an array of custom tools.
+ * Build a CustomToolsMap from an array of custom tools.
  * Used internally by ToolRouter.create() to construct the per-session routing map.
  *
  * @internal
@@ -136,9 +136,9 @@ export function createCustomTool<T extends z.ZodType>(
  * @returns Maps for O(1) lookup by both prefixed and original slug
  * @throws If duplicate slugs are detected
  */
-export function buildLocalToolsMap(tools: CustomTool[]): LocalToolsMap {
-  const byPrefixed = new Map<string, LocalToolsMapEntry>();
-  const byOriginal = new Map<string, LocalToolsMapEntry>();
+export function buildCustomToolsMap(tools: CustomTool[]): CustomToolsMap {
+  const byPrefixed = new Map<string, CustomToolsMapEntry>();
+  const byOriginal = new Map<string, CustomToolsMapEntry>();
 
   for (const handle of tools) {
     const upperSlug = handle.slug.toUpperCase();
@@ -148,7 +148,7 @@ export function buildLocalToolsMap(tools: CustomTool[]): LocalToolsMap {
       throw new Error(`createCustomTool: duplicate slug "${handle.slug}"`);
     }
 
-    const entry: LocalToolsMapEntry = { handle, prefixedSlug };
+    const entry: CustomToolsMapEntry = { handle, prefixedSlug };
     byPrefixed.set(prefixedSlug, entry);
     byOriginal.set(upperSlug, entry);
   }
@@ -161,11 +161,11 @@ export function buildLocalToolsMap(tools: CustomTool[]): LocalToolsMap {
  *
  * @internal
  * @param tools - The custom tools to serialize
- * @returns Array of LocalToolDefinition for the API payload
+ * @returns Array of CustomToolDefinition for the API payload
  */
-export function serializeLocalTools(
+export function serializeCustomTools(
   tools: CustomTool[]
-): LocalToolDefinition[] {
+): CustomToolDefinition[] {
   return tools.map(handle => ({
     slug: handle.slug,
     name: handle.name,

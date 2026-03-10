@@ -38,8 +38,8 @@ import {
   transformToolRouterToolkitsParams,
 } from '../lib/toolRouterParams';
 import { ToolRouterSession } from './ToolRouterSession';
-import { buildLocalToolsMap, serializeLocalTools } from './CustomTool';
-import type { LocalToolsMap, LocalToolDefinition } from '../types/customTool.types';
+import { buildCustomToolsMap, serializeCustomTools } from './CustomTool';
+import type { CustomToolsMap, CustomToolDefinition } from '../types/customTool.types';
 
 export class ToolRouter<
   TToolCollection,
@@ -96,11 +96,11 @@ export class ToolRouter<
   ): Promise<Session<TToolCollection, TTool, TProvider>> {
     const routerConfig = ToolRouterCreateSessionConfigSchema.parse(config ?? {});
 
-    // Build local tools map and backend payload from custom tool handles
-    let localToolsMap: LocalToolsMap | undefined;
+    // Build custom tools map and backend payload from custom tool handles
+    let customToolsMap: CustomToolsMap | undefined;
     const customTools = routerConfig.customTools;
 
-    const payload: SessionCreateParams & { local_tools?: LocalToolDefinition[] } = {
+    const payload: SessionCreateParams & { custom_tools?: CustomToolDefinition[] } = {
       user_id: userId,
       auth_configs: routerConfig.authConfigs,
       connected_accounts: routerConfig.connectedAccounts,
@@ -121,10 +121,10 @@ export class ToolRouter<
     };
 
     if (customTools?.length) {
-      localToolsMap = buildLocalToolsMap(customTools);
-      // Send definitions to backend for BM25 search indexing
-      // Type assertion: @composio/client doesn't have local_tools yet (Hermes PR #8453)
-      payload.local_tools = serializeLocalTools(customTools);
+      customToolsMap = buildCustomToolsMap(customTools);
+      // Send definitions to backend for search indexing
+      // Type assertion: @composio/client doesn't have custom_tools yet
+      payload.custom_tools = serializeCustomTools(customTools);
     }
 
     const session = await this.client.toolRouter.session.create(
@@ -140,7 +140,7 @@ export class ToolRouter<
       session.session_id,
       this.createMCPServerConfig(session.mcp),
       { assistivePrompt },
-      localToolsMap,
+      customToolsMap,
       userId
     );
   }

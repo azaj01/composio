@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod/v3';
-import { createCustomTool, buildLocalToolsMap, serializeLocalTools, LOCAL_TOOL_PREFIX } from '../../src/models/CustomTool';
+import { createCustomTool, buildCustomToolsMap, serializeCustomTools, LOCAL_TOOL_PREFIX } from '../../src/models/CustomTool';
 import { SessionContextImpl } from '../../src/models/SessionContext';
 import type { CustomTool, SessionContext } from '../../src/types/customTool.types';
 
@@ -154,10 +154,10 @@ describe('createCustomTool', () => {
 });
 
 // ────────────────────────────────────────────────────────────────
-// buildLocalToolsMap()
+// buildCustomToolsMap()
 // ────────────────────────────────────────────────────────────────
 
-describe('buildLocalToolsMap', () => {
+describe('buildCustomToolsMap', () => {
   const makeTool = (slug: string): CustomTool => ({
     slug,
     name: `Tool ${slug}`,
@@ -169,7 +169,7 @@ describe('buildLocalToolsMap', () => {
 
   it('should create maps with both prefixed and original slug keys', () => {
     const tools = [makeTool('MY_TOOL'), makeTool('OTHER_TOOL')];
-    const map = buildLocalToolsMap(tools);
+    const map = buildCustomToolsMap(tools);
 
     expect(map.byPrefixed.size).toBe(2);
     expect(map.byOriginal.size).toBe(2);
@@ -185,7 +185,7 @@ describe('buildLocalToolsMap', () => {
 
   it('should handle case-insensitive slugs (uppercased internally)', () => {
     const tool = makeTool('my_tool');
-    const map = buildLocalToolsMap([tool]);
+    const map = buildCustomToolsMap([tool]);
 
     expect(map.byOriginal.has('MY_TOOL')).toBe(true);
     expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
@@ -193,16 +193,16 @@ describe('buildLocalToolsMap', () => {
 
   it('should throw on duplicate slugs', () => {
     const tools = [makeTool('DUPE'), makeTool('DUPE')];
-    expect(() => buildLocalToolsMap(tools)).toThrow('duplicate slug "DUPE"');
+    expect(() => buildCustomToolsMap(tools)).toThrow('duplicate slug "DUPE"');
   });
 
 });
 
 // ────────────────────────────────────────────────────────────────
-// serializeLocalTools()
+// serializeCustomTools()
 // ────────────────────────────────────────────────────────────────
 
-describe('serializeLocalTools', () => {
+describe('serializeCustomTools', () => {
   it('should serialize tools into backend format', () => {
     const tool: CustomTool = {
       slug: 'GET_DATA',
@@ -214,7 +214,7 @@ describe('serializeLocalTools', () => {
       execute: vi.fn(),
     };
 
-    const result = serializeLocalTools([tool]);
+    const result = serializeCustomTools([tool]);
 
     expect(result).toEqual([
       {
@@ -237,7 +237,7 @@ describe('serializeLocalTools', () => {
       execute: vi.fn(),
     };
 
-    const result = serializeLocalTools([tool]);
+    const result = serializeCustomTools([tool]);
     expect(result[0]).not.toHaveProperty('toolkit');
   });
 });

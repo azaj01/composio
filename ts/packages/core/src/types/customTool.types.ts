@@ -147,8 +147,8 @@ export interface CustomTool {
   readonly execute: CustomToolExecuteFn<z.ZodType>;
 }
 
-/** Serialized tool definition sent to backend for BM25 search indexing. */
-export interface LocalToolDefinition {
+/** Serialized tool definition sent to backend for search indexing. */
+export interface CustomToolDefinition {
   slug: string;
   name: string;
   description: string;
@@ -156,16 +156,16 @@ export interface LocalToolDefinition {
   toolkit?: string;
 }
 
-/** @internal Entry in the per-session local tools routing map. */
-export type LocalToolsMapEntry = {
+/** @internal Entry in the per-session custom tools routing map. */
+export type CustomToolsMapEntry = {
   handle: CustomTool;
   prefixedSlug: string;
 };
 
-/** @internal Lookup maps used by ToolRouterSession for routing. */
-export type LocalToolsMap = {
+/** @internal Lookup maps used by ToolRouterSession for routing custom tools. */
+export type CustomToolsMap = {
   /** Lookup by prefixed slug (e.g. LOCAL_GET_USER_CONTEXT) — used for agent execution path */
-  byPrefixed: Map<string, LocalToolsMapEntry>;
+  byPrefixed: Map<string, CustomToolsMapEntry>;
   /** Lookup by original slug (e.g. GET_USER_CONTEXT) — used for programmatic session.execute() */
-  byOriginal: Map<string, LocalToolsMapEntry>;
+  byOriginal: Map<string, CustomToolsMapEntry>;
 };

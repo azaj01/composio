@@ -1,32 +1,32 @@
 /**
- * @fileoverview Standalone functions for local tool lookup and execution.
+ * @fileoverview Standalone functions for custom tool lookup and execution.
  * Extracted from ToolRouterSession for reuse in SessionContextImpl (sibling routing).
  */
-import type { LocalToolsMap, LocalToolsMapEntry, SessionContext } from '../types/customTool.types';
+import type { CustomToolsMap, CustomToolsMapEntry, SessionContext } from '../types/customTool.types';
 import type { ToolExecuteResponse } from '../types/tool.types';
 
 /**
- * Find a local tool entry by slug.
+ * Find a custom tool entry by slug.
  * Checks both the prefixed map (LOCAL_X — agent path) and original map (X — programmatic path).
  */
-export function findLocalTool(
-  map: LocalToolsMap | undefined,
+export function findCustomTool(
+  map: CustomToolsMap | undefined,
   slug: string
-): LocalToolsMapEntry | undefined {
+): CustomToolsMapEntry | undefined {
   if (!map) return undefined;
   const upper = slug.toUpperCase();
   return map.byPrefixed.get(upper) ?? map.byOriginal.get(upper);
 }
 
 /**
- * Execute a local tool in-process.
+ * Execute a custom tool in-process.
  * Validates input via the Zod schema, calls the user's execute function,
  * and wraps the result into the standard response format.
  *
- * Callers provide a pre-built SessionContext (which may include sibling local routing).
+ * Callers provide a pre-built SessionContext (which may include sibling routing).
  */
-export async function executeLocalTool(
-  entry: LocalToolsMapEntry,
+export async function executeCustomTool(
+  entry: CustomToolsMapEntry,
   arguments_: Record<string, unknown>,
   sessionContext: SessionContext
 ): Promise<ToolExecuteResponse> {

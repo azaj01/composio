@@ -25,10 +25,10 @@ import { ToolkitConnectionStateSchema } from '../types/toolRouter.types';
 import { ValidationError } from '../errors';
 import { Tools } from './Tools';
 import { ToolRouterSessionFilesMount } from './ToolRouterSessionFileMount';
-import type { LocalToolsMap, LocalToolsMapEntry, SessionContext } from '../types/customTool.types';
+import type { CustomToolsMap, CustomToolsMapEntry, SessionContext } from '../types/customTool.types';
 import type { Tool, ToolExecuteResponse } from '../types/tool.types';
 import { SessionContextImpl } from './SessionContext';
-import { findLocalTool, executeLocalTool } from './localToolExecution';
+import { findCustomTool, executeCustomTool } from './customToolExecution';
 
 const COMPOSIO_MULTI_EXECUTE_TOOL = 'COMPOSIO_MULTI_EXECUTE_TOOL';
 const COMPOSIO_EXECUTE_LOCAL_TOOL = 'COMPOSIO_EXECUTE_LOCAL_TOOL';
@@ -48,10 +48,10 @@ export class ToolRouterSession<
     sessionId: string,
     mcp: ToolRouterMCPServerConfig,
     experimentalOverrides?: Pick<SessionExperimental, 'assistivePrompt'>,
-    private readonly localToolsMap?: LocalToolsMap,
+    private readonly customToolsMap?: CustomToolsMap,
     private readonly userId?: string
   ) {
-    if (localToolsMap && !userId) {
+    if (customToolsMap && !userId) {
       throw new Error('userId is required when custom tools are bound to a session.');
     }
     this.sessionId = sessionId;
@@ -77,7 +77,7 @@ export class ToolRouterSession<
       modifiers?.modifySchema ? { modifySchema: modifiers.modifySchema } : undefined
     );
 
-    if (this.hasLocalTools()) {
+    if (this.hasCustomTools()) {
       // Create an execute function that splits local/remote tools in COMPOSIO_MULTI_EXECUTE_TOOL
       const routingExecuteFn = async (
         toolSlug: string,
@@ -89,15 +89,15 @@ export class ToolRouterSession<
         if (toolSlug === COMPOSIO_EXECUTE_LOCAL_TOOL) {
           const slug = String(input.tool_slug ?? '');
           const args = (input.arguments as Record<string, unknown> | undefined) ?? {};
-          const entry = findLocalTool(this.localToolsMap, slug);
+          const entry = findCustomTool(this.customToolsMap, slug);
           if (!entry) {
             return {
               data: {},
-              error: `Local tool "${slug}" not found`,
+              error: `Custom tool "${slug}" not found. If this is a remote tool, execute it via COMPOSIO_MULTI_EXECUTE_TOOL.`,
               successful: false,
             };
           }
-          return executeLocalTool(entry, args, this.buildSessionContext());
+          return executeCustomTool(entry, args, this.buildSessionContext());
         }
         // Non-multi-execute meta tools always go to backend
         return ToolsModel.executeMetaTool(
@@ -143,7 +143,7 @@ export class ToolRouterSession<
    * ```
    */
   async localTools(): Promise<ReturnType<TProvider['wrapTools']>> {
-    if (!this.hasLocalTools()) {
+    if (!this.hasCustomTools()) {
       throw new Error('No custom tools are bound to this session.');
     }
     if (!this.config?.provider) {
@@ -154,7 +154,7 @@ export class ToolRouterSession<
     }
 
     // Collect local tool slugs and descriptions for the schema
-    const toolEntries = Array.from(this.localToolsMap!.byOriginal.entries());
+    const toolEntries = Array.from(this.customToolsMap!.byOriginal.entries());
     const slugDescriptions = toolEntries
       .map(([slug, entry]) => `- ${entry.prefixedSlug}: ${entry.handle.description}`)
       .join('\n');
@@ -190,16 +190,16 @@ export class ToolRouterSession<
       const slug = String(input.tool_slug ?? '');
       const args = (input.arguments as Record<string, unknown> | undefined) ?? {};
 
-      const entry = findLocalTool(this.localToolsMap, slug);
+      const entry = findCustomTool(this.customToolsMap, slug);
       if (!entry) {
         return {
           data: {},
-          error: `Local tool "${slug}" not found. Available: ${toolEntries.map(([, e]) => e.prefixedSlug).join(', ')}`,
+          error: `Custom tool "${slug}" not found. Available: ${toolEntries.map(([, e]) => e.prefixedSlug).join(', ')}. If this is a remote tool, execute it via COMPOSIO_MULTI_EXECUTE_TOOL.`,
           successful: false,
         };
       }
 
-      return executeLocalTool(entry, args, this.buildSessionContext());
+      return executeCustomTool(entry, args, this.buildSessionContext());
     };
 
     return this.config.provider.wrapTools([tool], executeFn) as ReturnType<
@@ -312,9 +312,9 @@ export class ToolRouterSession<
     arguments_?: Record<string, unknown>
   ): Promise<ToolRouterSessionExecuteResponse> {
     // Check if this is a local tool (by original or prefixed slug)
-    const entry = findLocalTool(this.localToolsMap, toolSlug);
+    const entry = findCustomTool(this.customToolsMap, toolSlug);
     if (entry) {
-      const result = await executeLocalTool(entry, arguments_ ?? {}, this.buildSessionContext());
+      const result = await executeCustomTool(entry, arguments_ ?? {}, this.buildSessionContext());
       return {
         data: result.data,
         error: result.error,
@@ -333,9 +333,9 @@ export class ToolRouterSession<
 
   // ── Private helpers ──────────────────────────────────────────
 
-  /** Check if this session has any local tools bound. */
-  private hasLocalTools(): boolean {
-    return (this.localToolsMap?.byPrefixed.size ?? 0) > 0;
+  /** Check if this session has any custom tools bound. */
+  private hasCustomTools(): boolean {
+    return (this.customToolsMap?.byPrefixed.size ?? 0) > 0;
   }
 
   /**
@@ -349,9 +349,9 @@ export class ToolRouterSession<
       this.userId!,
       this.sessionId,
       (slug, args) => {
-        const entry = findLocalTool(this.localToolsMap, slug);
+        const entry = findCustomTool(this.customToolsMap, slug);
         if (!entry) return undefined;
-        return executeLocalTool(entry, args, this.buildSessionContext());
+        return executeCustomTool(entry, args, this.buildSessionContext());
       }
     );
   }
@@ -391,10 +391,10 @@ export class ToolRouterSession<
     const parsed = toolItems.map(item => this.parseToolItem(item));
 
     // Partition into local (with resolved entry) and remote
-    const localItems: Array<{ index: number; entry: LocalToolsMapEntry }> = [];
+    const localItems: Array<{ index: number; entry: CustomToolsMapEntry }> = [];
     const remoteIndices: number[] = [];
     for (let i = 0; i < parsed.length; i++) {
-      const entry = findLocalTool(this.localToolsMap, parsed[i].tool_slug);
+      const entry = findCustomTool(this.customToolsMap, parsed[i].tool_slug);
       if (entry) {
         localItems.push({ index: i, entry });
       } else {
@@ -413,7 +413,7 @@ export class ToolRouterSession<
 
     // Execute local tools in parallel
     const localPromises = localItems.map(async ({ index, entry }) => {
-      const result = await executeLocalTool(entry, parsed[index].arguments, this.buildSessionContext());
+      const result = await executeCustomTool(entry, parsed[index].arguments, this.buildSessionContext());
       return { index, result };
     });
 

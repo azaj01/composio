@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod/v3';
 import { ToolRouter } from '../../src/models/ToolRouter';
 import { ToolRouterSession } from '../../src/models/ToolRouterSession';
-import { createCustomTool, buildLocalToolsMap } from '../../src/models/CustomTool';
+import { createCustomTool, buildCustomToolsMap } from '../../src/models/CustomTool';
 import { MockProvider } from '../utils/mocks/provider.mock';
 import ComposioClient from '@composio/client';
 import { Tools } from '../../src/models/Tools';
@@ -99,7 +99,7 @@ const createSessionWithProvider = (
     'sess_123',
     { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
     undefined,
-    buildLocalToolsMap(customTools),
+    buildCustomToolsMap(customTools),
     'user_1'
   );
 };
@@ -129,14 +129,14 @@ describe('ToolRouter.create() with customTools', () => {
     });
   });
 
-  it('should send local_tools in the create payload', async () => {
+  it('should send custom_tools in the create payload', async () => {
     await router.create('user_1', {
       toolkits: ['gmail'],
       customTools: [customToolHandle],
     });
 
     const payload = mockClient.toolRouter.session.create.mock.calls[0][0];
-    expect(payload.local_tools).toEqual([
+    expect(payload.custom_tools).toEqual([
       {
         slug: 'GET_USER_CONTEXT',
         name: 'Get user context',
@@ -146,22 +146,22 @@ describe('ToolRouter.create() with customTools', () => {
     ]);
   });
 
-  it('should include toolkit in local_tools when toolkit is present', async () => {
+  it('should include toolkit in custom_tools when toolkit is present', async () => {
     await router.create('user_1', {
       customTools: [sessionToolHandle],
     });
 
     const payload = mockClient.toolRouter.session.create.mock.calls[0][0];
-    expect(payload.local_tools[0].toolkit).toBe('meta_ads');
+    expect(payload.custom_tools[0].toolkit).toBe('meta_ads');
   });
 
-  it('should not send local_tools when customTools is omitted or empty', async () => {
+  it('should not send custom_tools when customTools is omitted or empty', async () => {
     await router.create('user_1', { toolkits: ['gmail'] });
-    expect(mockClient.toolRouter.session.create.mock.calls[0][0].local_tools).toBeUndefined();
+    expect(mockClient.toolRouter.session.create.mock.calls[0][0].custom_tools).toBeUndefined();
 
     vi.clearAllMocks();
     await router.create('user_1', { customTools: [] });
-    expect(mockClient.toolRouter.session.create.mock.calls[0][0].local_tools).toBeUndefined();
+    expect(mockClient.toolRouter.session.create.mock.calls[0][0].custom_tools).toBeUndefined();
   });
 
   it('should return a session with the correct sessionId', async () => {
@@ -184,7 +184,7 @@ describe('ToolRouterSession execution routing', () => {
     client: ReturnType<typeof createMockClient>,
     customTools: CustomTool[] = []
   ) => {
-    const localToolsMap = customTools.length ? buildLocalToolsMap(customTools) : undefined;
+    const customToolsMap = customTools.length ? buildCustomToolsMap(customTools) : undefined;
 
     return new ToolRouterSession(
       client as unknown as ComposioClient,
@@ -192,7 +192,7 @@ describe('ToolRouterSession execution routing', () => {
       'sess_123',
       { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
       undefined,
-      localToolsMap,
+      customToolsMap,
       'user_1'
     );
   };
@@ -506,7 +506,7 @@ describe('ToolRouterSession execution routing', () => {
         { apiKey: 'key', provider: new MockProvider() },
         'sess_123',
         { type: 'http' as const, url: 'https://mcp.example.com/sess_123' }
-        // No localToolsMap, no userId
+        // No customToolsMap, no userId
       );
 
       const result = await session.tools();
@@ -884,7 +884,7 @@ describe('ToolRouterSession execution routing', () => {
 
   describe('provider guard — session.tools() throws without provider', () => {
     it('should throw when provider is not configured but local tools exist', async () => {
-      const localToolsMap = buildLocalToolsMap([customToolHandle]);
+      const customToolsMap = buildCustomToolsMap([customToolHandle]);
 
       const session = new ToolRouterSession(
         mockClient as unknown as ComposioClient,
@@ -892,7 +892,7 @@ describe('ToolRouterSession execution routing', () => {
         'sess_123',
         { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
         undefined,
-        localToolsMap,
+        customToolsMap,
         'user_1'
       );
 
@@ -953,7 +953,7 @@ describe('ToolRouterSession execution routing', () => {
       });
 
       expect(result.successful).toBe(false);
-      expect(result.error).toContain('Local tool "NON_EXISTENT_TOOL" not found');
+      expect(result.error).toContain('Custom tool "NON_EXISTENT_TOOL" not found');
       expect(result.data).toEqual({});
     });
 
@@ -963,7 +963,7 @@ describe('ToolRouterSession execution routing', () => {
         { apiKey: 'key', provider: new MockProvider() },
         'sess_123',
         { type: 'http' as const, url: 'https://mcp.example.com/sess_123' }
-        // No localToolsMap, no userId
+        // No customToolsMap, no userId
       );
 
       await expect(session.localTools()).rejects.toThrow(
@@ -1010,7 +1010,7 @@ describe('ToolRouterSession execution routing', () => {
       });
 
       expect(result.successful).toBe(false);
-      expect(result.error).toContain('Local tool "DOES_NOT_EXIST" not found');
+      expect(result.error).toContain('Custom tool "DOES_NOT_EXIST" not found');
       expect(result.data).toEqual({});
     });
   });
