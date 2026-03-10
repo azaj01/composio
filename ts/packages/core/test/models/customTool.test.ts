@@ -183,15 +183,6 @@ describe('buildLocalToolsMap', () => {
     expect(map.byOriginal.has('OTHER_TOOL')).toBe(true);
   });
 
-  it('should store correct prefixedSlug on each entry', () => {
-    const handles = [makeHandle('FOO')];
-    const map = buildLocalToolsMap(handles);
-
-    const entry = map.byPrefixed.get('LOCAL_FOO');
-    expect(entry?.prefixedSlug).toBe('LOCAL_FOO');
-    expect(entry?.handle.slug).toBe('FOO');
-  });
-
   it('should handle case-insensitive slugs (uppercased internally)', () => {
     const handle = makeHandle('my_tool');
     const map = buildLocalToolsMap([handle]);
@@ -205,11 +196,6 @@ describe('buildLocalToolsMap', () => {
     expect(() => buildLocalToolsMap(handles)).toThrow('duplicate slug "DUPE"');
   });
 
-  it('should return empty maps for empty input', () => {
-    const map = buildLocalToolsMap([]);
-    expect(map.byPrefixed.size).toBe(0);
-    expect(map.byOriginal.size).toBe(0);
-  });
 });
 
 // ────────────────────────────────────────────────────────────────

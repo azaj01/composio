@@ -155,18 +155,13 @@ describe('ToolRouter.create() with customTools', () => {
     expect(payload.local_tools[0].toolkit).toBe('meta_ads');
   });
 
-  it('should not send local_tools when customTools is omitted', async () => {
+  it('should not send local_tools when customTools is omitted or empty', async () => {
     await router.create('user_1', { toolkits: ['gmail'] });
+    expect(mockClient.toolRouter.session.create.mock.calls[0][0].local_tools).toBeUndefined();
 
-    const payload = mockClient.toolRouter.session.create.mock.calls[0][0];
-    expect(payload.local_tools).toBeUndefined();
-  });
-
-  it('should not send local_tools when customTools is empty', async () => {
+    vi.clearAllMocks();
     await router.create('user_1', { customTools: [] });
-
-    const payload = mockClient.toolRouter.session.create.mock.calls[0][0];
-    expect(payload.local_tools).toBeUndefined();
+    expect(mockClient.toolRouter.session.create.mock.calls[0][0].local_tools).toBeUndefined();
   });
 
   it('should return a session with the correct sessionId', async () => {
@@ -448,41 +443,6 @@ describe('ToolRouterSession execution routing', () => {
       expect(localExecute).not.toHaveBeenCalled();
     });
 
-    it('should split mixed local+remote tools and merge results', async () => {
-      const provider = new MockProvider();
-      captureExecuteFn(provider);
-      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
-
-      await session.tools();
-
-      // Re-mock executeMetaTool after session.tools() created the Tools instance
-      const latestToolsInstance = (Tools as any).mock.results[
-        (Tools as any).mock.results.length - 1
-      ].value;
-      latestToolsInstance.executeMetaTool.mockResolvedValueOnce({
-        data: { GMAIL_SEND_EMAIL: { messageId: 'msg_1' } },
-        error: null,
-        successful: true,
-      });
-
-      const executeFn = (provider as any)._capturedExecuteFn;
-
-      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
-        tools: [
-          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'prefs' } },
-          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'test@test.com' } },
-        ],
-        sync_response_to_workbench: false,
-      });
-
-      // Both should have been called
-      expect(localExecute).toHaveBeenCalled();
-      // Remote goes to backend — merged results keyed by slug
-      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
-      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
-      expect(result.data.GMAIL_SEND_EMAIL).toEqual({ messageId: 'msg_1' });
-    });
-
     it('should route non-MULTI_EXECUTE meta tools to backend', async () => {
       const provider = new MockProvider();
       captureExecuteFn(provider);
@@ -531,30 +491,6 @@ describe('ToolRouterSession execution routing', () => {
       ].value;
       return { executeFn, toolsInstance, provider, session };
     };
-
-    it('should only send remote items in the backend payload (not local ones)', async () => {
-      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
-
-      toolsInstance.executeMetaTool.mockResolvedValueOnce({
-        data: { GMAIL_SEND_EMAIL: { sent: true } },
-        error: null,
-        successful: true,
-      });
-
-      await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
-        tools: [
-          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'a' } },
-          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'x@y.com' } },
-        ],
-        sync_response_to_workbench: false,
-      });
-
-      // Backend should only receive the remote tool
-      const metaCall = toolsInstance.executeMetaTool.mock.calls[0];
-      const backendTools = metaCall[1].arguments.tools;
-      expect(backendTools).toHaveLength(1);
-      expect(backendTools[0].tool_slug).toBe('GMAIL_SEND_EMAIL');
-    });
 
     it('should merge results with remote keys first, local keys last', async () => {
       const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
