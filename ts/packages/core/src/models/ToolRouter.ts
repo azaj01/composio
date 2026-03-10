@@ -38,6 +38,8 @@ import {
   transformToolRouterToolkitsParams,
 } from '../lib/toolRouterParams';
 import { ToolRouterSession } from './ToolRouterSession';
+import { buildLocalToolsMap, serializeLocalTools } from './CustomTool';
+import type { LocalToolsMap } from '../types/customTool.types';
 
 export class ToolRouter<
   TToolCollection,
@@ -77,29 +79,15 @@ export class ToolRouter<
    * @example
    * ```typescript
    * import { Composio } from '@composio/core';
+   * import { CustomTool } from '@composio/core/experimental';
    *
    * const composio = new Composio();
-   * const userId = 'user_123';
    *
-   * const session = await composio.experimental.create(userId, {
+   * const session = await composio.create('user_123', {
    *   toolkits: ['gmail'],
    *   manageConnections: true,
-   *   tools: {
-   *     gmail: {
-   *       disabled: ['gmail_send_email']
-   *     }
-   *   },
-   *   tags: ['readOnlyHint']
+   *   customTools: [myCustomTool],
    * });
-   *
-   * console.log(session.sessionId);
-   * console.log(session.mcp.url);
-   *
-   * // Get tools formatted for your framework (requires provider)
-   * const tools = await session.tools();
-   *
-   * // Check toolkit connection states
-   * const toolkits = await session.toolkits();
    * ```
    */
   async create(
@@ -108,7 +96,11 @@ export class ToolRouter<
   ): Promise<Session<TToolCollection, TTool, TProvider>> {
     const routerConfig = ToolRouterCreateSessionConfigSchema.parse(config ?? {});
 
-    const payload: SessionCreateParams = {
+    // Build local tools map and backend payload from custom tool handles
+    let localToolsMap: LocalToolsMap | undefined;
+    const customTools = routerConfig.customTools;
+
+    const payload: SessionCreateParams & { local_tools?: unknown } = {
       user_id: userId,
       auth_configs: routerConfig.authConfigs,
       connected_accounts: routerConfig.connectedAccounts,
@@ -128,7 +120,16 @@ export class ToolRouter<
         : undefined,
     };
 
-    const session = await this.client.toolRouter.session.create(payload);
+    if (customTools?.length) {
+      localToolsMap = buildLocalToolsMap(customTools);
+      // Send definitions to backend for BM25 search indexing
+      // Type assertion: @composio/client doesn't have local_tools yet (Hermes PR #8453)
+      payload.local_tools = serializeLocalTools(customTools);
+    }
+
+    const session = await this.client.toolRouter.session.create(
+      payload as SessionCreateParams
+    );
 
     const assistivePrompt =
       session.experimental?.assistive_prompt;
@@ -138,7 +139,9 @@ export class ToolRouter<
       this.config,
       session.session_id,
       this.createMCPServerConfig(session.mcp),
-      { assistivePrompt }
+      { assistivePrompt },
+      localToolsMap,
+      userId
     );
   }
 

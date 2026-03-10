@@ -1,7 +1,11 @@
 import { z } from 'zod/v3';
-import { Tool, ToolProxyParams } from './tool.types';
+import { Tool, ToolProxyParams, ToolExecuteResponse as SdkToolExecuteResponse } from './tool.types';
 import { ToolExecuteResponse } from '@composio/client/resources/tools';
 import { ConnectionData } from './connectedAccountAuthStates.types';
+
+// ────────────────────────────────────────────────────────────────
+// Legacy custom tool types (used by composio.tools.createCustomTool)
+// ────────────────────────────────────────────────────────────────
 
 type BaseCustomToolOptions<T extends z.ZodType> = {
   name: string;
@@ -53,3 +57,96 @@ export interface ExecuteMetadata {
   userId: string;
   connectedAccountId?: string;
 }
+
+// ────────────────────────────────────────────────────────────────
+// New custom tool types (for tool router integration via CustomTool())
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Session context injected into custom tool execute functions at runtime.
+ * Provides identity context and methods to call other tools or proxy API requests.
+ */
+export interface SessionContext {
+  /** The user ID for this session */
+  readonly userId: string;
+  /** The tool router session ID */
+  readonly sessionId: string;
+  /** Execute any Composio native tool from within a custom tool */
+  execute(
+    toolSlug: string,
+    arguments_: Record<string, unknown>
+  ): Promise<SdkToolExecuteResponse>;
+  /** Proxy API calls through Composio's auth layer (resolved from session) */
+  proxyExecute(params: ToolProxyParams): Promise<SdkToolExecuteResponse>;
+}
+
+/** Response shape returned by custom tool execute functions. */
+export type CustomToolExecuteResponse = {
+  data: Record<string, unknown>;
+  error: string | null;
+  successful: boolean;
+};
+
+/**
+ * Execute function for custom tools.
+ * Supports two call patterns:
+ * - `(input) => result` — for tools that don't need session context
+ * - `(input, session) => result` — for tools that need to call other tools or proxy APIs
+ */
+export type CustomToolExecuteFn<T extends z.ZodType> = (
+  input: z.infer<T>,
+  session: SessionContext
+) => Promise<CustomToolExecuteResponse>;
+
+/** Options for creating a custom local tool via `CustomTool()`. */
+export type NewCustomToolOptions<T extends z.ZodType> = {
+  /** Unique slug identifier (e.g. 'GET_USER_CONTEXT') */
+  slug: string;
+  /** Human-readable name */
+  name: string;
+  /** Description — required for search indexing */
+  description: string;
+  /** Zod schema for input parameters */
+  inputParams: T;
+  /** Optional toolkit slug for auth-based tools (e.g. 'meta_ads') */
+  toolkit?: string;
+  /** The function that executes the tool */
+  execute: CustomToolExecuteFn<T>;
+};
+
+/**
+ * Handle returned from `CustomTool()`.
+ * Pass to `composio.create(userId, { customTools: [...] })` to bind to a session.
+ */
+export interface CustomToolHandle {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+  readonly toolkit?: string;
+  readonly inputSchema: Record<string, unknown>;
+  /** Direct reference to the execute function — useful for testing */
+  readonly execute: CustomToolExecuteFn<z.ZodType>;
+}
+
+/** Serialized tool definition sent to backend for BM25 search indexing. */
+export interface LocalToolDefinition {
+  slug: string;
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+  toolkit?: string;
+}
+
+/** @internal Entry in the per-session local tools routing map. */
+export type LocalToolsMapEntry = {
+  handle: CustomToolHandle;
+  prefixedSlug: string;
+};
+
+/** @internal Lookup maps used by ToolRouterSession for routing. */
+export type LocalToolsMap = {
+  /** Lookup by prefixed slug (e.g. LOCAL_GET_USER_CONTEXT) — used for agent execution path */
+  byPrefixed: Map<string, LocalToolsMapEntry>;
+  /** Lookup by original slug (e.g. GET_USER_CONTEXT) — used for programmatic session.execute() */
+  byOriginal: Map<string, LocalToolsMapEntry>;
+};

@@ -3,6 +3,7 @@ import type { BaseComposioProvider } from '../provider/BaseProvider';
 import { SessionMetaToolOptions } from './modifiers.types';
 import { ConnectionRequest } from './connectionRequest.types';
 import type { ToolRouterSessionFilesMount } from '../models/ToolRouterSessionFileMount';
+import type { CustomToolHandle } from './customTool.types';
 
 export const MCPServerTypeSchema = z.enum(['http', 'sse']);
 export type MCPServerType = z.infer<typeof MCPServerTypeSchema>;
@@ -215,6 +216,12 @@ export const ToolRouterCreateSessionConfigSchema = z
       })
       .optional()
       .describe('Experimental features configuration - not stable, may be modified or removed'),
+    customTools: z
+      .array(z.custom<CustomToolHandle>())
+      .optional()
+      .describe(
+        'Custom local tools to include in this session. Created via CustomTool() from @composio/core/experimental.'
+      ),
   })
   .partial()
   .describe('The config for the tool router session');

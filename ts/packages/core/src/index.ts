@@ -11,6 +11,9 @@ export { MCP } from './models/MCP';
 export { RemoteFile } from './models/RemoteFile';
 export { createConnectionRequest } from './models/ConnectionRequest';
 export { ToolRouterSession } from './models/ToolRouterSession';
+/** @experimental Create custom local tools — also available from '@composio/core/experimental' */
+export { CustomTool } from './models/CustomTool';
+export { SessionContextImpl } from './models/SessionContext';
 export * from './types/provider.types';
 export * from './types/customTool.types';
 export * from './types/tool.types';
