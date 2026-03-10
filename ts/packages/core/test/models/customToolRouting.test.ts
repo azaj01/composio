@@ -304,6 +304,48 @@ describe('ToolRouterSession execution routing', () => {
       expect(result.data).toEqual({});
     });
 
+    it('should apply Zod defaults when input is missing optional fields', async () => {
+      const defaultExecute = vi.fn().mockImplementation(async (input: any) => ({
+        data: { category: input.category },
+        error: null,
+        successful: true,
+      }));
+
+      const toolWithDefaults = CustomTool({
+        slug: 'DEFAULTS_TOOL',
+        name: 'Defaults',
+        description: 'Tool with default values',
+        inputParams: z.object({ category: z.string().default('all') }),
+        execute: defaultExecute,
+      });
+
+      const session = createSession(mockClient, [toolWithDefaults]);
+      const result = await session.execute('DEFAULTS_TOOL', {});
+
+      // Zod default should be applied
+      expect(defaultExecute).toHaveBeenCalledWith(
+        { category: 'all' },
+        expect.anything()
+      );
+      expect(result.data).toEqual({ category: 'all' });
+    });
+
+    it('should return validation error for invalid input', async () => {
+      const strictTool = CustomTool({
+        slug: 'STRICT_TOOL',
+        name: 'Strict',
+        description: 'Tool with strict input',
+        inputParams: z.object({ count: z.number() }),
+        execute: vi.fn(),
+      });
+
+      const session = createSession(mockClient, [strictTool]);
+      const result = await session.execute('STRICT_TOOL', { count: 'not-a-number' });
+
+      expect(result.error).toContain('Input validation failed');
+      expect(result.data).toEqual({});
+    });
+
     it('should handle non-Error throws gracefully', async () => {
       const throwingTool = CustomTool({
         slug: 'STRING_THROW',

@@ -38,6 +38,7 @@ describe('CustomTool', () => {
       },
       required: ['category'],
     });
+    expect(handle.inputParams).toBe(baseOptions.inputParams);
   });
 
   it('should include toolkit when provided', () => {
@@ -163,6 +164,7 @@ describe('buildLocalToolsMap', () => {
     name: `Tool ${slug}`,
     description: `Description for ${slug}`,
     inputSchema: { type: 'object', properties: {} },
+    inputParams: z.object({}),
     execute: vi.fn(),
   });
 
@@ -223,6 +225,7 @@ describe('serializeLocalTools', () => {
       description: 'Gets some data',
       toolkit: 'my_toolkit',
       inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
+      inputParams: z.object({ id: z.string() }),
       execute: vi.fn(),
     };
 
@@ -245,6 +248,7 @@ describe('serializeLocalTools', () => {
       name: 'No Toolkit',
       description: 'No toolkit tool',
       inputSchema: { type: 'object', properties: {} },
+      inputParams: z.object({}),
       execute: vi.fn(),
     };
 

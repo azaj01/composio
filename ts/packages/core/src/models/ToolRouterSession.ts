@@ -80,13 +80,11 @@ export class ToolRouterSession<
       ): Promise<ToolExecuteResponse> => {
         // Intercept COMPOSIO_MULTI_EXECUTE_TOOL and check if the inner tool is local
         if (toolSlug === COMPOSIO_MULTI_EXECUTE_TOOL) {
-          const innerSlug = String((input as Record<string, unknown>).tool_slug ?? '');
+          const innerSlug = String(input.tool_slug ?? '');
           const entry = this.findLocalTool(innerSlug);
           if (entry) {
-            return this.executeLocalTool(
-              entry,
-              (input as Record<string, unknown>).arguments as Record<string, unknown> ?? {}
-            );
+            const innerArgs = (input.arguments as Record<string, unknown> | undefined) ?? {};
+            return this.executeLocalTool(entry, innerArgs);
           }
         }
         // Default: send to backend
@@ -258,13 +256,16 @@ export class ToolRouterSession<
   ): Promise<ToolExecuteResponse> {
     const { handle } = entry;
 
-    // Validate input against the Zod schema
-    // The handle was created from a Zod schema, but we stored the execute fn.
-    // We need to re-validate at execution time. The inputParams is on the original options,
-    // but the handle doesn't store the Zod schema — only the JSON Schema.
-    // The execute function itself should handle its input. We trust the LLM/caller here
-    // and let the execute function handle validation. If the user used Zod in their execute,
-    // it will validate there.
+    // Validate and transform input using the original Zod schema.
+    // This applies defaults, coercions, and transforms (e.g. z.string().default('all')).
+    const parsed = handle.inputParams.safeParse(arguments_);
+    if (!parsed.success) {
+      return {
+        data: {},
+        error: `Input validation failed: ${parsed.error.message}`,
+        successful: false,
+      };
+    }
 
     // Build session context
     const sessionContext = new SessionContextImpl(
@@ -274,7 +275,7 @@ export class ToolRouterSession<
     );
 
     try {
-      const result = await handle.execute(arguments_, sessionContext);
+      const result = await handle.execute(parsed.data, sessionContext);
       return {
         data: result.data,
         error: result.error,

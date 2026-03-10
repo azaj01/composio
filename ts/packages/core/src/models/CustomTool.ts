@@ -113,6 +113,7 @@ export function CustomTool<T extends z.ZodType>(
     description,
     toolkit,
     inputSchema,
+    inputParams,
     execute: execute as CustomToolExecuteFn<z.ZodType>,
   };
 }

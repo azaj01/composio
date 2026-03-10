@@ -124,6 +124,8 @@ export interface CustomToolHandle {
   readonly description: string;
   readonly toolkit?: string;
   readonly inputSchema: Record<string, unknown>;
+  /** @internal Original Zod schema — used for runtime input validation (defaults, coercions, transforms) */
+  readonly inputParams: z.ZodType;
   /** Direct reference to the execute function — useful for testing */
   readonly execute: CustomToolExecuteFn<z.ZodType>;
 }
