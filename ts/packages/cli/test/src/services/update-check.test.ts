@@ -247,7 +247,7 @@ describe('checkForUpdate', () => {
     expect(state.latestVersion).toBe('0.5.0');
   });
 
-  it('does not write state when no CLI tags are found', async () => {
+  it('still writes lastChecked when no CLI tags are found', async () => {
     const config = makeConfig({
       fetchFn: vi.fn().mockResolvedValue({
         ok: true,
@@ -258,10 +258,32 @@ describe('checkForUpdate', () => {
 
     await checkForUpdate();
 
-    expect(existsSync(config.stateFile)).toBe(false);
+    expect(existsSync(config.stateFile)).toBe(true);
+    const state: UpdateCheckState = JSON.parse(readFileSync(config.stateFile, 'utf-8'));
+    expect(state.lastChecked).toBeDefined();
+    // Falls back to currentVersion since no previous state and no tags found
+    expect(state.latestVersion).toBe(config.currentVersion);
   });
 
-  it('silently ignores HTTP errors', async () => {
+  it('preserves previous latestVersion when no CLI tags are found', async () => {
+    const config = makeConfig({
+      fetchFn: vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([{ ref: 'refs/tags/@composio/core@1.0.0' }]),
+      }) as unknown as typeof fetch,
+    });
+    const stale = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    writeState(config, { lastChecked: stale, latestVersion: '0.3.0' });
+    const { checkForUpdate } = createUpdateChecker(config);
+
+    await checkForUpdate();
+
+    const state: UpdateCheckState = JSON.parse(readFileSync(config.stateFile, 'utf-8'));
+    expect(state.latestVersion).toBe('0.3.0');
+    expect(new Date(state.lastChecked).getTime()).toBeGreaterThan(new Date(stale).getTime());
+  });
+
+  it('writes lastChecked on HTTP errors to prevent retry loops', async () => {
     const config = makeConfig({
       fetchFn: vi.fn().mockResolvedValue({
         ok: false,
@@ -273,10 +295,13 @@ describe('checkForUpdate', () => {
     // Should not throw
     await checkForUpdate();
 
-    expect(existsSync(config.stateFile)).toBe(false);
+    expect(existsSync(config.stateFile)).toBe(true);
+    const state: UpdateCheckState = JSON.parse(readFileSync(config.stateFile, 'utf-8'));
+    expect(state.lastChecked).toBeDefined();
+    expect(state.latestVersion).toBe(config.currentVersion);
   });
 
-  it('silently ignores network errors', async () => {
+  it('writes lastChecked on network errors to prevent retry loops', async () => {
     const config = makeConfig({
       fetchFn: vi.fn().mockRejectedValue(new Error('DNS failed')) as unknown as typeof fetch,
     });
@@ -284,7 +309,10 @@ describe('checkForUpdate', () => {
 
     await checkForUpdate();
 
-    expect(existsSync(config.stateFile)).toBe(false);
+    expect(existsSync(config.stateFile)).toBe(true);
+    const state: UpdateCheckState = JSON.parse(readFileSync(config.stateFile, 'utf-8'));
+    expect(state.lastChecked).toBeDefined();
+    expect(state.latestVersion).toBe(config.currentVersion);
   });
 
   it('sends Authorization header when accessToken is set', async () => {

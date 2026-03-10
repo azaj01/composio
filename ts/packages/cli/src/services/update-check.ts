@@ -114,11 +114,13 @@ export function createUpdateChecker(config: UpdateCheckConfig) {
   function checkForUpdate(): Promise<void> | undefined {
     try {
       // Throttle: skip if checked recently.
+      let previousLatestVersion: string | undefined;
       try {
         const state: UpdateCheckState = JSON.parse(readFileSync(config.stateFile, 'utf-8'));
         if (Date.now() - new Date(state.lastChecked).getTime() < config.checkIntervalMs) {
           return undefined;
         }
+        previousLatestVersion = state.latestVersion;
       } catch {
         // ENOENT or corrupt file — re-check.
       }
@@ -132,33 +134,35 @@ export function createUpdateChecker(config: UpdateCheckConfig) {
         headers.Authorization = `Bearer ${config.accessToken}`;
       }
 
-      return (
-        config
-          .fetchFn(config.refsUrl, { headers, signal: AbortSignal.timeout(10_000) })
-          .then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          })
-          .then((refs: unknown) => {
-            const latestVersion = parseLatestVersionFromRefs(refs);
-            if (!latestVersion) return;
+      // Always persist lastChecked to prevent retry loops when the fetch
+      // fails or returns no matching tags.
+      const writeState = (latestVersion?: string): Promise<void> => {
+        const stateDir = dirname(config.stateFile);
+        mkdirSync(stateDir, { recursive: true });
 
-            const stateDir = dirname(config.stateFile);
-            mkdirSync(stateDir, { recursive: true });
+        const state: UpdateCheckState = {
+          lastChecked: new Date().toISOString(),
+          latestVersion: latestVersion ?? previousLatestVersion ?? config.currentVersion,
+        };
 
-            const state: UpdateCheckState = {
-              lastChecked: new Date().toISOString(),
-              latestVersion,
-            };
+        return writeFile(config.stateFile, JSON.stringify(state, null, 2)).then(() => {});
+      };
 
-            return writeFile(config.stateFile, JSON.stringify(state, null, 2));
-          })
-          // Normalize return type to Promise<void> (writeFile returns void, early-return yields undefined).
-          .then(() => {})
-          .catch(() => {
-            // Silently ignore — never block the CLI.
-          })
-      );
+      return config
+        .fetchFn(config.refsUrl, { headers, signal: AbortSignal.timeout(10_000) })
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((refs: unknown) => {
+          const latestVersion = parseLatestVersionFromRefs(refs);
+          return writeState(latestVersion);
+        })
+        .catch(() => {
+          // Silently ignore fetch/parse errors — never block the CLI.
+          // Still update the timestamp to prevent unbounded retry loops.
+          return writeState().catch(() => {});
+        });
     } catch {
       // Silently ignore.
       return undefined;
