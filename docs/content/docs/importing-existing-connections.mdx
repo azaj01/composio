@@ -40,7 +40,7 @@ The most common case. You have access tokens (and ideally refresh tokens) from y
 <Tab value="Python">
 ```python
 from composio import Composio
-from composio.core.models.connected_accounts import auth_scheme
+from composio.types import auth_scheme
 
 composio = Composio(api_key="your-api-key")
 
@@ -96,7 +96,7 @@ For services that use API key authentication (e.g., SendGrid, Tavily, PostHog):
 <Tab value="Python">
 ```python
 from composio import Composio
-from composio.core.models.connected_accounts import auth_scheme
+from composio.types import auth_scheme
 
 composio = Composio(api_key="your-api-key")
 
@@ -140,7 +140,7 @@ console.log('Connected:', connection.id);
 <Tab value="Python">
 ```python
 from composio import Composio
-from composio.core.models.connected_accounts import auth_scheme
+from composio.types import auth_scheme
 
 composio = Composio(api_key="your-api-key")
 
@@ -151,6 +151,9 @@ connection = composio.connected_accounts.initiate(
         "token": "existing-bearer-token",
     }),
 )
+
+# Bearer token connections are immediately active
+print(f"Connected: {connection.id}")
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -168,6 +171,9 @@ const connection = await composio.connectedAccounts.initiate(
     }),
   }
 );
+
+// Bearer token connections are immediately active
+console.log('Connected:', connection.id);
 ```
 </Tab>
 </Tabs>
@@ -178,7 +184,7 @@ const connection = await composio.connectedAccounts.initiate(
 <Tab value="Python">
 ```python
 from composio import Composio
-from composio.core.models.connected_accounts import auth_scheme
+from composio.types import auth_scheme
 
 composio = Composio(api_key="your-api-key")
 
@@ -190,6 +196,9 @@ connection = composio.connected_accounts.initiate(
         "password": "existing-password",
     }),
 )
+
+# Basic auth connections are immediately active
+print(f"Connected: {connection.id}")
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -208,6 +217,9 @@ const connection = await composio.connectedAccounts.initiate(
     }),
   }
 );
+
+// Basic auth connections are immediately active
+console.log('Connected:', connection.id);
 ```
 </Tab>
 </Tabs>
