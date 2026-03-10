@@ -13,6 +13,5 @@ export type {
   CustomToolHandle,
   NewCustomToolOptions,
   CustomToolExecuteFn,
-  CustomToolExecuteResponse,
   SessionContext,
 } from '../types/customTool.types';

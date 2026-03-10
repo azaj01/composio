@@ -73,21 +73,15 @@ export class ToolRouterSession<
     );
 
     if (this.hasLocalTools()) {
-      // Create an execute function that routes between local and remote execution
+      // Create an execute function that splits local/remote tools in COMPOSIO_MULTI_EXECUTE_TOOL
       const routingExecuteFn = async (
         toolSlug: string,
         input: Record<string, unknown>
       ): Promise<ToolExecuteResponse> => {
-        // Intercept COMPOSIO_MULTI_EXECUTE_TOOL and check if the inner tool is local
         if (toolSlug === COMPOSIO_MULTI_EXECUTE_TOOL) {
-          const innerSlug = String(input.tool_slug ?? '');
-          const entry = this.findLocalTool(innerSlug);
-          if (entry) {
-            const innerArgs = (input.arguments as Record<string, unknown> | undefined) ?? {};
-            return this.executeLocalTool(entry, innerArgs);
-          }
+          return this.routeMultiExecute(input, ToolsModel, modifiers);
         }
-        // Default: send to backend
+        // Non-multi-execute meta tools always go to backend
         return ToolsModel.executeMetaTool(
           toolSlug,
           { sessionId: this.sessionId, arguments: input },
@@ -246,9 +240,111 @@ export class ToolRouterSession<
     return this.localToolsMap.byPrefixed.get(upper) ?? this.localToolsMap.byOriginal.get(upper);
   }
 
+  /** Parse an individual tool item from COMPOSIO_MULTI_EXECUTE_TOOL's tools array */
+  private parseToolItem(item: unknown): { tool_slug: string; arguments: Record<string, unknown> } {
+    const obj = item as Record<string, unknown>;
+    return {
+      tool_slug: String(obj.tool_slug ?? ''),
+      arguments: (obj.arguments as Record<string, unknown> | undefined) ?? {},
+    };
+  }
+
+  /**
+   * Route a COMPOSIO_MULTI_EXECUTE_TOOL call.
+   * Splits the tools[] array into local and remote, executes each appropriately,
+   * and merges results preserving original order.
+   */
+  private async routeMultiExecute(
+    input: Record<string, unknown>,
+    ToolsModel: Tools<TToolCollection, TTool, TProvider>,
+    modifiers?: SessionMetaToolOptions
+  ): Promise<ToolExecuteResponse> {
+    const toolItems = input.tools as unknown[];
+    if (!Array.isArray(toolItems) || toolItems.length === 0) {
+      // Fallback: send to backend as-is
+      return ToolsModel.executeMetaTool(
+        COMPOSIO_MULTI_EXECUTE_TOOL,
+        { sessionId: this.sessionId, arguments: input },
+        modifiers
+      );
+    }
+
+    const parsed = toolItems.map(item => this.parseToolItem(item));
+
+    // Partition into local and remote
+    const localIndices: number[] = [];
+    const remoteIndices: number[] = [];
+    for (let i = 0; i < parsed.length; i++) {
+      const entry = this.findLocalTool(parsed[i].tool_slug);
+      if (entry) {
+        localIndices.push(i);
+      } else {
+        remoteIndices.push(i);
+      }
+    }
+
+    // All remote — just forward entire payload
+    if (localIndices.length === 0) {
+      return ToolsModel.executeMetaTool(
+        COMPOSIO_MULTI_EXECUTE_TOOL,
+        { sessionId: this.sessionId, arguments: input },
+        modifiers
+      );
+    }
+
+    // Execute local tools in parallel
+    const results: Array<{ index: number; result: ToolExecuteResponse }> = [];
+
+    const localPromises = localIndices.map(async i => {
+      const entry = this.findLocalTool(parsed[i].tool_slug)!;
+      const result = await this.executeLocalTool(entry, parsed[i].arguments);
+      results.push({ index: i, result });
+    });
+
+    // Execute remote tools via backend (if any)
+    let remotePromise: Promise<void> | undefined;
+    if (remoteIndices.length > 0) {
+      const remoteToolItems = remoteIndices.map(i => toolItems[i]);
+      const remoteInput = { ...input, tools: remoteToolItems };
+      remotePromise = ToolsModel.executeMetaTool(
+        COMPOSIO_MULTI_EXECUTE_TOOL,
+        { sessionId: this.sessionId, arguments: remoteInput },
+        modifiers
+      ).then(remoteResult => {
+        // The backend returns a single merged response for all remote tools.
+        // We assign it to the first remote index and mark it as the remote batch result.
+        for (const i of remoteIndices) {
+          results.push({ index: i, result: remoteResult });
+        }
+      });
+    }
+
+    await Promise.all([...localPromises, ...(remotePromise ? [remotePromise] : [])]);
+
+    // If only local tools, return the single/first result
+    if (remoteIndices.length === 0 && results.length === 1) {
+      return results[0].result;
+    }
+
+    // Merge: collect all data keyed by tool slug
+    const mergedData: Record<string, unknown> = {};
+    for (const { index, result } of results) {
+      mergedData[parsed[index].tool_slug] = result.data;
+    }
+    const anyError = results.find(r => r.result.error)?.result.error ?? null;
+    return {
+      data: mergedData,
+      error: anyError,
+      successful: !anyError,
+    };
+  }
+
   /**
    * Execute a local tool in-process.
-   * Builds a SessionContext, validates input, and calls the user's execute function.
+   * Builds a SessionContext, validates input, calls the user's execute function,
+   * and wraps the result into the standard response format.
+   *
+   * Users just return data or throw — we wrap it here.
    */
   private async executeLocalTool(
     entry: LocalToolsMapEntry,
@@ -275,11 +371,12 @@ export class ToolRouterSession<
     );
 
     try {
-      const result = await handle.execute(parsed.data, sessionContext);
+      // User's execute returns data directly — we wrap into { data, error, successful }
+      const data = await handle.execute(parsed.data, sessionContext);
       return {
-        data: result.data,
-        error: result.error,
-        successful: result.successful,
+        data: data ?? {},
+        error: null,
+        successful: true,
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

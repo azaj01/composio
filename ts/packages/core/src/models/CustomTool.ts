@@ -10,7 +10,7 @@
  *   name: 'Get user context',
  *   description: 'Retrieve what we know about a user',
  *   inputParams: z.object({ category: z.string() }),
- *   execute: async (input) => ({ data: { ... }, error: null, successful: true }),
+ *   execute: async (input) => ({ preferences: await db.find(input.category) }),
  * });
  * ```
  */
@@ -36,48 +36,63 @@ export const LOCAL_TOOL_PREFIX = 'LOCAL_';
  * and execute function. Pass it to `composio.create(userId, { customTools: [...] })`
  * to bind it to a session.
  *
+ * Just return the result data from `execute`, or throw an error.
+ * The SDK wraps it into the standard response format internally.
+ *
  * @param options - Tool definition including slug, schema, and execute function
  * @returns A CustomToolHandle to pass to session creation
  *
- * @example No-auth tool
+ * @example No-auth tool (no session needed)
  * ```typescript
  * const getUserContext = CustomTool({
  *   slug: 'GET_USER_CONTEXT',
  *   name: 'Get user context',
  *   description: 'Retrieve user preferences and history',
  *   inputParams: z.object({ category: z.string().default('all') }),
- *   execute: async (input) => ({
- *     data: await db.userContext.find(input.category),
- *     error: null,
- *     successful: true,
- *   }),
+ *   execute: async (input) => {
+ *     const prefs = await db.userContext.find(input.category);
+ *     return { preferences: prefs };
+ *   },
  * });
  * ```
  *
- * @example Auth tool with session context
+ * @example No-auth tool using session to call other tools
+ * ```typescript
+ * const enrichedSearch = CustomTool({
+ *   slug: 'ENRICHED_SEARCH',
+ *   name: 'Enriched search',
+ *   description: 'Search and enrich results with user context',
+ *   inputParams: z.object({ query: z.string() }),
+ *   execute: async (input, session) => {
+ *     const results = await session.execute('GOOGLE_SEARCH', { query: input.query });
+ *     return { enriched: results.data, userId: session.userId };
+ *   },
+ * });
+ * ```
+ *
+ * @example Auth tool with connectedToolkit (requires Composio connection)
  * ```typescript
  * const getAdAccounts = CustomTool({
  *   slug: 'GET_AD_ACCOUNTS',
  *   name: 'Get ad accounts',
  *   description: 'Get Meta ad account IDs for the authenticated user',
- *   toolkit: 'meta_ads',
+ *   connectedToolkit: 'meta_ads',
  *   inputParams: z.object({ fields: z.string().default('id,name') }),
- *   execute: async (input, session) => ({
- *     data: await session.proxyExecute({
+ *   execute: async (input, session) => {
+ *     const result = await session.proxyExecute({
  *       endpoint: '/v21.0/me/adaccounts',
  *       method: 'GET',
  *       parameters: [{ in: 'query', name: 'fields', value: input.fields }],
- *     }),
- *     error: null,
- *     successful: true,
- *   }),
+ *     });
+ *     return result.data;
+ *   },
  * });
  * ```
  */
 export function CustomTool<T extends z.ZodType>(
   options: NewCustomToolOptions<T>
 ): CustomToolHandle {
-  const { slug, name, description, inputParams, execute, toolkit } = options;
+  const { slug, name, description, inputParams, execute, connectedToolkit } = options;
 
   if (!slug) {
     throw new Error('CustomTool: slug is required');
@@ -111,7 +126,7 @@ export function CustomTool<T extends z.ZodType>(
     slug,
     name,
     description,
-    toolkit,
+    connectedToolkit,
     inputSchema,
     inputParams,
     execute: execute as CustomToolExecuteFn<z.ZodType>,
@@ -162,6 +177,6 @@ export function serializeLocalTools(
     name: handle.name,
     description: handle.description,
     input_schema: handle.inputSchema,
-    ...(handle.toolkit ? { toolkit: handle.toolkit } : {}),
+    ...(handle.connectedToolkit ? { toolkit: handle.connectedToolkit } : {}),
   }));
 }

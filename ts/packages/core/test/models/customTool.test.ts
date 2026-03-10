@@ -16,11 +16,7 @@ describe('CustomTool', () => {
     inputParams: z.object({
       category: z.string().describe('The category'),
     }),
-    execute: vi.fn().mockResolvedValue({
-      data: { result: 'ok' },
-      error: null,
-      successful: true,
-    }),
+    execute: vi.fn().mockResolvedValue({ result: 'ok' }),
   };
 
   it('should return a valid handle with correct fields', () => {
@@ -29,7 +25,7 @@ describe('CustomTool', () => {
     expect(handle.slug).toBe('GET_USER_CONTEXT');
     expect(handle.name).toBe('Get user context');
     expect(handle.description).toBe('Retrieve what we know about a user');
-    expect(handle.toolkit).toBeUndefined();
+    expect(handle.connectedToolkit).toBeUndefined();
     expect(handle.execute).toBe(baseOptions.execute);
     expect(handle.inputSchema).toMatchObject({
       type: 'object',
@@ -41,9 +37,9 @@ describe('CustomTool', () => {
     expect(handle.inputParams).toBe(baseOptions.inputParams);
   });
 
-  it('should include toolkit when provided', () => {
-    const handle = CustomTool({ ...baseOptions, toolkit: 'meta_ads' });
-    expect(handle.toolkit).toBe('meta_ads');
+  it('should include connectedToolkit when provided', () => {
+    const handle = CustomTool({ ...baseOptions, connectedToolkit: 'meta_ads' });
+    expect(handle.connectedToolkit).toBe('meta_ads');
   });
 
   it('should convert Zod schema with optional fields correctly', () => {
@@ -111,11 +107,7 @@ describe('CustomTool', () => {
 
   describe('execute function signatures', () => {
     it('should allow no-session execute (input only)', async () => {
-      const noSessionExecute = vi.fn().mockResolvedValue({
-        data: { result: 42 },
-        error: null,
-        successful: true,
-      });
+      const noSessionExecute = vi.fn().mockResolvedValue({ result: 42 });
 
       const handle = CustomTool({
         ...baseOptions,
@@ -124,16 +116,12 @@ describe('CustomTool', () => {
 
       // Call without session — JS ignores extra params
       const result = await handle.execute({ category: 'test' } as any);
-      expect(result.data.result).toBe(42);
+      expect(result.result).toBe(42);
       expect(noSessionExecute).toHaveBeenCalledWith({ category: 'test' });
     });
 
     it('should allow session-based execute (input + session)', async () => {
-      const sessionExecute = vi.fn().mockResolvedValue({
-        data: { userId: 'u1' },
-        error: null,
-        successful: true,
-      });
+      const sessionExecute = vi.fn().mockResolvedValue({ userId: 'u1' });
 
       const handle = CustomTool({
         ...baseOptions,
@@ -148,7 +136,7 @@ describe('CustomTool', () => {
       };
 
       const result = await handle.execute({ category: 'test' }, mockSession);
-      expect(result.data.userId).toBe('u1');
+      expect(result.userId).toBe('u1');
       expect(sessionExecute).toHaveBeenCalledWith({ category: 'test' }, mockSession);
     });
   });
@@ -223,7 +211,7 @@ describe('serializeLocalTools', () => {
       slug: 'GET_DATA',
       name: 'Get Data',
       description: 'Gets some data',
-      toolkit: 'my_toolkit',
+      connectedToolkit: 'my_toolkit',
       inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
       inputParams: z.object({ id: z.string() }),
       execute: vi.fn(),
@@ -242,7 +230,7 @@ describe('serializeLocalTools', () => {
     ]);
   });
 
-  it('should omit toolkit when not provided', () => {
+  it('should omit toolkit when connectedToolkit not provided', () => {
     const handle: CustomToolHandle = {
       slug: 'NO_TOOLKIT',
       name: 'No Toolkit',

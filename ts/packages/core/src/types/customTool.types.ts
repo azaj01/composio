@@ -80,23 +80,18 @@ export interface SessionContext {
   proxyExecute(params: ToolProxyParams): Promise<SdkToolExecuteResponse>;
 }
 
-/** Response shape returned by custom tool execute functions. */
-export type CustomToolExecuteResponse = {
-  data: Record<string, unknown>;
-  error: string | null;
-  successful: boolean;
-};
-
 /**
  * Execute function for custom tools.
+ * Just return the result data, or throw an error. The SDK wraps it internally.
+ *
  * Supports two call patterns:
- * - `(input) => result` — for tools that don't need session context
- * - `(input, session) => result` — for tools that need to call other tools or proxy APIs
+ * - `(input) => data` — for tools that don't need session context
+ * - `(input, session) => data` — for tools that need to call other tools or proxy APIs
  */
 export type CustomToolExecuteFn<T extends z.ZodType> = (
   input: z.infer<T>,
   session: SessionContext
-) => Promise<CustomToolExecuteResponse>;
+) => Promise<Record<string, unknown>>;
 
 /** Options for creating a custom local tool via `CustomTool()`. */
 export type NewCustomToolOptions<T extends z.ZodType> = {
@@ -108,8 +103,11 @@ export type NewCustomToolOptions<T extends z.ZodType> = {
   description: string;
   /** Zod schema for input parameters */
   inputParams: T;
-  /** Optional toolkit slug for auth-based tools (e.g. 'meta_ads') */
-  toolkit?: string;
+  /**
+   * Composio toolkit slug requiring an active connection (e.g. 'meta_ads').
+   * If not provided, the tool does not need Composio auth.
+   */
+  connectedToolkit?: string;
   /** The function that executes the tool */
   execute: CustomToolExecuteFn<T>;
 };
@@ -122,7 +120,11 @@ export interface CustomToolHandle {
   readonly slug: string;
   readonly name: string;
   readonly description: string;
-  readonly toolkit?: string;
+  /**
+   * Composio toolkit slug requiring an active connection.
+   * Undefined means the tool does not need Composio auth.
+   */
+  readonly connectedToolkit?: string;
   readonly inputSchema: Record<string, unknown>;
   /** @internal Original Zod schema — used for runtime input validation (defaults, coercions, transforms) */
   readonly inputParams: z.ZodType;
@@ -136,6 +138,7 @@ export interface LocalToolDefinition {
   name: string;
   description: string;
   input_schema: Record<string, unknown>;
+  /** Maps connectedToolkit → toolkit in the backend payload */
   toolkit?: string;
 }
 

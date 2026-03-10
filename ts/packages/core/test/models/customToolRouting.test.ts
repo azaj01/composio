@@ -62,11 +62,8 @@ const createMockClient = () => ({
   },
 });
 
-const localExecute = vi.fn().mockResolvedValue({
-  data: { local_result: true },
-  error: null,
-  successful: true,
-});
+// Execute returns data directly (simplified API)
+const localExecute = vi.fn().mockResolvedValue({ local_result: true });
 
 const customToolHandle = CustomTool({
   slug: 'GET_USER_CONTEXT',
@@ -77,16 +74,14 @@ const customToolHandle = CustomTool({
 });
 
 const sessionExecute = vi.fn().mockImplementation(async (input: any, session: any) => ({
-  data: { userId: session.userId },
-  error: null,
-  successful: true,
+  userId: session.userId,
 }));
 
 const sessionToolHandle = CustomTool({
   slug: 'GET_AD_ACCOUNTS',
   name: 'Get ad accounts',
   description: 'Get ad account IDs',
-  toolkit: 'meta_ads',
+  connectedToolkit: 'meta_ads',
   inputParams: z.object({ fields: z.string() }),
   execute: sessionExecute,
 });
@@ -125,7 +120,7 @@ describe('ToolRouter.create() with customTools', () => {
     ]);
   });
 
-  it('should include toolkit in local_tools when present', async () => {
+  it('should include toolkit in local_tools when connectedToolkit is present', async () => {
     await router.create('user_1', {
       customTools: [sessionToolHandle],
     });
@@ -194,6 +189,7 @@ describe('ToolRouterSession execution routing', () => {
 
       const result = await session.execute('GET_USER_CONTEXT', { category: 'prefs' });
 
+      // User returns data directly, SDK wraps it
       expect(result.data).toEqual({ local_result: true });
       expect(result.logId).toBe('local');
       expect(localExecute).toHaveBeenCalledWith(
@@ -263,7 +259,7 @@ describe('ToolRouterSession execution routing', () => {
       // Tool that calls another tool via session.execute()
       const chainedExecute = vi.fn().mockImplementation(async (input: any, session: any) => {
         const inner = await session.execute('GMAIL_SEND_EMAIL', { to: input.to });
-        return { data: { inner_result: inner.data }, error: null, successful: true };
+        return { inner_result: inner.data };
       });
 
       const chainedTool = CustomTool({
@@ -306,9 +302,7 @@ describe('ToolRouterSession execution routing', () => {
 
     it('should apply Zod defaults when input is missing optional fields', async () => {
       const defaultExecute = vi.fn().mockImplementation(async (input: any) => ({
-        data: { category: input.category },
-        error: null,
-        successful: true,
+        category: input.category,
       }));
 
       const toolWithDefaults = CustomTool({
@@ -364,35 +358,43 @@ describe('ToolRouterSession execution routing', () => {
     });
   });
 
-  describe('session.tools() — COMPOSIO_MULTI_EXECUTE_TOOL routing', () => {
-    it('should route local tools via COMPOSIO_MULTI_EXECUTE_TOOL to in-process execution', async () => {
-      const provider = new MockProvider();
-      // Mock wrapTools to capture the execute function and call it
-      provider.wrapTools.mockImplementation((tools: any, executeFn: any) => {
-        // Store executeFn so we can call it
-        (provider as any)._capturedExecuteFn = executeFn;
-        return 'wrapped-tools-with-routing';
-      });
-
-      const session = new ToolRouterSession(
-        mockClient as unknown as ComposioClient,
+  describe('session.tools() — COMPOSIO_MULTI_EXECUTE_TOOL routing with tools[] array', () => {
+    const createSessionWithProvider = (
+      client: ReturnType<typeof createMockClient>,
+      provider: MockProvider,
+      customTools: CustomToolHandle[]
+    ) => {
+      return new ToolRouterSession(
+        client as unknown as ComposioClient,
         { apiKey: 'key', provider },
         'sess_123',
         { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
         undefined,
-        buildLocalToolsMap([customToolHandle]),
+        buildLocalToolsMap(customTools),
         'user_1'
       );
+    };
+
+    const captureExecuteFn = (provider: MockProvider) => {
+      provider.wrapTools.mockImplementation((tools: any, executeFn: any) => {
+        (provider as any)._capturedExecuteFn = executeFn;
+        return 'wrapped-tools-with-routing';
+      });
+    };
+
+    it('should route all-local tools[] to in-process execution', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
 
       await session.tools();
-
-      // Now simulate the LLM calling COMPOSIO_MULTI_EXECUTE_TOOL with a local tool
       const executeFn = (provider as any)._capturedExecuteFn;
-      expect(executeFn).toBeDefined();
 
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
-        tool_slug: 'LOCAL_GET_USER_CONTEXT',
-        arguments: { category: 'test' },
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'test' } },
+        ],
+        sync_response_to_workbench: false,
       });
 
       expect(result.data).toEqual({ local_result: true });
@@ -402,56 +404,57 @@ describe('ToolRouterSession execution routing', () => {
       );
     });
 
-    it('should route remote tools via COMPOSIO_MULTI_EXECUTE_TOOL to backend', async () => {
+    it('should route all-remote tools[] to backend', async () => {
       const provider = new MockProvider();
-      provider.wrapTools.mockImplementation((tools: any, executeFn: any) => {
-        (provider as any)._capturedExecuteFn = executeFn;
-        return 'wrapped';
-      });
-
-      const session = new ToolRouterSession(
-        mockClient as unknown as ComposioClient,
-        { apiKey: 'key', provider },
-        'sess_123',
-        { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
-        undefined,
-        buildLocalToolsMap([customToolHandle]),
-        'user_1'
-      );
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
 
       await session.tools();
-
       const executeFn = (provider as any)._capturedExecuteFn;
+
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
-        tool_slug: 'GMAIL_SEND_EMAIL',
-        arguments: { to: 'test@test.com' },
+        tools: [
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'test@test.com' } },
+        ],
+        sync_response_to_workbench: false,
       });
 
-      // Should have gone to remote via executeMetaTool
+      // All remote — goes to executeMetaTool
       expect(result.data).toEqual({ remote: true });
       expect(localExecute).not.toHaveBeenCalled();
     });
 
-    it('should route non-MULTI_EXECUTE meta tools to backend', async () => {
+    it('should split mixed local+remote tools and merge results', async () => {
       const provider = new MockProvider();
-      provider.wrapTools.mockImplementation((tools: any, executeFn: any) => {
-        (provider as any)._capturedExecuteFn = executeFn;
-        return 'wrapped';
-      });
-
-      const session = new ToolRouterSession(
-        mockClient as unknown as ComposioClient,
-        { apiKey: 'key', provider },
-        'sess_123',
-        { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
-        undefined,
-        buildLocalToolsMap([customToolHandle]),
-        'user_1'
-      );
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
 
       await session.tools();
-
       const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'prefs' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'test@test.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // Both should have been called
+      expect(localExecute).toHaveBeenCalled();
+      // Remote goes to backend — merged results keyed by slug
+      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
+    });
+
+    it('should route non-MULTI_EXECUTE meta tools to backend', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      await session.tools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+
       const result = await executeFn('COMPOSIO_SEARCH_TOOLS', {
         queries: [{ use_case: 'send email' }],
       });
