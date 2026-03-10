@@ -275,8 +275,8 @@ describe('ToolRouterSession execution routing', () => {
       );
     });
 
-    it('should provide a working execute() on SessionContext', async () => {
-      // Tool that calls another tool via session.execute()
+    it('should provide a working execute() on SessionContext for remote tools', async () => {
+      // Tool that calls a remote tool via session.execute()
       const chainedExecute = vi.fn().mockImplementation(async (input: any, session: any) => {
         const inner = await session.execute('GMAIL_SEND_EMAIL', { to: input.to });
         return { inner_result: inner.data };
@@ -298,6 +298,47 @@ describe('ToolRouterSession execution routing', () => {
         tool_slug: 'GMAIL_SEND_EMAIL',
         arguments: { to: 'test@test.com' },
       });
+    });
+
+    it('should route sibling local tools in-process without hitting the API', async () => {
+      // Tool B — a sibling local tool
+      const siblingExecute = vi.fn().mockResolvedValue({ siblingData: 'from-B' });
+      const toolB = createCustomTool({
+        slug: 'TOOL_B',
+        name: 'Tool B',
+        description: 'Sibling tool',
+        inputParams: z.object({ key: z.string() }),
+        execute: siblingExecute,
+      });
+
+      // Tool A — calls Tool B via session.execute()
+      const toolAExecute = vi.fn().mockImplementation(async (input: any, session: any) => {
+        const inner = await session.execute('TOOL_B', { key: input.value });
+        return { fromA: true, fromB: inner.data };
+      });
+      const toolA = createCustomTool({
+        slug: 'TOOL_A',
+        name: 'Tool A',
+        description: 'Calls sibling tool B',
+        inputParams: z.object({ value: z.string() }),
+        execute: toolAExecute,
+      });
+
+      const session = createSession(mockClient, [toolA, toolB]);
+      const result = await session.execute('TOOL_A', { value: 'hello' });
+
+      // Tool B should have been called in-process
+      expect(siblingExecute).toHaveBeenCalledWith(
+        { key: 'hello' },
+        expect.objectContaining({ userId: 'user_1' })
+      );
+      // Result should contain data from both tools
+      expect(result.data).toEqual({
+        fromA: true,
+        fromB: { siblingData: 'from-B' },
+      });
+      // Should NOT have called the remote API for Tool B
+      expect(mockClient.toolRouter.session.execute).not.toHaveBeenCalled();
     });
   });
 
@@ -492,14 +533,43 @@ describe('ToolRouterSession execution routing', () => {
       return { executeFn, toolsInstance, provider, session };
     };
 
-    it('should merge results with remote keys first, local keys last', async () => {
+    /** Build a backend-shaped results[] response */
+    const backendResponse = (
+      results: Array<{ tool_slug: string; data: any; error?: string }>,
+    ) => {
+      const items = results.map((r, i) => ({
+        response: {
+          successful: !r.error,
+          data: r.data,
+          ...(r.error ? { error: r.error } : {}),
+        },
+        tool_slug: r.tool_slug,
+        index: i,
+        ...(r.error ? { error: r.error } : {}),
+      }));
+      const errorCount = results.filter(r => r.error).length;
+      return {
+        data: {
+          results: items,
+          total_count: results.length,
+          success_count: results.length - errorCount,
+          error_count: errorCount,
+        },
+        error: errorCount > 0 ? `${errorCount} out of ${results.length} tools failed` : null,
+        successful: errorCount === 0,
+      };
+    };
+
+    /** Find a local tool result in the results[] array by slug */
+    const findResult = (results: any[], slug: string) =>
+      results.find((r: any) => r.tool_slug === slug);
+
+    it('should append local results to remote results array', async () => {
       const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
 
-      toolsInstance.executeMetaTool.mockResolvedValueOnce({
-        data: { GMAIL_SEND_EMAIL: { sent: true } },
-        error: null,
-        successful: true,
-      });
+      toolsInstance.executeMetaTool.mockResolvedValueOnce(
+        backendResponse([{ tool_slug: 'GMAIL_SEND_EMAIL', data: { sent: true } }])
+      );
 
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
         tools: [
@@ -509,11 +579,16 @@ describe('ToolRouterSession execution routing', () => {
         sync_response_to_workbench: false,
       });
 
-      // Verify ordering: remote keys come before local keys
-      const keys = Object.keys(result.data);
-      const remoteIdx = keys.indexOf('GMAIL_SEND_EMAIL');
-      const localIdx = keys.indexOf('LOCAL_GET_USER_CONTEXT');
-      expect(remoteIdx).toBeLessThan(localIdx);
+      // Results is an array with both remote and local entries
+      const { results } = result.data;
+      expect(results).toHaveLength(2);
+
+      // Remote result comes first (from backend), local appended after
+      const remote = findResult(results, 'GMAIL_SEND_EMAIL');
+      const local = findResult(results, 'LOCAL_GET_USER_CONTEXT');
+      expect(remote.response.data).toEqual({ sent: true });
+      expect(local.response.data).toEqual({ local_result: true });
+      expect(local.response.successful).toBe(true);
     });
 
     it('should handle multiple local tools in same batch', async () => {
@@ -535,8 +610,11 @@ describe('ToolRouterSession execution routing', () => {
         { fields: 'id,name' },
         expect.objectContaining({ userId: 'user_1' })
       );
-      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
-      expect(result.data).toHaveProperty('LOCAL_GET_AD_ACCOUNTS');
+
+      const { results } = result.data;
+      expect(results).toHaveLength(2);
+      expect(findResult(results, 'LOCAL_GET_USER_CONTEXT')).toBeDefined();
+      expect(findResult(results, 'LOCAL_GET_AD_ACCOUNTS')).toBeDefined();
     });
 
     it('should handle mixed batch with multiple locals + multiple remotes', async () => {
@@ -545,14 +623,12 @@ describe('ToolRouterSession execution routing', () => {
         [customToolHandle, sessionToolHandle]
       );
 
-      toolsInstance.executeMetaTool.mockResolvedValueOnce({
-        data: {
-          GMAIL_SEND_EMAIL: { sent: true },
-          SLACK_POST_MESSAGE: { ts: '999' },
-        },
-        error: null,
-        successful: true,
-      });
+      toolsInstance.executeMetaTool.mockResolvedValueOnce(
+        backendResponse([
+          { tool_slug: 'GMAIL_SEND_EMAIL', data: { sent: true } },
+          { tool_slug: 'SLACK_POST_MESSAGE', data: { ts: '999' } },
+        ])
+      );
 
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
         tools: [
@@ -564,12 +640,13 @@ describe('ToolRouterSession execution routing', () => {
         sync_response_to_workbench: false,
       });
 
-      // All 4 tools should appear in result
-      expect(Object.keys(result.data)).toHaveLength(4);
-      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
-      expect(result.data).toHaveProperty('LOCAL_GET_AD_ACCOUNTS');
-      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
-      expect(result.data).toHaveProperty('SLACK_POST_MESSAGE');
+      // All 4 tools should appear in results array
+      const { results } = result.data;
+      expect(results).toHaveLength(4);
+      expect(findResult(results, 'LOCAL_GET_USER_CONTEXT')).toBeDefined();
+      expect(findResult(results, 'LOCAL_GET_AD_ACCOUNTS')).toBeDefined();
+      expect(findResult(results, 'GMAIL_SEND_EMAIL')).toBeDefined();
+      expect(findResult(results, 'SLACK_POST_MESSAGE')).toBeDefined();
 
       // Backend only got the 2 remote tools
       const backendTools = toolsInstance.executeMetaTool.mock.calls[0][1].arguments.tools;
@@ -582,9 +659,10 @@ describe('ToolRouterSession execution routing', () => {
       // Both local execute fns were called
       expect(localExecute).toHaveBeenCalled();
       expect(sessionExecute).toHaveBeenCalled();
+      expect(result.successful).toBe(true);
     });
 
-    it('should still succeed when one local tool errors in a mixed batch', async () => {
+    it('should surface errors from both local and remote tools', async () => {
       const throwingHandle = createCustomTool({
         slug: 'MIXED_THROWER',
         name: 'Throws in batch',
@@ -598,30 +676,44 @@ describe('ToolRouterSession execution routing', () => {
         [customToolHandle, throwingHandle]
       );
 
-      toolsInstance.executeMetaTool.mockResolvedValueOnce({
-        data: { GMAIL_SEND_EMAIL: { sent: true } },
-        error: null,
-        successful: true,
-      });
+      // Remote also returns an error for one tool
+      toolsInstance.executeMetaTool.mockResolvedValueOnce(
+        backendResponse([
+          { tool_slug: 'GMAIL_SEND_EMAIL', data: { sent: true } },
+          { tool_slug: 'SLACK_POST_MESSAGE', data: { message: 'auth failed' }, error: 'auth failed' },
+        ])
+      );
 
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
         tools: [
           { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'ok' } },
           { tool_slug: 'LOCAL_MIXED_THROWER', arguments: {} },
           { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+          { tool_slug: 'SLACK_POST_MESSAGE', arguments: { channel: '#dev' } },
         ],
         sync_response_to_workbench: false,
       });
 
-      // Successful local tool still has its data
-      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
-      // Throwing tool has empty data
-      expect(result.data.LOCAL_MIXED_THROWER).toEqual({});
-      // Remote tool still ran
-      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
-      // Error is surfaced
-      expect(result.error).toBe('batch-boom');
+      const { results } = result.data;
+      expect(results).toHaveLength(4);
+
+      // Local success
+      const localOk = findResult(results, 'LOCAL_GET_USER_CONTEXT');
+      expect(localOk.response.successful).toBe(true);
+
+      // Local error — data is empty, error is surfaced
+      const localErr = findResult(results, 'LOCAL_MIXED_THROWER');
+      expect(localErr.response.successful).toBe(false);
+      expect(localErr.response.error).toBe('batch-boom');
+      expect(localErr.error).toBe('batch-boom');
+
+      // Remote error is also preserved (not dropped!)
+      const remoteErr = findResult(results, 'SLACK_POST_MESSAGE');
+      expect(remoteErr.response.error).toBe('auth failed');
+
+      // Top-level error reflects total failure count
       expect(result.successful).toBe(false);
+      expect(result.error).toContain('2 out of 4');
     });
 
     it('should forward to backend when tools array is empty', async () => {
@@ -646,11 +738,9 @@ describe('ToolRouterSession execution routing', () => {
     it('should handle non-object items in tools array gracefully', async () => {
       const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
 
-      toolsInstance.executeMetaTool.mockResolvedValueOnce({
-        data: {},
-        error: null,
-        successful: true,
-      });
+      toolsInstance.executeMetaTool.mockResolvedValueOnce(
+        backendResponse([])
+      );
 
       // Malformed: string instead of object — should not crash
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
@@ -663,7 +753,8 @@ describe('ToolRouterSession execution routing', () => {
         { category: 'ok' },
         expect.objectContaining({ userId: 'user_1' })
       );
-      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+      const { results } = result.data;
+      expect(findResult(results, 'LOCAL_GET_USER_CONTEXT')).toBeDefined();
     });
 
     it('should execute local and remote in parallel (not sequentially)', async () => {
@@ -696,7 +787,7 @@ describe('ToolRouterSession execution routing', () => {
         callOrder.push('remote-start');
         await new Promise(r => setTimeout(r, 50));
         callOrder.push('remote-end');
-        return { data: { GMAIL_SEND_EMAIL: { sent: true } }, error: null, successful: true };
+        return backendResponse([{ tool_slug: 'GMAIL_SEND_EMAIL', data: { sent: true } }]);
       });
 
       await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
@@ -741,27 +832,26 @@ describe('ToolRouterSession execution routing', () => {
     });
   });
 
-  describe('remote batch duplication fix — each remote tool gets its own result', () => {
-    it('should return per-tool keyed results when multiple remote tools are in a mixed batch', async () => {
+  describe('per-tool results — each tool gets its own entry in results[]', () => {
+    it('should return per-tool results for mixed local+remote batch', async () => {
       const provider = new MockProvider();
       captureExecuteFn(provider);
       const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
 
-      // Mock executeMetaTool to return data keyed by slug (like real backend)
-      const toolsInstance = (Tools as any).mock.results[
-        (Tools as any).mock.results.length - 1
-      ]?.value;
-
       await session.tools();
 
-      // Re-mock executeMetaTool after session.tools() created the Tools instance
       const latestToolsInstance = (Tools as any).mock.results[
         (Tools as any).mock.results.length - 1
       ].value;
       latestToolsInstance.executeMetaTool.mockResolvedValueOnce({
         data: {
-          GMAIL_SEND_EMAIL: { message_id: 'msg_1' },
-          SLACK_POST_MESSAGE: { ts: '123456' },
+          results: [
+            { response: { successful: true, data: { message_id: 'msg_1' } }, tool_slug: 'GMAIL_SEND_EMAIL', index: 0 },
+            { response: { successful: true, data: { ts: '123456' } }, tool_slug: 'SLACK_POST_MESSAGE', index: 1 },
+          ],
+          total_count: 2,
+          success_count: 2,
+          error_count: 0,
         },
         error: null,
         successful: true,
@@ -778,16 +868,17 @@ describe('ToolRouterSession execution routing', () => {
         sync_response_to_workbench: false,
       });
 
-      // Local tool result keyed by its slug
-      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
-      expect(result.data.LOCAL_GET_USER_CONTEXT).toEqual({ local_result: true });
+      const { results } = result.data;
+      expect(results).toHaveLength(3);
 
-      // Each remote tool gets its own keyed result, not the entire batch blob
-      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
-      expect(result.data.GMAIL_SEND_EMAIL).toEqual({ message_id: 'msg_1' });
+      // Each tool has its own entry
+      const local = results.find((r: any) => r.tool_slug === 'LOCAL_GET_USER_CONTEXT');
+      const gmail = results.find((r: any) => r.tool_slug === 'GMAIL_SEND_EMAIL');
+      const slack = results.find((r: any) => r.tool_slug === 'SLACK_POST_MESSAGE');
 
-      expect(result.data).toHaveProperty('SLACK_POST_MESSAGE');
-      expect(result.data.SLACK_POST_MESSAGE).toEqual({ ts: '123456' });
+      expect(local.response.data).toEqual({ local_result: true });
+      expect(gmail.response.data).toEqual({ message_id: 'msg_1' });
+      expect(slack.response.data).toEqual({ ts: '123456' });
     });
   });
 

@@ -305,4 +305,53 @@ describe('SessionContextImpl', () => {
       ctx.proxyExecute({ endpoint: '/test', method: 'GET' })
     ).rejects.toThrow('proxyExecute is not yet implemented');
   });
+
+  describe('sibling local tool routing', () => {
+    it('should route to local tool when tryLocalExecute matches', async () => {
+      const tryLocalExecute = vi.fn().mockReturnValue(
+        Promise.resolve({ data: { local: true }, error: null, successful: true })
+      );
+
+      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1', tryLocalExecute);
+      const result = await ctx.execute('SIBLING_TOOL', { key: 'val' });
+
+      expect(tryLocalExecute).toHaveBeenCalledWith('SIBLING_TOOL', { key: 'val' });
+      expect(result).toEqual({ data: { local: true }, error: null, successful: true });
+      // Should NOT call remote
+      expect(mockClient.toolRouter.session.execute).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to remote when tryLocalExecute returns undefined', async () => {
+      const tryLocalExecute = vi.fn().mockReturnValue(undefined);
+      mockClient.toolRouter.session.execute.mockResolvedValue({
+        data: { remote: true },
+        error: null,
+        log_id: 'log_3',
+      });
+
+      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1', tryLocalExecute);
+      const result = await ctx.execute('REMOTE_TOOL', { key: 'val' });
+
+      expect(tryLocalExecute).toHaveBeenCalledWith('REMOTE_TOOL', { key: 'val' });
+      expect(mockClient.toolRouter.session.execute).toHaveBeenCalledWith('sess_1', {
+        tool_slug: 'REMOTE_TOOL',
+        arguments: { key: 'val' },
+      });
+      expect(result).toEqual({ data: { remote: true }, error: null, successful: true });
+    });
+
+    it('should delegate to remote when no tryLocalExecute is provided', async () => {
+      mockClient.toolRouter.session.execute.mockResolvedValue({
+        data: { remote: true },
+        error: null,
+        log_id: 'log_4',
+      });
+
+      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1');
+      const result = await ctx.execute('ANY_TOOL', {});
+
+      expect(mockClient.toolRouter.session.execute).toHaveBeenCalled();
+      expect(result.successful).toBe(true);
+    });
+  });
 });

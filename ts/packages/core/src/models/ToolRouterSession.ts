@@ -25,9 +25,10 @@ import { ToolkitConnectionStateSchema } from '../types/toolRouter.types';
 import { ValidationError } from '../errors';
 import { Tools } from './Tools';
 import { ToolRouterSessionFilesMount } from './ToolRouterSessionFileMount';
-import type { LocalToolsMap, LocalToolsMapEntry } from '../types/customTool.types';
+import type { LocalToolsMap, LocalToolsMapEntry, SessionContext } from '../types/customTool.types';
 import type { Tool, ToolExecuteResponse } from '../types/tool.types';
 import { SessionContextImpl } from './SessionContext';
+import { findLocalTool, executeLocalTool } from './localToolExecution';
 
 const COMPOSIO_MULTI_EXECUTE_TOOL = 'COMPOSIO_MULTI_EXECUTE_TOOL';
 const COMPOSIO_EXECUTE_LOCAL_TOOL = 'COMPOSIO_EXECUTE_LOCAL_TOOL';
@@ -88,7 +89,7 @@ export class ToolRouterSession<
         if (toolSlug === COMPOSIO_EXECUTE_LOCAL_TOOL) {
           const slug = String(input.tool_slug ?? '');
           const args = (input.arguments as Record<string, unknown> | undefined) ?? {};
-          const entry = this.findLocalTool(slug);
+          const entry = findLocalTool(this.localToolsMap, slug);
           if (!entry) {
             return {
               data: {},
@@ -96,7 +97,7 @@ export class ToolRouterSession<
               successful: false,
             };
           }
-          return this.executeLocalTool(entry, args);
+          return executeLocalTool(entry, args, this.buildSessionContext());
         }
         // Non-multi-execute meta tools always go to backend
         return ToolsModel.executeMetaTool(
@@ -123,16 +124,22 @@ export class ToolRouterSession<
   }
 
   /**
-   * Get a tool for executing local custom tools individually.
-   * Use this for MCP flows or when you need explicit control over local tool execution.
+   * Returns a dispatcher tool that exposes local custom tools for execution.
+   * Primarily used in MCP flows where remote tools are served via an MCP server
+   * and local tools need to be added alongside.
    *
    * Not included in `session.tools()` — must be explicitly added to the agent's tool set.
    *
    * @example
    * ```typescript
-   * const tools = await session.tools();
+   * // MCP flow: remote tools via MCP server, local tools via localTools()
    * const localTool = await session.localTools();
-   * const agent = new Agent({ tools: [...tools, ...localTool] });
+   * const agent = new Agent({
+   *   tools: [
+   *     hostedMcpTool(session.mcp.url),   // remote tools from MCP
+   *     ...localTool,                      // local custom tools
+   *   ],
+   * });
    * ```
    */
   async localTools(): Promise<ReturnType<TProvider['wrapTools']>> {
@@ -183,7 +190,7 @@ export class ToolRouterSession<
       const slug = String(input.tool_slug ?? '');
       const args = (input.arguments as Record<string, unknown> | undefined) ?? {};
 
-      const entry = this.findLocalTool(slug);
+      const entry = findLocalTool(this.localToolsMap, slug);
       if (!entry) {
         return {
           data: {},
@@ -192,7 +199,7 @@ export class ToolRouterSession<
         };
       }
 
-      return this.executeLocalTool(entry, args);
+      return executeLocalTool(entry, args, this.buildSessionContext());
     };
 
     return this.config.provider.wrapTools([tool], executeFn) as ReturnType<
@@ -305,9 +312,9 @@ export class ToolRouterSession<
     arguments_?: Record<string, unknown>
   ): Promise<ToolRouterSessionExecuteResponse> {
     // Check if this is a local tool (by original or prefixed slug)
-    const entry = this.findLocalTool(toolSlug);
+    const entry = findLocalTool(this.localToolsMap, toolSlug);
     if (entry) {
-      const result = await this.executeLocalTool(entry, arguments_ ?? {});
+      const result = await executeLocalTool(entry, arguments_ ?? {}, this.buildSessionContext());
       return {
         data: result.data,
         error: result.error,
@@ -332,13 +339,21 @@ export class ToolRouterSession<
   }
 
   /**
-   * Find a local tool entry by slug.
-   * Checks both the prefixed map (LOCAL_X — agent path) and original map (X — programmatic path).
+   * Build a SessionContext for local tool execution.
+   * Includes sibling routing: session.execute() inside a custom tool checks
+   * local tools first before falling back to the backend API.
    */
-  private findLocalTool(slug: string): LocalToolsMapEntry | undefined {
-    if (!this.localToolsMap) return undefined;
-    const upper = slug.toUpperCase();
-    return this.localToolsMap.byPrefixed.get(upper) ?? this.localToolsMap.byOriginal.get(upper);
+  private buildSessionContext(): SessionContext {
+    return new SessionContextImpl(
+      this.client,
+      this.userId!,
+      this.sessionId,
+      (slug, args) => {
+        const entry = findLocalTool(this.localToolsMap, slug);
+        if (!entry) return undefined;
+        return executeLocalTool(entry, args, this.buildSessionContext());
+      }
+    );
   }
 
   /** Parse an individual tool item from COMPOSIO_MULTI_EXECUTE_TOOL's tools array */
@@ -379,7 +394,7 @@ export class ToolRouterSession<
     const localItems: Array<{ index: number; entry: LocalToolsMapEntry }> = [];
     const remoteIndices: number[] = [];
     for (let i = 0; i < parsed.length; i++) {
-      const entry = this.findLocalTool(parsed[i].tool_slug);
+      const entry = findLocalTool(this.localToolsMap, parsed[i].tool_slug);
       if (entry) {
         localItems.push({ index: i, entry });
       } else {
@@ -398,7 +413,7 @@ export class ToolRouterSession<
 
     // Execute local tools in parallel
     const localPromises = localItems.map(async ({ index, entry }) => {
-      const result = await this.executeLocalTool(entry, parsed[index].arguments);
+      const result = await executeLocalTool(entry, parsed[index].arguments, this.buildSessionContext());
       return { index, result };
     });
 
@@ -419,79 +434,39 @@ export class ToolRouterSession<
       remotePromise,
     ]);
 
-    // If only local tools, return the single/first result
+    // If only local tools, return the single/first result unwrapped
     if (remoteIndices.length === 0 && localResults.length === 1) {
       return localResults[0].result;
     }
 
-    // Merge: remote results first (remote may write to session files), then local
-    const mergedData: Record<string, unknown> = {};
+    // Merge results into the backend's results[] format.
+    // Backend returns: { results: [{ response, tool_slug, index }], total_count, ... }
+    // We append local tool results in the same shape.
+    const remoteData = (remoteResult?.data ?? {}) as Record<string, unknown>;
+    const remoteResults = (Array.isArray(remoteData.results) ? remoteData.results : []) as unknown[];
 
-    // Remote batch data first (backend returns data keyed by tool slug)
-    if (remoteResult?.data && typeof remoteResult.data === 'object') {
-      Object.assign(mergedData, remoteResult.data);
-    }
+    // Build local result entries matching backend format
+    const localEntries = localResults.map(({ index, result }) => ({
+      response: {
+        successful: result.successful,
+        data: result.data,
+        ...(result.error ? { error: result.error } : {}),
+      },
+      tool_slug: parsed[index].tool_slug,
+      index,
+      ...(result.error ? { error: result.error } : {}),
+    }));
 
-    // Local results last
-    for (const { index, result } of localResults) {
-      mergedData[parsed[index].tool_slug] = result.data;
-    }
+    const allResults = [...remoteResults, ...localEntries];
+    const hasAnyError = localResults.some(r => r.result.error) || !!remoteResult?.error;
 
-    const anyLocalError = localResults.find(r => r.result.error)?.result.error;
-    const anyError = anyLocalError ?? remoteResult?.error ?? null;
     return {
-      data: mergedData,
-      error: anyError,
-      successful: !anyError,
+      data: { ...remoteData, results: allResults },
+      error: hasAnyError
+        ? `${allResults.filter((r: any) => r.error).length} out of ${allResults.length} tools failed`
+        : null,
+      successful: !hasAnyError,
     };
   }
 
-  /**
-   * Execute a local tool in-process.
-   * Builds a SessionContext, validates input, calls the user's execute function,
-   * and wraps the result into the standard response format.
-   *
-   * Users just return data or throw — we wrap it here.
-   */
-  private async executeLocalTool(
-    entry: LocalToolsMapEntry,
-    arguments_: Record<string, unknown>
-  ): Promise<ToolExecuteResponse> {
-    const { handle } = entry;
-
-    // Validate and transform input using the original Zod schema.
-    // This applies defaults, coercions, and transforms (e.g. z.string().default('all')).
-    const parsed = handle.inputParams.safeParse(arguments_);
-    if (!parsed.success) {
-      return {
-        data: {},
-        error: `Input validation failed: ${parsed.error.message}`,
-        successful: false,
-      };
-    }
-
-    // Build session context
-    const sessionContext = new SessionContextImpl(
-      this.client,
-      this.userId!,
-      this.sessionId
-    );
-
-    try {
-      // User's execute returns data directly — we wrap into { data, error, successful }
-      const data = await handle.execute(parsed.data, sessionContext);
-      return {
-        data: data ?? {},
-        error: null,
-        successful: true,
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        data: {},
-        error: message,
-        successful: false,
-      };
-    }
-  }
 }
