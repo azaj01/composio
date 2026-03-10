@@ -554,6 +554,17 @@ p.text-fd-muted-foreground.not-prose:has(> code.text-xs) {
   }
 }
 
+/* ==========================================================================
+   Decimal AI Widget – Push-Sidebar Transition
+   The widget sets body.style.maxWidth inline when opening. Smooth it out
+   and prevent horizontal overflow while the sidebar animates.
+   ========================================================================== */
+
+body {
+  overflow-x: hidden;
+  transition: max-width 0.3s ease;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
