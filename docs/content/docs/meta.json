@@ -25,6 +25,7 @@
     "importing-existing-connections",
     "webhook-verification",
     "subscribing-to-connection-expiry-events",
+    "custom-app-vs-managed-app",
     "native-tools-vs-mcp",
     "sessions-vs-direct-execution",
     "---Features---",
