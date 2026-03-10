@@ -2,7 +2,8 @@
  * Custom local tools E2E test.
  *
  * Verifies local tool execution, Zod validation, session context, error handling,
- * and mixed local+remote execution against the live Composio API.
+ * mixed local+remote chaining, and edge cases against the live Composio API.
+ * Uses weathermap toolkit (no auth needed).
  * Requires COMPOSIO_API_KEY in environment.
  */
 
@@ -41,15 +42,19 @@ e2e(import.meta.url, {
         expect(result.stdout).toContain('ZOD_DEFAULTS_OK');
       });
 
-      it('error handling works', () => {
+      it('error thrown by tool is wrapped into { data, error }', () => {
         expect(result.stdout).toContain('ERROR_HANDLING_OK');
       });
 
-      it('multiple local tools work', () => {
+      it('Zod validation failure returns error, does not crash', () => {
+        expect(result.stdout).toContain('ZOD_VALIDATION_FAIL_OK');
+      });
+
+      it('multiple local tools route to correct execute fn', () => {
         expect(result.stdout).toContain('MULTIPLE_TOOLS_OK');
       });
 
-      it('session context is injected', () => {
+      it('session context injects userId', () => {
         expect(result.stdout).toContain('SESSION_CONTEXT_OK');
       });
 
@@ -57,8 +62,16 @@ e2e(import.meta.url, {
         expect(result.stdout).toContain('CASE_INSENSITIVE_OK');
       });
 
-      it('prefixed slug works', () => {
+      it('prefixed slug (LOCAL_) works', () => {
         expect(result.stdout).toContain('PREFIXED_SLUG_OK');
+      });
+
+      it('local tool chains into remote tool via SessionContext.execute()', () => {
+        expect(result.stdout).toContain('CHAINED_EXECUTE_OK');
+      });
+
+      it('non-existent tool returns error gracefully', () => {
+        expect(result.stdout).toContain('NONEXISTENT_TOOL_OK');
       });
 
       it('localTools() method works', () => {
