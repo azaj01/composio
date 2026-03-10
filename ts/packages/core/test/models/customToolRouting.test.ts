@@ -515,6 +515,278 @@ describe('ToolRouterSession execution routing', () => {
     });
   });
 
+  describe('COMPOSIO_MULTI_EXECUTE_TOOL — detailed split/merge behavior', () => {
+    /** Helper: set up provider + session + capture executeFn + get latest Tools mock */
+    const setupMultiExecute = async (
+      client: ReturnType<typeof createMockClient>,
+      customTools: CustomToolHandle[]
+    ) => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(client, provider, customTools);
+      await session.tools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+      const toolsInstance = (Tools as any).mock.results[
+        (Tools as any).mock.results.length - 1
+      ].value;
+      return { executeFn, toolsInstance, provider, session };
+    };
+
+    it('should only send remote items in the backend payload (not local ones)', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: { GMAIL_SEND_EMAIL: { sent: true } },
+        error: null,
+        successful: true,
+      });
+
+      await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'a' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'x@y.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // Backend should only receive the remote tool
+      const metaCall = toolsInstance.executeMetaTool.mock.calls[0];
+      const backendTools = metaCall[1].arguments.tools;
+      expect(backendTools).toHaveLength(1);
+      expect(backendTools[0].tool_slug).toBe('GMAIL_SEND_EMAIL');
+    });
+
+    it('should merge results with remote keys first, local keys last', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: { GMAIL_SEND_EMAIL: { sent: true } },
+        error: null,
+        successful: true,
+      });
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'a' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'x@y.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // Verify ordering: remote keys come before local keys
+      const keys = Object.keys(result.data);
+      const remoteIdx = keys.indexOf('GMAIL_SEND_EMAIL');
+      const localIdx = keys.indexOf('LOCAL_GET_USER_CONTEXT');
+      expect(remoteIdx).toBeLessThan(localIdx);
+    });
+
+    it('should handle multiple local tools in same batch', async () => {
+      const { executeFn } = await setupMultiExecute(mockClient, [customToolHandle, sessionToolHandle]);
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'batch' } },
+          { tool_slug: 'LOCAL_GET_AD_ACCOUNTS', arguments: { fields: 'id,name' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      expect(localExecute).toHaveBeenCalledWith(
+        { category: 'batch' },
+        expect.objectContaining({ userId: 'user_1' })
+      );
+      expect(sessionExecute).toHaveBeenCalledWith(
+        { fields: 'id,name' },
+        expect.objectContaining({ userId: 'user_1' })
+      );
+      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+      expect(result.data).toHaveProperty('LOCAL_GET_AD_ACCOUNTS');
+    });
+
+    it('should handle mixed batch with multiple locals + multiple remotes', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(
+        mockClient,
+        [customToolHandle, sessionToolHandle]
+      );
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: {
+          GMAIL_SEND_EMAIL: { sent: true },
+          SLACK_POST_MESSAGE: { ts: '999' },
+        },
+        error: null,
+        successful: true,
+      });
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'x' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+          { tool_slug: 'LOCAL_GET_AD_ACCOUNTS', arguments: { fields: 'id' } },
+          { tool_slug: 'SLACK_POST_MESSAGE', arguments: { channel: '#dev' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // All 4 tools should appear in result
+      expect(Object.keys(result.data)).toHaveLength(4);
+      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+      expect(result.data).toHaveProperty('LOCAL_GET_AD_ACCOUNTS');
+      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
+      expect(result.data).toHaveProperty('SLACK_POST_MESSAGE');
+
+      // Backend only got the 2 remote tools
+      const backendTools = toolsInstance.executeMetaTool.mock.calls[0][1].arguments.tools;
+      expect(backendTools).toHaveLength(2);
+      expect(backendTools.map((t: any) => t.tool_slug)).toEqual([
+        'GMAIL_SEND_EMAIL',
+        'SLACK_POST_MESSAGE',
+      ]);
+
+      // Both local execute fns were called
+      expect(localExecute).toHaveBeenCalled();
+      expect(sessionExecute).toHaveBeenCalled();
+    });
+
+    it('should still succeed when one local tool errors in a mixed batch', async () => {
+      const throwingHandle = CustomTool({
+        slug: 'MIXED_THROWER',
+        name: 'Throws in batch',
+        description: 'Throws',
+        inputParams: z.object({}),
+        execute: async () => { throw new Error('batch-boom'); },
+      });
+
+      const { executeFn, toolsInstance } = await setupMultiExecute(
+        mockClient,
+        [customToolHandle, throwingHandle]
+      );
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: { GMAIL_SEND_EMAIL: { sent: true } },
+        error: null,
+        successful: true,
+      });
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'ok' } },
+          { tool_slug: 'LOCAL_MIXED_THROWER', arguments: {} },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // Successful local tool still has its data
+      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+      // Throwing tool has empty data
+      expect(result.data.LOCAL_MIXED_THROWER).toEqual({});
+      // Remote tool still ran
+      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
+      // Error is surfaced
+      expect(result.error).toBe('batch-boom');
+      expect(result.successful).toBe(false);
+    });
+
+    it('should forward to backend when tools array is empty', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [],
+        sync_response_to_workbench: false,
+      });
+
+      // Empty array → fallback to backend with full original input
+      expect(toolsInstance.executeMetaTool).toHaveBeenCalledWith(
+        'COMPOSIO_MULTI_EXECUTE_TOOL',
+        expect.objectContaining({
+          sessionId: 'sess_123',
+          arguments: expect.objectContaining({ tools: [] }),
+        }),
+        undefined
+      );
+    });
+
+    it('should handle non-object items in tools array gracefully', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: {},
+        error: null,
+        successful: true,
+      });
+
+      // Malformed: string instead of object — should not crash
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: ['not-an-object', null, { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'ok' } }],
+        sync_response_to_workbench: false,
+      });
+
+      // The valid local tool should still execute
+      expect(localExecute).toHaveBeenCalledWith(
+        { category: 'ok' },
+        expect.objectContaining({ userId: 'user_1' })
+      );
+      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+    });
+
+    it('should execute local and remote in parallel (not sequentially)', async () => {
+      // Track call timing to verify parallelism
+      const callOrder: string[] = [];
+
+      const slowLocalHandle = CustomTool({
+        slug: 'SLOW_LOCAL',
+        name: 'Slow local',
+        description: 'Slow',
+        inputParams: z.object({}),
+        execute: async () => {
+          callOrder.push('local-start');
+          await new Promise(r => setTimeout(r, 50));
+          callOrder.push('local-end');
+          return { slow: true };
+        },
+      });
+
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [slowLocalHandle]);
+      await session.tools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+      const toolsInstance = (Tools as any).mock.results[
+        (Tools as any).mock.results.length - 1
+      ].value;
+
+      toolsInstance.executeMetaTool.mockImplementation(async () => {
+        callOrder.push('remote-start');
+        await new Promise(r => setTimeout(r, 50));
+        callOrder.push('remote-end');
+        return { data: { GMAIL_SEND_EMAIL: { sent: true } }, error: null, successful: true };
+      });
+
+      await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_SLOW_LOCAL', arguments: {} },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'x@y.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // Both should start before either ends (parallel execution)
+      const localStartIdx = callOrder.indexOf('local-start');
+      const remoteStartIdx = callOrder.indexOf('remote-start');
+      const localEndIdx = callOrder.indexOf('local-end');
+      const remoteEndIdx = callOrder.indexOf('remote-end');
+
+      // Both started
+      expect(localStartIdx).toBeGreaterThanOrEqual(0);
+      expect(remoteStartIdx).toBeGreaterThanOrEqual(0);
+      // Both started before either finished
+      expect(Math.max(localStartIdx, remoteStartIdx)).toBeLessThan(
+        Math.min(localEndIdx, remoteEndIdx)
+      );
+    });
+  });
+
   describe('multiple custom tools', () => {
     it('should route each tool to its correct execute function', async () => {
       const session = createSession(mockClient, [customToolHandle, sessionToolHandle]);
