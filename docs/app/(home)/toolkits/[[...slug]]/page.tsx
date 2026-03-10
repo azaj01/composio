@@ -208,6 +208,8 @@ export default async function ToolkitsPage({ params }: { params: Promise<{ slug?
     const MDXContent = page.data.body;
     return (
       <article className="prose prose-fd max-w-none">
+        <a href="/toolkits" className="text-sm text-fd-primary no-underline hover:underline">← All Toolkits</a>
+        <h1>{page.data.title}</h1>
         <PageActions path={page.url} />
         <MDXContent components={getMDXComponents()} />
       </article>
