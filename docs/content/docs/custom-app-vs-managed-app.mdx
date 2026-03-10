@@ -137,7 +137,7 @@ Some toolkits don't have Composio managed auth. For these, you must create a cus
 
 ```bash
 curl 'https://backend.composio.dev/api/v3/toolkits/posthog' \
-  -H 'x-api-key: YOUR_API_KEY'
+  -H "x-api-key: $COMPOSIO_API_KEY"
 ```
 
 If the `composio_managed_auth_schemes` array is empty, you'll need to provide your own credentials. You can also check on each toolkit's page on the [toolkits page](/toolkits). See [Using custom auth configuration](/docs/using-custom-auth-configuration) for a step-by-step walkthrough.
