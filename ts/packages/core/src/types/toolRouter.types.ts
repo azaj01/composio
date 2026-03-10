@@ -220,7 +220,7 @@ export const ToolRouterCreateSessionConfigSchema = z
       .array(z.custom<CustomTool>())
       .optional()
       .describe(
-        'Custom local tools to include in this session. Created via CustomTool() from @composio/core/experimental.'
+        'Custom tools to include in this session. Created via createCustomTool() from @composio/core/experimental.'
       ),
   })
   .partial()
@@ -440,7 +440,7 @@ export interface Session<
   search: ToolRouterSessionSearchFn;
   /** Execute a tool within the session */
   execute: ToolRouterSessionExecuteFn;
-  /** Get provider-wrapped local custom tools for MCP flows */
+  /** Get provider-wrapped custom tools for MCP flows */
   localTools: () => Promise<ReturnType<TProvider['wrapTools']>>;
   /** Experimental features (files, assistive prompt, etc.) */
   experimental: SessionExperimental;

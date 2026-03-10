@@ -6,7 +6,7 @@
  * '@composio/core' — only the import path changes.
  */
 
-// Custom local tools
+// Custom tools
 export { createCustomTool } from '../models/CustomTool';
 export type {
   CustomTool,

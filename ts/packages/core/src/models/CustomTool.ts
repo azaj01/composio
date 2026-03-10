@@ -1,5 +1,5 @@
 /**
- * @fileoverview Standalone factory function for creating custom local tools.
+ * @fileoverview Standalone factory function for creating custom tools.
  *
  * Usage:
  * ```typescript
@@ -31,7 +31,7 @@ import {
 export const LOCAL_TOOL_PREFIX = 'LOCAL_';
 
 /**
- * Create a custom local tool for use in tool router sessions.
+ * Create a custom tool for use in tool router sessions.
  *
  * The returned object is a lightweight reference containing the tool's metadata
  * and execute function. Pass it to `composio.create(userId, { customTools: [...] })`

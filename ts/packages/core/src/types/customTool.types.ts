@@ -116,7 +116,7 @@ export const CreateCustomToolBaseSchema = z.object({
   toolkit: z.string().optional(),
 });
 
-/** Options for creating a custom local tool via `createCustomTool()`. */
+/** Options for creating a custom tool via `createCustomTool()`. */
 export type CreateCustomToolParams<T extends z.ZodType> = z.infer<
   typeof CreateCustomToolBaseSchema
 > & {

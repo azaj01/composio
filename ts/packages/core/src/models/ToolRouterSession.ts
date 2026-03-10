@@ -124,9 +124,9 @@ export class ToolRouterSession<
   }
 
   /**
-   * Returns a dispatcher tool that exposes local custom tools for execution.
+   * Returns a dispatcher tool that exposes custom tools for execution.
    * Primarily used in MCP flows where remote tools are served via an MCP server
-   * and local tools need to be added alongside.
+   * and custom tools need to be added alongside.
    *
    * Not included in `session.tools()` — must be explicitly added to the agent's tool set.
    *
@@ -137,7 +137,7 @@ export class ToolRouterSession<
    * const agent = new Agent({
    *   tools: [
    *     hostedMcpTool(session.mcp.url),   // remote tools from MCP
-   *     ...localTool,                      // local custom tools
+   *     ...localTool,                      // custom tools
    *   ],
    * });
    * ```
@@ -156,14 +156,14 @@ export class ToolRouterSession<
     // Collect local tool slugs and descriptions for the schema
     const toolEntries = Array.from(this.customToolsMap!.byOriginal.entries());
     const slugDescriptions = toolEntries
-      .map(([slug, entry]) => `- ${entry.prefixedSlug}: ${entry.handle.description}`)
+      .map(([_slug, entry]) => `- ${entry.prefixedSlug}: ${entry.handle.description}`)
       .join('\n');
 
     // Build a synthetic Tool schema for COMPOSIO_EXECUTE_LOCAL_TOOL
     const tool: Tool = {
       slug: COMPOSIO_EXECUTE_LOCAL_TOOL,
       name: 'Execute Local Tool',
-      description: `Execute a local custom tool by slug.\n\nAvailable tools:\n${slugDescriptions}`,
+      description: `Execute a custom tool by slug.\n\nAvailable tools:\n${slugDescriptions}`,
       inputParameters: {
         type: 'object',
         properties: {
@@ -299,8 +299,8 @@ export class ToolRouterSession<
   /**
    * Execute a tool within the session.
    *
-   * For custom local tools, accepts both the original slug (e.g. "GET_USER_CONTEXT")
-   * and the prefixed slug (e.g. "LOCAL_GET_USER_CONTEXT"). Local tools are executed
+   * For custom tools, accepts both the original slug (e.g. "GET_USER_CONTEXT")
+   * and the prefixed slug (e.g. "LOCAL_GET_USER_CONTEXT"). Custom tools are executed
    * in-process; remote tools are sent to the Composio backend.
    *
    * @param toolSlug - The tool slug to execute
@@ -457,16 +457,18 @@ export class ToolRouterSession<
     }));
 
     // Merge and re-index sequentially so there are no collisions
-    const allResults = [...remoteResults, ...localEntries].map((entry: any, i) => ({
-      ...entry,
-      index: i,
-    }));
+    const allResults = [...remoteResults, ...localEntries].map(
+      (entry: Record<string, unknown>, i) => ({
+        ...entry,
+        index: i,
+      })
+    );
     const hasAnyError = localResults.some(r => r.result.error) || !!remoteResult?.error;
 
     return {
       data: { ...remoteData, results: allResults },
       error: hasAnyError
-        ? `${allResults.filter((r: any) => r.error).length} out of ${allResults.length} tools failed`
+        ? `${allResults.filter((r: Record<string, unknown>) => r.error).length} out of ${allResults.length} tools failed`
         : null,
       successful: !hasAnyError,
     };
