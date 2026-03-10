@@ -453,11 +453,14 @@ export class ToolRouterSession<
         ...(result.error ? { error: result.error } : {}),
       },
       tool_slug: parsed[index].tool_slug,
-      index,
       ...(result.error ? { error: result.error } : {}),
     }));
 
-    const allResults = [...remoteResults, ...localEntries];
+    // Merge and re-index sequentially so there are no collisions
+    const allResults = [...remoteResults, ...localEntries].map((entry: any, i) => ({
+      ...entry,
+      index: i,
+    }));
     const hasAnyError = localResults.some(r => r.result.error) || !!remoteResult?.error;
 
     return {
