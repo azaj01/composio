@@ -22,6 +22,7 @@
     "white-labeling-authentication",
     "managing-multiple-connected-accounts",
     "using-custom-auth-configuration",
+    "importing-existing-connections",
     "webhook-verification",
     "subscribing-to-connection-expiry-events",
     "native-tools-vs-mcp",
