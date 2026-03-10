@@ -116,7 +116,7 @@ export function ManagedAuthList() {
     const list = s
       ? data.filter((t) => t.name.toLowerCase().includes(s) || t.slug.toLowerCase().includes(s))
       : data;
-    return list.sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
+    return [...list].sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
   }, [data, deferredSearch]);
 
   const managed = useMemo(
