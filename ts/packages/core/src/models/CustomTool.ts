@@ -79,10 +79,8 @@ export const LOCAL_TOOL_PREFIX = 'LOCAL_';
  *   connectedToolkit: 'meta_ads',
  *   inputParams: z.object({ fields: z.string().default('id,name') }),
  *   execute: async (input, session) => {
- *     const result = await session.proxyExecute({
- *       endpoint: '/v21.0/me/adaccounts',
- *       method: 'GET',
- *       parameters: [{ in: 'query', name: 'fields', value: input.fields }],
+ *     const result = await session.execute('META_ADS_GET_AD_ACCOUNTS', {
+ *       fields: input.fields,
  *     });
  *     return result.data;
  *   },

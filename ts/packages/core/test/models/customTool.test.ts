@@ -130,7 +130,6 @@ describe('CustomTool', () => {
 
       const mockSession: SessionContext = {
         userId: 'user_1',
-        sessionId: 'sess_1',
         execute: vi.fn(),
         proxyExecute: vi.fn(),
       };
@@ -262,10 +261,9 @@ describe('SessionContextImpl', () => {
     vi.clearAllMocks();
   });
 
-  it('should expose userId and sessionId', () => {
+  it('should expose userId', () => {
     const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1');
     expect(ctx.userId).toBe('user_1');
-    expect(ctx.sessionId).toBe('sess_1');
   });
 
   it('should delegate execute() to client.toolRouter.session.execute()', async () => {

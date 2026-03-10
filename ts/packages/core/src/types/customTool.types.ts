@@ -69,8 +69,6 @@ export interface ExecuteMetadata {
 export interface SessionContext {
   /** The user ID for this session */
   readonly userId: string;
-  /** The tool router session ID */
-  readonly sessionId: string;
   /** Execute any Composio native tool from within a custom tool */
   execute(
     toolSlug: string,

@@ -86,6 +86,32 @@ const sessionToolHandle = CustomTool({
   execute: sessionExecute,
 });
 
+// ── Shared helpers for provider-aware session tests ────────────
+
+const createSessionWithProvider = (
+  client: ReturnType<typeof createMockClient>,
+  provider: MockProvider,
+  customTools: CustomToolHandle[]
+) => {
+  return new ToolRouterSession(
+    client as unknown as ComposioClient,
+    { apiKey: 'key', provider },
+    'sess_123',
+    { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
+    undefined,
+    buildLocalToolsMap(customTools),
+    'user_1'
+  );
+};
+
+const captureExecuteFn = (provider: MockProvider) => {
+  provider.wrapTools.mockImplementation((tools: any, executeFn: any) => {
+    (provider as any)._capturedExecuteFn = executeFn;
+    (provider as any)._capturedTools = tools;
+    return 'wrapped-tools-with-routing';
+  });
+};
+
 // ────────────────────────────────────────────────────────────────
 // ToolRouter.create() with customTools
 // ────────────────────────────────────────────────────────────────
@@ -194,7 +220,7 @@ describe('ToolRouterSession execution routing', () => {
       expect(result.logId).toBe('local');
       expect(localExecute).toHaveBeenCalledWith(
         { category: 'prefs' },
-        expect.objectContaining({ userId: 'user_1', sessionId: 'sess_123' })
+        expect.objectContaining({ userId: 'user_1' })
       );
       // Should NOT call remote
       expect(mockClient.toolRouter.session.execute).not.toHaveBeenCalled();
@@ -241,7 +267,7 @@ describe('ToolRouterSession execution routing', () => {
   });
 
   describe('session.execute() — SessionContext injection', () => {
-    it('should inject SessionContext with correct userId and sessionId', async () => {
+    it('should inject SessionContext with correct userId', async () => {
       const session = createSession(mockClient, [sessionToolHandle]);
 
       await session.execute('GET_AD_ACCOUNTS', { fields: 'id' });
@@ -250,7 +276,6 @@ describe('ToolRouterSession execution routing', () => {
         { fields: 'id' },
         expect.objectContaining({
           userId: 'user_1',
-          sessionId: 'sess_123',
         })
       );
     });
@@ -359,29 +384,6 @@ describe('ToolRouterSession execution routing', () => {
   });
 
   describe('session.tools() — COMPOSIO_MULTI_EXECUTE_TOOL routing with tools[] array', () => {
-    const createSessionWithProvider = (
-      client: ReturnType<typeof createMockClient>,
-      provider: MockProvider,
-      customTools: CustomToolHandle[]
-    ) => {
-      return new ToolRouterSession(
-        client as unknown as ComposioClient,
-        { apiKey: 'key', provider },
-        'sess_123',
-        { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
-        undefined,
-        buildLocalToolsMap(customTools),
-        'user_1'
-      );
-    };
-
-    const captureExecuteFn = (provider: MockProvider) => {
-      provider.wrapTools.mockImplementation((tools: any, executeFn: any) => {
-        (provider as any)._capturedExecuteFn = executeFn;
-        return 'wrapped-tools-with-routing';
-      });
-    };
-
     it('should route all-local tools[] to in-process execution', async () => {
       const provider = new MockProvider();
       captureExecuteFn(provider);
@@ -400,7 +402,29 @@ describe('ToolRouterSession execution routing', () => {
       expect(result.data).toEqual({ local_result: true });
       expect(localExecute).toHaveBeenCalledWith(
         { category: 'test' },
-        expect.objectContaining({ userId: 'user_1', sessionId: 'sess_123' })
+        expect.objectContaining({ userId: 'user_1' })
+      );
+    });
+
+    it('should route local tool by non-prefixed slug in multi-execute', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      await session.tools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'GET_USER_CONTEXT', arguments: { category: 'no-prefix' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      expect(result.data).toEqual({ local_result: true });
+      expect(localExecute).toHaveBeenCalledWith(
+        { category: 'no-prefix' },
+        expect.objectContaining({ userId: 'user_1' })
       );
     });
 
@@ -430,6 +454,17 @@ describe('ToolRouterSession execution routing', () => {
       const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
 
       await session.tools();
+
+      // Re-mock executeMetaTool after session.tools() created the Tools instance
+      const latestToolsInstance = (Tools as any).mock.results[
+        (Tools as any).mock.results.length - 1
+      ].value;
+      latestToolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: { GMAIL_SEND_EMAIL: { messageId: 'msg_1' } },
+        error: null,
+        successful: true,
+      });
+
       const executeFn = (provider as any)._capturedExecuteFn;
 
       const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
@@ -445,6 +480,7 @@ describe('ToolRouterSession execution routing', () => {
       // Remote goes to backend — merged results keyed by slug
       expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
       expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
+      expect(result.data.GMAIL_SEND_EMAIL).toEqual({ messageId: 'msg_1' });
     });
 
     it('should route non-MULTI_EXECUTE meta tools to backend', async () => {
@@ -494,6 +530,189 @@ describe('ToolRouterSession execution routing', () => {
       await session.execute('GET_AD_ACCOUNTS', { fields: 'id' });
       expect(sessionExecute).toHaveBeenCalled();
       expect(localExecute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('remote batch duplication fix — each remote tool gets its own result', () => {
+    it('should return per-tool keyed results when multiple remote tools are in a mixed batch', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      // Mock executeMetaTool to return data keyed by slug (like real backend)
+      const toolsInstance = (Tools as any).mock.results[
+        (Tools as any).mock.results.length - 1
+      ]?.value;
+
+      await session.tools();
+
+      // Re-mock executeMetaTool after session.tools() created the Tools instance
+      const latestToolsInstance = (Tools as any).mock.results[
+        (Tools as any).mock.results.length - 1
+      ].value;
+      latestToolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: {
+          GMAIL_SEND_EMAIL: { message_id: 'msg_1' },
+          SLACK_POST_MESSAGE: { ts: '123456' },
+        },
+        error: null,
+        successful: true,
+      });
+
+      const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'prefs' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+          { tool_slug: 'SLACK_POST_MESSAGE', arguments: { channel: '#general' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      // Local tool result keyed by its slug
+      expect(result.data).toHaveProperty('LOCAL_GET_USER_CONTEXT');
+      expect(result.data.LOCAL_GET_USER_CONTEXT).toEqual({ local_result: true });
+
+      // Each remote tool gets its own keyed result, not the entire batch blob
+      expect(result.data).toHaveProperty('GMAIL_SEND_EMAIL');
+      expect(result.data.GMAIL_SEND_EMAIL).toEqual({ message_id: 'msg_1' });
+
+      expect(result.data).toHaveProperty('SLACK_POST_MESSAGE');
+      expect(result.data.SLACK_POST_MESSAGE).toEqual({ ts: '123456' });
+    });
+  });
+
+  describe('provider guard — session.tools() throws without provider', () => {
+    it('should throw when provider is not configured but local tools exist', async () => {
+      const localToolsMap = buildLocalToolsMap([customToolHandle]);
+
+      const session = new ToolRouterSession(
+        mockClient as unknown as ComposioClient,
+        { apiKey: 'key' } as any, // no provider
+        'sess_123',
+        { type: 'http' as const, url: 'https://mcp.example.com/sess_123' },
+        undefined,
+        localToolsMap,
+        'user_1'
+      );
+
+      await expect(session.tools()).rejects.toThrow(
+        'A provider is required when using custom tools with session.tools()'
+      );
+    });
+  });
+
+  describe('localTools() method', () => {
+    it('should return wrapped tools with COMPOSIO_EXECUTE_LOCAL_TOOL slug', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      const result = await session.localTools();
+
+      expect(result).toBe('wrapped-tools-with-routing');
+      expect(provider.wrapTools).toHaveBeenCalled();
+
+      const tools = (provider as any)._capturedTools;
+      expect(tools).toHaveLength(1);
+      expect(tools[0].slug).toBe('COMPOSIO_EXECUTE_LOCAL_TOOL');
+    });
+
+    it('should route to local tool correctly when executing via localTools()', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      await session.localTools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_EXECUTE_LOCAL_TOOL', {
+        tool_slug: 'LOCAL_GET_USER_CONTEXT',
+        arguments: { category: 'test' },
+      });
+
+      expect(result.data).toEqual({ local_result: true });
+      expect(result.successful).toBe(true);
+      expect(localExecute).toHaveBeenCalledWith(
+        { category: 'test' },
+        expect.objectContaining({ userId: 'user_1' })
+      );
+    });
+
+    it('should return error when executing with invalid slug via localTools()', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      await session.localTools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_EXECUTE_LOCAL_TOOL', {
+        tool_slug: 'NON_EXISTENT_TOOL',
+        arguments: {},
+      });
+
+      expect(result.successful).toBe(false);
+      expect(result.error).toContain('Local tool "NON_EXISTENT_TOOL" not found');
+      expect(result.data).toEqual({});
+    });
+
+    it('should throw when calling localTools() without custom tools', async () => {
+      const session = new ToolRouterSession(
+        mockClient as unknown as ComposioClient,
+        { apiKey: 'key', provider: new MockProvider() },
+        'sess_123',
+        { type: 'http' as const, url: 'https://mcp.example.com/sess_123' }
+        // No localToolsMap, no userId
+      );
+
+      await expect(session.localTools()).rejects.toThrow(
+        'No custom tools are bound to this session.'
+      );
+    });
+  });
+
+  describe('COMPOSIO_EXECUTE_LOCAL_TOOL interception in routing', () => {
+    it('should route COMPOSIO_EXECUTE_LOCAL_TOOL to the correct local tool via session.tools() routing', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      await session.tools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_EXECUTE_LOCAL_TOOL', {
+        tool_slug: 'LOCAL_GET_USER_CONTEXT',
+        arguments: { category: 'routing-test' },
+      });
+
+      expect(result.data).toEqual({ local_result: true });
+      expect(result.successful).toBe(true);
+      expect(localExecute).toHaveBeenCalledWith(
+        { category: 'routing-test' },
+        expect.objectContaining({ userId: 'user_1' })
+      );
+      // Should NOT call remote
+      expect(mockClient.toolRouter.session.execute).not.toHaveBeenCalled();
+    });
+
+    it('should return error for COMPOSIO_EXECUTE_LOCAL_TOOL with unknown slug', async () => {
+      const provider = new MockProvider();
+      captureExecuteFn(provider);
+      const session = createSessionWithProvider(mockClient, provider, [customToolHandle]);
+
+      await session.tools();
+      const executeFn = (provider as any)._capturedExecuteFn;
+
+      const result = await executeFn('COMPOSIO_EXECUTE_LOCAL_TOOL', {
+        tool_slug: 'DOES_NOT_EXIST',
+        arguments: {},
+      });
+
+      expect(result.successful).toBe(false);
+      expect(result.error).toContain('Local tool "DOES_NOT_EXIST" not found');
+      expect(result.data).toEqual({});
     });
   });
 });

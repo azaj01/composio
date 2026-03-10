@@ -39,7 +39,7 @@ import {
 } from '../lib/toolRouterParams';
 import { ToolRouterSession } from './ToolRouterSession';
 import { buildLocalToolsMap, serializeLocalTools } from './CustomTool';
-import type { LocalToolsMap } from '../types/customTool.types';
+import type { LocalToolsMap, LocalToolDefinition } from '../types/customTool.types';
 
 export class ToolRouter<
   TToolCollection,
@@ -100,7 +100,7 @@ export class ToolRouter<
     let localToolsMap: LocalToolsMap | undefined;
     const customTools = routerConfig.customTools;
 
-    const payload: SessionCreateParams & { local_tools?: unknown } = {
+    const payload: SessionCreateParams & { local_tools?: LocalToolDefinition[] } = {
       user_id: userId,
       auth_configs: routerConfig.authConfigs,
       connected_accounts: routerConfig.connectedAccounts,

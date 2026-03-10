@@ -11,15 +11,13 @@ import type { ToolExecuteResponse, ToolProxyParams } from '../types/tool.types';
  */
 export class SessionContextImpl implements SessionContext {
   public readonly userId: string;
-  public readonly sessionId: string;
 
   constructor(
     private readonly client: ComposioClient,
     userId: string,
-    sessionId: string
+    private readonly sessionId: string
   ) {
     this.userId = userId;
-    this.sessionId = sessionId;
   }
 
   /**
