@@ -82,6 +82,18 @@ describe('CustomTool', () => {
       expect(() => CustomTool({ ...baseOptions, slug: '' })).toThrow('slug is required');
     });
 
+    it('should throw if slug starts with LOCAL_ prefix', () => {
+      expect(() => CustomTool({ ...baseOptions, slug: 'LOCAL_MY_TOOL' })).toThrow(
+        'must not start with "LOCAL_"'
+      );
+    });
+
+    it('should throw if slug starts with local_ prefix (case-insensitive)', () => {
+      expect(() => CustomTool({ ...baseOptions, slug: 'local_something' })).toThrow(
+        'must not start with "LOCAL_"'
+      );
+    });
+
     it('should throw if name is missing', () => {
       expect(() => CustomTool({ ...baseOptions, name: '' })).toThrow('name is required');
     });

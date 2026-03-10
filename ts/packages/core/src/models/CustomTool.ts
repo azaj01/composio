@@ -95,6 +95,11 @@ export function CustomTool<T extends z.ZodType>(
   if (!slug) {
     throw new Error('CustomTool: slug is required');
   }
+  if (slug.toUpperCase().startsWith(LOCAL_TOOL_PREFIX)) {
+    throw new Error(
+      `CustomTool: slug must not start with "${LOCAL_TOOL_PREFIX}" — this prefix is reserved for internal routing.`
+    );
+  }
   if (!name) {
     throw new Error('CustomTool: name is required');
   }
