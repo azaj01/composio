@@ -121,7 +121,7 @@ To get all available tools, pass `toolkit_versions=latest`:
 
 ```bash
 curl 'https://backend.composio.dev/api/v3/tools?toolkit_slug=googledrive&toolkit_versions=latest' \
-  -H "x-api-key: $COMPOSIO_API_KEY"
+  -H 'x-api-key: YOUR_API_KEY'
 ```
 
 See [Toolkit versioning](/docs/tools-direct/toolkit-versioning) for more details.
@@ -228,7 +228,7 @@ Call the toolkits API and check the `composio_managed_auth_schemes` field:
 
 ```bash
 curl 'https://backend.composio.dev/api/v3/toolkits/github' \
-  -H "x-api-key: $COMPOSIO_API_KEY"
+  -H 'x-api-key: YOUR_API_KEY'
 ```
 
 If the array is empty, you'll need to provide your own credentials.
@@ -237,7 +237,7 @@ To fetch all toolkits and filter by managed auth availability, use the list endp
 
 ```bash
 curl 'https://backend.composio.dev/api/v3/toolkits' \
-  -H "x-api-key: $COMPOSIO_API_KEY"
+  -H 'x-api-key: YOUR_API_KEY'
 ```
 
 Each toolkit in the response includes `composio_managed_auth_schemes`. You can also browse the full list on the [managed auth page](/toolkits/managed-auth) or check individual toolkit pages on the [toolkits page](/toolkits).
