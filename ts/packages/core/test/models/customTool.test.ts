@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod/v3';
-import { CustomTool, buildLocalToolsMap, serializeLocalTools, LOCAL_TOOL_PREFIX } from '../../src/models/CustomTool';
+import { createCustomTool, buildLocalToolsMap, serializeLocalTools, LOCAL_TOOL_PREFIX } from '../../src/models/CustomTool';
 import { SessionContextImpl } from '../../src/models/SessionContext';
-import type { CustomToolHandle, SessionContext } from '../../src/types/customTool.types';
+import type { CustomTool, SessionContext } from '../../src/types/customTool.types';
 
 // ────────────────────────────────────────────────────────────────
-// CustomTool() factory
+// createCustomTool() factory
 // ────────────────────────────────────────────────────────────────
 
-describe('CustomTool', () => {
+describe('createCustomTool', () => {
   const baseOptions = {
     slug: 'GET_USER_CONTEXT',
     name: 'Get user context',
@@ -19,31 +19,31 @@ describe('CustomTool', () => {
     execute: vi.fn().mockResolvedValue({ result: 'ok' }),
   };
 
-  it('should return a valid handle with correct fields', () => {
-    const handle = CustomTool(baseOptions);
+  it('should return a valid tool with correct fields', () => {
+    const tool = createCustomTool(baseOptions);
 
-    expect(handle.slug).toBe('GET_USER_CONTEXT');
-    expect(handle.name).toBe('Get user context');
-    expect(handle.description).toBe('Retrieve what we know about a user');
-    expect(handle.connectedToolkit).toBeUndefined();
-    expect(handle.execute).toBe(baseOptions.execute);
-    expect(handle.inputSchema).toMatchObject({
+    expect(tool.slug).toBe('GET_USER_CONTEXT');
+    expect(tool.name).toBe('Get user context');
+    expect(tool.description).toBe('Retrieve what we know about a user');
+    expect(tool.toolkit).toBeUndefined();
+    expect(tool.execute).toBe(baseOptions.execute);
+    expect(tool.inputSchema).toMatchObject({
       type: 'object',
       properties: {
         category: { type: 'string', description: 'The category' },
       },
       required: ['category'],
     });
-    expect(handle.inputParams).toBe(baseOptions.inputParams);
+    expect(tool.inputParams).toBe(baseOptions.inputParams);
   });
 
-  it('should include connectedToolkit when provided', () => {
-    const handle = CustomTool({ ...baseOptions, connectedToolkit: 'meta_ads' });
-    expect(handle.connectedToolkit).toBe('meta_ads');
+  it('should include toolkit when provided', () => {
+    const tool = createCustomTool({ ...baseOptions, toolkit: 'meta_ads' });
+    expect(tool.toolkit).toBe('meta_ads');
   });
 
   it('should convert Zod schema with optional fields correctly', () => {
-    const handle = CustomTool({
+    const tool = createCustomTool({
       ...baseOptions,
       inputParams: z.object({
         required_field: z.string(),
@@ -51,7 +51,7 @@ describe('CustomTool', () => {
       }),
     });
 
-    expect(handle.inputSchema).toMatchObject({
+    expect(tool.inputSchema).toMatchObject({
       type: 'object',
       properties: {
         required_field: { type: 'string' },
@@ -62,14 +62,14 @@ describe('CustomTool', () => {
   });
 
   it('should convert Zod schema with defaults correctly', () => {
-    const handle = CustomTool({
+    const tool = createCustomTool({
       ...baseOptions,
       inputParams: z.object({
         category: z.string().default('all'),
       }),
     });
 
-    expect(handle.inputSchema).toMatchObject({
+    expect(tool.inputSchema).toMatchObject({
       type: 'object',
       properties: {
         category: expect.objectContaining({ type: 'string' }),
@@ -79,39 +79,39 @@ describe('CustomTool', () => {
 
   describe('validation', () => {
     it('should throw if slug is missing', () => {
-      expect(() => CustomTool({ ...baseOptions, slug: '' })).toThrow('slug is required');
+      expect(() => createCustomTool({ ...baseOptions, slug: '' })).toThrow('slug is required');
     });
 
     it('should throw if slug starts with LOCAL_ prefix', () => {
-      expect(() => CustomTool({ ...baseOptions, slug: 'LOCAL_MY_TOOL' })).toThrow(
-        'must not start with "LOCAL_"'
+      expect(() => createCustomTool({ ...baseOptions, slug: 'LOCAL_MY_TOOL' })).toThrow(
+        /LOCAL_/
       );
     });
 
     it('should throw if slug starts with local_ prefix (case-insensitive)', () => {
-      expect(() => CustomTool({ ...baseOptions, slug: 'local_something' })).toThrow(
-        'must not start with "LOCAL_"'
+      expect(() => createCustomTool({ ...baseOptions, slug: 'local_something' })).toThrow(
+        /LOCAL_/
       );
     });
 
     it('should throw if name is missing', () => {
-      expect(() => CustomTool({ ...baseOptions, name: '' })).toThrow('name is required');
+      expect(() => createCustomTool({ ...baseOptions, name: '' })).toThrow('name is required');
     });
 
     it('should throw if description is missing', () => {
-      expect(() => CustomTool({ ...baseOptions, description: '' })).toThrow(
+      expect(() => createCustomTool({ ...baseOptions, description: '' })).toThrow(
         'description is required'
       );
     });
 
     it('should throw if inputParams is missing', () => {
-      expect(() => CustomTool({ ...baseOptions, inputParams: null as any })).toThrow(
+      expect(() => createCustomTool({ ...baseOptions, inputParams: null as any })).toThrow(
         'inputParams is required'
       );
     });
 
     it('should throw if execute is not a function', () => {
-      expect(() => CustomTool({ ...baseOptions, execute: 'not-fn' as any })).toThrow(
+      expect(() => createCustomTool({ ...baseOptions, execute: 'not-fn' as any })).toThrow(
         'execute must be a function'
       );
     });
@@ -121,13 +121,13 @@ describe('CustomTool', () => {
     it('should allow no-session execute (input only)', async () => {
       const noSessionExecute = vi.fn().mockResolvedValue({ result: 42 });
 
-      const handle = CustomTool({
+      const tool = createCustomTool({
         ...baseOptions,
         execute: noSessionExecute,
       });
 
       // Call without session — JS ignores extra params
-      const result = await handle.execute({ category: 'test' } as any);
+      const result = await tool.execute({ category: 'test' } as any);
       expect(result.result).toBe(42);
       expect(noSessionExecute).toHaveBeenCalledWith({ category: 'test' });
     });
@@ -135,7 +135,7 @@ describe('CustomTool', () => {
     it('should allow session-based execute (input + session)', async () => {
       const sessionExecute = vi.fn().mockResolvedValue({ userId: 'u1' });
 
-      const handle = CustomTool({
+      const tool = createCustomTool({
         ...baseOptions,
         execute: sessionExecute,
       });
@@ -146,7 +146,7 @@ describe('CustomTool', () => {
         proxyExecute: vi.fn(),
       };
 
-      const result = await handle.execute({ category: 'test' }, mockSession);
+      const result = await tool.execute({ category: 'test' }, mockSession);
       expect(result.userId).toBe('u1');
       expect(sessionExecute).toHaveBeenCalledWith({ category: 'test' }, mockSession);
     });
@@ -158,7 +158,7 @@ describe('CustomTool', () => {
 // ────────────────────────────────────────────────────────────────
 
 describe('buildLocalToolsMap', () => {
-  const makeHandle = (slug: string): CustomToolHandle => ({
+  const makeTool = (slug: string): CustomTool => ({
     slug,
     name: `Tool ${slug}`,
     description: `Description for ${slug}`,
@@ -168,8 +168,8 @@ describe('buildLocalToolsMap', () => {
   });
 
   it('should create maps with both prefixed and original slug keys', () => {
-    const handles = [makeHandle('MY_TOOL'), makeHandle('OTHER_TOOL')];
-    const map = buildLocalToolsMap(handles);
+    const tools = [makeTool('MY_TOOL'), makeTool('OTHER_TOOL')];
+    const map = buildLocalToolsMap(tools);
 
     expect(map.byPrefixed.size).toBe(2);
     expect(map.byOriginal.size).toBe(2);
@@ -184,16 +184,16 @@ describe('buildLocalToolsMap', () => {
   });
 
   it('should handle case-insensitive slugs (uppercased internally)', () => {
-    const handle = makeHandle('my_tool');
-    const map = buildLocalToolsMap([handle]);
+    const tool = makeTool('my_tool');
+    const map = buildLocalToolsMap([tool]);
 
     expect(map.byOriginal.has('MY_TOOL')).toBe(true);
     expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
   });
 
   it('should throw on duplicate slugs', () => {
-    const handles = [makeHandle('DUPE'), makeHandle('DUPE')];
-    expect(() => buildLocalToolsMap(handles)).toThrow('duplicate slug "DUPE"');
+    const tools = [makeTool('DUPE'), makeTool('DUPE')];
+    expect(() => buildLocalToolsMap(tools)).toThrow('duplicate slug "DUPE"');
   });
 
 });
@@ -203,18 +203,18 @@ describe('buildLocalToolsMap', () => {
 // ────────────────────────────────────────────────────────────────
 
 describe('serializeLocalTools', () => {
-  it('should serialize handles into backend format', () => {
-    const handle: CustomToolHandle = {
+  it('should serialize tools into backend format', () => {
+    const tool: CustomTool = {
       slug: 'GET_DATA',
       name: 'Get Data',
       description: 'Gets some data',
-      connectedToolkit: 'my_toolkit',
+      toolkit: 'my_toolkit',
       inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
       inputParams: z.object({ id: z.string() }),
       execute: vi.fn(),
     };
 
-    const result = serializeLocalTools([handle]);
+    const result = serializeLocalTools([tool]);
 
     expect(result).toEqual([
       {
@@ -227,8 +227,8 @@ describe('serializeLocalTools', () => {
     ]);
   });
 
-  it('should omit toolkit when connectedToolkit not provided', () => {
-    const handle: CustomToolHandle = {
+  it('should omit toolkit when not provided', () => {
+    const tool: CustomTool = {
       slug: 'NO_TOOLKIT',
       name: 'No Toolkit',
       description: 'No toolkit tool',
@@ -237,7 +237,7 @@ describe('serializeLocalTools', () => {
       execute: vi.fn(),
     };
 
-    const result = serializeLocalTools([handle]);
+    const result = serializeLocalTools([tool]);
     expect(result[0]).not.toHaveProperty('toolkit');
   });
 });

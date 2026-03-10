@@ -7,7 +7,7 @@
  * Requires COMPOSIO_API_KEY in environment.
  */
 import { Composio } from '@composio/core';
-import { CustomTool } from '@composio/core/experimental';
+import { createCustomTool } from '@composio/core/experimental';
 import { z } from 'zod/v3';
 
 const apiKey = process.env.COMPOSIO_API_KEY;
@@ -18,7 +18,7 @@ if (!apiKey) {
 
 // ── Define custom tools ──────────────────────────────────────
 
-const getUserContext = CustomTool({
+const getUserContext = createCustomTool({
   slug: 'GET_USER_CONTEXT',
   name: 'Get user context',
   description: 'Retrieve user preferences and history',
@@ -30,7 +30,7 @@ const getUserContext = CustomTool({
   },
 });
 
-const enrichedSearch = CustomTool({
+const enrichedSearch = createCustomTool({
   slug: 'ENRICHED_SEARCH',
   name: 'Enriched search',
   description: 'Search and enrich results with user context',
@@ -45,7 +45,7 @@ const enrichedSearch = CustomTool({
   },
 });
 
-const throwingTool = CustomTool({
+const throwingTool = createCustomTool({
   slug: 'THROWING_TOOL',
   name: 'Throwing tool',
   description: 'A tool that always throws an error',
@@ -56,7 +56,7 @@ const throwingTool = CustomTool({
 });
 
 // Tool with strict numeric schema — for Zod validation failure test
-const strictTool = CustomTool({
+const strictTool = createCustomTool({
   slug: 'STRICT_TOOL',
   name: 'Strict tool',
   description: 'Tool with strict numeric input',
@@ -69,7 +69,7 @@ const strictTool = CustomTool({
 });
 
 // Tool that chains into a remote tool via SessionContext.execute()
-const weatherChain = CustomTool({
+const weatherChain = createCustomTool({
   slug: 'WEATHER_CHAIN',
   name: 'Weather chain',
   description: 'Fetches weather via remote tool and enriches with local context',

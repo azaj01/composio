@@ -59,7 +59,7 @@ export interface ExecuteMetadata {
 }
 
 // ────────────────────────────────────────────────────────────────
-// New custom tool types (for tool router integration via CustomTool())
+// New custom tool types (for tool router integration via createCustomTool())
 // ────────────────────────────────────────────────────────────────
 
 /**
@@ -74,7 +74,10 @@ export interface SessionContext {
     toolSlug: string,
     arguments_: Record<string, unknown>
   ): Promise<SdkToolExecuteResponse>;
-  /** Proxy API calls through Composio's auth layer (resolved from session) */
+  /**
+   * Proxy API calls through Composio's auth layer (resolved from session).
+   * @todo Not yet implemented — pending backend session-scoped proxy endpoint.
+   */
   proxyExecute(params: ToolProxyParams): Promise<SdkToolExecuteResponse>;
 }
 
@@ -91,38 +94,52 @@ export type CustomToolExecuteFn<T extends z.ZodType> = (
   session: SessionContext
 ) => Promise<Record<string, unknown>>;
 
-/** Options for creating a custom local tool via `CustomTool()`. */
-export type NewCustomToolOptions<T extends z.ZodType> = {
-  /** Unique slug identifier (e.g. 'GET_USER_CONTEXT') */
-  slug: string;
-  /** Human-readable name */
-  name: string;
-  /** Description — required for search indexing */
-  description: string;
+/**
+ * Zod schema for validating the string/scalar fields of createCustomTool() options.
+ * Used internally for validation — inputParams and execute are checked manually.
+ */
+export const CreateCustomToolBaseSchema = z.object({
+  slug: z
+    .string()
+    .min(1, 'createCustomTool: slug is required')
+    .refine(s => !s.toUpperCase().startsWith('LOCAL_'), {
+      message:
+        'createCustomTool: slug must not start with "LOCAL_" — this prefix is reserved for internal routing.',
+    }),
+  name: z.string().min(1, 'createCustomTool: name is required'),
+  description: z.string().min(1, 'createCustomTool: description is required'),
+  /**
+   * Composio toolkit slug that this tool requires an active connection for.
+   * Set this to the toolkit whose auth your tool needs (e.g. `'meta_ads'`, `'gmail'`).
+   * Leave empty for tools that don't need any Composio-managed authentication.
+   */
+  toolkit: z.string().optional(),
+});
+
+/** Options for creating a custom local tool via `createCustomTool()`. */
+export type CreateCustomToolParams<T extends z.ZodType> = z.infer<
+  typeof CreateCustomToolBaseSchema
+> & {
   /** Zod schema for input parameters */
   inputParams: T;
-  /**
-   * Composio toolkit slug requiring an active connection (e.g. 'meta_ads').
-   * If not provided, the tool does not need Composio auth.
-   */
-  connectedToolkit?: string;
   /** The function that executes the tool */
   execute: CustomToolExecuteFn<T>;
 };
 
 /**
- * Handle returned from `CustomTool()`.
+ * Custom tool definition returned from `createCustomTool()`.
  * Pass to `composio.create(userId, { customTools: [...] })` to bind to a session.
  */
-export interface CustomToolHandle {
+export interface CustomTool {
   readonly slug: string;
   readonly name: string;
   readonly description: string;
   /**
-   * Composio toolkit slug requiring an active connection.
-   * Undefined means the tool does not need Composio auth.
+   * Composio toolkit slug that this tool requires an active connection for.
+   * Set this to the toolkit whose auth your tool needs (e.g. `'meta_ads'`, `'gmail'`).
+   * Undefined means the tool doesn't need any Composio-managed authentication.
    */
-  readonly connectedToolkit?: string;
+  readonly toolkit?: string;
   readonly inputSchema: Record<string, unknown>;
   /** @internal Original Zod schema — used for runtime input validation (defaults, coercions, transforms) */
   readonly inputParams: z.ZodType;
@@ -136,13 +153,12 @@ export interface LocalToolDefinition {
   name: string;
   description: string;
   input_schema: Record<string, unknown>;
-  /** Maps connectedToolkit → toolkit in the backend payload */
   toolkit?: string;
 }
 
 /** @internal Entry in the per-session local tools routing map. */
 export type LocalToolsMapEntry = {
-  handle: CustomToolHandle;
+  handle: CustomTool;
   prefixedSlug: string;
 };
 

@@ -7,11 +7,10 @@
  */
 
 // Custom local tools
-export { CustomTool } from '../models/CustomTool';
-export { SessionContextImpl } from '../models/SessionContext';
+export { createCustomTool } from '../models/CustomTool';
 export type {
-  CustomToolHandle,
-  NewCustomToolOptions,
+  CustomTool,
+  CreateCustomToolParams,
   CustomToolExecuteFn,
   SessionContext,
 } from '../types/customTool.types';

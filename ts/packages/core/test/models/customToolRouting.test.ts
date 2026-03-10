@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod/v3';
 import { ToolRouter } from '../../src/models/ToolRouter';
 import { ToolRouterSession } from '../../src/models/ToolRouterSession';
-import { CustomTool, buildLocalToolsMap } from '../../src/models/CustomTool';
+import { createCustomTool, buildLocalToolsMap } from '../../src/models/CustomTool';
 import { MockProvider } from '../utils/mocks/provider.mock';
 import ComposioClient from '@composio/client';
 import { Tools } from '../../src/models/Tools';
-import type { CustomToolHandle } from '../../src/types/customTool.types';
+import type { CustomTool } from '../../src/types/customTool.types';
 
 // Mock telemetry
 vi.mock('../../src/telemetry/Telemetry', () => ({
@@ -65,7 +65,7 @@ const createMockClient = () => ({
 // Execute returns data directly (simplified API)
 const localExecute = vi.fn().mockResolvedValue({ local_result: true });
 
-const customToolHandle = CustomTool({
+const customToolHandle = createCustomTool({
   slug: 'GET_USER_CONTEXT',
   name: 'Get user context',
   description: 'Retrieve user preferences',
@@ -77,11 +77,11 @@ const sessionExecute = vi.fn().mockImplementation(async (input: any, session: an
   userId: session.userId,
 }));
 
-const sessionToolHandle = CustomTool({
+const sessionToolHandle = createCustomTool({
   slug: 'GET_AD_ACCOUNTS',
   name: 'Get ad accounts',
   description: 'Get ad account IDs',
-  connectedToolkit: 'meta_ads',
+  toolkit: 'meta_ads',
   inputParams: z.object({ fields: z.string() }),
   execute: sessionExecute,
 });
@@ -91,7 +91,7 @@ const sessionToolHandle = CustomTool({
 const createSessionWithProvider = (
   client: ReturnType<typeof createMockClient>,
   provider: MockProvider,
-  customTools: CustomToolHandle[]
+  customTools: CustomTool[]
 ) => {
   return new ToolRouterSession(
     client as unknown as ComposioClient,
@@ -146,7 +146,7 @@ describe('ToolRouter.create() with customTools', () => {
     ]);
   });
 
-  it('should include toolkit in local_tools when connectedToolkit is present', async () => {
+  it('should include toolkit in local_tools when toolkit is present', async () => {
     await router.create('user_1', {
       customTools: [sessionToolHandle],
     });
@@ -182,7 +182,7 @@ describe('ToolRouterSession execution routing', () => {
 
   const createSession = (
     client: ReturnType<typeof createMockClient>,
-    customTools: CustomToolHandle[] = []
+    customTools: CustomTool[] = []
   ) => {
     const localToolsMap = customTools.length ? buildLocalToolsMap(customTools) : undefined;
 
@@ -282,7 +282,7 @@ describe('ToolRouterSession execution routing', () => {
         return { inner_result: inner.data };
       });
 
-      const chainedTool = CustomTool({
+      const chainedTool = createCustomTool({
         slug: 'CHAINED_TOOL',
         name: 'Chained',
         description: 'Calls another tool',
@@ -303,7 +303,7 @@ describe('ToolRouterSession execution routing', () => {
 
   describe('session.execute() — error handling', () => {
     it('should catch errors thrown by execute function and return error response', async () => {
-      const throwingTool = CustomTool({
+      const throwingTool = createCustomTool({
         slug: 'THROWING_TOOL',
         name: 'Throwing',
         description: 'Throws an error',
@@ -325,7 +325,7 @@ describe('ToolRouterSession execution routing', () => {
         category: input.category,
       }));
 
-      const toolWithDefaults = CustomTool({
+      const toolWithDefaults = createCustomTool({
         slug: 'DEFAULTS_TOOL',
         name: 'Defaults',
         description: 'Tool with default values',
@@ -345,7 +345,7 @@ describe('ToolRouterSession execution routing', () => {
     });
 
     it('should return validation error for invalid input', async () => {
-      const strictTool = CustomTool({
+      const strictTool = createCustomTool({
         slug: 'STRICT_TOOL',
         name: 'Strict',
         description: 'Tool with strict input',
@@ -361,7 +361,7 @@ describe('ToolRouterSession execution routing', () => {
     });
 
     it('should handle non-Error throws gracefully', async () => {
-      const throwingTool = CustomTool({
+      const throwingTool = createCustomTool({
         slug: 'STRING_THROW',
         name: 'String throw',
         description: 'Throws a string',
@@ -479,7 +479,7 @@ describe('ToolRouterSession execution routing', () => {
     /** Helper: set up provider + session + capture executeFn + get latest Tools mock */
     const setupMultiExecute = async (
       client: ReturnType<typeof createMockClient>,
-      customTools: CustomToolHandle[]
+      customTools: CustomTool[]
     ) => {
       const provider = new MockProvider();
       captureExecuteFn(provider);
@@ -585,7 +585,7 @@ describe('ToolRouterSession execution routing', () => {
     });
 
     it('should still succeed when one local tool errors in a mixed batch', async () => {
-      const throwingHandle = CustomTool({
+      const throwingHandle = createCustomTool({
         slug: 'MIXED_THROWER',
         name: 'Throws in batch',
         description: 'Throws',
@@ -670,7 +670,7 @@ describe('ToolRouterSession execution routing', () => {
       // Track call timing to verify parallelism
       const callOrder: string[] = [];
 
-      const slowLocalHandle = CustomTool({
+      const slowLocalHandle = createCustomTool({
         slug: 'SLOW_LOCAL',
         name: 'Slow local',
         description: 'Slow',
