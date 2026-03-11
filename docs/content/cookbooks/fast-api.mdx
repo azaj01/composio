@@ -112,16 +112,3 @@ curl -X POST http://localhost:8000/connect/gmail \
 ```
 
 Open the `redirect_url` from the response in your browser to complete OAuth.
-
-## Take it further
-
-This server is a starting point. A few ways to extend it:
-
-- **Add auth middleware**: pass `user_id` from your JWT or session instead of the request body
-- **Webhook-driven agents**: add a `/webhook` endpoint that triggers the agent from Stripe, GitHub, or Slack events
-- **Multi-agent routing**: spin up different agents per endpoint — one for email, one for code review, one for scheduling
-
-<Cards>
-  <Card title="Build a Chat App" href="/cookbooks/chat-app" description="Full Next.js chat UI with streaming and multi-user auth" />
-  <Card title="Hono Server" href="/cookbooks/hono" description="Same pattern in Hono.js for TypeScript backends" />
-</Cards>

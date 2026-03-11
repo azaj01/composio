@@ -112,16 +112,3 @@ curl -X POST http://localhost:8000/connect/gmail \
 ```
 
 Open the `redirectUrl` from the response in your browser to complete OAuth.
-
-## Take it further
-
-This server handles chat, connections, and OAuth in ~50 lines. A few ways to extend it:
-
-- **Trigger endpoints**: add a `/webhooks` route that receives [Composio trigger events](/docs/setting-up-triggers/subscribing-to-events) and kicks off an agent run
-- **Scoped toolkits per route**: give `/chat/support` access to Zendesk and Notion, and `/chat/sales` access to Salesforce and Gmail
-- **Edge deployment**: Hono runs on Cloudflare Workers — deploy the same agent at the edge with zero changes
-
-<Cards>
-  <Card title="FastAPI Server" href="/cookbooks/fast-api" description="Same pattern in Python with FastAPI" />
-  <Card title="Build a Chat App" href="/cookbooks/chat-app" description="Full Next.js chat UI with streaming and multi-user auth" />
-</Cards>
