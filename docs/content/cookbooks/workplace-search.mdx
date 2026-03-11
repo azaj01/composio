@@ -113,10 +113,9 @@ into two phases. The team agreed in the thread.
 1. `authorize.py` connects each toolkit via OAuth using `session.authorize()` and `wait_for_connection()`. It checks `session.toolkits()` first to skip already-connected apps.
 2. The session is created with four toolkits. Composio scopes all tool calls to the user's connected accounts.
 3. The agent searches across apps, synthesizes results, and cites sources with links, channel names, or sender info.
-4. Changing `USER_ID` in `.env` switches to a different user's connections without touching the code.
+4. The `USER_ID` in `.env` scopes all connections — swap it to switch users without changing code.
 
 ## Next steps
 
 - Restrict to read-only tools with `tags` when creating the session. See [Enable and disable toolkits](/docs/toolkits/enable-and-disable-toolkits).
-- Wrap this in a FastAPI endpoint and pass `user_id` from your auth middleware.
-- Add more toolkits (Jira, Confluence, Linear) without changing the agent code.
+- Add more toolkits (Jira, Confluence, Linear) — no agent code changes needed.
