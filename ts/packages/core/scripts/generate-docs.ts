@@ -454,8 +454,8 @@ function generateMethodMdx(method: MethodDoc): string {
         for (const param of sig.parameters) {
           const opt = param.required ? '' : '?';
           const desc = escapeTextForMdx(param.description || '');
-          const typeCell = safeInlineType(simplifyTypeForTable(param.type));
-          lines.push(`| \`${param.name}${opt}\` | ${typeCell} | ${desc} |`);
+          const typeCell = escapeTypeForMdx(simplifyTypeForTable(param.type));
+          lines.push(`| \`${param.name}${opt}\` | \`${typeCell}\` | ${desc} |`);
         }
       } else {
         // No descriptions - use simpler table
@@ -463,8 +463,8 @@ function generateMethodMdx(method: MethodDoc): string {
         lines.push('|------|------|');
         for (const param of sig.parameters) {
           const opt = param.required ? '' : '?';
-          const typeCell = safeInlineType(simplifyTypeForTable(param.type));
-          lines.push(`| \`${param.name}${opt}\` | ${typeCell} |`);
+          const typeCell = escapeTypeForMdx(simplifyTypeForTable(param.type));
+          lines.push(`| \`${param.name}${opt}\` | \`${typeCell}\` |`);
         }
       }
       lines.push('');
@@ -474,8 +474,8 @@ function generateMethodMdx(method: MethodDoc): string {
     if (sig.returnType !== 'void') {
       lines.push('**Returns**');
       lines.push('');
-      const returnTypeDisplay = safeInlineType(simplifyTypeForTable(sig.returnType));
-      let returnLine = returnTypeDisplay;
+      const returnTypeDisplay = escapeTypeForMdx(simplifyTypeForTable(sig.returnType));
+      let returnLine = `\`${returnTypeDisplay}\``;
       if (sig.returnDescription) {
         returnLine += ` — ${escapeTextForMdx(sig.returnDescription)}`;
       }
@@ -568,16 +568,16 @@ function generateClassMdx(classDoc: ClassDoc): string {
       lines.push('| Name | Type | Description |');
       lines.push('|------|------|-------------|');
       for (const prop of publicProps) {
-        const typeCell = safeInlineType(simplifyTypeForTable(prop.type));
+        const typeCell = escapeTypeForMdx(simplifyTypeForTable(prop.type));
         const safeDesc = escapeTextForMdx(prop.description || '');
-        lines.push(`| \`${prop.name}\` | ${typeCell} | ${safeDesc} |`);
+        lines.push(`| \`${prop.name}\` | \`${typeCell}\` | ${safeDesc} |`);
       }
     } else {
       lines.push('| Name | Type |');
       lines.push('|------|------|');
       for (const prop of publicProps) {
-        const typeCell = safeInlineType(simplifyTypeForTable(prop.type));
-        lines.push(`| \`${prop.name}\` | ${typeCell} |`);
+        const typeCell = escapeTypeForMdx(simplifyTypeForTable(prop.type));
+        lines.push(`| \`${prop.name}\` | \`${typeCell}\` |`);
       }
     }
     lines.push('');
@@ -612,25 +612,12 @@ function escapeTextForMdx(str: string): string {
     .replace(/>/g, '&gt;');
 }
 
-// Render a type string as an inline code element safe for MDX tables.
-// Uses <code> HTML tag with &lt;/&gt; escaping instead of backticks,
-// because MDX parsers can interpret <TypeName> as JSX even inside
-// backtick code spans within table cells.
-function safeInlineType(type: string): string {
-  const escaped = type
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\{/g, '\\{')
-    .replace(/\}/g, '\\}');
-  return `<code>${escaped}</code>`;
-}
-
 // Clean up internal generic type parameters that don't add value for users
 function cleanupGenericTypes(type: string): string {
   // Remove generic parameters that are just implementation details
   // e.g., "Tools<unknown, unknown, TProvider>" -> "Tools"
   // e.g., "Composio<TProvider>" -> "Composio"
+  // e.g., "Uint8Array<ArrayBufferLike>" -> "Uint8Array"
   let cleaned = type;
 
   // Remove type parameters that are just unknowns or TProvider
@@ -638,10 +625,20 @@ function cleanupGenericTypes(type: string): string {
   cleaned = cleaned.replace(/<TProvider>/g, '');
   cleaned = cleaned.replace(/<unknown>/g, '');
 
+  // Remove TypeScript internal generic parameters (e.g., <ArrayBufferLike>)
+  // that add no value for users and break MDX parsing
+  cleaned = cleaned.replace(/<ArrayBufferLike>/g, '');
+
   // Clean up double spaces and trailing commas
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
   return cleaned;
+}
+
+// Escape type strings for safe use in MDX backtick code spans.
+// Escapes curly braces which MDX interprets as JSX expressions.
+function escapeTypeForMdx(type: string): string {
+  return type.replace(/\{/g, '\\{').replace(/\}/g, '\\}');
 }
 
 // Simplify complex types for table display (aggressive)
