@@ -137,8 +137,13 @@ export function createUpdateChecker(config: UpdateCheckConfig) {
       // Always persist lastChecked to prevent retry loops when the fetch
       // fails or returns no matching tags.
       const writeState = (latestVersion?: string): Promise<void> => {
-        const stateDir = dirname(config.stateFile);
-        mkdirSync(stateDir, { recursive: true });
+        try {
+          const stateDir = dirname(config.stateFile);
+          mkdirSync(stateDir, { recursive: true });
+        } catch {
+          // If we can't create the directory, bail out silently.
+          return Promise.resolve();
+        }
 
         const state: UpdateCheckState = {
           lastChecked: new Date().toISOString(),
