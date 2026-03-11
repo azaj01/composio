@@ -5,11 +5,12 @@ description: ToolRouterSessionFilesMount class reference
 
 ## Usage
 
-Access this class through the `composio.toolRouterSessionFilesMount` property:
+Access via the `files` property on a session:
 
 ```typescript
 const composio = new Composio({ apiKey: 'your-api-key' });
-const result = await composio.toolRouterSessionFilesMount.list();
+const session = await composio.toolRouter.use('session_123');
+const { items } = await session.files.list({ path: '/' });
 ```
 
 ## Methods

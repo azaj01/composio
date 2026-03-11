@@ -31,6 +31,35 @@ const INTERNAL_CLASSES = new Set([
 // Classes that users instantiate directly (show constructor)
 const USER_INSTANTIATED_CLASSES = new Set(['Composio']);
 
+// Custom usage examples for classes that aren't top-level composio.* properties
+const CLASS_CUSTOM_USAGE: Record<string, { intro: string; code: string }> = {
+  RemoteFile: {
+    intro:
+      '`RemoteFile` is returned by session file operations such as `session.files.download()` and `session.files.upload()`:',
+    code: `const composio = new Composio({ apiKey: 'your-api-key' });
+const session = await composio.toolRouter.use('session_123');
+const file = await session.files.download('/output/report.pdf');
+// file is a RemoteFile instance
+const content = await file.text();`,
+  },
+  ToolRouterSession: {
+    intro: 'Obtain a session via `composio.toolRouter`:',
+    code: `const composio = new Composio({ apiKey: 'your-api-key' });
+
+// Use an existing session
+const session = await composio.toolRouter.use('session_123');
+
+// Or create a new session
+const session = await composio.toolRouter.create('user_123', { toolkits: ['github'] });`,
+  },
+  ToolRouterSessionFilesMount: {
+    intro: 'Access via the `files` property on a session:',
+    code: `const composio = new Composio({ apiKey: 'your-api-key' });
+const session = await composio.toolRouter.use('session_123');
+const { items } = await session.files.list({ path: '/' });`,
+  },
+};
+
 // Discover model files automatically
 async function discoverModelFiles(): Promise<string[]> {
   const files = await readdir(MODELS_DIR);
@@ -538,20 +567,30 @@ function generateClassMdx(classDoc: ClassDoc): string {
     lines.push('');
     lines.push(generateMethodMdx(classDoc.constructor));
   } else if (!USER_INSTANTIATED_CLASSES.has(classDoc.name)) {
-    // Show usage hint for non-instantiated classes
-    // Handle acronyms (e.g., "MCP" -> "mcp") vs PascalCase (e.g., "AuthConfigs" -> "authConfigs")
-    const accessorName =
-      classDoc.name === classDoc.name.toUpperCase()
-        ? classDoc.name.toLowerCase()
-        : classDoc.name.charAt(0).toLowerCase() + classDoc.name.slice(1);
     lines.push('## Usage');
     lines.push('');
-    lines.push(`Access this class through the \`composio.${accessorName}\` property:`);
-    lines.push('');
-    lines.push('```typescript');
-    lines.push(`const composio = new Composio({ apiKey: 'your-api-key' });`);
-    lines.push(`const result = await composio.${accessorName}.list();`);
-    lines.push('```');
+
+    const customUsage = CLASS_CUSTOM_USAGE[classDoc.name];
+    if (customUsage) {
+      lines.push(customUsage.intro);
+      lines.push('');
+      lines.push('```typescript');
+      lines.push(customUsage.code);
+      lines.push('```');
+    } else {
+      // Default: show as top-level composio.* property
+      // Handle acronyms (e.g., "MCP" -> "mcp") vs PascalCase (e.g., "AuthConfigs" -> "authConfigs")
+      const accessorName =
+        classDoc.name === classDoc.name.toUpperCase()
+          ? classDoc.name.toLowerCase()
+          : classDoc.name.charAt(0).toLowerCase() + classDoc.name.slice(1);
+      lines.push(`Access this class through the \`composio.${accessorName}\` property:`);
+      lines.push('');
+      lines.push('```typescript');
+      lines.push(`const composio = new Composio({ apiKey: 'your-api-key' });`);
+      lines.push(`const result = await composio.${accessorName}.list();`);
+      lines.push('```');
+    }
     lines.push('');
   }
 
