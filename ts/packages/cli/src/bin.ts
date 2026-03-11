@@ -219,6 +219,7 @@ runWithArgs.pipe(
         );
 
         yield* Console.error(message);
+        process.exitCode = 1;
       }
     })
   ),
