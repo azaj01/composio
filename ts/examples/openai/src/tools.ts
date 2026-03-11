@@ -16,7 +16,7 @@ const tools = await composio.tools.get('default', {
 const query = 'What is the user "pg"';
 
 const response = await openai.chat.completions.create({
-  model: 'gpt-5.4',
+  model: 'gpt-4o',
   messages: [
     {
       role: 'system',

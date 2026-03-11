@@ -133,7 +133,7 @@ app.post('/hackernews-chat', async (c) => {
 	];
 
 	const response = await openai.chat.completions.create({
-		model: 'gpt-5.4',
+		model: 'gpt-4o-mini',
 		messages: [{ role: 'user', content: message }],
 		tools,
 	});
@@ -150,7 +150,7 @@ app.post('/hackernews-chat', async (c) => {
 	if (toolResponses.length > 0) {
 		// create the final response
 		const finalResponse = await openai.chat.completions.create({
-			model: 'gpt-5.4',
+			model: 'gpt-4o-mini',
 			messages,
 		});
 

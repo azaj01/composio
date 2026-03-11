@@ -32,7 +32,7 @@ console.log(`✅ Tools loaded: ${Object.keys(tools).join(', ')}`);
 
 // 3. Create a ToolLoopAgent with Composio tools
 const hackerNewsAgent = new ToolLoopAgent({
-  model: openai('gpt-5.4'),
+  model: openai('gpt-4o-mini'),
   instructions: `You are a helpful assistant that can look up information about Hacker News users.
 When asked about a user, use the available tools to fetch their profile information.
 Provide a concise summary of the user's profile including their karma, about section, and any other relevant details.`,

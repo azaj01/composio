@@ -41,7 +41,7 @@ console.log({ tools });
 // 4. Pass tools to OpenAI-specific Agent.
 const openai = new OpenAI();
 const emailResponse = await openai.responses.create({
-  model: 'gpt-5.4',
+  model: 'gpt-4o-mini',
   instructions: `
     You are a helpful Gmail assistant that fetches and summarizes emails.
     When fetching emails, provide a clear summary of the results including sender, subject, and date.

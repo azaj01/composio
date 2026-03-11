@@ -35,7 +35,7 @@ async function run() {
   ];
 
   const { text } = await generateText({
-    model: openai('gpt-5.4'),
+    model: openai('gpt-4o-mini'),
     tools,
     messages,
     stopWhen: stepCountIs(5),

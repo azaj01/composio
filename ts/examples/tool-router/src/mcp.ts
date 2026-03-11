@@ -31,7 +31,7 @@ mcpProgress.succeed(`${Object.values(tools).length} tools retrieved from MCP`);
 
 console.log(`🤖 Waiting for agent response...`);
 const stream = await streamText({
-  model: openai('gpt-5.4'),
+  model: openai('gpt-4o-mini'),
   prompt: 'Summarize my latest received email from gmail.',
   stopWhen: stepCountIs(10),
   onStepFinish: (step) => {

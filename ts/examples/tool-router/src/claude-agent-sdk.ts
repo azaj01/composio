@@ -9,7 +9,7 @@ const session = await composio.create('user_123', { toolkits: ['gmail'] });
 const stream = await query({
   prompt: 'Use composio tools to fetch my last email from gmail',
   options: {
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-4-5-20250929',
     permissionMode: "bypassPermissions",
     mcpServers: {
       composio: {

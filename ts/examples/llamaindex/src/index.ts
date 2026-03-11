@@ -56,7 +56,7 @@ async function main() {
     const hackernewsAgent = agent({
       name: 'Hackernews Agent',
       description: 'A helpful hackernews assistant',
-      llm: openai({ model: 'gpt-5.4' }),
+      llm: openai({ model: 'gpt-4o-mini' }),
       systemPrompt:
         'You are a helpful hackernews assistant that helps users with their queries related to hackernews',
       tools,
