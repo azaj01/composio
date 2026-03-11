@@ -115,7 +115,15 @@ into two phases. The team agreed in the thread.
 3. The agent searches across apps, synthesizes results, and cites sources with links, channel names, or sender info.
 4. The `USER_ID` in `.env` scopes all connections — swap it to switch users without changing code.
 
-## Next steps
+## Take it further
 
-- Restrict to read-only tools with `tags` when creating the session. See [Enable and disable toolkits](/docs/toolkits/enable-and-disable-toolkits).
-- Add more toolkits (Jira, Confluence, Linear) — no agent code changes needed.
+The prompt and toolkits are the only moving parts. Change them to change what the agent searches. Some ideas:
+
+- **Engineering on-call**: add PagerDuty and Datadog toolkits, ask "what incidents fired overnight and which PRs might be related?"
+- **Sales prep**: connect Salesforce and Gmail, ask "summarize all recent activity with Acme Corp before my call"
+- **Compliance audit**: add Jira and Confluence, ask "which security tickets are still open and do any docs reference the old auth flow?"
+
+<Cards>
+  <Card title="Background Agent" href="/cookbooks/background-agent" description="Run a similar multi-app agent on a cron schedule" />
+  <Card title="Enable and disable toolkits" href="/docs/toolkits/enable-and-disable-toolkits" description="Restrict tools to read-only with tags" />
+</Cards>
