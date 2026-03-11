@@ -42,7 +42,7 @@ const tools = await mcpClient.tools();
 
 // 6. Pass tools to Vercel-specific Agent.
 const stream = streamText({
-  model: openai('gpt-4o-mini'),
+  model: openai('gpt-5.4'),
   messages: [
     {
       role: 'user',

@@ -105,7 +105,7 @@ const gmailAgent = new Agent({
     When fetching emails, provide a clear summary of the results including sender, subject, and date.
     Be concise and provide actionable information based on the email content.
   `,
-  model: openai('gpt-4o-mini'),
+  model: openai('gpt-5.4'),
   tools: wrapTools(serverInstance, tools),
 });
 

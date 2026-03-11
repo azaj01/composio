@@ -32,7 +32,7 @@ async function main() {
     console.log(`🔄 Sending query to OpenAI: "${query}"`);
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-5.4',
       messages: [
         {
           role: 'system',
@@ -64,7 +64,7 @@ async function main() {
       console.log('✅ Tool execution result:', JSON.parse(toolResult));
 
       const finalResponse = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-5.4',
         messages: [
           {
             role: 'system',

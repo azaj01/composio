@@ -8,7 +8,7 @@ const composio = new Composio({
 });
 
 const llm = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-5.4",
 })
 
 async function main() {

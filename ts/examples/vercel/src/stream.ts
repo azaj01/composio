@@ -13,7 +13,7 @@ const composio = new Composio({
 
 const tools = await composio.tools.get('test-user-id', 'HACKERNEWS_GET_FRONTPAGE');
 const stream = await streamText({
-  model: openai('gpt-4o-mini'),
+  model: openai('gpt-5.4'),
   tools,
   prompt: 'Summarize the front page of HackerNews',
   stopWhen: stepCountIs(5),

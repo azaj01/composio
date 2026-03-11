@@ -45,7 +45,7 @@ const agent = new OpenAIAgent({
     When fetching emails, provide a clear summary of the results including sender, subject, and date.
     Be concise and provide actionable information based on the email content.
   `,
-  model: 'gpt-4o-mini',
+  model: 'gpt-5.4',
   tools: tools,
 });
 

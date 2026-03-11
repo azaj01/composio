@@ -44,7 +44,7 @@ const messages: OpenAI.ChatCompletionMessageParam[] = [
 ];
 
 const response = await openai.chat.completions.create({
-  model: 'gpt-4o-mini',
+  model: 'gpt-5.4',
   messages,
   tools: tools,
   tool_choice: 'auto',

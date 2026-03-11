@@ -55,7 +55,7 @@ const hackernewsAgent = new Agent({
   name: 'Weather Agent',
   instructions:
     'You are a helpful assistant that can use the Hackernews API to get user information.',
-  model: openai('gpt-4o-mini'),
+  model: openai('gpt-5.4'),
   tools: tools,
 });
 

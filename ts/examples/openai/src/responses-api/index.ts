@@ -13,7 +13,7 @@ console.log(`✅ Tools fetched from composio`);
 
 console.log(`🔄 Generating response from OpenAI...`);
 const initialResponse = await openai.responses.create({
-  model: 'gpt-4.1',
+  model: 'gpt-5.4',
   input: 'Tell me about the user `pg` in hackernews',
   tools,
 });
@@ -40,7 +40,7 @@ const modelInputs = await composio.provider.handleResponse(
 console.log(`🔄 Submitting tool outputs to OpenAI...`);
 console.log(JSON.stringify(modelInputs, null, 2));
 const finalResponse = await openai.responses.create({
-  model: 'gpt-4.1',
+  model: 'gpt-5.4',
   input: [...initialResponse.output, ...modelInputs],
   tools,
 });
