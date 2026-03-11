@@ -8,8 +8,6 @@
     "app-connections-dashboard",
     "fast-api",
     "hono",
-    "---Developer Tools---",
-    "pr-review-agent",
     "---Productivity & Automation---",
     "workplace-search",
     "background-agent",
@@ -17,6 +15,8 @@
     "gmail-labeler",
     "slack-summariser",
     "supabase-sql-agent",
+    "---Developer Tools---",
+    "pr-review-agent",
     "---Behind the Curtain---",
     "tool-generator"
   ]
