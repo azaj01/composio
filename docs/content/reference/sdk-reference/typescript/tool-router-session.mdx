@@ -5,16 +5,11 @@ description: ToolRouterSession class reference
 
 ## Usage
 
-Obtain a session via `composio.toolRouter`:
+Access this class through the `composio.toolRouterSession` property:
 
 ```typescript
 const composio = new Composio({ apiKey: 'your-api-key' });
-
-// Use an existing session
-const session = await composio.toolRouter.use('session_123');
-
-// Or create a new session
-const session = await composio.toolRouter.create('user_123', { toolkits: ['github'] });
+const result = await composio.toolRouterSession.list();
 ```
 
 ## Properties
