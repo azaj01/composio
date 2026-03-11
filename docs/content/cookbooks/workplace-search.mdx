@@ -57,7 +57,7 @@ uv run --env-file .env python authorize.py
 Each toolkit prints a URL. Open it in a browser, complete OAuth, and the script moves to the next one. You only need to do this once per user.
 
 <Callout>
-If you're using sessions with meta tools (`COMPOSIO_MANAGE_CONNECTIONS`), authentication happens in-chat automatically. This manual flow is useful when you want to pre-connect apps before the agent runs, like in a setup script or CI pipeline.
+If you're using sessions with meta tools (`COMPOSIO_MANAGE_CONNECTIONS`), authentication happens in-chat automatically. This manual flow is useful when you want to pre-connect apps once locally before deploying `agent.py` to a CI pipeline or scheduled job.
 </Callout>
 
 ## Step 2: Build the agent
