@@ -16,10 +16,7 @@ import { fileURLToPath } from 'url';
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_DIR = join(SCRIPT_DIR, '..');
 const MODELS_DIR = join(PACKAGE_DIR, 'src/models');
-const OUTPUT_DIR = join(
-  PACKAGE_DIR,
-  '../../../docs/content/reference/sdk-reference/typescript'
-);
+const OUTPUT_DIR = join(PACKAGE_DIR, '../../../docs/content/reference/sdk-reference/typescript');
 const TEMP_JSON = join(PACKAGE_DIR, '.typedoc-output.json');
 
 // Internal classes that should NOT be documented (accessed via other APIs)
@@ -456,9 +453,9 @@ function generateMethodMdx(method: MethodDoc): string {
         lines.push('|------|------|-------------|');
         for (const param of sig.parameters) {
           const opt = param.required ? '' : '?';
-          const desc = escapeForMdx(param.description || '');
-          const safeType = escapeForMdx(simplifyTypeForTable(param.type));
-          lines.push(`| \`${param.name}${opt}\` | \`${safeType}\` | ${desc} |`);
+          const desc = escapeTextForMdx(param.description || '');
+          const typeCell = safeInlineType(simplifyTypeForTable(param.type));
+          lines.push(`| \`${param.name}${opt}\` | ${typeCell} | ${desc} |`);
         }
       } else {
         // No descriptions - use simpler table
@@ -466,8 +463,8 @@ function generateMethodMdx(method: MethodDoc): string {
         lines.push('|------|------|');
         for (const param of sig.parameters) {
           const opt = param.required ? '' : '?';
-          const safeType = escapeForMdx(simplifyTypeForTable(param.type));
-          lines.push(`| \`${param.name}${opt}\` | \`${safeType}\` |`);
+          const typeCell = safeInlineType(simplifyTypeForTable(param.type));
+          lines.push(`| \`${param.name}${opt}\` | ${typeCell} |`);
         }
       }
       lines.push('');
@@ -477,10 +474,10 @@ function generateMethodMdx(method: MethodDoc): string {
     if (sig.returnType !== 'void') {
       lines.push('**Returns**');
       lines.push('');
-      const safeReturnType = escapeForMdx(simplifyTypeForTable(sig.returnType));
-      let returnLine = `\`${safeReturnType}\``;
+      const returnTypeDisplay = safeInlineType(simplifyTypeForTable(sig.returnType));
+      let returnLine = returnTypeDisplay;
       if (sig.returnDescription) {
-        returnLine += ` — ${sig.returnDescription}`;
+        returnLine += ` — ${escapeTextForMdx(sig.returnDescription)}`;
       }
       lines.push(returnLine);
       lines.push('');
@@ -571,16 +568,16 @@ function generateClassMdx(classDoc: ClassDoc): string {
       lines.push('| Name | Type | Description |');
       lines.push('|------|------|-------------|');
       for (const prop of publicProps) {
-        const safeType = escapeForMdx(simplifyTypeForTable(prop.type));
-        const safeDesc = escapeForMdx(prop.description || '');
-        lines.push(`| \`${prop.name}\` | \`${safeType}\` | ${safeDesc} |`);
+        const typeCell = safeInlineType(simplifyTypeForTable(prop.type));
+        const safeDesc = escapeTextForMdx(prop.description || '');
+        lines.push(`| \`${prop.name}\` | ${typeCell} | ${safeDesc} |`);
       }
     } else {
       lines.push('| Name | Type |');
       lines.push('|------|------|');
       for (const prop of publicProps) {
-        const safeType = escapeForMdx(simplifyTypeForTable(prop.type));
-        lines.push(`| \`${prop.name}\` | \`${safeType}\` |`);
+        const typeCell = safeInlineType(simplifyTypeForTable(prop.type));
+        lines.push(`| \`${prop.name}\` | ${typeCell} |`);
       }
     }
     lines.push('');
@@ -605,9 +602,28 @@ function toKebabCase(str: string): string {
     .toLowerCase();
 }
 
-// Escape curly braces for MDX (they're interpreted as JSX expressions)
-function escapeForMdx(str: string): string {
-  return str.replace(/\{/g, '\\{').replace(/\}/g, '\\}');
+// Escape text content for MDX (descriptions, etc. that appear outside backticks)
+// Handles both curly braces and angle brackets (which MDX interprets as JSX tags)
+function escapeTextForMdx(str: string): string {
+  return str
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Render a type string as an inline code element safe for MDX tables.
+// Uses <code> HTML tag with &lt;/&gt; escaping instead of backticks,
+// because MDX parsers can interpret <TypeName> as JSX even inside
+// backtick code spans within table cells.
+function safeInlineType(type: string): string {
+  const escaped = type
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}');
+  return `<code>${escaped}</code>`;
 }
 
 // Clean up internal generic type parameters that don't add value for users
@@ -790,7 +806,7 @@ async function main() {
   const classesTable = documented
     .map(
       ({ name, description }) =>
-        `| [\`${name}\`](/reference/sdk-reference/typescript/${toKebabCase(name)}) | ${escapeForMdx(description)} |`
+        `| [\`${name}\`](/reference/sdk-reference/typescript/${toKebabCase(name)}) | ${escapeTextForMdx(description)} |`
     )
     .join('\n');
 
