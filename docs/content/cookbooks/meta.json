@@ -16,6 +16,7 @@
     "gmail-labeler",
     "slack-summariser",
     "supabase-sql-agent",
+    "workplace-search",
     "---Behind the Curtain---",
     "tool-generator"
   ]
