@@ -43,7 +43,7 @@ export class AuthScheme {
         status: hasToken ? ConnectionStatuses.ACTIVE : ConnectionStatuses.INITIALIZING,
         ...params,
       },
-    };
+    } as ConnectionData;
   }
 
   /**
@@ -73,7 +73,7 @@ export class AuthScheme {
         status: hasTokens ? ConnectionStatuses.ACTIVE : ConnectionStatuses.INITIALIZING,
         ...params,
       },
-    };
+    } as ConnectionData;
   }
 
   /**
