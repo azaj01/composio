@@ -51,6 +51,10 @@ composio.triggers.enable(
 )
 ```
 
+### App-Level Interval Overrides
+
+We will also be introducing **app-specific default polling intervals**. Each app will have its own default interval based on the rate limits that app allows and whether the rate limit is per-user or per-app. These app-level defaults may be lower or higher than 15 minutes depending on the app. When you don't specify an `interval`, the app-level default will be used instead of the global 15-minute default.
+
 ### Need Intervals Below 15 Minutes?
 
 If you require polling intervals shorter than 15 minutes, you should **use your own OAuth app** (custom auth). With custom auth, the 15-minute minimum does not apply — you can set polling intervals as low as **1 minute**.
