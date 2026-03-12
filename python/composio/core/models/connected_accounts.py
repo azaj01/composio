@@ -94,13 +94,10 @@ class AuthScheme:
         """
         Create a new connected account using OAuth 1.0.
         """
-        oauth_token = options.get("oauth_token")  # type: ignore[union-attr]
-        oauth_token_secret = options.get("oauth_token_secret")  # type: ignore[union-attr]
-        has_tokens = (
-            isinstance(oauth_token, str)
-            and len(oauth_token) > 0
-            and isinstance(oauth_token_secret, str)
-            and len(oauth_token_secret) > 0
+        has_tokens = bool(
+            options.get("oauth_token")  # type: ignore[union-attr]
+        ) and bool(
+            options.get("oauth_token_secret")  # type: ignore[union-attr]
         )
         status = "ACTIVE" if has_tokens else "INITIALIZING"
         return {
@@ -120,8 +117,7 @@ class AuthScheme:
         """
         Create a new connected account using OAuth 2.0.
         """
-        access_token = options.get("access_token")  # type: ignore[union-attr]
-        has_token = isinstance(access_token, str) and len(access_token) > 0
+        has_token = bool(options.get("access_token"))  # type: ignore[union-attr]
         status = "ACTIVE" if has_token else "INITIALIZING"
         return {
             "auth_scheme": "OAUTH2",

@@ -33,7 +33,7 @@ export class AuthScheme {
       expired_at?: string;
     }
   ): ConnectionData {
-    const hasToken = typeof params.access_token === 'string' && params.access_token.length > 0;
+    const hasToken = !!params.access_token;
     return {
       authScheme: AuthSchemeTypes.OAUTH2,
       val: {
@@ -60,11 +60,7 @@ export class AuthScheme {
       expired_at?: string;
     }
   ): ConnectionData {
-    const hasTokens =
-      typeof params.oauth_token === 'string' &&
-      params.oauth_token.length > 0 &&
-      typeof params.oauth_token_secret === 'string' &&
-      params.oauth_token_secret.length > 0;
+    const hasTokens = !!params.oauth_token && !!params.oauth_token_secret;
     return {
       authScheme: AuthSchemeTypes.OAUTH1,
       val: {
