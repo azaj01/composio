@@ -93,6 +93,11 @@ class AuthScheme:
     ) -> connected_account_create_params.ConnectionState:
         """
         Create a new connected account using OAuth 1.0.
+
+        When both ``oauth_token`` and ``oauth_token_secret`` are provided,
+        status defaults to ACTIVE (token import). When either is omitted,
+        status defaults to INITIALIZING (redirect-based OAuth flow).
+        Pass an explicit ``status`` in options to override.
         """
         has_tokens = bool(
             options.get("oauth_token")  # type: ignore[union-attr]
@@ -116,6 +121,11 @@ class AuthScheme:
     ) -> connected_account_create_params.ConnectionState:
         """
         Create a new connected account using OAuth 2.0.
+
+        When ``access_token`` is provided, status defaults to ACTIVE
+        (token import). When omitted, status defaults to INITIALIZING
+        (redirect-based OAuth flow). Pass an explicit ``status`` in
+        options to override.
         """
         has_token = bool(options.get("access_token"))  # type: ignore[union-attr]
         status = "ACTIVE" if has_token else "INITIALIZING"

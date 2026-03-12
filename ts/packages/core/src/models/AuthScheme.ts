@@ -7,7 +7,10 @@ import {
 
 export class AuthScheme {
   /**
-   * Creates a ConnectionData object for OAuth2 authentication
+   * Creates a ConnectionData object for OAuth2 authentication.
+   * When `access_token` is provided, status defaults to ACTIVE (token import).
+   * When omitted, status defaults to INITIALIZING (redirect-based OAuth flow).
+   * Pass an explicit `status` in params to override the auto-detected default.
    * @param params The OAuth2 parameters
    * @returns ConnectionData object
    */
@@ -44,7 +47,10 @@ export class AuthScheme {
   }
 
   /**
-   * Creates a ConnectionData object for OAuth1 authentication
+   * Creates a ConnectionData object for OAuth1 authentication.
+   * When both `oauth_token` and `oauth_token_secret` are provided, status defaults to ACTIVE (token import).
+   * When either is omitted, status defaults to INITIALIZING (redirect-based OAuth flow).
+   * Pass an explicit `status` in params to override the auto-detected default.
    * @param params The OAuth1 parameters
    * @returns ConnectionData object
    */
