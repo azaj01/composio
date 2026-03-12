@@ -33,10 +33,11 @@ export class AuthScheme {
       expired_at?: string;
     }
   ): ConnectionData {
+    const hasToken = typeof params.access_token === 'string' && params.access_token.length > 0;
     return {
       authScheme: AuthSchemeTypes.OAUTH2,
       val: {
-        status: ConnectionStatuses.INITIALIZING,
+        status: hasToken ? ConnectionStatuses.ACTIVE : ConnectionStatuses.INITIALIZING,
         ...params,
       },
     };
@@ -50,6 +51,7 @@ export class AuthScheme {
   static OAuth1(
     params: BaseConnectionFields & {
       oauth_token?: string;
+      oauth_token_secret?: string;
       consumer_key?: string;
       redirectUrl?: string;
       callback_url?: string;
@@ -58,10 +60,15 @@ export class AuthScheme {
       expired_at?: string;
     }
   ): ConnectionData {
+    const hasTokens =
+      typeof params.oauth_token === 'string' &&
+      params.oauth_token.length > 0 &&
+      typeof params.oauth_token_secret === 'string' &&
+      params.oauth_token_secret.length > 0;
     return {
       authScheme: AuthSchemeTypes.OAUTH1,
       val: {
-        status: ConnectionStatuses.INITIALIZING,
+        status: hasTokens ? ConnectionStatuses.ACTIVE : ConnectionStatuses.INITIALIZING,
         ...params,
       },
     };
