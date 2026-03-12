@@ -38,12 +38,12 @@ composio.triggers.enable(
 
 During the transition period, intervals below the minimum are **silently clamped** — your triggers will continue to work without errors, but they will run at the minimum interval instead of your requested interval.
 
-### Enforcement (April 1, 2026)
+### Enforcement (April 15, 2026)
 
-Starting **April 1, 2026**, requesting an interval below the minimum will return an **API error** instead of silently clamping. Update your trigger configurations to use an interval of 15 minutes or higher before this date.
+Starting **April 15, 2026**, requesting an interval below the minimum will return an **API error** instead of silently clamping. Update your trigger configurations to use an interval of 15 minutes or higher before this date.
 
 ```python
-# This will return an error after April 1, 2026
+# This will return an error after April 15, 2026
 composio.triggers.enable(
     trigger_name="GMAIL_NEW_GMAIL_MESSAGE",
     connected_account_id="ca_xxx",
@@ -51,22 +51,22 @@ composio.triggers.enable(
 )
 ```
 
-### Using Custom Auth?
+### Need Intervals Below 15 Minutes?
 
-If you're using **custom auth** (your own OAuth apps), the 15-minute minimum does not apply. You can set polling intervals as low as **1 minute**.
+If you require polling intervals shorter than 15 minutes, you should **use your own OAuth app** (custom auth). With custom auth, the 15-minute minimum does not apply — you can set polling intervals as low as **1 minute**.
 
 ## What You Need to Do
 
 1. **Review your trigger configurations** — check if any triggers use intervals shorter than 15 minutes
-2. **Update intervals** to 15 minutes or higher before **April 1, 2026**
+2. **Update intervals** to 15 minutes or higher before **April 15, 2026**
 3. **If you need near-real-time events**, consider using **webhook triggers** instead of polling triggers, or use **custom auth** for intervals as low as 1 minute
 
 ## Rollout Timeline
 
 - **March 3, 2026**: Silent clamping enabled — intervals below 15 minutes are automatically raised to 15 minutes
-- **April 1, 2026**: API enforcement — intervals below 15 minutes will return an error
-- **April 1, 2026**: Dashboard enforcement — the UI will prevent setting intervals below 15 minutes
+- **April 15, 2026**: API enforcement — intervals below 15 minutes will return an error
+- **April 15, 2026**: Dashboard enforcement — the UI will prevent setting intervals below 15 minutes
 
 <Callout type="info">
-Existing triggers with intervals below 15 minutes will continue to function during the transition period, but at the clamped 15-minute interval. Update your configurations before April 1 to avoid errors.
+Existing triggers with intervals below 15 minutes will continue to function during the transition period, but at the clamped 15-minute interval. Update your configurations before April 15 to avoid errors.
 </Callout>
