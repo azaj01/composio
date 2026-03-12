@@ -165,6 +165,16 @@ describe('AuthScheme', () => {
 
       expect(result.val.status).toBe(ConnectionStatuses.INITIALIZING);
     });
+
+    it('should honor explicit status override from user', () => {
+      const result = AuthScheme.OAuth1({
+        oauth_token: 'test_token',
+        oauth_token_secret: 'test_secret',
+        status: ConnectionStatuses.INITIALIZING,
+      });
+
+      expect(result.val.status).toBe(ConnectionStatuses.INITIALIZING);
+    });
   });
 
   describe('APIKey', () => {

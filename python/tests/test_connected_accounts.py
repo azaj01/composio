@@ -69,6 +69,18 @@ class TestAuthScheme:
 
         assert state["val"]["status"] == "INITIALIZING"
 
+    def test_oauth1_honors_explicit_status_override(self):
+        scheme = AuthScheme()
+        state = scheme.oauth1(
+            {
+                "oauth_token": "tok",
+                "oauth_token_secret": "secret",
+                "status": "INITIALIZING",
+            }
+        )
+
+        assert state["val"]["status"] == "INITIALIZING"
+
     @pytest.mark.parametrize(
         "method_name, expected_auth_scheme, expected_status",
         [
