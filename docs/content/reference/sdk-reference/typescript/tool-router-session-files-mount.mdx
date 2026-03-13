@@ -137,14 +137,14 @@ Accepts a file path (local or URL), a native File object, or a raw buffer.
 The file is stored in the virtual filesystem associated with the tool router session.
 
 ```typescript
-async upload(input: string | File | ArrayBuffer | Uint8Array<ArrayBufferLike>, options?: { mimetype?: string; mountId?: string; remotePath?: string }): Promise<RemoteFile>
+async upload(input: string | File | ArrayBuffer | Uint8Array, options?: { mimetype?: string; mountId?: string; remotePath?: string }): Promise<RemoteFile>
 ```
 
 **Parameters**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `input` | `string \| File \| ArrayBuffer \| Uint8Array` | File path (string), native File, or raw buffer (ArrayBuffer \| Uint8Array). |
+| `input` | `string | File | ArrayBuffer | Uint8Array` | File path (string), native File, or raw buffer (ArrayBuffer | Uint8Array). |
 | `options?` | `object` | Optional configuration. When passing a buffer, remotePath is required. |
 
 **Returns**
