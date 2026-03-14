@@ -29,8 +29,8 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
         run: |
-          if [[ "$BEFORE" =~ ^0+$ ]]; then
-            echo "First push or force-push — diffing against HEAD~1"
+          if [[ "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            echo "BEFORE ref unavailable — falling back to HEAD~1"
             BEFORE=$(git rev-parse HEAD~1)
           fi
 
