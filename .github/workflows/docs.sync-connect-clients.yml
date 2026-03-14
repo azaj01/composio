@@ -22,13 +22,18 @@ jobs:
           fetch-depth: 1
 
       - name: Get client definitions
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          CLIENT_DEFINITIONS: ${{ github.event.client_payload.client_definitions }}
+          DASHBOARD_TAG: ${{ github.event.client_payload.dashboard_tag }}
+          GH_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            echo "${{ github.event.client_payload.client_definitions }}" | base64 -d > /tmp/client-definitions.ts
-            echo "Received client-definitions.ts from dashboard deploy (tag: ${{ github.event.client_payload.dashboard_tag }})"
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            echo "$CLIENT_DEFINITIONS" | base64 -d > /tmp/client-definitions.ts
+            echo "Received client-definitions.ts from dashboard deploy (tag: $DASHBOARD_TAG)"
           else
             echo "Manual trigger — fetching from dashboard repo"
-            GH_TOKEN="${{ secrets.CI_BOT_TOKEN }}" gh api \
+            gh api \
               repos/ComposioHQ/composio_dashboard/contents/src/app/\(connect\)/\[org\]/~/connect/clients/_components/client-definitions.ts?ref=main \
               --jq '.content' | base64 -d > /tmp/client-definitions.ts
           fi
