@@ -1,0 +1,37 @@
+---
+title: "Polling Intervals: Grace Period for Existing Customers"
+description: "Existing customers keep 1-minute polling until May 1. New triggers default to 15 minutes."
+date: "2026-03-13"
+---
+
+We're introducing a **grace period** for existing customers to transition to the new polling interval limits.
+
+## Timeline
+
+| Customer Type | Polling Interval | Until When |
+|---------------|------------------|------------|
+| **Existing** (triggers before today) | 1 minute | May 1, 2026 |
+| **New** (triggers from today) | 15 minutes minimum | Now |
+
+If any of your triggers were affected by the recent changes, we've restored them to their original intervals.
+
+## Why 15 Minutes?
+
+Composio-managed OAuth apps share rate limits across all users. At scale, 1-minute polling causes rate limiting and service degradation. The 15-minute minimum ensures reliability for everyone.
+
+## How to Keep 1-Minute Polling
+
+Set up **your own OAuth app**. With custom auth:
+- Intervals as low as 1 minute
+- Your own rate limits
+- No platform limits, ever
+
+<Callout type="warn">
+OAuth approval from Google, Microsoft, etc. takes **days to weeks**. Start now.
+</Callout>
+
+→ [Set up your own OAuth app](/docs/custom-app-vs-managed-app)
+
+## Alternatives
+
+For real-time events, use **webhook triggers** — instant delivery, no polling limits.
