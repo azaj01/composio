@@ -22,12 +22,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Get SDK diff
         id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
         run: |
-          DIFF=$(git diff HEAD~1 -- \
+          DIFF=$(git diff "$BEFORE".."$AFTER" -- \
             ts/packages/core/src/ \
             ts/packages/cli/src/ \
             ts/packages/providers/*/src/ \
