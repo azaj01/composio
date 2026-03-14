@@ -16,7 +16,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout repository
@@ -30,18 +29,22 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
         run: |
-          DIFF=$(git diff "$BEFORE".."$AFTER" -- \
+          if [[ "$BEFORE" =~ ^0+$ ]]; then
+            echo "First push or force-push — diffing against HEAD~1"
+            BEFORE=$(git rev-parse HEAD~1)
+          fi
+
+          git diff "$BEFORE".."$AFTER" -- \
             ts/packages/core/src/ \
             ts/packages/cli/src/ \
             ts/packages/providers/*/src/ \
-            python/composio/)
+            python/composio/ > /tmp/sdk-diff.patch
 
-          if [ -z "$DIFF" ]; then
+          if [ ! -s /tmp/sdk-diff.patch ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "$DIFF" > /tmp/sdk-diff.patch
-            echo "$(echo "$DIFF" | wc -l) lines of SDK changes"
+            echo "$(wc -l < /tmp/sdk-diff.patch) lines of SDK changes"
           fi
 
       - name: Check docs for staleness

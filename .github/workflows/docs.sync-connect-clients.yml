@@ -12,7 +12,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout repository
@@ -28,7 +27,12 @@ jobs:
           DASHBOARD_TAG: ${{ github.event.client_payload.dashboard_tag }}
           GH_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
         run: |
+          set -e
           if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            if [ -z "$CLIENT_DEFINITIONS" ]; then
+              echo "::error::repository_dispatch payload missing client_definitions"
+              exit 1
+            fi
             echo "$CLIENT_DEFINITIONS" | base64 -d > /tmp/client-definitions.ts
             echo "Received client-definitions.ts from dashboard deploy (tag: $DASHBOARD_TAG)"
           else
@@ -36,6 +40,11 @@ jobs:
             gh api \
               repos/ComposioHQ/composio_dashboard/contents/src/app/\(connect\)/\[org\]/~/connect/clients/_components/client-definitions.ts?ref=main \
               --jq '.content' | base64 -d > /tmp/client-definitions.ts
+          fi
+
+          if [ ! -s /tmp/client-definitions.ts ]; then
+            echo "::error::client-definitions.ts is empty"
+            exit 1
           fi
           echo "$(wc -l < /tmp/client-definitions.ts) lines"
 
