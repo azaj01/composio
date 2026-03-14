@@ -24,12 +24,16 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Log trigger source
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HERMES_COMMIT: ${{ github.event.client_payload.hermes_commit }}
+          DEPLOY_TIMESTAMP: ${{ github.event.client_payload.timestamp }}
         run: |
-          echo "Workflow triggered by: ${{ github.event_name }}"
-          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          echo "Workflow triggered by: $EVENT_NAME"
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
             echo "Triggered by Apollo production deployment"
-            echo "Hermes commit: ${{ github.event.client_payload.hermes_commit }}"
-            echo "Timestamp: ${{ github.event.client_payload.timestamp }}"
+            echo "Hermes commit: $HERMES_COMMIT"
+            echo "Timestamp: $DEPLOY_TIMESTAMP"
           fi
 
       - name: Setup Bun
