@@ -8,6 +8,7 @@ on:
       - 'ts/packages/cli/src/**'
       - 'ts/packages/providers/*/src/**'
       - 'python/composio/**'
+  workflow_dispatch:
 
 jobs:
   sync-docs:
