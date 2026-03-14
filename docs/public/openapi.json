@@ -1402,6 +1402,16 @@
                               "logo": {
                                 "type": "string",
                                 "description": "The URL to the integration app's logo image"
+                              },
+                              "auth_guide_url": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "URL to a guide page with authentication setup instructions"
+                              },
+                              "auth_hint_url": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "URL to a page where users can obtain or configure credentials"
                               }
                             },
                             "required": [
@@ -1707,6 +1717,16 @@
                         "logo": {
                           "type": "string",
                           "description": "The URL to the integration app's logo image"
+                        },
+                        "auth_guide_url": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "URL to a guide page with authentication setup instructions"
+                        },
+                        "auth_hint_url": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "URL to a page where users can obtain or configure credentials"
                         }
                       },
                       "required": [
@@ -6725,6 +6745,12 @@
                             "description": "When true, this toolkit can be used without authentication",
                             "example": false
                           },
+                          "auth_guide_url": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "URL to a guide page with authentication setup instructions for this toolkit",
+                            "example": "https://composio.dev/auth/github"
+                          },
                           "deprecated": {
                             "$ref": "#/components/schemas/DeprecatedToolkitInfo"
                           },
@@ -7297,6 +7323,12 @@
                             "description": "Display name for this authentication method",
                             "example": "OAuth 2.0"
                           },
+                          "auth_hint_url": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "URL to a page where users can obtain or configure credentials for this authentication method",
+                            "example": "https://github.com/settings/tokens"
+                          },
                           "deprecated_auth_provider_details": {
                             "type": "object",
                             "properties": {
@@ -7319,6 +7351,12 @@
                         "description": "Detailed configuration for an authentication method"
                       },
                       "description": "Complete authentication configuration details for each supported auth method"
+                    },
+                    "auth_guide_url": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "URL to a guide page with authentication setup instructions for this toolkit",
+                      "example": "https://composio.dev/auth/github"
                     },
                     "base_url": {
                       "type": "string",
@@ -8102,6 +8140,12 @@
                             "type": "boolean",
                             "description": "When true, this toolkit can be used without authentication",
                             "example": false
+                          },
+                          "auth_guide_url": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "URL to a guide page with authentication setup instructions for this toolkit",
+                            "example": "https://composio.dev/auth/github"
                           },
                           "deprecated": {
                             "$ref": "#/components/schemas/DeprecatedToolkitInfo"
