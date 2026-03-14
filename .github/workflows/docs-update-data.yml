@@ -71,19 +71,16 @@ jobs:
         uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
         with:
           commit-message: 'docs: update toolkits and API data'
-          title: 'docs: Update toolkits and API data'
+          title: 'docs: update toolkits, API spec, and meta tools data'
           body: |
-            Auto-generated update from Apollo production deployment.
+            ## Summary
+            Automated sync of backend data into the docs site. Triggered by: `${{ github.event_name }}`${{ github.event_name == 'repository_dispatch' && format(' (Hermes commit: {0})', github.event.client_payload.hermes_commit) || '' }}.
 
-            This PR updates:
-            - `docs/public/data/toolkits.json` - Full toolkit data
-            - `docs/public/data/toolkits-list.json` - Light toolkit list
-            - `docs/public/openapi.json` - OpenAPI specification
-            - `docs/content/reference/api-reference/*.mdx` - API index pages
-            - `docs/public/data/meta-tools.json` - Meta tools schemas
-            - `docs/content/reference/meta-tools/*.mdx` - Meta tools reference pages
-
-            ${{ github.event_name == 'repository_dispatch' && format('Hermes commit: {0}', github.event.client_payload.hermes_commit) || '' }}
+            ## What changed
+            - **Toolkit catalog** (`docs/public/data/toolkits.json`, `toolkits-list.json`) — refreshed list of available toolkits, auth schemes, and tools from the backend API
+            - **OpenAPI spec** (`docs/public/openapi.json`) — latest API specification fetched from production
+            - **API reference pages** (`docs/content/reference/api-reference/*.mdx`) — regenerated index pages from the updated OpenAPI spec
+            - **Meta tools reference** (`docs/public/data/meta-tools.json`, `docs/content/reference/meta-tools/*.mdx`) — updated meta tool schemas and reference docs
           branch: docs/auto-update-data
           base: next
           add-paths: |
