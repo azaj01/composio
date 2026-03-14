@@ -31,7 +31,11 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
         run: |
-          if [[ "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+          if [ -z "$AFTER" ] || ! git cat-file -e "$AFTER" 2>/dev/null; then
+            AFTER=$(git rev-parse HEAD)
+          fi
+
+          if [ -z "$BEFORE" ] || [[ "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
             echo "BEFORE ref unavailable — falling back to HEAD~1"
             BEFORE=$(git rev-parse HEAD~1)
           fi
