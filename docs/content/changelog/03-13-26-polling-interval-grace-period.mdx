@@ -4,14 +4,12 @@ description: "Existing customers keep 1-minute polling until May 1. New triggers
 date: "2026-03-13"
 ---
 
-We're allowing a **transition period** for existing customers to move to the new polling interval limits.
+We're allowing a **transition period** before enforcing the new polling interval limits.
 
 ## Timeline
 
-| Customer Type | Polling Interval | Until When |
-|---------------|------------------|------------|
-| **Existing** (triggers before today) | 1 minute | May 1, 2026 |
-| **New** (triggers from today) | 15 minutes minimum | Now |
+- **Until May 1, 2026** — Existing customers continue to get 1-minute polling on all their triggers, including newly created ones.
+- **From May 1, 2026** — All triggers move to a **15-minute default** polling interval. App-specific overrides will be available for apps with favorable rate limits.
 
 If any of your triggers were affected by the recent changes, we've restored them to their original intervals.
 
@@ -31,7 +29,3 @@ OAuth approval from Google, Microsoft, etc. takes **days to weeks**. Start now.
 </Callout>
 
 → [Set up your own OAuth app](/docs/custom-app-vs-managed-app)
-
-## Alternatives
-
-For real-time events, use **webhook triggers** — instant delivery, no polling limits.
