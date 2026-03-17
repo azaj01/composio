@@ -25,7 +25,13 @@ import { ToolkitConnectionStateSchema } from '../types/toolRouter.types';
 import { ValidationError } from '../errors';
 import { Tools } from './Tools';
 import { ToolRouterSessionFilesMount } from './ToolRouterSessionFileMount';
-import type { CustomToolsMap, CustomToolsMapEntry, SessionContext } from '../types/customTool.types';
+import type {
+  CustomToolsMap,
+  CustomToolsMapEntry,
+  SessionContext,
+  RegisteredCustomTool,
+  RegisteredCustomToolkit,
+} from '../types/customTool.types';
 import type { ToolExecuteResponse } from '../types/tool.types';
 import type { SessionProxyExecuteParams } from '../types/toolRouter.types';
 import { SessionProxyExecuteParamsSchema } from '../types/toolRouter.types';
@@ -43,6 +49,9 @@ export class ToolRouterSession<
   public readonly sessionId: string;
   public readonly mcp: ToolRouterMCPServerConfig;
   public readonly experimental: SessionExperimental;
+
+  /** Singleton session context — shared across all custom tool executions */
+  private readonly sessionContext?: SessionContext;
 
   constructor(
     private readonly client: ComposioClient,
@@ -62,6 +71,12 @@ export class ToolRouterSession<
       assistivePrompt: experimentalOverrides?.assistivePrompt,
       files: new ToolRouterSessionFilesMount(client, sessionId),
     };
+
+    // Create singleton session context if custom tools are bound
+    if (customToolsMap && userId) {
+      this.sessionContext = new SessionContextImpl(client, userId, sessionId, customToolsMap);
+    }
+
     telemetry.instrument(this, 'ToolRouterSession');
   }
 
@@ -110,6 +125,60 @@ export class ToolRouterSession<
     // Standard path (no local tools)
     const wrappedTools = ToolsModel.wrapToolsForToolRouter(this.sessionId, tools, modifiers);
     return wrappedTools as ReturnType<TProvider['wrapTools']>;
+  }
+
+  /**
+   * List all custom tools registered in this session.
+   * Returns tools with their final slugs, schemas, and resolved toolkit.
+   *
+   * @param options.toolkit - Filter by toolkit slug (e.g. 'gmail', 'DEV_TOOLS')
+   * @returns Array of registered custom tools
+   */
+  customTools(options?: { toolkit?: string }): RegisteredCustomTool[] {
+    if (!this.customToolsMap) return [];
+
+    const entries = Array.from(this.customToolsMap.byFinalSlug.values());
+    const filtered = options?.toolkit
+      ? entries.filter(e => e.toolkit?.toLowerCase() === options.toolkit!.toLowerCase())
+      : entries;
+
+    return filtered.map(entry => ({
+      slug: entry.finalSlug,
+      name: entry.handle.name,
+      description: entry.handle.description,
+      toolkit: entry.toolkit,
+      inputSchema: entry.handle.inputSchema,
+      outputSchema: entry.handle.outputSchema,
+    }));
+  }
+
+  /**
+   * List all custom toolkits registered in this session.
+   * Returns toolkits with their tools showing final slugs.
+   *
+   * @returns Array of registered custom toolkits
+   */
+  customToolkits(): RegisteredCustomToolkit[] {
+    const toolkits = this.customToolsMap?.toolkits;
+    if (!toolkits?.length) return [];
+
+    return toolkits.map(tk => ({
+      slug: tk.slug,
+      name: tk.name,
+      description: tk.description,
+      tools: tk.tools.map(tool => {
+        // Look up the entry to get the final slug
+        const entry = this.customToolsMap!.byOriginalSlug.get(tool.slug.toUpperCase());
+        return {
+          slug: entry?.finalSlug ?? tool.slug,
+          name: tool.name,
+          description: tool.description,
+          toolkit: tk.slug,
+          inputSchema: tool.inputSchema,
+          outputSchema: tool.outputSchema,
+        };
+      }),
+    }));
   }
 
   /**
@@ -204,9 +273,9 @@ export class ToolRouterSession<
   /**
    * Execute a tool within the session.
    *
-   * For custom tools, accepts both the original slug (e.g. "GET_USER_CONTEXT")
-   * and the prefixed slug (e.g. "LOCAL_GET_USER_CONTEXT"). Custom tools are executed
-   * in-process; remote tools are sent to the Composio backend.
+   * For custom tools, accepts the original slug (e.g. "GREP") or the
+   * full slug (e.g. "LOCAL_GREP"). Custom tools are executed in-process;
+   * remote tools are sent to the Composio backend.
    *
    * @param toolSlug - The tool slug to execute
    * @param arguments_ - Optional tool arguments
@@ -216,10 +285,10 @@ export class ToolRouterSession<
     toolSlug: string,
     arguments_?: Record<string, unknown>
   ): Promise<ToolRouterSessionExecuteResponse> {
-    // Check if this is a local tool (by original or prefixed slug)
+    // Check if this is a local tool (by original or final slug)
     const entry = findCustomTool(this.customToolsMap, toolSlug);
     if (entry) {
-      const result = await executeCustomTool(entry, arguments_ ?? {}, this.buildSessionContext());
+      const result = await executeCustomTool(entry, arguments_ ?? {}, this.sessionContext!);
       return {
         data: result.data,
         error: result.error,
@@ -268,20 +337,7 @@ export class ToolRouterSession<
 
   /** Check if this session has any custom tools bound. */
   private hasCustomTools(): boolean {
-    return (this.customToolsMap?.byPrefixed.size ?? 0) > 0;
-  }
-
-  /**
-   * Build a SessionContext for local tool execution.
-   * The context holds the custom tools map and routes sibling calls in-process.
-   */
-  private buildSessionContext(): SessionContext {
-    return new SessionContextImpl(
-      this.client,
-      this.userId!,
-      this.sessionId,
-      this.customToolsMap
-    );
+    return (this.customToolsMap?.byFinalSlug.size ?? 0) > 0;
   }
 
   /** Parse an individual tool item from COMPOSIO_MULTI_EXECUTE_TOOL's tools array */
@@ -339,8 +395,8 @@ export class ToolRouterSession<
       );
     }
 
-    // Execute local tools in parallel (shared context for the entire batch)
-    const ctx = this.buildSessionContext();
+    // Execute local tools in parallel (shared singleton context)
+    const ctx = this.sessionContext!;
     const localPromises = localItems.map(async ({ index, entry }) => {
       const result = await executeCustomTool(entry, parsed[index].arguments, ctx);
       return { index, result };
@@ -369,8 +425,6 @@ export class ToolRouterSession<
     }
 
     // Merge results into the backend's results[] format.
-    // Backend returns: { results: [{ response, tool_slug, index }], total_count, ... }
-    // We append local tool results in the same shape.
     const remoteData = (remoteResult?.data ?? {}) as Record<string, unknown>;
     const remoteResults = (Array.isArray(remoteData.results) ? remoteData.results : []) as unknown[];
 

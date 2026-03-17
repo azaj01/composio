@@ -85,17 +85,17 @@ export interface SessionContext {
  *
  * Supports two call patterns:
  * - `(input) => data` — for tools that don't need session context
- * - `(input, session) => data` — for tools that need to call other tools or proxy APIs
+ * - `(input, ctx) => data` — for tools that need to call other tools or proxy APIs
  */
 export type CustomToolExecuteFn<T extends z.ZodType> = (
   input: z.infer<T>,
-  session: SessionContext
+  ctx: SessionContext
 ) => Promise<Record<string, unknown>>;
 
 /**
  * Zod schema for validating a custom tool slug.
- * Alphanumeric, underscores, and hyphens only. No `LOCAL_` prefix.
- * Length is validated later in `buildCustomToolsMap` with contextual error.
+ * Alphanumeric, underscores, and hyphens only. No `LOCAL_` or `COMPOSIO_` prefix.
+ * Length is validated contextually (standalone vs extension vs toolkit) at creation time.
  */
 export const CustomToolSlugSchema = z
   .string()
@@ -107,6 +107,10 @@ export const CustomToolSlugSchema = z
   .refine(s => !s.toUpperCase().startsWith('LOCAL_'), {
     message:
       'slug must not start with "LOCAL_" — this prefix is reserved for internal routing.',
+  })
+  .refine(s => !s.toUpperCase().startsWith('COMPOSIO_'), {
+    message:
+      'slug must not start with "COMPOSIO_" — this prefix is reserved for Composio meta tools.',
   });
 
 /**
@@ -118,8 +122,9 @@ export const CreateCustomToolBaseSchema = z.object({
   name: z.string().min(1, 'createCustomTool: name is required'),
   description: z.string().min(1, 'createCustomTool: description is required'),
   /**
-   * Composio toolkit slug that this tool extends (requires an active connection for).
-   * Set this to the toolkit whose auth your tool needs (e.g. `'meta_ads'`, `'gmail'`).
+   * Composio toolkit slug that this tool extends (inherits auth from).
+   * Must be a valid Composio toolkit slug (e.g. `'gmail'`, `'github'`, `'meta_ads'`).
+   * The backend validates this against the toolkit catalog.
    * Leave empty for tools that don't need any Composio-managed authentication.
    */
   extendsToolkit: z.string().optional(),
@@ -146,7 +151,8 @@ export interface CustomTool {
   readonly name: string;
   readonly description: string;
   /**
-   * Composio toolkit slug that this tool extends (requires an active connection for).
+   * Composio toolkit slug that this tool extends (inherits auth from).
+   * Must be a valid Composio toolkit slug. Validated by the backend.
    * Undefined means the tool doesn't need any Composio-managed authentication.
    */
   readonly extendsToolkit?: string;
@@ -216,13 +222,42 @@ export interface CustomToolkitDefinition {
 /** @internal Entry in the per-session custom tools routing map. */
 export type CustomToolsMapEntry = {
   handle: CustomTool;
-  prefixedSlug: string;
+  /** @internal The final slug assigned by the prefixing rules (e.g. LOCAL_GREP, LOCAL_GMAIL_GET_EMAILS) */
+  finalSlug: string;
+  /** Resolved toolkit — from extendsToolkit, parent custom toolkit, or undefined for standalone */
+  toolkit?: string;
 };
 
 /** @internal Lookup maps used by ToolRouterSession for routing custom tools. */
 export type CustomToolsMap = {
-  /** Lookup by prefixed slug (e.g. LOCAL_GET_USER_CONTEXT) — used for agent execution path */
-  byPrefixed: Map<string, CustomToolsMapEntry>;
+  /** Lookup by final slug (e.g. LOCAL_GET_USER_CONTEXT) — used for agent execution path */
+  byFinalSlug: Map<string, CustomToolsMapEntry>;
   /** Lookup by original slug (e.g. GET_USER_CONTEXT) — used for programmatic session.execute() */
-  byOriginal: Map<string, CustomToolsMapEntry>;
+  byOriginalSlug: Map<string, CustomToolsMapEntry>;
+  /** The original custom toolkits passed at session creation — used for session.customToolkits() */
+  toolkits?: CustomToolkit[];
 };
+
+// ────────────────────────────────────────────────────────────────
+// Registered custom tool types (returned by session.customTools())
+// ────────────────────────────────────────────────────────────────
+
+/** A custom tool as registered in a session, with its final resolved slug. */
+export interface RegisteredCustomTool {
+  /** The final slug as registered with the backend (e.g. LOCAL_GREP, LOCAL_GMAIL_GET_EMAILS) */
+  slug: string;
+  name: string;
+  description: string;
+  /** Resolved toolkit — extendsToolkit value, custom toolkit slug, or undefined for standalone */
+  toolkit?: string;
+  inputSchema: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+}
+
+/** A custom toolkit as registered in a session, with final slugs on nested tools. */
+export interface RegisteredCustomToolkit {
+  slug: string;
+  name: string;
+  description: string;
+  tools: RegisteredCustomTool[];
+}

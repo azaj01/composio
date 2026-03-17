@@ -34,10 +34,10 @@ const enrichedSearch = createCustomTool('ENRICHED_SEARCH', {
   inputParams: z.object({
     query: z.string(),
   }),
-  execute: async (input, session) => {
+  execute: async (input, ctx) => {
     return {
       query: input.query,
-      userId: session.userId,
+      userId: ctx.userId,
     };
   },
 });
@@ -70,14 +70,14 @@ const weatherChain = createCustomTool('WEATHER_CHAIN', {
   inputParams: z.object({
     city: z.string(),
   }),
-  execute: async (input, session) => {
+  execute: async (input, ctx) => {
     // Call remote WEATHERMAP_WEATHER tool through SessionContext
-    const weather = await session.execute('WEATHERMAP_WEATHER', {
+    const weather = await ctx.execute('WEATHERMAP_WEATHER', {
       location: input.city,
     });
     return {
       city: input.city,
-      userId: session.userId,
+      userId: ctx.userId,
       weatherData: weather.data,
       weatherError: weather.error,
     };

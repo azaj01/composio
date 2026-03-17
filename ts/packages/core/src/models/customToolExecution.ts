@@ -7,7 +7,7 @@ import type { ToolExecuteResponse } from '../types/tool.types';
 
 /**
  * Find a custom tool entry by slug.
- * Checks both the prefixed map (LOCAL_X — agent path) and original map (X — programmatic path).
+ * Checks both the final slug map (LOCAL_X — agent/LLM path) and original slug map (X — programmatic path).
  */
 export function findCustomTool(
   map: CustomToolsMap | undefined,
@@ -15,7 +15,7 @@ export function findCustomTool(
 ): CustomToolsMapEntry | undefined {
   if (!map) return undefined;
   const upper = slug.toUpperCase();
-  return map.byPrefixed.get(upper) ?? map.byOriginal.get(upper);
+  return map.byFinalSlug.get(upper) ?? map.byOriginalSlug.get(upper);
 }
 
 /**

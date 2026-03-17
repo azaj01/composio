@@ -99,7 +99,7 @@ const formatGmailEmail = experimental_createTool("FORMAT_GMAIL_EMAIL", {
     subject: z.string().describe("Email subject line"),
     body: z.string().describe("Email body content in markdown"),
   }),
-  execute: async (input, session) => {
+  execute: async (input, ctx) => {
     const htmlBody = input.body
       .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
       .replace(/\*(.*?)\*/g, "<i>$1</i>")
@@ -110,7 +110,7 @@ const formatGmailEmail = experimental_createTool("FORMAT_GMAIL_EMAIL", {
       subject: input.subject,
       html_body: htmlBody,
       plain_body: input.body,
-      user_id: session.userId,
+      user_id: ctx.userId,
     };
   },
 });

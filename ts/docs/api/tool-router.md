@@ -293,8 +293,8 @@ const getImportant = experimental_createTool('GET_IMPORTANT_EMAILS', {
   description: 'Fetch high-priority emails',
   extendsToolkit: 'gmail',
   inputParams: z.object({ limit: z.number().default(10) }),
-  execute: async (input, session) => {
-    const result = await session.execute('GMAIL_SEARCH', { query: 'is:important' });
+  execute: async (input, ctx) => {
+    const result = await ctx.execute('GMAIL_SEARCH', { query: 'is:important' });
     return { emails: result.data };
   },
 });

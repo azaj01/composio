@@ -290,15 +290,15 @@ describe('buildCustomToolsMap', () => {
     it('should prefix as LOCAL_<SLUG>', () => {
       const map = buildCustomToolsMap([makeTool('MY_TOOL')]);
 
-      expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
-      expect(map.byOriginal.has('MY_TOOL')).toBe(true);
+      expect(map.byFinalSlug.has('LOCAL_MY_TOOL')).toBe(true);
+      expect(map.byOriginalSlug.has('MY_TOOL')).toBe(true);
     });
 
     it('should handle case-insensitive slugs (uppercased internally)', () => {
       const map = buildCustomToolsMap([makeTool('my_tool')]);
 
-      expect(map.byOriginal.has('MY_TOOL')).toBe(true);
-      expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
+      expect(map.byOriginalSlug.has('MY_TOOL')).toBe(true);
+      expect(map.byFinalSlug.has('LOCAL_MY_TOOL')).toBe(true);
     });
   });
 
@@ -306,8 +306,8 @@ describe('buildCustomToolsMap', () => {
     it('should prefix as LOCAL_<EXTENDS_TOOLKIT>_<SLUG>', () => {
       const map = buildCustomToolsMap([makeTool('GET_EMAILS', 'gmail')]);
 
-      expect(map.byPrefixed.has('LOCAL_GMAIL_GET_EMAILS')).toBe(true);
-      expect(map.byOriginal.has('GET_EMAILS')).toBe(true);
+      expect(map.byFinalSlug.has('LOCAL_GMAIL_GET_EMAILS')).toBe(true);
+      expect(map.byOriginalSlug.has('GET_EMAILS')).toBe(true);
     });
   });
 
@@ -323,8 +323,8 @@ describe('buildCustomToolsMap', () => {
 
       const map = buildCustomToolsMap([], [tk]);
 
-      expect(map.byPrefixed.has('LOCAL_DEV_TOOLS_SED')).toBe(true);
-      expect(map.byOriginal.has('SED')).toBe(true);
+      expect(map.byFinalSlug.has('LOCAL_DEV_TOOLS_SED')).toBe(true);
+      expect(map.byOriginalSlug.has('SED')).toBe(true);
     });
   });
 
@@ -341,9 +341,9 @@ describe('buildCustomToolsMap', () => {
 
       const map = buildCustomToolsMap([grep], [tk]);
 
-      expect(map.byPrefixed.size).toBe(2);
-      expect(map.byPrefixed.has('LOCAL_GREP')).toBe(true);
-      expect(map.byPrefixed.has('LOCAL_DEV_TOOLS_SED')).toBe(true);
+      expect(map.byFinalSlug.size).toBe(2);
+      expect(map.byFinalSlug.has('LOCAL_GREP')).toBe(true);
+      expect(map.byFinalSlug.has('LOCAL_DEV_TOOLS_SED')).toBe(true);
     });
   });
 
@@ -369,27 +369,39 @@ describe('buildCustomToolsMap', () => {
   });
 
   describe('length validation', () => {
-    it('should throw when prefixed slug exceeds 60 characters with contextual error', () => {
+    it('should throw early in createCustomTool when slug is too long (standalone)', () => {
       const longSlug = 'A'.repeat(56); // LOCAL_ + 56 = 62 > 60
-      expect(() => buildCustomToolsMap([makeTool(longSlug)])).toThrow('too long');
+      expect(() => createCustomTool(longSlug, {
+        name: 'Long', description: 'Too long', inputParams: z.object({}), execute: vi.fn().mockResolvedValue({}),
+      })).toThrow('too long');
     });
 
-    it('should show available length in error for toolkit tools', () => {
-      const longSlug = 'A'.repeat(50); // LOCAL_DEV_TOOLS_ + 50 = 66 > 60
-      const tk: CustomToolkit = {
-        slug: 'DEV_TOOLS',
-        name: 'Dev Tools',
-        description: 'Utilities',
-        tools: [makeTool(longSlug)],
-      };
+    it('should throw early in createCustomTool when slug is too long (extension)', () => {
+      // LOCAL_GMAIL_ = 12 chars, so slug > 48 chars overflows
+      const longSlug = 'A'.repeat(49);
+      expect(() => createCustomTool(longSlug, {
+        name: 'Long', description: 'Too long', extendsToolkit: 'gmail',
+        inputParams: z.object({}), execute: vi.fn().mockResolvedValue({}),
+      })).toThrow('too long');
+    });
 
-      expect(() => buildCustomToolsMap([], [tk])).toThrow(/Shorten the slug to at most/);
+    it('should throw early in createCustomToolkit when tool slug is too long', () => {
+      const longSlug = 'A'.repeat(50); // LOCAL_DEV_TOOLS_ + 50 = 66 > 60
+      const tool = makeTool(longSlug);
+      expect(() => createCustomToolkit('DEV_TOOLS', {
+        name: 'Dev Tools', description: 'Utilities', tools: [tool],
+      })).toThrow('too long');
+    });
+
+    it('should still validate in buildCustomToolsMap as safety net', () => {
+      const longSlug = 'A'.repeat(56);
+      expect(() => buildCustomToolsMap([makeTool(longSlug)])).toThrow('exceeds');
     });
 
     it('should accept slugs that fit within 60 chars', () => {
       const slug = 'A'.repeat(54); // LOCAL_ + 54 = 60 exactly
       const map = buildCustomToolsMap([makeTool(slug)]);
-      expect(map.byPrefixed.size).toBe(1);
+      expect(map.byFinalSlug.size).toBe(1);
     });
   });
 });

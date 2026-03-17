@@ -72,8 +72,8 @@ const customToolHandle = createCustomTool('GET_USER_CONTEXT', {
   execute: localExecute,
 });
 
-const sessionExecute = vi.fn().mockImplementation(async (input: any, session: any) => ({
-  userId: session.userId,
+const sessionExecute = vi.fn().mockImplementation(async (input: any, ctx: any) => ({
+  userId: ctx.userId,
 }));
 
 const sessionToolHandle = createCustomTool('GET_AD_ACCOUNTS', {
@@ -291,8 +291,8 @@ describe('ToolRouterSession execution routing', () => {
     });
 
     it('should provide a working execute() on SessionContext for remote tools', async () => {
-      const chainedExecute = vi.fn().mockImplementation(async (input: any, session: any) => {
-        const inner = await session.execute('GMAIL_SEND_EMAIL', { to: input.to });
+      const chainedExecute = vi.fn().mockImplementation(async (input: any, ctx: any) => {
+        const inner = await ctx.execute('GMAIL_SEND_EMAIL', { to: input.to });
         return { inner_result: inner.data };
       });
 
@@ -321,8 +321,8 @@ describe('ToolRouterSession execution routing', () => {
         execute: siblingExecute,
       });
 
-      const toolAExecute = vi.fn().mockImplementation(async (input: any, session: any) => {
-        const inner = await session.execute('TOOL_B', { key: input.value });
+      const toolAExecute = vi.fn().mockImplementation(async (input: any, ctx: any) => {
+        const inner = await ctx.execute('TOOL_B', { key: input.value });
         return { fromA: true, fromB: inner.data };
       });
       const toolA = createCustomTool('TOOL_A', {

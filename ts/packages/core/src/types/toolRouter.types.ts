@@ -3,7 +3,7 @@ import type { BaseComposioProvider } from '../provider/BaseProvider';
 import { SessionMetaToolOptions } from './modifiers.types';
 import { ConnectionRequest } from './connectionRequest.types';
 import type { ToolRouterSessionFilesMount } from '../models/ToolRouterSessionFileMount';
-import type { CustomTool, CustomToolkit } from './customTool.types';
+import type { CustomTool, CustomToolkit, RegisteredCustomTool, RegisteredCustomToolkit } from './customTool.types';
 
 export const MCPServerTypeSchema = z.enum(['http', 'sse']);
 export type MCPServerType = z.infer<typeof MCPServerTypeSchema>;
@@ -474,6 +474,10 @@ export interface Session<
   execute: ToolRouterSessionExecuteFn;
   /** Proxy an API call through Composio's auth layer using the session's connected account */
   proxyExecute: ToolRouterSessionProxyExecuteFn;
+  /** List custom tools registered in this session, with their final slugs and schemas */
+  customTools: (options?: { toolkit?: string }) => RegisteredCustomTool[];
+  /** List custom toolkits registered in this session, with final slugs on nested tools */
+  customToolkits: () => RegisteredCustomToolkit[];
   /** Experimental features (files, assistive prompt, etc.) */
   experimental: SessionExperimental;
 }
