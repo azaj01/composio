@@ -267,11 +267,11 @@ The `userTimezone` field accepts an IANA timezone identifier (e.g., 'America/New
 
 #### Custom Tools & Custom Toolkits
 
-Add user-defined tools that execute locally (in-process) alongside Composio's remote tools. Custom tools are indexed by the backend for search and returned to the LLM with the correct `LOCAL_` prefixed slug.
+Define your own tools that run in-process alongside Composio's remote tools. Custom tools are automatically indexed for search and routed to your `execute` function when called.
 
 There are three ways to define custom tools:
 
-**1. Standalone tool** — no auth, passed in `customTools`:
+**1. Standalone tool** — no auth needed, passed in `customTools`:
 
 ```typescript
 import { experimental_createTool } from '@composio/core';
@@ -285,9 +285,7 @@ const grep = experimental_createTool('GREP', {
 });
 ```
 
-Slug format: `LOCAL_GREP`
-
-**2. Extension tool** — extends a Composio toolkit (inherits auth), passed in `customTools`:
+**2. Extension tool** — extends a Composio toolkit, inherits its auth. Passed in `customTools` with `extendsToolkit`:
 
 ```typescript
 const getImportant = experimental_createTool('GET_IMPORTANT_EMAILS', {
@@ -302,9 +300,7 @@ const getImportant = experimental_createTool('GET_IMPORTANT_EMAILS', {
 });
 ```
 
-Slug format: `LOCAL_GMAIL_GET_IMPORTANT_EMAILS`
-
-**3. Custom toolkit** — groups no-auth tools, passed in `customToolkits`:
+**3. Custom toolkit** — groups related no-auth tools. Passed in `customToolkits`:
 
 ```typescript
 import { experimental_createToolkit } from '@composio/core';
@@ -323,9 +319,7 @@ const devTools = experimental_createToolkit('DEV_TOOLS', {
 });
 ```
 
-Slug format: `LOCAL_DEV_TOOLS_SED`
-
-**Using in a session:**
+**Creating a session with custom tools:**
 
 ```typescript
 const session = await composio.create('user_123', {
@@ -335,15 +329,22 @@ const session = await composio.create('user_123', {
     customToolkits: [devTools],
   },
 });
-
-// Execute locally via session.execute()
-const result = await session.execute('GREP', { pattern: 'TODO', path: '/src' });
-
-// Also works with prefixed slug
-const result2 = await session.execute('LOCAL_DEV_TOOLS_SED', { pattern: 'foo', replacement: 'bar' });
 ```
 
-Custom tools are searched alongside Composio tools. When an LLM calls a custom tool via `COMPOSIO_MULTI_EXECUTE_TOOL`, the SDK intercepts it and executes locally — remote tools in the same batch are sent to the backend in parallel.
+**Executing custom tools** — use the same slug you defined:
+
+```typescript
+// Standalone tool
+await session.execute('GREP', { pattern: 'TODO', path: '/src' });
+
+// Extension tool
+await session.execute('GET_IMPORTANT_EMAILS', { limit: 5 });
+
+// Toolkit tool
+await session.execute('SED', { pattern: 'foo', replacement: 'bar' });
+```
+
+Custom tools are searched alongside Composio tools. When the LLM calls a custom tool, the SDK executes it in-process — remote tools in the same batch are sent to the backend in parallel.
 
 ## Session Properties
 
@@ -431,16 +432,15 @@ This method is useful when you need direct access to the underlying meta tools w
 
 ### `execute()`
 
-Execute a tool within the session. Custom tools run locally in-process; remote tools are sent to the Composio backend. Accepts both the original slug and the `LOCAL_`-prefixed slug for custom tools.
+Execute a tool within the session. Custom tools run in-process; remote tools are sent to the Composio backend. Works with any tool — custom or remote — using the same API.
 
 ```typescript
-// Execute a custom tool
+// Custom tool
 const result = await session.execute('GET_USER_CONTEXT', { category: 'prefs' });
 console.log(result.data);  // { preferences: { ... } }
 console.log(result.error); // null on success
-console.log(result.logId); // 'local' for custom tools, backend log ID for remote tools
 
-// Execute a remote Composio tool
+// Remote Composio tool — same API
 const weather = await session.execute('WEATHERMAP_WEATHER', { location: 'Tokyo' });
 ```
 
