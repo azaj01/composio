@@ -1,12 +1,11 @@
 import { Command } from '@effect/cli';
-import { Option } from 'effect';
 import {
-  generateTypescriptTypeStubs,
   outputOpt,
   compact,
   transpiled,
   typeTools,
   toolkitsOpt,
+  handleTsGenerate,
 } from '../ts/commands/ts.generate.cmd';
 
 /**
@@ -20,12 +19,5 @@ export const generateCmd$Ts = Command.make('ts', {
   toolkitsOpt,
 }).pipe(
   Command.withDescription('Generate TypeScript type stubs for toolkits, tools, and triggers.'),
-  Command.withHandler(params => {
-    const shouldCompile = params.transpiled || !Option.isSome(params.outputOpt);
-    return generateTypescriptTypeStubs({
-      ...params,
-      compact: params.compact,
-      transpiled: shouldCompile,
-    });
-  })
+  Command.withHandler(handleTsGenerate)
 );

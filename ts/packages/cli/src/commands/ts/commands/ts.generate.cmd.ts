@@ -332,20 +332,21 @@ function validateOutputDir(outputDir: string): Effect.Effect<string, Error, File
   });
 }
 
-export const tsCmd$Generate = _tsCmd$Generate.pipe(
-  Command.withHandler(params => {
-    // Determine if we should compile based on the rules:
-    // - If --output-dir is specified, default transpiled to false unless overridden
-    // - If no --output-dir, default transpiled to true unless overridden
-    const shouldCompile = params.transpiled || !Option.isSome(params.outputOpt);
+/**
+ * Shared handler for TypeScript generation commands.
+ * Resolves the `transpiled` default based on whether `--output-dir` was provided.
+ */
+export const handleTsGenerate = (params: GetCmdParams<typeof _tsCmd$Generate>) => {
+  // Determine if we should compile based on the rules:
+  // - If --output-dir is specified, default transpiled to false unless overridden
+  // - If no --output-dir, default transpiled to true unless overridden
+  const shouldCompile = params.transpiled || !Option.isSome(params.outputOpt);
 
-    return generateTypescriptTypeStubs({
-      ...params,
-      compact: params.compact,
-      transpiled: shouldCompile,
-    });
-  })
-);
+  return generateTypescriptTypeStubs({
+    ...params,
+    transpiled: shouldCompile,
+  });
+};
 
 export function generateTypescriptTypeStubs({
   outputOpt,
