@@ -1,5 +1,5 @@
 import { Command, Options } from '@effect/cli';
-import { Effect, Match } from 'effect';
+import { Effect, Match, Option } from 'effect';
 import { ProjectEnvironmentDetector } from 'src/services/project-environment-detector';
 import { NodeProcess } from 'src/services/node-process';
 import { TerminalUI } from 'src/services/terminal-ui';
@@ -58,12 +58,16 @@ export const generateCmd = Command.make('generate', { outputOpt, typeTools, tool
       const displayLang = env.kind === 'js' ? 'TypeScript' : 'Python';
       yield* ui.log.step(`Project type detected: ${displayLang}`);
 
+      // Apply the same transpile default as `composio generate ts`:
+      // transpile when writing to node_modules (no --output-dir)
+      const shouldCompile = !Option.isSome(outputOpt);
+
       yield* Match.value(env.kind).pipe(
         Match.when('js', () =>
           generateTypescriptTypeStubs({
             outputOpt,
             compact: false,
-            transpiled: false,
+            transpiled: shouldCompile,
             typeTools,
             toolkitsOpt,
           })
