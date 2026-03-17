@@ -5,8 +5,8 @@ import { NodeProcess } from 'src/services/node-process';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { generateTypescriptTypeStubs } from '../ts/commands/ts.generate.cmd';
 import { generatePythonTypeStubs } from '../py/commands/py.generate.cmd';
-import { generateCmd$Py } from './generate-py.cmd';
-import { generateCmd$Ts } from './generate-ts.cmd';
+import { generateCmd$Py } from './generate.py.cmd';
+import { generateCmd$Ts } from './generate.ts.cmd';
 
 export const outputOpt = Options.optional(
   Options.directory('output-dir', {
