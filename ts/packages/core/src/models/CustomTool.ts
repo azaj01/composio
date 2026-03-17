@@ -127,6 +127,12 @@ export function createCustomTool<T extends z.ZodType>(
   if (!options.inputParams) {
     throw new ValidationError('createCustomTool: inputParams is required');
   }
+  if (!(options.inputParams instanceof z.ZodObject)) {
+    throw new ValidationError(
+      'createCustomTool: inputParams must be a z.object() schema. ' +
+      'Tool input parameters are always an object with named properties.'
+    );
+  }
   if (typeof options.execute !== 'function') {
     throw new ValidationError('createCustomTool: execute must be a function');
   }
@@ -136,7 +142,7 @@ export function createCustomTool<T extends z.ZodType>(
 
   const { inputParams, execute } = options;
 
-  // Convert Zod input schema → JSON Schema
+  // Convert Zod input schema → JSON Schema (inputParams is guaranteed to be z.object)
   const paramsSchema = zodToJsonSchema.default(inputParams, {
     name: 'input',
   }) as InputParamsSchema;
@@ -148,18 +154,13 @@ export function createCustomTool<T extends z.ZodType>(
     ...(paramsSchemaJson.required ? { required: paramsSchemaJson.required } : {}),
   };
 
-  // Convert Zod output schema → JSON Schema (if provided)
+  // Convert Zod output schema → JSON Schema (if provided, any Zod type allowed)
   let outputSchema: Record<string, unknown> | undefined;
   if (options.outputParams) {
     const outSchema = zodToJsonSchema.default(options.outputParams, {
       name: 'output',
-    }) as { definitions: { output: { type: string; properties: Record<string, unknown>; required?: string[] } } };
-    const outJson = outSchema.definitions.output;
-    outputSchema = {
-      type: 'object',
-      properties: outJson.properties,
-      ...(outJson.required ? { required: outJson.required } : {}),
-    };
+    }) as { definitions: { output: Record<string, unknown> } };
+    outputSchema = outSchema.definitions.output;
   }
 
   return {
