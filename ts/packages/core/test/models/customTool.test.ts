@@ -596,31 +596,44 @@ describe('SessionContextImpl', () => {
   });
 
   describe('sibling local tool routing', () => {
-    it('should route to local tool when tryLocalExecute matches', async () => {
-      const tryLocalExecute = vi.fn().mockReturnValue(
-        Promise.resolve({ data: { local: true }, error: null, successful: true })
-      );
+    it('should route to local tool when customToolsMap has a match', async () => {
+      const siblingExecute = vi.fn().mockResolvedValue({ local: true });
+      const customToolsMap = buildCustomToolsMap([
+        createCustomTool('SIBLING_TOOL', {
+          name: 'Sibling',
+          description: 'A sibling tool',
+          inputParams: z.object({ key: z.string() }),
+          execute: siblingExecute,
+        }),
+      ]);
 
-      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1', tryLocalExecute);
+      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1', customToolsMap);
       const result = await ctx.execute('SIBLING_TOOL', { key: 'val' });
 
-      expect(tryLocalExecute).toHaveBeenCalledWith('SIBLING_TOOL', { key: 'val' });
+      expect(siblingExecute).toHaveBeenCalledWith({ key: 'val' }, ctx);
       expect(result).toEqual({ data: { local: true }, error: null, successful: true });
+      // Should NOT call remote
       expect(mockClient.toolRouter.session.execute).not.toHaveBeenCalled();
     });
 
-    it('should fall back to remote when tryLocalExecute returns undefined', async () => {
-      const tryLocalExecute = vi.fn().mockReturnValue(undefined);
+    it('should fall back to remote when slug not in customToolsMap', async () => {
+      const customToolsMap = buildCustomToolsMap([
+        createCustomTool('OTHER_TOOL', {
+          name: 'Other',
+          description: 'Not the one we call',
+          inputParams: z.object({}),
+          execute: vi.fn().mockResolvedValue({}),
+        }),
+      ]);
       mockClient.toolRouter.session.execute.mockResolvedValue({
         data: { remote: true },
         error: null,
         log_id: 'log_3',
       });
 
-      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1', tryLocalExecute);
+      const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1', customToolsMap);
       const result = await ctx.execute('REMOTE_TOOL', { key: 'val' });
 
-      expect(tryLocalExecute).toHaveBeenCalledWith('REMOTE_TOOL', { key: 'val' });
       expect(mockClient.toolRouter.session.execute).toHaveBeenCalledWith('sess_1', {
         tool_slug: 'REMOTE_TOOL',
         arguments: { key: 'val' },
@@ -628,7 +641,7 @@ describe('SessionContextImpl', () => {
       expect(result).toEqual({ data: { remote: true }, error: null, successful: true });
     });
 
-    it('should delegate to remote when no tryLocalExecute is provided', async () => {
+    it('should delegate to remote when no customToolsMap is provided', async () => {
       mockClient.toolRouter.session.execute.mockResolvedValue({
         data: { remote: true },
         error: null,

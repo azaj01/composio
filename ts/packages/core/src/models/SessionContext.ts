@@ -2,28 +2,22 @@
  * @fileoverview Session context implementation injected into custom tool execute functions.
  */
 import { Composio as ComposioClient } from '@composio/client';
-import type { SessionContext } from '../types/customTool.types';
+import type { SessionContext, CustomToolsMap } from '../types/customTool.types';
 import type { ToolExecuteResponse } from '../types/tool.types';
 import type { SessionProxyExecuteParams } from '../types/toolRouter.types';
 import { SessionProxyExecuteParamsSchema } from '../types/toolRouter.types';
+import { ValidationError } from '../errors';
 import { transformProxyParams } from './proxyParamsTransform';
-
-/**
- * Callback that attempts local tool execution.
- * Returns a Promise if the slug matches a local tool, or undefined to fall back to remote.
- */
-export type TryLocalExecuteFn = (
-  slug: string,
-  args: Record<string, unknown>
-) => Promise<ToolExecuteResponse> | undefined;
+import { findCustomTool, executeCustomTool } from './customToolExecution';
 
 /**
  * Concrete implementation of SessionContext.
- * Built per local tool invocation inside ToolRouterSession.
+ * One instance is created per session (or per multi-execute batch) and shared
+ * across all custom tool invocations, including sibling routing.
  *
- * When `tryLocalExecute` is provided, `execute()` checks sibling local tools first
- * before falling back to the backend API. This allows local tool A to call local
- * tool B via `session.execute('B', ...)` without hitting the network.
+ * When `customToolsMap` is provided, `execute()` checks local tools first
+ * before falling back to the backend API. This allows tool A to call tool B
+ * via `session.execute('B', ...)` without hitting the network.
  */
 export class SessionContextImpl implements SessionContext {
   public readonly userId: string;
@@ -32,7 +26,7 @@ export class SessionContextImpl implements SessionContext {
     private readonly client: ComposioClient,
     userId: string,
     private readonly sessionId: string,
-    private readonly tryLocalExecute?: TryLocalExecuteFn
+    private readonly customToolsMap?: CustomToolsMap
   ) {
     this.userId = userId;
   }
@@ -47,9 +41,9 @@ export class SessionContextImpl implements SessionContext {
     arguments_: Record<string, unknown>
   ): Promise<ToolExecuteResponse> {
     // Try local tool first (sibling routing)
-    const localResult = this.tryLocalExecute?.(toolSlug, arguments_);
-    if (localResult) {
-      return localResult;
+    const entry = findCustomTool(this.customToolsMap, toolSlug);
+    if (entry) {
+      return executeCustomTool(entry, arguments_, this);
     }
 
     // Fall back to remote execution
@@ -74,7 +68,7 @@ export class SessionContextImpl implements SessionContext {
   async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolExecuteResponse> {
     const validated = SessionProxyExecuteParamsSchema.safeParse(params);
     if (!validated.success) {
-      throw new Error(`Invalid proxy execute parameters: ${validated.error.message}`);
+      throw new ValidationError('Invalid proxy execute parameters', { cause: validated.error });
     }
 
     const body = transformProxyParams(validated.data);

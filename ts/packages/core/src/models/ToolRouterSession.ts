@@ -273,19 +273,14 @@ export class ToolRouterSession<
 
   /**
    * Build a SessionContext for local tool execution.
-   * Includes sibling routing: session.execute() inside a custom tool checks
-   * local tools first before falling back to the backend API.
+   * The context holds the custom tools map and routes sibling calls in-process.
    */
   private buildSessionContext(): SessionContext {
     return new SessionContextImpl(
       this.client,
       this.userId!,
       this.sessionId,
-      (slug, args) => {
-        const entry = findCustomTool(this.customToolsMap, slug);
-        if (!entry) return undefined;
-        return executeCustomTool(entry, args, this.buildSessionContext());
-      }
+      this.customToolsMap
     );
   }
 
@@ -344,9 +339,10 @@ export class ToolRouterSession<
       );
     }
 
-    // Execute local tools in parallel
+    // Execute local tools in parallel (shared context for the entire batch)
+    const ctx = this.buildSessionContext();
     const localPromises = localItems.map(async ({ index, entry }) => {
-      const result = await executeCustomTool(entry, parsed[index].arguments, this.buildSessionContext());
+      const result = await executeCustomTool(entry, parsed[index].arguments, ctx);
       return { index, result };
     });
 

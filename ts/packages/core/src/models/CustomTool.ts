@@ -38,6 +38,7 @@ import {
   type CustomToolkitDefinition,
   type InputParamsSchema,
 } from '../types/customTool.types';
+import { ValidationError } from '../errors';
 
 /** Prefix applied by the backend to local tool slugs for disambiguation. */
 export const LOCAL_TOOL_PREFIX = 'LOCAL_';
@@ -90,7 +91,7 @@ export function createCustomTool<T extends z.ZodType>(
   // Validate slug separately
   const slugResult = CustomToolSlugSchema.safeParse(slug);
   if (!slugResult.success) {
-    throw new Error(`createCustomTool: ${slugResult.error.issues[0].message}`);
+    throw new ValidationError(`createCustomTool: ${slugResult.error.issues[0].message}`, { cause: slugResult.error });
   }
 
   // Validate string/scalar fields via Zod schema
@@ -98,10 +99,10 @@ export function createCustomTool<T extends z.ZodType>(
 
   // Manual checks for fields Zod can't validate
   if (!options.inputParams) {
-    throw new Error('createCustomTool: inputParams is required');
+    throw new ValidationError('createCustomTool: inputParams is required');
   }
   if (typeof options.execute !== 'function') {
-    throw new Error('createCustomTool: execute must be a function');
+    throw new ValidationError('createCustomTool: execute must be a function');
   }
 
   const { inputParams, execute } = options;
@@ -170,7 +171,7 @@ export function createCustomToolkit(
   // Validate slug
   const slugResult = CustomToolSlugSchema.safeParse(slug);
   if (!slugResult.success) {
-    throw new Error(`createCustomToolkit: ${slugResult.error.issues[0].message}`);
+    throw new ValidationError(`createCustomToolkit: ${slugResult.error.issues[0].message}`, { cause: slugResult.error });
   }
 
   // Validate name/description
@@ -178,13 +179,13 @@ export function createCustomToolkit(
 
   // Non-empty tools required
   if (!options.tools?.length) {
-    throw new Error('createCustomToolkit: at least one tool is required');
+    throw new ValidationError('createCustomToolkit: at least one tool is required');
   }
 
   // Reject tools with extendsToolkit
   for (const tool of options.tools) {
     if (tool.extendsToolkit) {
-      throw new Error(
+      throw new ValidationError(
         `createCustomToolkit: tool "${tool.slug}" has extendsToolkit set. ` +
         `Tools in a custom toolkit must not use extendsToolkit — they inherit the toolkit identity instead.`
       );
@@ -228,7 +229,7 @@ export function buildCustomToolsMap(
     if (prefixedSlug.length > MAX_PREFIXED_SLUG_LENGTH) {
       const prefix = prefixedSlug.substring(0, prefixedSlug.length - originalSlug.length);
       const available = MAX_PREFIXED_SLUG_LENGTH - prefix.length;
-      throw new Error(
+      throw new ValidationError(
         `Custom tool slug "${handle.slug}" is too long. ` +
         `With prefix "${prefix}", the final slug "${prefixedSlug}" exceeds ${MAX_PREFIXED_SLUG_LENGTH} characters. ` +
         `Shorten the slug to at most ${available} characters.`
@@ -237,12 +238,12 @@ export function buildCustomToolsMap(
 
     // Check cross-group collisions on prefixed slug
     if (byPrefixed.has(prefixedSlug)) {
-      throw new Error(`Custom tool slug collision: "${prefixedSlug}" is already registered.`);
+      throw new ValidationError(`Custom tool slug collision: "${prefixedSlug}" is already registered.`);
     }
 
     // Check cross-group collisions on original slug
     if (byOriginal.has(originalSlug)) {
-      throw new Error(
+      throw new ValidationError(
         `Custom tool slug collision: original slug "${handle.slug}" maps to multiple prefixed slugs. ` +
         `"${byOriginal.get(originalSlug)!.prefixedSlug}" and "${prefixedSlug}" both resolve from "${originalSlug}".`
       );
