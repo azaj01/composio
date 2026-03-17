@@ -1,5 +1,6 @@
 import { z } from 'zod/v3';
 import { Tool, ToolProxyParams, ToolExecuteResponse as SdkToolExecuteResponse } from './tool.types';
+import type { SessionProxyExecuteParams } from './toolRouter.types';
 import { ToolExecuteResponse } from '@composio/client/resources/tools';
 import { ConnectionData } from './connectedAccountAuthStates.types';
 
@@ -74,11 +75,8 @@ export interface SessionContext {
     toolSlug: string,
     arguments_: Record<string, unknown>
   ): Promise<SdkToolExecuteResponse>;
-  /**
-   * Proxy API calls through Composio's auth layer (resolved from session).
-   * @todo Not yet implemented — pending backend session-scoped proxy endpoint.
-   */
-  proxyExecute(params: ToolProxyParams): Promise<SdkToolExecuteResponse>;
+  /** Proxy API calls through Composio's auth layer (resolved from session toolkit). */
+  proxyExecute(params: SessionProxyExecuteParams): Promise<SdkToolExecuteResponse>;
 }
 
 /**
@@ -95,25 +93,36 @@ export type CustomToolExecuteFn<T extends z.ZodType> = (
 ) => Promise<Record<string, unknown>>;
 
 /**
+ * Zod schema for validating a custom tool slug.
+ * Alphanumeric, underscores, and hyphens only. No `LOCAL_` prefix.
+ * Length is validated later in `buildCustomToolsMap` with contextual error.
+ */
+export const CustomToolSlugSchema = z
+  .string()
+  .min(1, 'slug is required')
+  .regex(
+    /^[A-Za-z0-9_-]+$/,
+    'slug must only contain alphanumeric characters, underscores, and hyphens'
+  )
+  .refine(s => !s.toUpperCase().startsWith('LOCAL_'), {
+    message:
+      'slug must not start with "LOCAL_" — this prefix is reserved for internal routing.',
+  });
+
+/**
  * Zod schema for validating the string/scalar fields of createCustomTool() options.
- * Used internally for validation — inputParams and execute are checked manually.
+ * Slug is validated separately as the first argument.
+ * Used internally for validation — inputParams, outputParams, and execute are checked manually.
  */
 export const CreateCustomToolBaseSchema = z.object({
-  slug: z
-    .string()
-    .min(1, 'createCustomTool: slug is required')
-    .refine(s => !s.toUpperCase().startsWith('LOCAL_'), {
-      message:
-        'createCustomTool: slug must not start with "LOCAL_" — this prefix is reserved for internal routing.',
-    }),
   name: z.string().min(1, 'createCustomTool: name is required'),
   description: z.string().min(1, 'createCustomTool: description is required'),
   /**
-   * Composio toolkit slug that this tool requires an active connection for.
+   * Composio toolkit slug that this tool extends (requires an active connection for).
    * Set this to the toolkit whose auth your tool needs (e.g. `'meta_ads'`, `'gmail'`).
    * Leave empty for tools that don't need any Composio-managed authentication.
    */
-  toolkit: z.string().optional(),
+  extendsToolkit: z.string().optional(),
 });
 
 /** Options for creating a custom tool via `createCustomTool()`. */
@@ -122,25 +131,28 @@ export type CreateCustomToolParams<T extends z.ZodType> = z.infer<
 > & {
   /** Zod schema for input parameters */
   inputParams: T;
+  /** Optional Zod schema for output parameters (sent to backend for documentation) */
+  outputParams?: z.ZodType;
   /** The function that executes the tool */
   execute: CustomToolExecuteFn<T>;
 };
 
 /**
  * Custom tool definition returned from `createCustomTool()`.
- * Pass to `composio.create(userId, { customTools: [...] })` to bind to a session.
+ * Pass to `composio.create(userId, { experimental: { customTools: [...] } })` to bind to a session.
  */
 export interface CustomTool {
   readonly slug: string;
   readonly name: string;
   readonly description: string;
   /**
-   * Composio toolkit slug that this tool requires an active connection for.
-   * Set this to the toolkit whose auth your tool needs (e.g. `'meta_ads'`, `'gmail'`).
+   * Composio toolkit slug that this tool extends (requires an active connection for).
    * Undefined means the tool doesn't need any Composio-managed authentication.
    */
-  readonly toolkit?: string;
+  readonly extendsToolkit?: string;
   readonly inputSchema: Record<string, unknown>;
+  /** JSON Schema representation of the output (for backend documentation) */
+  readonly outputSchema?: Record<string, unknown>;
   /** @internal Original Zod schema — used for runtime input validation (defaults, coercions, transforms) */
   readonly inputParams: z.ZodType;
   /** Direct reference to the execute function — useful for testing */
@@ -153,8 +165,53 @@ export interface CustomToolDefinition {
   name: string;
   description: string;
   input_schema: Record<string, unknown>;
-  toolkit?: string;
+  output_schema?: Record<string, unknown>;
+  /** Mapped from `extendsToolkit`. Omitted for standalone tools. */
+  extends_toolkit?: string;
 }
+
+// ────────────────────────────────────────────────────────────────
+// Custom toolkit types
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Zod schema for validating the string/scalar fields of createCustomToolkit() options.
+ * Slug is validated separately as the first argument.
+ */
+export const CreateCustomToolkitBaseSchema = z.object({
+  name: z.string().min(1, 'createCustomToolkit: name is required'),
+  description: z.string().min(1, 'createCustomToolkit: description is required'),
+});
+
+/** Options for creating a custom toolkit via `createCustomToolkit()`. */
+export type CreateCustomToolkitParams = z.infer<typeof CreateCustomToolkitBaseSchema> & {
+  /** Tools to include in this toolkit. Must not have `extendsToolkit` set. */
+  tools: CustomTool[];
+};
+
+/**
+ * Custom toolkit definition returned from `createCustomToolkit()`.
+ * Pass to `composio.create(userId, { experimental: { customToolkits: [...] } })`.
+ */
+export interface CustomToolkit {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+  readonly tools: readonly CustomTool[];
+}
+
+/** Serialized toolkit definition sent to backend. */
+export interface CustomToolkitDefinition {
+  slug: string;
+  name: string;
+  description: string;
+  /** Nested tools — no extends_toolkit, they inherit the toolkit identity from the parent. */
+  tools: Omit<CustomToolDefinition, 'extends_toolkit'>[];
+}
+
+// ────────────────────────────────────────────────────────────────
+// Internal routing types
+// ────────────────────────────────────────────────────────────────
 
 /** @internal Entry in the per-session custom tools routing map. */
 export type CustomToolsMapEntry = {

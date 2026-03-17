@@ -38,8 +38,8 @@ import {
   transformToolRouterToolkitsParams,
 } from '../lib/toolRouterParams';
 import { ToolRouterSession } from './ToolRouterSession';
-import { buildCustomToolsMap, serializeCustomTools } from './CustomTool';
-import type { CustomToolsMap, CustomToolDefinition } from '../types/customTool.types';
+import { buildCustomToolsMap, serializeCustomTools, serializeCustomToolkits } from './CustomTool';
+import type { CustomToolsMap } from '../types/customTool.types';
 
 export class ToolRouter<
   TToolCollection,
@@ -78,15 +78,17 @@ export class ToolRouter<
    *
    * @example
    * ```typescript
-   * import { Composio } from '@composio/core';
-   * import { CustomTool } from '@composio/core/experimental';
+   * import { Composio, experimental_createTool } from '@composio/core';
    *
    * const composio = new Composio();
    *
    * const session = await composio.create('user_123', {
    *   toolkits: ['gmail'],
    *   manageConnections: true,
-   *   customTools: [myCustomTool],
+   *   experimental: {
+   *     customTools: [myCustomTool],
+   *     customToolkits: [myToolkit],
+   *   },
    * });
    * ```
    */
@@ -96,11 +98,29 @@ export class ToolRouter<
   ): Promise<Session<TToolCollection, TTool, TProvider>> {
     const routerConfig = ToolRouterCreateSessionConfigSchema.parse(config ?? {});
 
-    // Build custom tools map and backend payload from custom tool handles
+    // Extract custom tools/toolkits from experimental config
+    const customTools = routerConfig.experimental?.customTools;
+    const customToolkits = routerConfig.experimental?.customToolkits;
     let customToolsMap: CustomToolsMap | undefined;
-    const customTools = routerConfig.customTools;
 
-    const payload: SessionCreateParams & { custom_tools?: CustomToolDefinition[] } = {
+    // Build the experimental payload for the backend
+    const experimentalPayload: Record<string, unknown> = {};
+
+    if (routerConfig.experimental?.assistivePrompt?.userTimezone) {
+      experimentalPayload.assistive_prompt_config = {
+        user_timezone: routerConfig.experimental.assistivePrompt.userTimezone,
+      };
+    }
+
+    if (customTools?.length || customToolkits?.length) {
+      customToolsMap = buildCustomToolsMap(customTools ?? [], customToolkits);
+      experimentalPayload.custom_tools = serializeCustomTools(customTools ?? []);
+      if (customToolkits?.length) {
+        experimentalPayload.custom_toolkits = serializeCustomToolkits(customToolkits);
+      }
+    }
+
+    const payload: SessionCreateParams = {
       user_id: userId,
       auth_configs: routerConfig.authConfigs,
       connected_accounts: routerConfig.connectedAccounts,
@@ -111,21 +131,10 @@ export class ToolRouter<
         routerConfig.manageConnections
       ),
       workbench: transformToolRouterWorkbenchParams(routerConfig.workbench),
-      experimental: routerConfig.experimental?.assistivePrompt?.userTimezone
-        ? {
-            assistive_prompt_config: {
-              user_timezone: routerConfig.experimental.assistivePrompt.userTimezone,
-            },
-          }
+      experimental: Object.keys(experimentalPayload).length > 0
+        ? experimentalPayload
         : undefined,
     };
-
-    if (customTools?.length) {
-      customToolsMap = buildCustomToolsMap(customTools);
-      // Send definitions to backend for search indexing
-      // Type assertion: @composio/client doesn't have custom_tools yet
-      payload.custom_tools = serializeCustomTools(customTools);
-    }
 
     const session = await this.client.toolRouter.session.create(
       payload as SessionCreateParams

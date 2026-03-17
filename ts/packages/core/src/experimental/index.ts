@@ -7,10 +7,12 @@
  */
 
 // Custom tools
-export { createCustomTool } from '../models/CustomTool';
+export { createCustomTool, createCustomToolkit } from '../models/CustomTool';
 export type {
   CustomTool,
   CreateCustomToolParams,
   CustomToolExecuteFn,
   SessionContext,
+  CustomToolkit,
+  CreateCustomToolkitParams,
 } from '../types/customTool.types';

@@ -245,6 +245,8 @@ const session = await composio.create('user_123', {
 
 Configure experimental features for the session. These features are not stable and may be modified or removed in future versions.
 
+#### Assistive Prompt
+
 ```typescript
 const session = await composio.create('user_123', {
   toolkits: ['gmail'],
@@ -262,6 +264,86 @@ if (session.experimental?.assistivePrompt) {
 ```
 
 The `userTimezone` field accepts an IANA timezone identifier (e.g., 'America/New_York', 'Europe/London') which is used to generate a timezone-aware system prompt for optimal tool router usage.
+
+#### Custom Tools & Custom Toolkits
+
+Add user-defined tools that execute locally (in-process) alongside Composio's remote tools. Custom tools are indexed by the backend for search and returned to the LLM with the correct `LOCAL_` prefixed slug.
+
+There are three ways to define custom tools:
+
+**1. Standalone tool** — no auth, passed in `customTools`:
+
+```typescript
+import { experimental_createTool } from '@composio/core';
+import { z } from 'zod/v3';
+
+const grep = experimental_createTool('GREP', {
+  name: 'Grep Search',
+  description: 'Search for patterns in files',
+  inputParams: z.object({ pattern: z.string(), path: z.string() }),
+  execute: async (input) => ({ matches: [] }),
+});
+```
+
+Slug format: `LOCAL_GREP`
+
+**2. Extension tool** — extends a Composio toolkit (inherits auth), passed in `customTools`:
+
+```typescript
+const getImportant = experimental_createTool('GET_IMPORTANT_EMAILS', {
+  name: 'Get Important Emails',
+  description: 'Fetch high-priority emails',
+  extendsToolkit: 'gmail',
+  inputParams: z.object({ limit: z.number().default(10) }),
+  execute: async (input, session) => {
+    const result = await session.execute('GMAIL_SEARCH', { query: 'is:important' });
+    return { emails: result.data };
+  },
+});
+```
+
+Slug format: `LOCAL_GMAIL_GET_IMPORTANT_EMAILS`
+
+**3. Custom toolkit** — groups no-auth tools, passed in `customToolkits`:
+
+```typescript
+import { experimental_createToolkit } from '@composio/core';
+
+const sed = experimental_createTool('SED', {
+  name: 'Sed Replace',
+  description: 'Find and replace in files',
+  inputParams: z.object({ pattern: z.string(), replacement: z.string() }),
+  execute: async (input) => ({ replaced: 0 }),
+});
+
+const devTools = experimental_createToolkit('DEV_TOOLS', {
+  name: 'Dev Tools',
+  description: 'Local dev utilities',
+  tools: [sed],
+});
+```
+
+Slug format: `LOCAL_DEV_TOOLS_SED`
+
+**Using in a session:**
+
+```typescript
+const session = await composio.create('user_123', {
+  toolkits: ['gmail'],
+  experimental: {
+    customTools: [grep, getImportant],
+    customToolkits: [devTools],
+  },
+});
+
+// Execute locally via session.execute()
+const result = await session.execute('GREP', { pattern: 'TODO', path: '/src' });
+
+// Also works with prefixed slug
+const result2 = await session.execute('LOCAL_DEV_TOOLS_SED', { pattern: 'foo', replacement: 'bar' });
+```
+
+Custom tools are searched alongside Composio tools. When an LLM calls a custom tool via `COMPOSIO_MULTI_EXECUTE_TOOL`, the SDK intercepts it and executes locally — remote tools in the same batch are sent to the backend in parallel.
 
 ## Session Properties
 
@@ -346,6 +428,49 @@ Meta tools allow you to:
 - Manage session configuration
 
 This method is useful when you need direct access to the underlying meta tools without creating a full session object.
+
+### `execute()`
+
+Execute a tool within the session. Custom tools run locally in-process; remote tools are sent to the Composio backend. Accepts both the original slug and the `LOCAL_`-prefixed slug for custom tools.
+
+```typescript
+// Execute a custom tool
+const result = await session.execute('GET_USER_CONTEXT', { category: 'prefs' });
+console.log(result.data);  // { preferences: { ... } }
+console.log(result.error); // null on success
+console.log(result.logId); // 'local' for custom tools, backend log ID for remote tools
+
+// Execute a remote Composio tool
+const weather = await session.execute('WEATHERMAP_WEATHER', { location: 'Tokyo' });
+```
+
+### `search()`
+
+Search for tools by semantic use case. Returns relevant tools with schemas and guidance.
+
+```typescript
+const results = await session.search({ query: 'send an email via gmail' });
+
+for (const result of results.results) {
+  console.log(result.useCase);
+  console.log(result.primaryToolSlugs); // e.g. ['GMAIL_SEND_EMAIL']
+}
+```
+
+### `proxyExecute()`
+
+Proxy an API call through Composio's auth layer using the session's connected account. The backend resolves the connected account from the toolkit within the session.
+
+```typescript
+const result = await session.proxyExecute({
+  toolkit: 'github',
+  endpoint: 'https://api.github.com/user',
+  method: 'GET',
+  parameters: [
+    { in: 'header', name: 'X-Custom', value: 'value' },
+  ],
+});
+```
 
 ### `authorize()`
 
@@ -802,6 +927,8 @@ interface ToolRouterCreateSessionConfig {
     assistivePrompt?: {
       userTimezone?: string; // IANA timezone identifier for timezone-aware assistive prompts
     };
+    customTools?: CustomTool[];      // Standalone or extension tools (from experimental_createTool)
+    customToolkits?: CustomToolkit[]; // Grouped no-auth tools (from experimental_createToolkit)
   };
 }
 ```
@@ -817,8 +944,11 @@ interface ToolRouterSession {
     headers?: Record<string, string>; // Authentication headers (includes x-api-key if configured)
   };
   tools: (modifiers?: ProviderOptions) => Promise<Tools>;
+  execute: (toolSlug: string, arguments?: Record<string, unknown>) => Promise<ToolRouterSessionExecuteResponse>;
+  search: (params: { query: string; toolkits?: string[] }) => Promise<ToolRouterSessionSearchResponse>;
+  proxyExecute: (params: SessionProxyExecuteParams) => Promise<ToolRouterSessionExecuteResponse>;
   authorize: (toolkit: string, options?: { callbackUrl?: string }) => Promise<ConnectionRequest>;
-  toolkits: (options?: { 
+  toolkits: (options?: {
     toolkits?: string[];   // Filter by specific toolkit slugs
     nextCursor?: string;   // Pagination cursor
     limit?: number;        // Number of items per page

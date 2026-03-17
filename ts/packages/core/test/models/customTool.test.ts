@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod/v3';
-import { createCustomTool, buildCustomToolsMap, serializeCustomTools, LOCAL_TOOL_PREFIX } from '../../src/models/CustomTool';
+import {
+  createCustomTool,
+  createCustomToolkit,
+  buildCustomToolsMap,
+  serializeCustomTools,
+  serializeCustomToolkits,
+  LOCAL_TOOL_PREFIX,
+} from '../../src/models/CustomTool';
 import { SessionContextImpl } from '../../src/models/SessionContext';
-import type { CustomTool, SessionContext } from '../../src/types/customTool.types';
+import type { CustomTool, CustomToolkit, SessionContext } from '../../src/types/customTool.types';
 
 // ────────────────────────────────────────────────────────────────
 // createCustomTool() factory
@@ -10,7 +17,6 @@ import type { CustomTool, SessionContext } from '../../src/types/customTool.type
 
 describe('createCustomTool', () => {
   const baseOptions = {
-    slug: 'GET_USER_CONTEXT',
     name: 'Get user context',
     description: 'Retrieve what we know about a user',
     inputParams: z.object({
@@ -20,12 +26,12 @@ describe('createCustomTool', () => {
   };
 
   it('should return a valid tool with correct fields', () => {
-    const tool = createCustomTool(baseOptions);
+    const tool = createCustomTool('GET_USER_CONTEXT', baseOptions);
 
     expect(tool.slug).toBe('GET_USER_CONTEXT');
     expect(tool.name).toBe('Get user context');
     expect(tool.description).toBe('Retrieve what we know about a user');
-    expect(tool.toolkit).toBeUndefined();
+    expect(tool.extendsToolkit).toBeUndefined();
     expect(tool.execute).toBe(baseOptions.execute);
     expect(tool.inputSchema).toMatchObject({
       type: 'object',
@@ -37,13 +43,37 @@ describe('createCustomTool', () => {
     expect(tool.inputParams).toBe(baseOptions.inputParams);
   });
 
-  it('should include toolkit when provided', () => {
-    const tool = createCustomTool({ ...baseOptions, toolkit: 'meta_ads' });
-    expect(tool.toolkit).toBe('meta_ads');
+  it('should include extendsToolkit when provided', () => {
+    const tool = createCustomTool('GET_AD_ACCOUNTS', { ...baseOptions, extendsToolkit: 'meta_ads' });
+    expect(tool.extendsToolkit).toBe('meta_ads');
+  });
+
+  it('should convert outputParams to JSON Schema when provided', () => {
+    const tool = createCustomTool('WITH_OUTPUT', {
+      ...baseOptions,
+      outputParams: z.object({
+        result: z.string(),
+        count: z.number(),
+      }),
+    });
+
+    expect(tool.outputSchema).toMatchObject({
+      type: 'object',
+      properties: {
+        result: { type: 'string' },
+        count: { type: 'number' },
+      },
+      required: ['result', 'count'],
+    });
+  });
+
+  it('should not have outputSchema when outputParams is not provided', () => {
+    const tool = createCustomTool('NO_OUTPUT', baseOptions);
+    expect(tool.outputSchema).toBeUndefined();
   });
 
   it('should convert Zod schema with optional fields correctly', () => {
-    const tool = createCustomTool({
+    const tool = createCustomTool('OPT_FIELDS', {
       ...baseOptions,
       inputParams: z.object({
         required_field: z.string(),
@@ -62,7 +92,7 @@ describe('createCustomTool', () => {
   });
 
   it('should convert Zod schema with defaults correctly', () => {
-    const tool = createCustomTool({
+    const tool = createCustomTool('DEFAULTS', {
       ...baseOptions,
       inputParams: z.object({
         category: z.string().default('all'),
@@ -77,41 +107,53 @@ describe('createCustomTool', () => {
     });
   });
 
-  describe('validation', () => {
-    it('should throw if slug is missing', () => {
-      expect(() => createCustomTool({ ...baseOptions, slug: '' })).toThrow('slug is required');
+  describe('slug validation', () => {
+    it('should throw if slug is empty', () => {
+      expect(() => createCustomTool('', baseOptions)).toThrow('slug is required');
     });
 
     it('should throw if slug starts with LOCAL_ prefix', () => {
-      expect(() => createCustomTool({ ...baseOptions, slug: 'LOCAL_MY_TOOL' })).toThrow(
-        /LOCAL_/
-      );
+      expect(() => createCustomTool('LOCAL_MY_TOOL', baseOptions)).toThrow(/LOCAL_/);
     });
 
     it('should throw if slug starts with local_ prefix (case-insensitive)', () => {
-      expect(() => createCustomTool({ ...baseOptions, slug: 'local_something' })).toThrow(
-        /LOCAL_/
-      );
+      expect(() => createCustomTool('local_something', baseOptions)).toThrow(/LOCAL_/);
     });
 
+    it('should throw if slug contains invalid characters', () => {
+      expect(() => createCustomTool('MY TOOL', baseOptions)).toThrow(/alphanumeric/);
+      expect(() => createCustomTool('MY.TOOL', baseOptions)).toThrow(/alphanumeric/);
+      expect(() => createCustomTool('MY@TOOL', baseOptions)).toThrow(/alphanumeric/);
+    });
+
+    it('should allow underscores and hyphens in slug', () => {
+      const tool1 = createCustomTool('MY_TOOL', baseOptions);
+      expect(tool1.slug).toBe('MY_TOOL');
+
+      const tool2 = createCustomTool('my-tool', baseOptions);
+      expect(tool2.slug).toBe('my-tool');
+    });
+  });
+
+  describe('other validation', () => {
     it('should throw if name is missing', () => {
-      expect(() => createCustomTool({ ...baseOptions, name: '' })).toThrow('name is required');
+      expect(() => createCustomTool('SLUG', { ...baseOptions, name: '' })).toThrow('name is required');
     });
 
     it('should throw if description is missing', () => {
-      expect(() => createCustomTool({ ...baseOptions, description: '' })).toThrow(
+      expect(() => createCustomTool('SLUG', { ...baseOptions, description: '' })).toThrow(
         'description is required'
       );
     });
 
     it('should throw if inputParams is missing', () => {
-      expect(() => createCustomTool({ ...baseOptions, inputParams: null as any })).toThrow(
+      expect(() => createCustomTool('SLUG', { ...baseOptions, inputParams: null as any })).toThrow(
         'inputParams is required'
       );
     });
 
     it('should throw if execute is not a function', () => {
-      expect(() => createCustomTool({ ...baseOptions, execute: 'not-fn' as any })).toThrow(
+      expect(() => createCustomTool('SLUG', { ...baseOptions, execute: 'not-fn' as any })).toThrow(
         'execute must be a function'
       );
     });
@@ -121,12 +163,11 @@ describe('createCustomTool', () => {
     it('should allow no-session execute (input only)', async () => {
       const noSessionExecute = vi.fn().mockResolvedValue({ result: 42 });
 
-      const tool = createCustomTool({
+      const tool = createCustomTool('NO_SESSION', {
         ...baseOptions,
         execute: noSessionExecute,
       });
 
-      // Call without session — JS ignores extra params
       const result = await tool.execute({ category: 'test' } as any);
       expect(result.result).toBe(42);
       expect(noSessionExecute).toHaveBeenCalledWith({ category: 'test' });
@@ -135,7 +176,7 @@ describe('createCustomTool', () => {
     it('should allow session-based execute (input + session)', async () => {
       const sessionExecute = vi.fn().mockResolvedValue({ userId: 'u1' });
 
-      const tool = createCustomTool({
+      const tool = createCustomTool('WITH_SESSION', {
         ...baseOptions,
         execute: sessionExecute,
       });
@@ -154,48 +195,203 @@ describe('createCustomTool', () => {
 });
 
 // ────────────────────────────────────────────────────────────────
+// createCustomToolkit() factory
+// ────────────────────────────────────────────────────────────────
+
+describe('createCustomToolkit', () => {
+  const baseTool = createCustomTool('GREP', {
+    name: 'Grep',
+    description: 'Search files',
+    inputParams: z.object({ pattern: z.string() }),
+    execute: vi.fn().mockResolvedValue({}),
+  });
+
+  it('should return a valid toolkit with correct fields', () => {
+    const tk = createCustomToolkit('DEV_TOOLS', {
+      name: 'Dev Tools',
+      description: 'Local dev utilities',
+      tools: [baseTool],
+    });
+
+    expect(tk.slug).toBe('DEV_TOOLS');
+    expect(tk.name).toBe('Dev Tools');
+    expect(tk.description).toBe('Local dev utilities');
+    expect(tk.tools).toHaveLength(1);
+    expect(tk.tools[0].slug).toBe('GREP');
+  });
+
+  it('should throw if slug is empty', () => {
+    expect(() =>
+      createCustomToolkit('', { name: 'X', description: 'X', tools: [baseTool] })
+    ).toThrow('slug is required');
+  });
+
+  it('should throw if slug starts with LOCAL_', () => {
+    expect(() =>
+      createCustomToolkit('LOCAL_TK', { name: 'X', description: 'X', tools: [baseTool] })
+    ).toThrow(/LOCAL_/);
+  });
+
+  it('should throw if slug contains invalid characters', () => {
+    expect(() =>
+      createCustomToolkit('MY TOOLKIT', { name: 'X', description: 'X', tools: [baseTool] })
+    ).toThrow(/alphanumeric/);
+  });
+
+  it('should throw if name is missing', () => {
+    expect(() =>
+      createCustomToolkit('TK', { name: '', description: 'X', tools: [baseTool] })
+    ).toThrow('name is required');
+  });
+
+  it('should throw if description is missing', () => {
+    expect(() =>
+      createCustomToolkit('TK', { name: 'X', description: '', tools: [baseTool] })
+    ).toThrow('description is required');
+  });
+
+  it('should throw if tools array is empty', () => {
+    expect(() =>
+      createCustomToolkit('TK', { name: 'X', description: 'X', tools: [] })
+    ).toThrow('at least one tool is required');
+  });
+
+  it('should reject tools with extendsToolkit set', () => {
+    const extendsTool = createCustomTool('EXTENDS_TOOL', {
+      name: 'Extends',
+      description: 'Has extendsToolkit',
+      extendsToolkit: 'gmail',
+      inputParams: z.object({}),
+      execute: vi.fn().mockResolvedValue({}),
+    });
+
+    expect(() =>
+      createCustomToolkit('TK', { name: 'X', description: 'X', tools: [extendsTool] })
+    ).toThrow('extendsToolkit');
+  });
+});
+
+// ────────────────────────────────────────────────────────────────
 // buildCustomToolsMap()
 // ────────────────────────────────────────────────────────────────
 
 describe('buildCustomToolsMap', () => {
-  const makeTool = (slug: string): CustomTool => ({
+  const makeTool = (slug: string, extendsToolkit?: string): CustomTool => ({
     slug,
     name: `Tool ${slug}`,
     description: `Description for ${slug}`,
+    extendsToolkit,
     inputSchema: { type: 'object', properties: {} },
     inputParams: z.object({}),
     execute: vi.fn(),
   });
 
-  it('should create maps with both prefixed and original slug keys', () => {
-    const tools = [makeTool('MY_TOOL'), makeTool('OTHER_TOOL')];
-    const map = buildCustomToolsMap(tools);
+  describe('standalone tools (no extendsToolkit)', () => {
+    it('should prefix as LOCAL_<SLUG>', () => {
+      const map = buildCustomToolsMap([makeTool('MY_TOOL')]);
 
-    expect(map.byPrefixed.size).toBe(2);
-    expect(map.byOriginal.size).toBe(2);
+      expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
+      expect(map.byOriginal.has('MY_TOOL')).toBe(true);
+    });
 
-    // Prefixed lookup
-    expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
-    expect(map.byPrefixed.has('LOCAL_OTHER_TOOL')).toBe(true);
+    it('should handle case-insensitive slugs (uppercased internally)', () => {
+      const map = buildCustomToolsMap([makeTool('my_tool')]);
 
-    // Original lookup
-    expect(map.byOriginal.has('MY_TOOL')).toBe(true);
-    expect(map.byOriginal.has('OTHER_TOOL')).toBe(true);
+      expect(map.byOriginal.has('MY_TOOL')).toBe(true);
+      expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
+    });
   });
 
-  it('should handle case-insensitive slugs (uppercased internally)', () => {
-    const tool = makeTool('my_tool');
-    const map = buildCustomToolsMap([tool]);
+  describe('tools with extendsToolkit', () => {
+    it('should prefix as LOCAL_<EXTENDS_TOOLKIT>_<SLUG>', () => {
+      const map = buildCustomToolsMap([makeTool('GET_EMAILS', 'gmail')]);
 
-    expect(map.byOriginal.has('MY_TOOL')).toBe(true);
-    expect(map.byPrefixed.has('LOCAL_MY_TOOL')).toBe(true);
+      expect(map.byPrefixed.has('LOCAL_GMAIL_GET_EMAILS')).toBe(true);
+      expect(map.byOriginal.has('GET_EMAILS')).toBe(true);
+    });
   });
 
-  it('should throw on duplicate slugs', () => {
-    const tools = [makeTool('DUPE'), makeTool('DUPE')];
-    expect(() => buildCustomToolsMap(tools)).toThrow('duplicate slug "DUPE"');
+  describe('toolkit tools', () => {
+    it('should prefix as LOCAL_<TOOLKIT_SLUG>_<TOOL_SLUG>', () => {
+      const sed = makeTool('SED');
+      const tk: CustomToolkit = {
+        slug: 'DEV_TOOLS',
+        name: 'Dev Tools',
+        description: 'Utilities',
+        tools: [sed],
+      };
+
+      const map = buildCustomToolsMap([], [tk]);
+
+      expect(map.byPrefixed.has('LOCAL_DEV_TOOLS_SED')).toBe(true);
+      expect(map.byOriginal.has('SED')).toBe(true);
+    });
   });
 
+  describe('mixed tools and toolkits', () => {
+    it('should handle standalone + toolkit tools together', () => {
+      const grep = makeTool('GREP');
+      const sed = makeTool('SED');
+      const tk: CustomToolkit = {
+        slug: 'DEV_TOOLS',
+        name: 'Dev Tools',
+        description: 'Utilities',
+        tools: [sed],
+      };
+
+      const map = buildCustomToolsMap([grep], [tk]);
+
+      expect(map.byPrefixed.size).toBe(2);
+      expect(map.byPrefixed.has('LOCAL_GREP')).toBe(true);
+      expect(map.byPrefixed.has('LOCAL_DEV_TOOLS_SED')).toBe(true);
+    });
+  });
+
+  describe('collision detection', () => {
+    it('should throw on duplicate standalone slugs', () => {
+      expect(() => buildCustomToolsMap([makeTool('DUPE'), makeTool('DUPE')])).toThrow(
+        'collision'
+      );
+    });
+
+    it('should throw on cross-group collision (standalone vs toolkit same original slug)', () => {
+      const standalone = makeTool('SED');
+      const tkTool = makeTool('SED');
+      const tk: CustomToolkit = {
+        slug: 'DEV_TOOLS',
+        name: 'Dev Tools',
+        description: 'Utilities',
+        tools: [tkTool],
+      };
+
+      expect(() => buildCustomToolsMap([standalone], [tk])).toThrow('collision');
+    });
+  });
+
+  describe('length validation', () => {
+    it('should throw when prefixed slug exceeds 60 characters with contextual error', () => {
+      const longSlug = 'A'.repeat(56); // LOCAL_ + 56 = 62 > 60
+      expect(() => buildCustomToolsMap([makeTool(longSlug)])).toThrow('too long');
+    });
+
+    it('should show available length in error for toolkit tools', () => {
+      const longSlug = 'A'.repeat(50); // LOCAL_DEV_TOOLS_ + 50 = 66 > 60
+      const tk: CustomToolkit = {
+        slug: 'DEV_TOOLS',
+        name: 'Dev Tools',
+        description: 'Utilities',
+        tools: [makeTool(longSlug)],
+      };
+
+      expect(() => buildCustomToolsMap([], [tk])).toThrow(/Shorten the slug to at most/);
+    });
+
+    it('should accept slugs that fit within 60 chars', () => {
+      const slug = 'A'.repeat(54); // LOCAL_ + 54 = 60 exactly
+      const map = buildCustomToolsMap([makeTool(slug)]);
+      expect(map.byPrefixed.size).toBe(1);
+    });
+  });
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -203,12 +399,12 @@ describe('buildCustomToolsMap', () => {
 // ────────────────────────────────────────────────────────────────
 
 describe('serializeCustomTools', () => {
-  it('should serialize tools into backend format', () => {
+  it('should serialize tools with extendsToolkit as extends_toolkit', () => {
     const tool: CustomTool = {
       slug: 'GET_DATA',
       name: 'Get Data',
       description: 'Gets some data',
-      toolkit: 'my_toolkit',
+      extendsToolkit: 'my_toolkit',
       inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
       inputParams: z.object({ id: z.string() }),
       execute: vi.fn(),
@@ -221,13 +417,13 @@ describe('serializeCustomTools', () => {
         slug: 'GET_DATA',
         name: 'Get Data',
         description: 'Gets some data',
-        toolkit: 'my_toolkit',
+        extends_toolkit: 'my_toolkit',
         input_schema: { type: 'object', properties: { id: { type: 'string' } } },
       },
     ]);
   });
 
-  it('should omit toolkit when not provided', () => {
+  it('should omit extends_toolkit when extendsToolkit is not provided', () => {
     const tool: CustomTool = {
       slug: 'NO_TOOLKIT',
       name: 'No Toolkit',
@@ -238,7 +434,66 @@ describe('serializeCustomTools', () => {
     };
 
     const result = serializeCustomTools([tool]);
-    expect(result[0]).not.toHaveProperty('toolkit');
+    expect(result[0]).not.toHaveProperty('extends_toolkit');
+  });
+
+  it('should include output_schema when outputSchema is present', () => {
+    const tool: CustomTool = {
+      slug: 'WITH_OUTPUT',
+      name: 'With Output',
+      description: 'Has output schema',
+      inputSchema: { type: 'object', properties: {} },
+      outputSchema: { type: 'object', properties: { result: { type: 'string' } } },
+      inputParams: z.object({}),
+      execute: vi.fn(),
+    };
+
+    const result = serializeCustomTools([tool]);
+    expect(result[0].output_schema).toEqual({
+      type: 'object',
+      properties: { result: { type: 'string' } },
+    });
+  });
+});
+
+// ────────────────────────────────────────────────────────────────
+// serializeCustomToolkits()
+// ────────────────────────────────────────────────────────────────
+
+describe('serializeCustomToolkits', () => {
+  it('should serialize toolkits with their tools', () => {
+    const tool: CustomTool = {
+      slug: 'SED',
+      name: 'Sed Replace',
+      description: 'Find and replace',
+      inputSchema: { type: 'object', properties: { pattern: { type: 'string' } } },
+      inputParams: z.object({ pattern: z.string() }),
+      execute: vi.fn(),
+    };
+    const tk: CustomToolkit = {
+      slug: 'DEV_TOOLS',
+      name: 'Dev Tools',
+      description: 'Dev utilities',
+      tools: [tool],
+    };
+
+    const result = serializeCustomToolkits([tk]);
+
+    expect(result).toEqual([
+      {
+        slug: 'DEV_TOOLS',
+        name: 'Dev Tools',
+        description: 'Dev utilities',
+        tools: [
+          {
+            slug: 'SED',
+            name: 'Sed Replace',
+            description: 'Find and replace',
+            input_schema: { type: 'object', properties: { pattern: { type: 'string' } } },
+          },
+        ],
+      },
+    ]);
   });
 });
 
@@ -299,11 +554,45 @@ describe('SessionContextImpl', () => {
     expect(result.error).toBe('something went wrong');
   });
 
-  it('should throw on proxyExecute() (not yet implemented)', async () => {
+  it('should call session proxy_execute endpoint via proxyExecute()', async () => {
+    const mockPost = vi.fn().mockResolvedValue({
+      data: { proxy_result: true },
+      error: null,
+      log_id: 'log_proxy',
+    });
+    const clientWithPost = { ...mockClient, post: mockPost };
+    const ctx = new SessionContextImpl(clientWithPost as any, 'user_1', 'sess_1');
+
+    const result = await ctx.proxyExecute({
+      toolkit: 'github',
+      endpoint: 'https://api.github.com/user',
+      method: 'GET',
+      parameters: [{ in: 'header' as const, name: 'X-Custom', value: 'val' }],
+    });
+
+    expect(mockPost).toHaveBeenCalledWith(
+      '/api/v3/tool_router/session/sess_1/proxy_execute',
+      {
+        body: {
+          toolkit_slug: 'github',
+          endpoint: 'https://api.github.com/user',
+          method: 'GET',
+          parameters: [{ name: 'X-Custom', type: 'header', value: 'val' }],
+        },
+      }
+    );
+    expect(result).toEqual({
+      data: { proxy_result: true },
+      error: null,
+      successful: true,
+    });
+  });
+
+  it('should throw on proxyExecute() with invalid params', async () => {
     const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1');
     await expect(
-      ctx.proxyExecute({ endpoint: '/test', method: 'GET' })
-    ).rejects.toThrow('proxyExecute is not yet implemented');
+      ctx.proxyExecute({ toolkit: 'github', endpoint: '/test', method: 'INVALID' as any })
+    ).rejects.toThrow('Invalid proxy execute parameters');
   });
 
   describe('sibling local tool routing', () => {
@@ -317,7 +606,6 @@ describe('SessionContextImpl', () => {
 
       expect(tryLocalExecute).toHaveBeenCalledWith('SIBLING_TOOL', { key: 'val' });
       expect(result).toEqual({ data: { local: true }, error: null, successful: true });
-      // Should NOT call remote
       expect(mockClient.toolRouter.session.execute).not.toHaveBeenCalled();
     });
 

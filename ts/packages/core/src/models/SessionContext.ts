@@ -3,7 +3,10 @@
  */
 import { Composio as ComposioClient } from '@composio/client';
 import type { SessionContext } from '../types/customTool.types';
-import type { ToolExecuteResponse, ToolProxyParams } from '../types/tool.types';
+import type { ToolExecuteResponse } from '../types/tool.types';
+import type { SessionProxyExecuteParams } from '../types/toolRouter.types';
+import { SessionProxyExecuteParamsSchema } from '../types/toolRouter.types';
+import { transformProxyParams } from './proxyParamsTransform';
 
 /**
  * Callback that attempts local tool execution.
@@ -66,16 +69,26 @@ export class SessionContextImpl implements SessionContext {
 
   /**
    * Proxy API calls through Composio's auth layer.
-   * The session-scoped backend endpoint resolves the connected account automatically.
-   *
-   * TODO: Wire to session-scoped proxy endpoint (proxyExecuteForSessionRPC).
-   * Currently a skeleton — will be connected to backend API.
+   * The backend resolves the connected account from the toolkit within the session.
    */
-  async proxyExecute(_params: ToolProxyParams): Promise<ToolExecuteResponse> {
-    // TODO: Call session-scoped proxy endpoint that resolves connected account from session.
-    // Backend API: apps/apollo/src/lib/toolRouterV2/features/execution/proxyExecuteForSessionRPC.ts
-    throw new Error(
-      'proxyExecute is not yet implemented. Session-scoped proxy endpoint pending backend support.'
+  async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolExecuteResponse> {
+    const validated = SessionProxyExecuteParamsSchema.safeParse(params);
+    if (!validated.success) {
+      throw new Error(`Invalid proxy execute parameters: ${validated.error.message}`);
+    }
+
+    const body = transformProxyParams(validated.data);
+
+    // TODO: Replace with client.toolRouter.session.proxyExecute() when @composio/client is updated
+    const response = await (this.client as unknown as { post: (path: string, opts: { body: unknown }) => Promise<{ data: Record<string, unknown>; error: string | null; log_id: string }> }).post(
+      `/api/v3/tool_router/session/${this.sessionId}/proxy_execute`,
+      { body }
     );
+
+    return {
+      data: response.data ?? {},
+      error: response.error,
+      successful: !response.error,
+    };
   }
 }

@@ -74,10 +74,6 @@ e2e(import.meta.url, {
         expect(result.stdout).toContain('NONEXISTENT_TOOL_OK');
       });
 
-      it('localTools() method works', () => {
-        expect(result.stdout).toContain('LOCAL_TOOLS_METHOD_OK');
-      });
-
       it('session.tools() wrapping works', () => {
         expect(result.stdout).toContain('TOOLS_WRAPPING_OK');
       });

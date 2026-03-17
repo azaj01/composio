@@ -18,8 +18,7 @@ if (!apiKey) {
 
 // ── Define custom tools ──────────────────────────────────────
 
-const getUserContext = createCustomTool({
-  slug: 'GET_USER_CONTEXT',
+const getUserContext = createCustomTool('GET_USER_CONTEXT', {
   name: 'Get user context',
   description: 'Retrieve user preferences and history',
   inputParams: z.object({
@@ -30,8 +29,7 @@ const getUserContext = createCustomTool({
   },
 });
 
-const enrichedSearch = createCustomTool({
-  slug: 'ENRICHED_SEARCH',
+const enrichedSearch = createCustomTool('ENRICHED_SEARCH', {
   name: 'Enriched search',
   description: 'Search and enrich results with user context',
   inputParams: z.object({
@@ -45,8 +43,7 @@ const enrichedSearch = createCustomTool({
   },
 });
 
-const throwingTool = createCustomTool({
-  slug: 'THROWING_TOOL',
+const throwingTool = createCustomTool('THROWING_TOOL', {
   name: 'Throwing tool',
   description: 'A tool that always throws an error',
   inputParams: z.object({}),
@@ -56,8 +53,7 @@ const throwingTool = createCustomTool({
 });
 
 // Tool with strict numeric schema — for Zod validation failure test
-const strictTool = createCustomTool({
-  slug: 'STRICT_TOOL',
+const strictTool = createCustomTool('STRICT_TOOL', {
   name: 'Strict tool',
   description: 'Tool with strict numeric input',
   inputParams: z.object({
@@ -69,8 +65,7 @@ const strictTool = createCustomTool({
 });
 
 // Tool that chains into a remote tool via SessionContext.execute()
-const weatherChain = createCustomTool({
-  slug: 'WEATHER_CHAIN',
+const weatherChain = createCustomTool('WEATHER_CHAIN', {
   name: 'Weather chain',
   description: 'Fetches weather via remote tool and enriches with local context',
   inputParams: z.object({
@@ -100,7 +95,9 @@ async function main() {
   const session = await composio.create(userId, {
     toolkits: ['weathermap'],
     manageConnections: false,
-    customTools: [getUserContext, enrichedSearch, throwingTool, strictTool, weatherChain],
+    experimental: {
+      customTools: [getUserContext, enrichedSearch, throwingTool, strictTool, weatherChain],
+    },
   });
 
   // ── Test 1: Single local tool execution ──
@@ -230,24 +227,6 @@ async function main() {
       throw new Error('NONEXISTENT_TOOL expected an error but got success');
     }
     console.log('NONEXISTENT_TOOL_OK');
-  }
-
-  // ── Test 11: localTools() method ──
-  {
-    try {
-      const localTool = await session.localTools();
-      if (!localTool) {
-        throw new Error('localTools() returned falsy value');
-      }
-      console.log('LOCAL_TOOLS_METHOD_OK');
-    } catch (err) {
-      // Expected — no provider configured in this fixture
-      if (err.message?.includes('provider')) {
-        console.log('LOCAL_TOOLS_METHOD_OK');
-      } else {
-        throw err;
-      }
-    }
   }
 
   // ── Test 12: session.tools() wrapping ──

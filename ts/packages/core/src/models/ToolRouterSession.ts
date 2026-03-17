@@ -26,12 +26,14 @@ import { ValidationError } from '../errors';
 import { Tools } from './Tools';
 import { ToolRouterSessionFilesMount } from './ToolRouterSessionFileMount';
 import type { CustomToolsMap, CustomToolsMapEntry, SessionContext } from '../types/customTool.types';
-import type { Tool, ToolExecuteResponse } from '../types/tool.types';
+import type { ToolExecuteResponse } from '../types/tool.types';
+import type { SessionProxyExecuteParams } from '../types/toolRouter.types';
+import { SessionProxyExecuteParamsSchema } from '../types/toolRouter.types';
 import { SessionContextImpl } from './SessionContext';
 import { findCustomTool, executeCustomTool } from './customToolExecution';
+import { transformProxyParams } from './proxyParamsTransform';
 
 const COMPOSIO_MULTI_EXECUTE_TOOL = 'COMPOSIO_MULTI_EXECUTE_TOOL';
-const COMPOSIO_EXECUTE_LOCAL_TOOL = 'COMPOSIO_EXECUTE_LOCAL_TOOL';
 
 export class ToolRouterSession<
   TToolCollection,
@@ -86,19 +88,6 @@ export class ToolRouterSession<
         if (toolSlug === COMPOSIO_MULTI_EXECUTE_TOOL) {
           return this.routeMultiExecute(input, ToolsModel, modifiers);
         }
-        if (toolSlug === COMPOSIO_EXECUTE_LOCAL_TOOL) {
-          const slug = String(input.tool_slug ?? '');
-          const args = (input.arguments as Record<string, unknown> | undefined) ?? {};
-          const entry = findCustomTool(this.customToolsMap, slug);
-          if (!entry) {
-            return {
-              data: {},
-              error: `Custom tool "${slug}" not found. If this is a remote tool, execute it via COMPOSIO_MULTI_EXECUTE_TOOL.`,
-              successful: false,
-            };
-          }
-          return executeCustomTool(entry, args, this.buildSessionContext());
-        }
         // Non-multi-execute meta tools always go to backend
         return ToolsModel.executeMetaTool(
           toolSlug,
@@ -121,90 +110,6 @@ export class ToolRouterSession<
     // Standard path (no local tools)
     const wrappedTools = ToolsModel.wrapToolsForToolRouter(this.sessionId, tools, modifiers);
     return wrappedTools as ReturnType<TProvider['wrapTools']>;
-  }
-
-  /**
-   * Returns a dispatcher tool that exposes custom tools for execution.
-   * Primarily used in MCP flows where remote tools are served via an MCP server
-   * and custom tools need to be added alongside.
-   *
-   * Not included in `session.tools()` — must be explicitly added to the agent's tool set.
-   *
-   * @example
-   * ```typescript
-   * // MCP flow: remote tools via MCP server, local tools via localTools()
-   * const localTool = await session.localTools();
-   * const agent = new Agent({
-   *   tools: [
-   *     hostedMcpTool(session.mcp.url),   // remote tools from MCP
-   *     ...localTool,                      // custom tools
-   *   ],
-   * });
-   * ```
-   */
-  async localTools(): Promise<ReturnType<TProvider['wrapTools']>> {
-    if (!this.hasCustomTools()) {
-      throw new Error('No custom tools are bound to this session.');
-    }
-    if (!this.config?.provider) {
-      throw new Error(
-        'A provider is required for session.localTools(). ' +
-        'Pass a provider in the Composio constructor.'
-      );
-    }
-
-    // Collect local tool slugs and descriptions for the schema
-    const toolEntries = Array.from(this.customToolsMap!.byOriginal.entries());
-    const slugDescriptions = toolEntries
-      .map(([_slug, entry]) => `- ${entry.prefixedSlug}: ${entry.handle.description}`)
-      .join('\n');
-
-    // Build a synthetic Tool schema for COMPOSIO_EXECUTE_LOCAL_TOOL
-    const tool: Tool = {
-      slug: COMPOSIO_EXECUTE_LOCAL_TOOL,
-      name: 'Execute Local Tool',
-      description: `Execute a custom tool by slug.\n\nAvailable tools:\n${slugDescriptions}`,
-      inputParameters: {
-        type: 'object',
-        properties: {
-          tool_slug: {
-            type: 'string',
-            description: 'The slug of the local tool to execute',
-            enum: toolEntries.map(([, entry]) => entry.prefixedSlug),
-          },
-          arguments: {
-            type: 'object',
-            description: 'Arguments to pass to the tool',
-            properties: {},
-            additionalProperties: true,
-          },
-        },
-        required: ['tool_slug'],
-      },
-    };
-
-    const executeFn = async (
-      _toolSlug: string,
-      input: Record<string, unknown>
-    ): Promise<ToolExecuteResponse> => {
-      const slug = String(input.tool_slug ?? '');
-      const args = (input.arguments as Record<string, unknown> | undefined) ?? {};
-
-      const entry = findCustomTool(this.customToolsMap, slug);
-      if (!entry) {
-        return {
-          data: {},
-          error: `Custom tool "${slug}" not found. Available: ${toolEntries.map(([, e]) => e.prefixedSlug).join(', ')}. If this is a remote tool, execute it via COMPOSIO_MULTI_EXECUTE_TOOL.`,
-          successful: false,
-        };
-      }
-
-      return executeCustomTool(entry, args, this.buildSessionContext());
-    };
-
-    return this.config.provider.wrapTools([tool], executeFn) as ReturnType<
-      TProvider['wrapTools']
-    >;
   }
 
   /**
@@ -329,6 +234,34 @@ export class ToolRouterSession<
     });
     const transformed = transformExecuteResponse(response);
     return ToolRouterSessionExecuteResponseSchema.parse(transformed);
+  }
+
+  /**
+   * Proxy an API call through Composio's auth layer using the session's connected account.
+   * The backend resolves the connected account from the toolkit within the session.
+   *
+   * @param params - Proxy request parameters (toolkit, endpoint, method, body, headers/query params)
+   * @returns The proxied API response
+   */
+  async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolRouterSessionExecuteResponse> {
+    const validated = SessionProxyExecuteParamsSchema.safeParse(params);
+    if (!validated.success) {
+      throw new ValidationError('Invalid proxy execute parameters', { cause: validated.error });
+    }
+
+    const body = transformProxyParams(validated.data);
+
+    // TODO: Replace with client.toolRouter.session.proxyExecute() when @composio/client is updated
+    const response = await (this.client as unknown as { post: (path: string, opts: { body: unknown }) => Promise<{ data: Record<string, unknown>; error: string | null; log_id: string }> }).post(
+      `/api/v3/tool_router/session/${this.sessionId}/proxy_execute`,
+      { body }
+    );
+
+    return ToolRouterSessionExecuteResponseSchema.parse({
+      data: response.data,
+      error: response.error,
+      logId: response.log_id,
+    });
   }
 
   // ── Private helpers ──────────────────────────────────────────
@@ -457,18 +390,20 @@ export class ToolRouterSession<
     }));
 
     // Merge and re-index sequentially so there are no collisions
-    const allResults = [...remoteResults, ...localEntries].map(
-      (entry: Record<string, unknown>, i) => ({
-        ...entry,
-        index: i,
-      })
-    );
+    const merged: Array<Record<string, unknown>> = [
+      ...(remoteResults as Array<Record<string, unknown>>),
+      ...localEntries,
+    ];
+    const allResults = merged.map((entry, i): Record<string, unknown> => ({
+      ...entry,
+      index: i,
+    }));
     const hasAnyError = localResults.some(r => r.result.error) || !!remoteResult?.error;
 
     return {
       data: { ...remoteData, results: allResults },
       error: hasAnyError
-        ? `${allResults.filter((r: Record<string, unknown>) => r.error).length} out of ${allResults.length} tools failed`
+        ? `${allResults.filter(r => r.error).length} out of ${allResults.length} tools failed`
         : null,
       successful: !hasAnyError,
     };
