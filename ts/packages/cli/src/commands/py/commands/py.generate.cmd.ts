@@ -54,7 +54,7 @@ export function generatePythonTypeStubs({
     const fs = yield* FileSystem.FileSystem;
     const client = yield* ComposioToolkitsRepository;
 
-    yield* ui.intro('composio py generate');
+    yield* ui.intro('composio generate py');
 
     // Determine the actual output directory
     const outputDir = yield* outputOpt.pipe(

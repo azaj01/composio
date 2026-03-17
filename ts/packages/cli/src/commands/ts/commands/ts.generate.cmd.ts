@@ -362,7 +362,7 @@ export function generateTypescriptTypeStubs({
     const cwd = process.cwd;
     const client = yield* ComposioToolkitsRepository;
 
-    yield* ui.intro('composio ts generate');
+    yield* ui.intro('composio generate ts');
 
     // Determine the actual output directory
     const outputDir = yield* outputOpt.pipe(
