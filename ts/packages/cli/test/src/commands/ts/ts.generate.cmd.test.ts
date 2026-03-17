@@ -14,7 +14,7 @@ import type { TestLiveInput } from 'test/__utils__/services/test-layer';
 import { TRIGGER_TYPES_GMAIL } from 'test/__mocks__/trigger-types-gmail';
 import { TOOLS_TYPES_GMAIL } from 'test/__mocks__/tools-types-gmail';
 
-describe('CLI: composio ts generate', () => {
+describe('CLI: composio generate ts', () => {
   const appClientData = {
     toolkits: makeTestToolkits([
       {

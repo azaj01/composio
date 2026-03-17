@@ -1,5 +1,5 @@
 /**
- * The `composio ts generate` command can be configured as follows:
+ * The `composio generate ts` command can be configured as follows:
  * - `--compact`: Emit a single module file
  * - `--transpiled`: Emit not just the TypeScript files, but also the transpiled JavaScript files
  * - `--output-dir`: Output directory for the generated TypeScript type stubs.

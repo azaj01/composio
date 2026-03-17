@@ -10,7 +10,7 @@ import { TestLiveInput } from 'test/__utils__/services/test-layer';
 import { assertPythonIsValid } from 'test/__utils__/python-compiler';
 import { TOOLS_TYPES_GMAIL } from 'test/__mocks__/tools-types-gmail';
 
-describe('CLI: composio py generate', () => {
+describe('CLI: composio generate py', () => {
   const appClientData = {
     toolkits: makeTestToolkits([
       {
