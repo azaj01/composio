@@ -1,13 +1,12 @@
 /**
  * Experimental APIs for @composio/core.
  *
- * Import from '@composio/core/experimental'. These APIs may change
- * in future releases. When graduating to stable, they will move to
- * '@composio/core' — only the import path changes.
+ * @deprecated Import from '@composio/core' instead:
+ *   import { experimental_createTool, experimental_createToolkit } from '@composio/core';
  */
 
-// Custom tools
-export { createCustomTool, createCustomToolkit } from '../models/CustomTool';
+// Re-export for backward compatibility with existing code
+export { createCustomTool as experimental_createTool, createCustomToolkit as experimental_createToolkit } from '../models/CustomTool';
 export type {
   CustomTool,
   CreateCustomToolParams,

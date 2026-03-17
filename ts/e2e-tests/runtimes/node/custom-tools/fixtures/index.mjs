@@ -6,8 +6,7 @@
  * Uses weathermap toolkit (no auth needed, active connection).
  * Requires COMPOSIO_API_KEY in environment.
  */
-import { Composio } from '@composio/core';
-import { createCustomTool } from '@composio/core/experimental';
+import { Composio, experimental_createTool as createCustomTool } from '@composio/core';
 import { z } from 'zod/v3';
 
 const apiKey = process.env.COMPOSIO_API_KEY;

@@ -4,8 +4,6 @@
  * Usage:
  * ```typescript
  * import { experimental_createTool, experimental_createToolkit } from '@composio/core';
- * // or
- * import { createCustomTool, createCustomToolkit } from '@composio/core/experimental';
  *
  * const grep = createCustomTool('GREP', {
  *   name: 'Grep Search',
