@@ -418,10 +418,5 @@ export function buildCustomToolsMapFromResponse(
     }
   }
 
-  // Fallback: if backend returned no mapping at all, use client-side prefix computation
-  if (!experimental) {
-    return buildCustomToolsMap(tools, toolkits);
-  }
-
   return { byFinalSlug, byOriginalSlug, toolkits };
 }
