@@ -1,6 +1,6 @@
 # @composio/langchain
 
-## 0.6.6-alpha.0
+## 0.7.0-alpha.0
 
 ### Patch Changes
 

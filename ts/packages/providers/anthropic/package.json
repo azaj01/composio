@@ -1,6 +1,6 @@
 {
   "name": "@composio/anthropic",
-  "version": "0.6.6-alpha.0",
+  "version": "0.7.0-alpha.0",
   "description": "Non-Agentic Provider for Anthropic in Composio SDK",
   "main": "src/index.ts",
   "publishConfig": {

@@ -1,6 +1,6 @@
 # @composio/cli
 
-## 0.2.5-alpha.0
+## 0.7.0-alpha.0
 
 ### Patch Changes
 
