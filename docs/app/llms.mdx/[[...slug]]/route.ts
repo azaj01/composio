@@ -272,7 +272,7 @@ function renderSchema(schema: OpenAPISchema, indent = 0, maxDepth = 4): string[]
       lines.push(`${prefix}- \`[key: string]\` (${typeStr})${desc}`);
       if (ap.type === 'object' && (ap.properties || (ap.additionalProperties && typeof ap.additionalProperties === 'object'))) {
         lines.push(...renderSchema(ap, indent + 1, maxDepth));
-      } else if (ap.type === 'array' && ap.items?.type === 'object' && ap.items.properties) {
+      } else if (ap.type === 'array' && ap.items?.type === 'object' && (ap.items.properties || (ap.items.additionalProperties && typeof ap.items.additionalProperties === 'object'))) {
         lines.push(`${prefix}  - Array items:`);
         lines.push(...renderSchema(ap.items, indent + 2, maxDepth));
       }
