@@ -130,7 +130,8 @@ export function createCustomTool<T extends z.ZodType>(
   }
   // Check for z.object() — use _def.typeName instead of instanceof to work
   // across different Zod instances (e.g. when user imports their own zod/v3)
-  if ((options.inputParams as any)?._def?.typeName !== 'ZodObject') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod internals, cross-instance safe
+  if ((options.inputParams as { _def?: { typeName?: string } })?._def?.typeName !== 'ZodObject') {
     throw new ValidationError(
       'createCustomTool: inputParams must be a z.object() schema. ' +
       'Tool input parameters are always an object with named properties.'
@@ -419,8 +420,8 @@ export function buildCustomToolsMapFromResponse(
     }
   }
 
-  // Fallback: if no response mapping available, use client-side prefix computation
-  if (!experimental?.custom_tools && !experimental?.custom_toolkits) {
+  // Fallback: if backend returned no mapping at all, use client-side prefix computation
+  if (!experimental) {
     return buildCustomToolsMap(tools, toolkits);
   }
 
