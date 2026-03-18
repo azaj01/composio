@@ -1,6 +1,6 @@
 # @composio/cloudflare
 
-## 1.0.0-alpha.0
+## 0.6.6-alpha.0
 
 ### Patch Changes
 
