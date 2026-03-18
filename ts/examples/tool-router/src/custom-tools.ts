@@ -5,11 +5,6 @@
  * remote Composio tools. Includes a tool that calls the Gmail API
  * directly via ctx.proxyExecute().
  *
- * Three tool types demonstrated:
- *   1. Standalone — no auth, pure local logic
- *   2. Extension — inherits auth from a Composio toolkit (Gmail)
- *   3. Toolkit  — groups related tools under a namespace
- *
  * Usage:
  *   COMPOSIO_API_KEY=... OPENAI_API_KEY=... bun src/custom-tools.ts
  */
@@ -19,16 +14,16 @@ import { OpenAIAgentsProvider } from "@composio/openai-agents";
 import { Agent, run } from "@openai/agents";
 import { z } from "zod/v3";
 
-// ── 1. Standalone tool (no auth) ────────────────────────────────
+// ── Custom tools ────────────────────────────────────────────────
 
+/** Standalone tool (no auth needed) */
 const getUser = experimental_createTool("GET_USER", {
   name: "Get user",
-  description: "Look up an internal user by ID. Returns name, email, and role.",
+  description: "Look up an internal user by ID",
   inputParams: z.object({
-    user_id: z.string().describe("User ID (e.g. user-1, user-2)"),
+    user_id: z.string().describe("User ID (e.g. user-1)"),
   }),
   execute: async ({ user_id }) => {
-    // In a real app, this would query your database
     const users: Record<string, Record<string, string>> = {
       "user-1": { name: "Alice Johnson", email: "alice@acme.com", role: "admin" },
       "user-2": { name: "Bob Smith", email: "bob@acme.com", role: "developer" },
@@ -39,61 +34,46 @@ const getUser = experimental_createTool("GET_USER", {
   },
 });
 
-// ── 2. Extension tool (inherits Gmail auth via proxy execute) ───
-
-const sendCompanyEmail = experimental_createTool("SEND_COMPANY_EMAIL", {
-  name: "Send company formatted email",
-  description:
-    "Draft a company-branded email via Gmail. Adds a standard signature " +
-    "and formats the body with the company template. The draft appears " +
-    "in the authenticated user's Gmail drafts folder.",
+/** Extension tool — inherits Gmail auth, calls the real API via proxy */
+const createDraft = experimental_createTool("CREATE_DRAFT", {
+  name: "Create Gmail draft",
+  description: "Create a real Gmail draft via the Gmail API. Appears in the user's drafts folder.",
   extendsToolkit: "gmail",
   inputParams: z.object({
     to: z.string().describe("Recipient email address"),
     subject: z.string().describe("Email subject"),
-    body: z.string().describe("Email body content (plain text)"),
+    body: z.string().describe("Email body (plain text)"),
   }),
   execute: async (input, ctx) => {
-    // Add company branding to the email
-    const branded = [
-      input.body,
-      "",
-      "---",
-      "Sent via Acme Corp Internal Tools",
-      `Drafted by: ${ctx.userId}`,
-    ].join("\r\n");
-
-    // Build RFC 2822 email and base64url encode
-    const rawEmail = `To: ${input.to}\r\nSubject: ${input.subject}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${branded}`;
-    const encoded = Buffer.from(rawEmail)
+    const raw = Buffer.from(
+      `To: ${input.to}\r\nSubject: ${input.subject}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${input.body}`
+    )
       .toString("base64")
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
 
-    // Create draft via Gmail API using session's auth
     const res = await ctx.proxyExecute({
       toolkit: "gmail",
       endpoint: "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
       method: "POST",
-      body: { message: { raw: encoded } },
+      body: { message: { raw } },
     });
 
     if (res.status !== 200) throw new Error(`Gmail API error ${res.status}`);
     const data = res.data as { id: string; message: { id: string } };
-    return { draft_id: data.id, to: input.to, subject: input.subject };
+    return { draft_id: data.id, message_id: data.message.id, to: input.to, subject: input.subject };
   },
 });
 
-// ── 3. Custom toolkit (groups tools under a namespace) ──────────
-
+/** Custom toolkit — groups related tools under one namespace */
 const roleManager = experimental_createToolkit("ROLE_MANAGER", {
   name: "Role Manager",
-  description: "Manage internal user roles and permissions",
+  description: "Manage user roles",
   tools: [
     experimental_createTool("SET_ROLE", {
       name: "Set role",
-      description: "Assign a new role to a user",
+      description: "Set a user's role",
       inputParams: z.object({
         user_id: z.string().describe("User ID"),
         role: z.enum(["admin", "developer", "viewer"]).describe("New role"),
@@ -103,23 +83,19 @@ const roleManager = experimental_createToolkit("ROLE_MANAGER", {
   ],
 });
 
-// ── Agent setup ─────────────────────────────────────────────────
+// ── Agent ────────────────────────────────────────────────────────
 
 const composio = new Composio({
   provider: new OpenAIAgentsProvider(),
 });
 
-const session = await composio.create(process.env.COMPOSIO_USER_ID ?? "default", {
-  toolkits: ["gmail", "weathermap"],
+const session = await composio.create("default", {
+  toolkits: ["gmail"],
   experimental: {
-    customTools: [getUser, sendCompanyEmail],
+    customTools: [getUser, createDraft],
     customToolkits: [roleManager],
   },
 });
-
-console.log(`Session: ${session.sessionId}`);
-console.log("Custom tools:", session.customTools().map(t => t.slug).join(", "));
-console.log();
 
 const tools = await session.tools();
 
@@ -132,32 +108,8 @@ const agent = new Agent({
   tools,
 });
 
-// Tool call logging
-agent.on("agent_tool_start", (_ctx, tool, details: Record<string, unknown>) => {
-  const input = (details as { toolCall?: { arguments?: unknown } }).toolCall?.arguments ?? {};
-  const json = JSON.stringify(typeof input === "string" ? JSON.parse(input) : input, null, 2);
-  console.log(`\n  ┌─ ${tool.name}`);
-  console.log(`  │ INPUT: ${json.length > 500 ? json.slice(0, 500) + "..." : json}`);
-});
-agent.on("agent_tool_end", (_ctx, tool, result: unknown) => {
-  let output: unknown;
-  try { output = typeof result === "string" ? JSON.parse(result as string) : result; } catch { output = result; }
-  const json = JSON.stringify(output, null, 2);
-  console.log(`  │ OUTPUT: ${json.length > 500 ? json.slice(0, 500) + "..." : json}`);
-  console.log(`  └─ ${tool.name} done`);
-});
-
-// Multi-task prompt that exercises all tool types:
-//   - Standalone local tool (get user)
-//   - Toolkit local tool (set role)
-//   - Remote Composio tool (weather)
-//   - Extension local tool with proxy execute (company email)
-const prompt = process.argv[2] ?? `Do all of these:
-1. Look up user-1's profile
-2. Promote user-2 to admin
-3. What's the weather in Tokyo right now?
-4. Send a company formatted email to myself summarizing the above results`;
+const prompt = process.argv[2] ?? "Get user-1's info and draft an email to them saying hello";
 
 console.log(`> ${prompt}\n`);
 const result = await run(agent, prompt);
-console.log(`\n${result.finalOutput}`);
+console.log(result.finalOutput);
