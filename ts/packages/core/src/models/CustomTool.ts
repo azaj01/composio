@@ -128,7 +128,9 @@ export function createCustomTool<T extends z.ZodType>(
   if (!options.inputParams) {
     throw new ValidationError('createCustomTool: inputParams is required');
   }
-  if (!(options.inputParams instanceof z.ZodObject)) {
+  // Check for z.object() — use _def.typeName instead of instanceof to work
+  // across different Zod instances (e.g. when user imports their own zod/v3)
+  if ((options.inputParams as any)?._def?.typeName !== 'ZodObject') {
     throw new ValidationError(
       'createCustomTool: inputParams must be a z.object() schema. ' +
       'Tool input parameters are always an object with named properties.'
