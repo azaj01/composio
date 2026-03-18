@@ -4,71 +4,11 @@
 
 ### Minor Changes
 
-- feat(core): custom tools, custom toolkits, and proxy execute for tool router sessions (TypeScript only)
-
-  #### Standalone tool (no auth)
-
-  ```typescript
-  import { experimental_createTool } from "@composio/core";
-
-  const getUser = experimental_createTool("GET_USER", {
-    name: "Get user",
-    description: "Look up user by ID",
-    inputParams: z.object({ user_id: z.string() }),
-    execute: async ({ user_id }) => {
-      return { name: "Alice", email: "alice@acme.com" };
-    },
-  });
-  ```
-
-  #### Extension tool (inherits auth from a Composio toolkit)
-
-  ```typescript
-  const createDraft = experimental_createTool("CREATE_DRAFT", {
-    extendsToolkit: "gmail",
-    name: "Create Gmail draft",
-    description: "Create a draft via Gmail API",
-    inputParams: z.object({ to: z.string(), subject: z.string(), body: z.string() }),
-    execute: async (input, ctx) => {
-      const res = await ctx.proxyExecute({
-        toolkit: "gmail",
-        endpoint: "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
-        method: "POST",
-        body: { message: { raw: buildRawEmail(input) } },
-      });
-      return { draft_id: res.data.id, status: res.status };
-    },
-  });
-  ```
-
-  #### Custom toolkit (groups tools under a namespace)
-
-  ```typescript
-  import { experimental_createToolkit } from "@composio/core";
-
-  const userMgmt = experimental_createToolkit("USER_MANAGEMENT", {
-    name: "User Management",
-    description: "Manage user roles and status",
-    tools: [setRoleTool, updateStatusTool],
-  });
-  ```
-
-  #### Session creation
-
-  ```typescript
-  const session = await composio.create("user_123", {
-    toolkits: ["gmail"],
-    experimental: {
-      customTools: [getUser, createDraft],
-      customToolkits: [userMgmt],
-    },
-  });
-  ```
-
-  #### Other changes
-  - `session.proxyExecute()` / `ctx.proxyExecute()` for raw HTTP calls through Composio auth — returns `{ status, data, headers }`
-  - Slug mapping uses backend response instead of client-side `LOCAL_` prefix
-  - Uses official `@composio/client@0.1.0-alpha.62` types
+- Custom tools, custom toolkits, and proxy execute for tool router sessions (TypeScript only)
+  - `experimental_createTool()` — standalone (no auth), extension (inherits toolkit auth via `extendsToolkit`), or grouped in toolkits
+  - `experimental_createToolkit()` — group related tools under a namespace
+  - `session.proxyExecute()` / `ctx.proxyExecute()` — raw HTTP calls through Composio auth, returns `{ status, data, headers }`
+  - Bump `@composio/client` to `0.1.0-alpha.62`
 
 ## 0.6.5
 
