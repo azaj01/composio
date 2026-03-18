@@ -6,33 +6,69 @@
 
 - feat(core): custom tools, custom toolkits, and proxy execute for tool router sessions (TypeScript only)
 
-  ### Custom Tools
-
-  Define local tools that execute in-process alongside remote Composio tools:
-  - **Standalone tools** — no auth, run entirely locally
-  - **Extension tools** — inherit auth from a Composio toolkit (e.g. Gmail) via `extendsToolkit`
-  - **Custom toolkits** — group related tools under a namespace
-
-  ### Proxy Execute
-
-  `session.proxyExecute()` and `ctx.proxyExecute()` for raw HTTP API calls through Composio's auth layer. Returns `{ status, data, headers }`.
-
-  ### Session Creation
+  #### Standalone tool (no auth)
 
   ```typescript
-  const session = await composio.create('user_123', {
-    toolkits: ['gmail'],
-    experimental: {
-      customTools: [myTool, myExtensionTool],
-      customToolkits: [myToolkit],
+  import { experimental_createTool } from "@composio/core";
+
+  const getUser = experimental_createTool("GET_USER", {
+    name: "Get user",
+    description: "Look up user by ID",
+    inputParams: z.object({ user_id: z.string() }),
+    execute: async ({ user_id }) => {
+      return { name: "Alice", email: "alice@acme.com" };
     },
   });
   ```
 
-  ### Other Changes
-  - Slug mapping uses backend response (`slug`/`original_slug`) instead of client-side prefix
+  #### Extension tool (inherits auth from a Composio toolkit)
+
+  ```typescript
+  const createDraft = experimental_createTool("CREATE_DRAFT", {
+    extendsToolkit: "gmail",
+    name: "Create Gmail draft",
+    description: "Create a draft via Gmail API",
+    inputParams: z.object({ to: z.string(), subject: z.string(), body: z.string() }),
+    execute: async (input, ctx) => {
+      const res = await ctx.proxyExecute({
+        toolkit: "gmail",
+        endpoint: "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
+        method: "POST",
+        body: { message: { raw: buildRawEmail(input) } },
+      });
+      return { draft_id: res.data.id, status: res.status };
+    },
+  });
+  ```
+
+  #### Custom toolkit (groups tools under a namespace)
+
+  ```typescript
+  import { experimental_createToolkit } from "@composio/core";
+
+  const userMgmt = experimental_createToolkit("USER_MANAGEMENT", {
+    name: "User Management",
+    description: "Manage user roles and status",
+    tools: [setRoleTool, updateStatusTool],
+  });
+  ```
+
+  #### Session creation
+
+  ```typescript
+  const session = await composio.create("user_123", {
+    toolkits: ["gmail"],
+    experimental: {
+      customTools: [getUser, createDraft],
+      customToolkits: [userMgmt],
+    },
+  });
+  ```
+
+  #### Other changes
+  - `session.proxyExecute()` / `ctx.proxyExecute()` for raw HTTP calls through Composio auth — returns `{ status, data, headers }`
+  - Slug mapping uses backend response instead of client-side `LOCAL_` prefix
   - Uses official `@composio/client@0.1.0-alpha.62` types
-  - `proxyExecute` uses official client method
 
 ## 0.6.5
 
