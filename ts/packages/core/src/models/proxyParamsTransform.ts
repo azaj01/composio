@@ -1,24 +1,16 @@
 /**
  * @fileoverview Shared transform for converting SDK SessionProxyExecuteParams
- * to the backend proxy execute request format.
+ * to the official @composio/client proxy execute params.
  */
 import type { SessionProxyExecuteParams } from '../types/toolRouter.types';
-
-/** Backend session proxy execute request body shape. */
-export interface SessionProxyExecuteRequestBody {
-  toolkit_slug: string;
-  endpoint: string;
-  method: string;
-  body?: unknown;
-  parameters?: Array<{ name: string; type: 'header' | 'query'; value: string }>;
-}
+import type { SessionProxyExecuteParams as ClientProxyExecuteParams } from '@composio/client/resources/tool-router/session/session.mjs';
 
 /**
- * Transform SDK session proxy params to the backend request format.
- * Converts `in` (query/header) to `type` and stringifies values.
+ * Transform SDK session proxy params to the official client request format.
+ * Converts SDK-facing `toolkit` → `toolkit_slug` and `parameters[].in` → `parameters[].type`.
  */
-export function transformProxyParams(params: SessionProxyExecuteParams): SessionProxyExecuteRequestBody {
-  const parameters = params.parameters?.map(p => ({
+export function transformProxyParams(params: SessionProxyExecuteParams): ClientProxyExecuteParams {
+  const parameters: ClientProxyExecuteParams['parameters'] = params.parameters?.map(p => ({
     name: p.name,
     type: p.in as 'header' | 'query',
     value: p.value.toString(),

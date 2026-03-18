@@ -1,8 +1,12 @@
 import { z } from 'zod/v3';
 import { Tool, ToolProxyParams, ToolExecuteResponse as SdkToolExecuteResponse } from './tool.types';
-import type { SessionProxyExecuteParams } from './toolRouter.types';
+import type { SessionProxyExecuteParams, ToolRouterSessionProxyExecuteResponse } from './toolRouter.types';
 import { ToolExecuteResponse } from '@composio/client/resources/tools';
 import { ConnectionData } from './connectedAccountAuthStates.types';
+import type {
+  SessionCreateParams,
+  SessionCreateResponse,
+} from '@composio/client/resources/tool-router/session/session.mjs';
 
 // ────────────────────────────────────────────────────────────────
 // Legacy custom tool types (used by composio.tools.createCustomTool)
@@ -76,7 +80,7 @@ export interface SessionContext {
     arguments_: Record<string, unknown>
   ): Promise<SdkToolExecuteResponse>;
   /** Proxy API calls through Composio's auth layer (resolved from session toolkit). */
-  proxyExecute(params: SessionProxyExecuteParams): Promise<SdkToolExecuteResponse>;
+  proxyExecute(params: SessionProxyExecuteParams): Promise<ToolRouterSessionProxyExecuteResponse>;
 }
 
 /**
@@ -165,16 +169,8 @@ export interface CustomTool {
   readonly execute: CustomToolExecuteFn<z.ZodType>;
 }
 
-/** Serialized tool definition sent to backend for search indexing. */
-export interface CustomToolDefinition {
-  slug: string;
-  name: string;
-  description: string;
-  input_schema: Record<string, unknown>;
-  output_schema?: Record<string, unknown>;
-  /** Mapped from `extendsToolkit`. Omitted for standalone tools. */
-  extends_toolkit?: string;
-}
+/** Serialized tool definition sent to backend for search indexing. Uses official client type. */
+export type CustomToolDefinition = SessionCreateParams.Experimental.CustomTool;
 
 // ────────────────────────────────────────────────────────────────
 // Custom toolkit types
@@ -206,14 +202,8 @@ export interface CustomToolkit {
   readonly tools: readonly CustomTool[];
 }
 
-/** Serialized toolkit definition sent to backend. */
-export interface CustomToolkitDefinition {
-  slug: string;
-  name: string;
-  description: string;
-  /** Nested tools — no extends_toolkit, they inherit the toolkit identity from the parent. */
-  tools: Omit<CustomToolDefinition, 'extends_toolkit'>[];
-}
+/** Serialized toolkit definition sent to backend. Uses official client type. */
+export type CustomToolkitDefinition = SessionCreateParams.Experimental.CustomToolkit;
 
 // ────────────────────────────────────────────────────────────────
 // Internal routing types
@@ -261,3 +251,13 @@ export interface RegisteredCustomToolkit {
   description: string;
   tools: RegisteredCustomTool[];
 }
+
+// ────────────────────────────────────────────────────────────────
+// Response types from the backend (slug + original_slug mapping)
+// ────────────────────────────────────────────────────────────────
+
+/** Custom tool as returned in the session create response (has prefixed slug + original_slug). */
+export type CustomToolResponse = SessionCreateResponse.Experimental.CustomTool;
+
+/** Custom toolkit as returned in the session create response (has prefixed slugs + original_slugs). */
+export type CustomToolkitResponse = SessionCreateResponse.Experimental.CustomToolkit;

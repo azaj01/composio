@@ -4,7 +4,7 @@
 import { Composio as ComposioClient } from '@composio/client';
 import type { SessionContext, CustomToolsMap } from '../types/customTool.types';
 import type { ToolExecuteResponse } from '../types/tool.types';
-import type { SessionProxyExecuteParams } from '../types/toolRouter.types';
+import type { SessionProxyExecuteParams, ToolRouterSessionProxyExecuteResponse } from '../types/toolRouter.types';
 import { SessionProxyExecuteParamsSchema } from '../types/toolRouter.types';
 import { ValidationError } from '../errors';
 import { transformProxyParams } from './proxyParamsTransform';
@@ -65,24 +65,30 @@ export class SessionContextImpl implements SessionContext {
    * Proxy API calls through Composio's auth layer.
    * The backend resolves the connected account from the toolkit within the session.
    */
-  async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolExecuteResponse> {
+  async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolRouterSessionProxyExecuteResponse> {
     const validated = SessionProxyExecuteParamsSchema.safeParse(params);
     if (!validated.success) {
       throw new ValidationError('Invalid proxy execute parameters', { cause: validated.error });
     }
 
-    const body = transformProxyParams(validated.data);
-
-    // TODO: Replace with client.toolRouter.session.proxyExecute() when @composio/client is updated
-    const response = await (this.client as unknown as { post: (path: string, opts: { body: unknown }) => Promise<{ data: Record<string, unknown>; error: string | null; log_id: string }> }).post(
-      `/api/v3/tool_router/session/${this.sessionId}/proxy_execute`,
-      { body }
+    const clientParams = transformProxyParams(validated.data);
+    const response = await this.client.toolRouter.session.proxyExecute(
+      this.sessionId,
+      clientParams
     );
 
     return {
-      data: response.data ?? {},
-      error: response.error,
-      successful: !response.error,
+      status: response.status,
+      data: response.data,
+      headers: response.headers,
+      ...(response.binary_data ? {
+        binaryData: {
+          contentType: response.binary_data.content_type,
+          size: response.binary_data.size,
+          url: response.binary_data.url,
+          expiresAt: response.binary_data.expires_at,
+        },
+      } : {}),
     };
   }
 }

@@ -405,6 +405,24 @@ export type ToolRouterSessionExecuteResponse = z.infer<
   typeof ToolRouterSessionExecuteResponseSchema
 >;
 
+// --- Session proxy execute response (matches ToolProxyResponse from client) ---
+
+export interface ToolRouterSessionProxyExecuteResponse {
+  /** The HTTP status code returned from the proxied API */
+  status: number;
+  /** The response data from the proxied API */
+  data?: unknown;
+  /** HTTP headers from the proxied API */
+  headers?: Record<string, string>;
+  /** Binary response data (present when response is a file) */
+  binaryData?: {
+    contentType: string;
+    size: number;
+    url: string;
+    expiresAt?: string;
+  };
+}
+
 /**
  * Experimental features on a tool router session.
  * Contains features that may be modified or removed in future versions.
@@ -455,7 +473,7 @@ export type SessionProxyExecuteParams = z.infer<typeof SessionProxyExecuteParams
 
 export type ToolRouterSessionProxyExecuteFn = (
   params: SessionProxyExecuteParams
-) => Promise<ToolRouterSessionExecuteResponse>;
+) => Promise<ToolRouterSessionProxyExecuteResponse>;
 
 /** Session type returned by ToolRouter.create() and ToolRouter.use() */
 export interface Session<

@@ -518,6 +518,7 @@ describe('SessionContextImpl', () => {
     toolRouter: {
       session: {
         execute: vi.fn(),
+        proxyExecute: vi.fn(),
       },
     },
   };
@@ -566,14 +567,12 @@ describe('SessionContextImpl', () => {
     expect(result.error).toBe('something went wrong');
   });
 
-  it('should call session proxy_execute endpoint via proxyExecute()', async () => {
-    const mockPost = vi.fn().mockResolvedValue({
+  it('should call client.toolRouter.session.proxyExecute() via proxyExecute()', async () => {
+    mockClient.toolRouter.session.proxyExecute.mockResolvedValue({
+      status: 200,
       data: { proxy_result: true },
-      error: null,
-      log_id: 'log_proxy',
     });
-    const clientWithPost = { ...mockClient, post: mockPost };
-    const ctx = new SessionContextImpl(clientWithPost as any, 'user_1', 'sess_1');
+    const ctx = new SessionContextImpl(mockClient as any, 'user_1', 'sess_1');
 
     const result = await ctx.proxyExecute({
       toolkit: 'github',
@@ -582,21 +581,18 @@ describe('SessionContextImpl', () => {
       parameters: [{ in: 'header' as const, name: 'X-Custom', value: 'val' }],
     });
 
-    expect(mockPost).toHaveBeenCalledWith(
-      '/api/v3/tool_router/session/sess_1/proxy_execute',
+    expect(mockClient.toolRouter.session.proxyExecute).toHaveBeenCalledWith(
+      'sess_1',
       {
-        body: {
-          toolkit_slug: 'github',
-          endpoint: 'https://api.github.com/user',
-          method: 'GET',
-          parameters: [{ name: 'X-Custom', type: 'header', value: 'val' }],
-        },
+        toolkit_slug: 'github',
+        endpoint: 'https://api.github.com/user',
+        method: 'GET',
+        parameters: [{ name: 'X-Custom', type: 'header', value: 'val' }],
       }
     );
     expect(result).toEqual({
+      status: 200,
       data: { proxy_result: true },
-      error: null,
-      successful: true,
     });
   });
 

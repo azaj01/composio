@@ -36,6 +36,7 @@ import {
   type CustomToolkitDefinition,
   type InputParamsSchema,
 } from '../types/customTool.types';
+import type { SessionCreateResponse } from '@composio/client/resources/tool-router/session/session.mjs';
 import { ValidationError } from '../errors';
 
 /** Prefix applied by the backend to local tool slugs for disambiguation. */
@@ -354,4 +355,72 @@ export function serializeCustomToolkits(
       ...(t.outputSchema ? { output_schema: t.outputSchema } : {}),
     })),
   }));
+}
+
+/**
+ * Build a CustomToolsMap using the slug/original_slug mapping from the session create response.
+ * This uses the backend's authoritative prefixed slugs instead of computing them client-side.
+ *
+ * @internal
+ * @param tools - The original custom tools passed to session creation
+ * @param toolkits - The original custom toolkits passed to session creation
+ * @param experimental - The experimental section from the session create response
+ * @returns Maps for O(1) lookup by both final and original slug
+ */
+export function buildCustomToolsMapFromResponse(
+  tools: CustomTool[],
+  toolkits: CustomToolkit[] | undefined,
+  experimental: SessionCreateResponse['experimental'] | undefined
+): CustomToolsMap {
+  const byFinalSlug = new Map<string, CustomToolsMapEntry>();
+  const byOriginalSlug = new Map<string, CustomToolsMapEntry>();
+
+  // Build a lookup from original slug → custom tool handle (for matching response items)
+  const handlesByOriginalSlug = new Map<string, { handle: CustomTool; toolkit?: string }>();
+  for (const handle of tools) {
+    handlesByOriginalSlug.set(handle.slug.toUpperCase(), { handle, toolkit: handle.extendsToolkit });
+  }
+  if (toolkits) {
+    for (const tk of toolkits) {
+      for (const handle of tk.tools) {
+        handlesByOriginalSlug.set(handle.slug.toUpperCase(), { handle, toolkit: tk.slug });
+      }
+    }
+  }
+
+  const addEntry = (finalSlug: string, originalSlug: string, toolkit?: string) => {
+    const match = handlesByOriginalSlug.get(originalSlug.toUpperCase());
+    if (!match) return; // Response tool not found in our handles (shouldn't happen)
+
+    const entry: CustomToolsMapEntry = {
+      handle: match.handle,
+      finalSlug,
+      toolkit: toolkit ?? match.toolkit,
+    };
+    byFinalSlug.set(finalSlug, entry);
+    byOriginalSlug.set(originalSlug.toUpperCase(), entry);
+  };
+
+  // Map standalone custom tools from response
+  if (experimental?.custom_tools) {
+    for (const ct of experimental.custom_tools) {
+      addEntry(ct.slug, ct.original_slug, ct.extends_toolkit);
+    }
+  }
+
+  // Map toolkit custom tools from response
+  if (experimental?.custom_toolkits) {
+    for (const ctk of experimental.custom_toolkits) {
+      for (const ct of ctk.tools) {
+        addEntry(ct.slug, ct.original_slug, ctk.slug);
+      }
+    }
+  }
+
+  // Fallback: if no response mapping available, use client-side prefix computation
+  if (!experimental?.custom_tools && !experimental?.custom_toolkits) {
+    return buildCustomToolsMap(tools, toolkits);
+  }
+
+  return { byFinalSlug, byOriginalSlug, toolkits };
 }

@@ -11,6 +11,7 @@ import {
   ToolRouterSessionSearchResponseSchema,
   ToolRouterSessionExecuteResponse,
   ToolRouterSessionExecuteResponseSchema,
+  ToolRouterSessionProxyExecuteResponse,
 } from '../types/toolRouter.types';
 import {
   transformSearchResponse,
@@ -292,7 +293,7 @@ export class ToolRouterSession<
       return {
         data: result.data,
         error: result.error,
-        logId: 'local',
+        logId: '',
       };
     }
 
@@ -310,27 +311,33 @@ export class ToolRouterSession<
    * The backend resolves the connected account from the toolkit within the session.
    *
    * @param params - Proxy request parameters (toolkit, endpoint, method, body, headers/query params)
-   * @returns The proxied API response
+   * @returns The proxied API response with status, data, headers
    */
-  async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolRouterSessionExecuteResponse> {
+  async proxyExecute(params: SessionProxyExecuteParams): Promise<ToolRouterSessionProxyExecuteResponse> {
     const validated = SessionProxyExecuteParamsSchema.safeParse(params);
     if (!validated.success) {
       throw new ValidationError('Invalid proxy execute parameters', { cause: validated.error });
     }
 
-    const body = transformProxyParams(validated.data);
-
-    // TODO: Replace with client.toolRouter.session.proxyExecute() when @composio/client is updated
-    const response = await (this.client as unknown as { post: (path: string, opts: { body: unknown }) => Promise<{ data: Record<string, unknown>; error: string | null; log_id: string }> }).post(
-      `/api/v3/tool_router/session/${this.sessionId}/proxy_execute`,
-      { body }
+    const clientParams = transformProxyParams(validated.data);
+    const response = await this.client.toolRouter.session.proxyExecute(
+      this.sessionId,
+      clientParams
     );
 
-    return ToolRouterSessionExecuteResponseSchema.parse({
+    return {
+      status: response.status,
       data: response.data,
-      error: response.error,
-      logId: response.log_id,
-    });
+      headers: response.headers,
+      ...(response.binary_data ? {
+        binaryData: {
+          contentType: response.binary_data.content_type,
+          size: response.binary_data.size,
+          url: response.binary_data.url,
+          expiresAt: response.binary_data.expires_at,
+        },
+      } : {}),
+    };
   }
 
   // ── Private helpers ──────────────────────────────────────────

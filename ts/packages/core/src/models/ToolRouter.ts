@@ -29,7 +29,10 @@ import {
   ToolRouterMCPServerConfig,
 } from '../types/toolRouter.types';
 import { ToolRouterCreateSessionConfigSchema } from '../types/toolRouter.types';
-import { SessionCreateParams } from '@composio/client/resources/tool-router.mjs';
+import {
+  SessionCreateParams,
+  SessionCreateResponse,
+} from '@composio/client/resources/tool-router/session/session.mjs';
 import {
   transformToolRouterTagsParams,
   transformToolRouterToolsParams,
@@ -38,7 +41,7 @@ import {
   transformToolRouterToolkitsParams,
 } from '../lib/toolRouterParams';
 import { ToolRouterSession } from './ToolRouterSession';
-import { buildCustomToolsMap, serializeCustomTools, serializeCustomToolkits } from './CustomTool';
+import { buildCustomToolsMapFromResponse, serializeCustomTools, serializeCustomToolkits } from './CustomTool';
 import type { CustomToolsMap } from '../types/customTool.types';
 
 export class ToolRouter<
@@ -101,10 +104,9 @@ export class ToolRouter<
     // Extract custom tools/toolkits from experimental config
     const customTools = routerConfig.experimental?.customTools;
     const customToolkits = routerConfig.experimental?.customToolkits;
-    let customToolsMap: CustomToolsMap | undefined;
 
-    // Build the experimental payload for the backend
-    const experimentalPayload: Record<string, unknown> = {};
+    // Build the typed experimental payload for the backend
+    const experimentalPayload: SessionCreateParams['experimental'] = {};
 
     if (routerConfig.experimental?.assistivePrompt?.userTimezone) {
       experimentalPayload.assistive_prompt_config = {
@@ -112,12 +114,11 @@ export class ToolRouter<
       };
     }
 
-    if (customTools?.length || customToolkits?.length) {
-      customToolsMap = buildCustomToolsMap(customTools ?? [], customToolkits);
-      experimentalPayload.custom_tools = serializeCustomTools(customTools ?? []);
-      if (customToolkits?.length) {
-        experimentalPayload.custom_toolkits = serializeCustomToolkits(customToolkits);
-      }
+    if (customTools?.length) {
+      experimentalPayload.custom_tools = serializeCustomTools(customTools);
+    }
+    if (customToolkits?.length) {
+      experimentalPayload.custom_toolkits = serializeCustomToolkits(customToolkits);
     }
 
     const payload: SessionCreateParams = {
@@ -136,12 +137,20 @@ export class ToolRouter<
         : undefined,
     };
 
-    const session = await this.client.toolRouter.session.create(
-      payload as SessionCreateParams
-    );
+    const session = await this.client.toolRouter.session.create(payload);
 
-    const assistivePrompt =
-      session.experimental?.assistive_prompt;
+    // Build custom tools map from the response's slug/original_slug mapping
+    // instead of computing LOCAL_ prefix client-side
+    let customToolsMap: CustomToolsMap | undefined;
+    if (customTools?.length || customToolkits?.length) {
+      customToolsMap = buildCustomToolsMapFromResponse(
+        customTools ?? [],
+        customToolkits,
+        session.experimental
+      );
+    }
+
+    const assistivePrompt = session.experimental?.assistive_prompt;
 
     return new ToolRouterSession<TToolCollection, TTool, TProvider>(
       this.client,

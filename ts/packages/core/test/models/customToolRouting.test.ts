@@ -217,7 +217,7 @@ describe('ToolRouterSession execution routing', () => {
       const result = await session.execute('GET_USER_CONTEXT', { category: 'prefs' });
 
       expect(result.data).toEqual({ local_result: true });
-      expect(result.logId).toBe('local');
+      expect(result.logId).toBe('');
       expect(localExecute).toHaveBeenCalledWith(
         { category: 'prefs' },
         expect.objectContaining({ userId: 'user_1' })
