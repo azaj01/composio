@@ -43,9 +43,27 @@ jobs:
 
       - name: Set Version Info
         if: steps.changesets.outputs.published == 'true'
+        env:
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
-          VERSIONS=$(pnpm changeset status --json | jq -r '.releases[] | "⚡️ \(.name) -> \(.version)"' || echo "No version info available")
-          echo "SLACK_VERSIONS=$VERSIONS" >> $GITHUB_ENV
+          echo "SLACK_VERSIONS<<EOF" >> $GITHUB_ENV
+          echo "$PUBLISHED_PACKAGES" | jq -c '.[]' | while read -r pkg; do
+            NAME=$(echo "$pkg" | jq -r '.name')
+            NEW_VERSION=$(echo "$pkg" | jq -r '.version')
+            PKG_PATH=$(pnpm list --filter "$NAME" --json | jq -r '.[0].path')
+            if [ "$PKG_PATH" != "null" ] && [ -n "$PKG_PATH" ]; then
+              REL_PKG_JSON_PATH="${PKG_PATH#$GITHUB_WORKSPACE/}/package.json"
+              OLD_VERSION=$(git show "HEAD^:$REL_PKG_JSON_PATH" | jq -r .version 2>/dev/null || echo "")
+              if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+                echo "⚡️ $NAME: \`$OLD_VERSION\` -> \`$NEW_VERSION\`" >> $GITHUB_ENV
+              else
+                echo "⚡️ $NAME: \`$NEW_VERSION\`" >> $GITHUB_ENV
+              fi
+            else
+              echo "⚡️ $NAME: \`$NEW_VERSION\`" >> $GITHUB_ENV
+            fi
+          done
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Send Slack Notification
         if: steps.changesets.outputs.published == 'true'
