@@ -604,6 +604,7 @@ describe('CLI: composio tools execute', () => {
           data: { executed: true },
           error: null,
           successful: true,
+          logId: 'log_test',
         },
       },
     })
