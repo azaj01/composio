@@ -8,18 +8,10 @@ import { upgradeCmd } from './upgrade.cmd';
 import { whoamiCmd } from './whoami.cmd';
 import { loginCmd } from './login.cmd';
 import { logoutCmd } from './logout.cmd';
+import { installCmd } from './install.cmd';
 import { initCmd } from './init.cmd';
-import { pyCmd } from './py/py.cmd';
-import { tsCmd } from './ts/ts.cmd';
-import { generateCmd } from './generate.cmd';
-import { toolkitsCmd } from './toolkits/toolkits.cmd';
-import { toolsCmd } from './tools/tools.cmd';
-import { authConfigsCmd } from './auth-configs/auth-configs.cmd';
-import { connectedAccountsCmd } from './connected-accounts/connected-accounts.cmd';
-import { triggersCmd } from './triggers/triggers.cmd';
-import { logsCmd } from './logs-cmd/logs.cmd';
-import { orgsCmd } from './orgs/orgs.cmd';
-import { projectsCmd } from './projects/projects.cmd';
+import { generateCmd } from './generate/generate.cmd';
+import { manageCmd } from './manage/manage.cmd';
 import { showToolsExecuteInputHelp } from './tools/commands/tools.execute.cmd';
 import { printRootHelp } from './root-help';
 
@@ -30,32 +22,23 @@ const $cmd = $defaultCmd.pipe(
     whoamiCmd,
     loginCmd,
     logoutCmd,
+    installCmd,
     initCmd,
     generateCmd,
-    pyCmd,
-    tsCmd,
-    toolkitsCmd,
-    toolsCmd,
-    authConfigsCmd,
-    connectedAccountsCmd,
-    triggersCmd,
-    logsCmd,
-    orgsCmd,
-    projectsCmd,
+    manageCmd,
   ])
 );
-
 export const rootCommand = $cmd;
 
 const parseExecuteInputHelpSlug = (argv: ReadonlyArray<string>): string | undefined => {
   const args = argv.slice(2);
-  if (args.length < 3) return undefined;
-  if (args[0] !== 'tools' || args[1] !== 'execute') return undefined;
+  if (args.length < 4) return undefined;
+  if (args[0] !== 'manage' || args[1] !== 'tools' || args[2] !== 'execute') return undefined;
 
   const hasHelp = args.includes('--help') || args.includes('-h');
   if (!hasHelp) return undefined;
 
-  const tail = args.slice(2);
+  const tail = args.slice(3);
   for (let i = 0; i < tail.length; i += 1) {
     const token = tail[i];
     if (!token) continue;
@@ -100,20 +83,20 @@ const normalizeVersionShortFlag = (argv: ReadonlyArray<string>): ReadonlyArray<s
   return argv;
 };
 
-const ALIAS_TO_PARENT: Record<string, string> = {
-  search: 'tools',
-  execute: 'tools',
-  link: 'connected-accounts',
-  listen: 'triggers',
+const ALIAS_TO_PARENT: Record<string, ReadonlyArray<string>> = {
+  search: ['manage', 'tools'],
+  execute: ['manage', 'tools'],
+  link: ['manage', 'connected-accounts'],
+  listen: ['manage', 'triggers'],
 };
 
 const normalizeAliases = (argv: ReadonlyArray<string>): ReadonlyArray<string> => {
   const args = argv.slice(2);
   if (args.length === 0) return argv;
   const first = args[0];
-  const parent = first && ALIAS_TO_PARENT[first];
-  if (!parent) return argv;
-  return [...argv.slice(0, 2), parent, ...args];
+  const parents = first && ALIAS_TO_PARENT[first];
+  if (!parents) return argv;
+  return [...argv.slice(0, 2), ...parents, ...args];
 };
 
 const isRootHelp = (argv: ReadonlyArray<string>): boolean => {

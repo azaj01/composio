@@ -22,12 +22,12 @@ BASIC COMMANDS
 
   login
     Log in to the Composio CLI session.
-    Usage: composio login [--no-browser] [--api-key text] [--org-id text] [--project-id text]
+    Usage: composio login [--no-browser] [--no-wait] [--key text] [-y, --yes]
     Options:
       --no-browser          Login without browser interaction
-      --api-key             API key for non-interactive login (agents/CI)
-      --org-id              Organization ID for non-interactive login
-      --project-id          Project ID for non-interactive login
+      --no-wait             Print login URL and session info, then exit (no browser, no waiting)
+      --key                 Complete login using session key from --no-wait
+      -y, --yes             Skip org/project picker; use session defaults
 
   logout
     Log out from the Composio CLI session.
@@ -35,10 +35,8 @@ BASIC COMMANDS
 
   init
     Initialize a Composio project in the current directory.
-    Usage: composio init [--org-id text] [--project-id text] [--no-browser] [-y, --yes]
+    Usage: composio init [--no-browser] [-y, --yes]
     Options:
-      --org-id              Organization ID (skip interactive picker)
-      --project-id          Project ID (skip interactive picker)
       --no-browser          Skip opening browser for auth
       -y, --yes             Auto-select default org/project
 
@@ -82,17 +80,8 @@ BASIC COMMANDS
       --table               Show compact table rows
 
 ADVANCED COMMANDS
-  generate            Generate type stubs for toolkits, tools, and triggers, auto-detecting project language (TypeScript | Python)
-  py                  Handle Python projects.
-  ts                  Handle TypeScript projects.
-  toolkits            Discover and inspect Composio toolkits.
-  tools               Discover and inspect Composio tools.
-  auth-configs        View and manage Composio auth configs.
-  connected-accounts  View and manage Composio connected accounts.
-  triggers            Inspect and subscribe to trigger events.
-  logs                Inspect trigger and tool execution logs.
-  orgs                Manage default global organization/project context.
-  projects            Manage default global project context.
+  generate    Generate type stubs for toolkits, tools, and triggers, auto-detecting project language (TypeScript | Python)
+  manage      Manage Composio resources — toolkits, tools, accounts, triggers, logs, orgs, and projects.
 
 FLAGS
   -h, --help     Show help for command

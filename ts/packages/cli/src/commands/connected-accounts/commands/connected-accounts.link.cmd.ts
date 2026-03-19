@@ -30,6 +30,11 @@ const noBrowser = Options.boolean('no-browser').pipe(
   Options.withDescription('Skip auto-opening the browser')
 );
 
+const noWait = Options.boolean('no-wait').pipe(
+  Options.withDefault(false),
+  Options.withDescription('Do not wait for authorization; only print link info')
+);
+
 /**
  * Open the browser and poll until the connected account becomes ACTIVE.
  * On success, outputs valid JSON to stdout for piping (e.g. to jq).
@@ -120,20 +125,20 @@ const waitForActiveConnection = (
  * Link an external account via OAuth redirect.
  *
  * Two modes:
- * - **Tool Router** (default): `composio connected-accounts link <toolkit>`
- * - **Legacy**: `composio connected-accounts link --auth-config <id>`
+ * - **Tool Router** (default): `composio manage connected-accounts link <toolkit>`
+ * - **Legacy**: `composio manage connected-accounts link --auth-config <id>`
  *
  * @example
  * ```bash
- * composio connected-accounts link github
- * composio connected-accounts link gmail --user-id "alice"
- * composio connected-accounts link --auth-config "ac_..." --user-id "default"
+ * composio manage connected-accounts link github
+ * composio manage connected-accounts link gmail --user-id "alice"
+ * composio manage connected-accounts link --auth-config "ac_..." --user-id "default"
  * ```
  */
 export const connectedAccountsCmd$Link = Command.make(
   'link',
-  { toolkit, authConfig, userId, noBrowser },
-  ({ toolkit, authConfig, userId, noBrowser }) =>
+  { toolkit, authConfig, userId, noBrowser, noWait },
+  ({ toolkit, authConfig, userId, noBrowser, noWait }) =>
     Effect.gen(function* () {
       if (!(yield* requireAuth)) return;
 
@@ -163,8 +168,8 @@ export const connectedAccountsCmd$Link = Command.make(
       if (Option.isSome(toolkit) && Option.isSome(authConfig)) {
         yield* ui.log.error(
           'Cannot use both <toolkit> and --auth-config. Choose one:\n' +
-            '  Tool Router: composio connected-accounts link <toolkit>\n' +
-            '  Legacy:      composio connected-accounts link --auth-config <id>'
+            '  Tool Router: composio manage connected-accounts link <toolkit>\n' +
+            '  Legacy:      composio manage connected-accounts link --auth-config <id>'
         );
         return;
       }
@@ -172,8 +177,8 @@ export const connectedAccountsCmd$Link = Command.make(
       if (Option.isNone(toolkit) && Option.isNone(authConfig)) {
         yield* ui.log.error(
           'Missing argument. Provide a toolkit slug or --auth-config:\n' +
-            '  composio connected-accounts link github\n' +
-            '  composio connected-accounts link --auth-config "ac_..."'
+            '  composio manage connected-accounts link github\n' +
+            '  composio manage connected-accounts link --auth-config "ac_..."'
         );
         return;
       }
@@ -194,7 +199,7 @@ export const connectedAccountsCmd$Link = Command.make(
               'services/HttpServerError',
               handleHttpServerError(ui, {
                 fallbackMessage: `Failed to create link for auth config "${authConfig.value}".`,
-                hint: 'Browse available auth configs:\n> composio auth-configs list',
+                hint: 'Browse available auth configs:\n> composio manage auth-configs list',
                 fallbackValue: Option.none(),
               })
             )
@@ -204,13 +209,25 @@ export const connectedAccountsCmd$Link = Command.make(
           return;
         }
 
-        yield* waitForActiveConnection(
-          ui,
-          repo,
-          linkOpt.value.connected_account_id,
-          linkOpt.value.redirect_url,
-          noBrowser
-        );
+        const { connected_account_id: connId, redirect_url: redirectUrl } = linkOpt.value;
+
+        if (noWait) {
+          yield* ui.note(redirectUrl, 'Redirect URL');
+          yield* ui.output(
+            JSON.stringify(
+              {
+                status: 'pending',
+                message: 'Complete authorization by opening the URL',
+                connected_account_id: connId,
+                redirect_url: redirectUrl,
+              },
+              null,
+              2
+            )
+          );
+        } else {
+          yield* waitForActiveConnection(ui, repo, connId, redirectUrl, noBrowser);
+        }
       } else {
         // Path B: Tool Router flow — toolkit is guaranteed Some (validated above)
         const toolkitSlug = Option.getOrThrow(toolkit);
@@ -235,7 +252,7 @@ export const connectedAccountsCmd$Link = Command.make(
                   extractMessage(error) ?? `Failed to create link for toolkit "${toolkitSlug}".`;
                 yield* ui.log.error(message);
                 yield* Effect.logDebug('Link error:', error);
-                yield* ui.log.step('Browse available toolkits:\n> composio toolkits list');
+                yield* ui.log.step('Browse available toolkits:\n> composio manage toolkits list');
                 return Option.none();
               })
             )
@@ -254,7 +271,24 @@ export const connectedAccountsCmd$Link = Command.make(
           return;
         }
 
-        yield* waitForActiveConnection(ui, repo, connAccountId, redirectUrl, noBrowser);
+        if (noWait) {
+          yield* ui.note(redirectUrl, 'Redirect URL');
+          yield* ui.output(
+            JSON.stringify(
+              {
+                status: 'pending',
+                message: 'Complete authorization by opening the URL',
+                connected_account_id: connAccountId,
+                redirect_url: redirectUrl,
+                toolkit: toolkitSlug,
+              },
+              null,
+              2
+            )
+          );
+        } else {
+          yield* waitForActiveConnection(ui, repo, connAccountId, redirectUrl, noBrowser);
+        }
       }
     })
 ).pipe(Command.withDescription('Link an external account via OAuth redirect.'));

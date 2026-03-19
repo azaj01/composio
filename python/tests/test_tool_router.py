@@ -660,15 +660,18 @@ class TestToolRouter:
             session.experimental.assistive_prompt
             == "You are a helpful assistant working in the America/New_York timezone."
         )
+        assert session.experimental.files is not None
 
     def test_create_session_without_experimental_response(
         self, tool_router, mock_client
     ):
-        """Test that session without experimental response has None."""
+        """Test that session without experimental response has experimental with files only."""
         session = tool_router.create(user_id="user_123")
 
-        # Verify experimental is None when not in response
-        assert session.experimental is None
+        # Verify experimental is present with files, assistive_prompt is None
+        assert session.experimental is not None
+        assert session.experimental.assistive_prompt is None
+        assert session.experimental.files is not None
 
     def test_create_session_raises_error_without_provider(self, mock_client):
         """Test that creating a session without provider raises an error when calling tools()."""
@@ -677,6 +680,13 @@ class TestToolRouter:
         # The error is raised during create() because it calls _create_tools_fn
         with pytest.raises(ValueError, match="Provider is required for tool router"):
             tool_router.create(user_id="user_123")
+
+    def test_use_session_raises_error_without_provider(self, mock_client):
+        """Test that use() raises when provider is None."""
+        tool_router = ToolRouter(client=mock_client, provider=None)
+
+        with pytest.raises(ValueError, match="Provider is required for tool router"):
+            tool_router.use(session_id="session_123")
 
     def test_use_session(self, tool_router, mock_client):
         """Test retrieving an existing session."""
@@ -687,6 +697,13 @@ class TestToolRouter:
         assert session.mcp.type == ToolRouterMCPServerType.HTTP
         assert session.mcp.url == "https://mcp.example.com/session_123"
         assert session.mcp.headers == {"x-api-key": "test-api-key"}
+        assert session.experimental.files is not None
+        assert hasattr(session.experimental.files, "list")
+        assert hasattr(session.experimental.files, "upload")
+        assert hasattr(session.experimental.files, "download")
+        assert hasattr(session.experimental.files, "delete")
+        assert callable(session.search)
+        assert callable(session.execute)
         assert callable(session.tools)
         assert callable(session.authorize)
         assert callable(session.toolkits)
@@ -1084,14 +1101,22 @@ class TestToolRouterTypes:
 
     def test_session_experimental_dataclass(self):
         """Test ToolRouterSessionExperimental dataclass."""
+        mock_files = MagicMock()
         experimental = ToolRouterSessionExperimental(
-            assistive_prompt="You are a helpful assistant."
+            files=mock_files,
+            assistive_prompt="You are a helpful assistant.",
         )
         assert experimental.assistive_prompt == "You are a helpful assistant."
+        assert experimental.files is mock_files
 
-        # Test with None
-        experimental_none = ToolRouterSessionExperimental()
+        # Test with None assistive_prompt
+        mock_files_none = MagicMock()
+        experimental_none = ToolRouterSessionExperimental(
+            files=mock_files_none,
+            assistive_prompt=None,
+        )
         assert experimental_none.assistive_prompt is None
+        assert experimental_none.files is mock_files_none
 
     def test_mcp_server_config(self):
         """Test ToolRouterMCPServerConfig dataclass."""

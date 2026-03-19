@@ -64,25 +64,41 @@ function formatType(param: ParameterSchema): string {
   return typeStr;
 }
 
-// Get children from a param (object properties or array item properties)
+// Get children from a param (object properties, array item properties, or additionalProperties)
 function getChildren(param: ParameterSchema): Record<string, ParameterSchema> | null {
   const props = param.properties || param.items?.properties;
-  if (!props || typeof props !== 'object') return null;
+  const additionalProps = param.additionalProperties || param.items?.additionalProperties;
+
+  if ((!props || typeof props !== 'object') && (!additionalProps || typeof additionalProps !== 'object')) return null;
 
   const requiredList: string[] = param.requiredFields || param.items?.requiredFields || [];
   const result: Record<string, ParameterSchema> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (typeof value === 'object' && value !== null) {
-      const raw = value as ParameterSchema & { required?: string[] | boolean };
-      result[key] = {
-        ...raw,
-        required: Array.isArray(requiredList) ? requiredList.includes(key) : false,
-        // Map the child's own JSON Schema required array to requiredFields
-        // so that deeper nesting levels preserve required info
-        ...(Array.isArray(raw.required) ? { requiredFields: raw.required } : {}),
-      };
+
+  if (props && typeof props === 'object') {
+    for (const [key, value] of Object.entries(props)) {
+      if (typeof value === 'object' && value !== null) {
+        const raw = value as ParameterSchema & { required?: string[] | boolean };
+        result[key] = {
+          ...raw,
+          required: Array.isArray(requiredList) ? requiredList.includes(key) : false,
+          // Map the child's own JSON Schema required array to requiredFields
+          // so that deeper nesting levels preserve required info
+          ...(Array.isArray(raw.required) ? { requiredFields: raw.required } : {}),
+        };
+      }
     }
   }
+
+  // Include additionalProperties as a synthetic [key: string] entry
+  if (additionalProps && typeof additionalProps === 'object') {
+    const raw = additionalProps as ParameterSchema & { required?: string[] | boolean };
+    result['[key: string]'] = {
+      ...raw,
+      required: false,
+      ...(Array.isArray(raw.required) ? { requiredFields: raw.required } : {}),
+    };
+  }
+
   return Object.keys(result).length > 0 ? result : null;
 }
 
@@ -337,7 +353,7 @@ export function ToolkitDetail({ toolkit, tools, triggers, path, faq }: ToolkitDe
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Link
-                  href={`https://platform.composio.dev/auth?next_page=${encodeURIComponent(`/tool-router?toolkits=${toolkit.slug}`)}`}
+                  href={`https://platform.composio.dev/marketplace/${toolkit.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-md border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-500/20 dark:text-orange-400"

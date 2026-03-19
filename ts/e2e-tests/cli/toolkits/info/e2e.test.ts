@@ -1,5 +1,5 @@
 /**
- * CLI `composio toolkits info` e2e test
+ * CLI `composio manage toolkits info` e2e test
  *
  * Verifies that the info subcommand returns detailed toolkit JSON in piped mode,
  * handles invalid slugs gracefully, and supports stdout redirection.
@@ -8,6 +8,7 @@
 import {
   e2e,
   sanitizeOutput,
+  parseJsonStdout,
   type E2ETestResult,
   type E2ETestResultWithFiles,
 } from '@e2e-tests/utils';
@@ -34,16 +35,16 @@ e2e(import.meta.url, {
     let missingSlugResult: E2ETestResult;
 
     beforeAll(async () => {
-      validResult = await runCmd('composio toolkits info gmail');
+      validResult = await runCmd('composio manage toolkits info gmail');
       redirectResult = await runCmd({
-        command: 'composio toolkits info gmail > out.json',
+        command: 'composio manage toolkits info gmail > out.json',
         files: ['out.json'],
       });
-      invalidResult = await runCmd('composio toolkits info nonexistent_toolkit_xyz12345');
-      missingSlugResult = await runCmd('composio toolkits info');
+      invalidResult = await runCmd('composio manage toolkits info nonexistent_toolkit_xyz12345');
+      missingSlugResult = await runCmd('composio manage toolkits info');
     }, TIMEOUTS.FIXTURE);
 
-    describe('composio toolkits info gmail (valid slug)', () => {
+    describe('composio manage toolkits info gmail (valid slug)', () => {
       it('exits successfully', () => {
         expect(validResult.exitCode).toBe(0);
       });
@@ -53,42 +54,42 @@ e2e(import.meta.url, {
       });
 
       it('stdout is a valid JSON object', () => {
-        const obj = JSON.parse(sanitizeOutput(validResult.stdout));
+        const obj = parseJsonStdout(validResult);
         expect(typeof obj).toBe('object');
         expect(Array.isArray(obj)).toBe(false);
       });
 
       it('has the correct name and slug', () => {
-        const obj = JSON.parse(sanitizeOutput(validResult.stdout));
+        const obj = parseJsonStdout(validResult) as Record<string, unknown>;
         expect(obj.name).toBe('Gmail');
         expect(obj.slug).toBe('gmail');
       });
 
       it('has meta with description and logo', () => {
-        const obj = JSON.parse(sanitizeOutput(validResult.stdout));
+        const obj = parseJsonStdout(validResult) as Record<string, Record<string, unknown>>;
         expect(obj.meta).toHaveProperty('description');
         expect(typeof obj.meta.description).toBe('string');
         expect(obj.meta).toHaveProperty('logo');
       });
 
       it('has is_no_auth and enabled', () => {
-        const obj = JSON.parse(sanitizeOutput(validResult.stdout));
+        const obj = parseJsonStdout(validResult) as Record<string, unknown>;
         expect(typeof obj.is_no_auth).toBe('boolean');
         expect(typeof obj.enabled).toBe('boolean');
       });
 
       it('has composio_managed_auth_schemes array', () => {
-        const obj = JSON.parse(sanitizeOutput(validResult.stdout));
+        const obj = parseJsonStdout(validResult) as Record<string, unknown>;
         expect(Array.isArray(obj.composio_managed_auth_schemes)).toBe(true);
       });
 
       it('has connected_account (object or null)', () => {
-        const obj = JSON.parse(sanitizeOutput(validResult.stdout));
+        const obj = parseJsonStdout(validResult) as Record<string, unknown>;
         expect(obj).toHaveProperty('connected_account');
       });
     });
 
-    describe('composio toolkits info gmail > out.json (stdout redirection)', () => {
+    describe('composio manage toolkits info gmail > out.json (stdout redirection)', () => {
       it('exits successfully', () => {
         expect(redirectResult.exitCode).toBe(0);
       });
@@ -108,7 +109,7 @@ e2e(import.meta.url, {
       });
     });
 
-    describe('composio toolkits info nonexistent_toolkit_xyz12345 (invalid slug)', () => {
+    describe('composio manage toolkits info nonexistent_toolkit_xyz12345 (invalid slug)', () => {
       it('exits successfully (graceful error handling)', () => {
         expect(invalidResult.exitCode).toBe(0);
       });
@@ -122,7 +123,7 @@ e2e(import.meta.url, {
       });
     });
 
-    describe('composio toolkits info (missing slug)', () => {
+    describe('composio manage toolkits info (missing slug)', () => {
       it('exits successfully (optional arg, handler guards)', () => {
         expect(missingSlugResult.exitCode).toBe(0);
       });
