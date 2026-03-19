@@ -184,7 +184,7 @@ describe('CLI: composio manage tools search', () => {
     it => {
       it.scoped('CTA uses -d "{}" when no schema properties', () =>
         Effect.gen(function* () {
-          yield* cli(['tools', 'search', 'send']);
+          yield* cli(['manage', 'tools', 'search', 'send']);
           const lines = yield* MockConsole.getLines({ stripAnsi: true });
           const output = lines.join('\n');
 

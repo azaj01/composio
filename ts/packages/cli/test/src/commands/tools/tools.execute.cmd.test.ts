@@ -631,19 +631,12 @@ describe('CLI: composio manage tools execute', () => {
   )('[Given] no -d and TTY stdin [Then] defaults to empty object and executes', it => {
     it.scoped('defaults to {} when no data provided', () =>
       Effect.gen(function* () {
-        const result = yield* cli([
-          'manage',
-          'tools',
-          'execute',
-          'GMAIL_SEND_EMAIL',
-          '--user-id',
-          'default',
-        ]).pipe(Effect.catchAll(e => Effect.succeed(e)));
+        yield* cli(['manage', 'tools', 'execute', 'GMAIL_SEND_EMAIL', '--user-id', 'default']);
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const output = lines.join('\n');
 
-        expect(result).toBeDefined();
-        expect(result instanceof Error ? result.message : String(result)).toContain(
-          'Missing JSON input'
-        );
+        expect(output).toContain('successful');
+        expect(output).toContain('executed');
       })
     );
   });
