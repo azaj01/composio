@@ -185,9 +185,10 @@ export const toolsCmd$Search = Command.make(
           firstSchema?.input_schema as Record<string, unknown>
         );
         const payloadJson = JSON.stringify(payload);
+        const dataArg = Object.keys(payload).length === 0 ? '-d "{}"' : `-d '${payloadJson}'`;
         cta.push({
           action: 'Execute a tool',
-          command: `composio execute "${firstSlug}" -d '${payloadJson}'`,
+          command: `composio execute "${firstSlug}" ${dataArg}`,
         });
       }
       if (firstToolkit) {

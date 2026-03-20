@@ -63,9 +63,8 @@ const resolveInput = (input: Option.Option<string>) =>
       return piped.value;
     }
 
-    return yield* Effect.fail(
-      new Error('Missing JSON input. Provide -d/--data or pipe JSON to stdin.')
-    );
+    // Default to empty object when no data provided (e.g. tools with no required args)
+    return '{}';
   });
 
 const parseArguments = (raw: string) =>
