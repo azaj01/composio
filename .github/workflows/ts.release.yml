@@ -48,8 +48,8 @@ jobs:
         env:
           PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
-          echo "SLACK_VERSIONS<<EOF" >> $GITHUB_ENV
-          echo "$PUBLISHED_PACKAGES" | jq -c '.[]' | while read -r pkg; do
+          SLACK_VERSIONS=""
+          while read -r pkg; do
             NAME=$(echo "$pkg" | jq -r '.name')
             NEW_VERSION=$(echo "$pkg" | jq -r '.version')
             PKG_PATH=$(pnpm list --filter "$NAME" --json | jq -r '.[0].path')
@@ -57,23 +57,32 @@ jobs:
               REL_PKG_JSON_PATH="${PKG_PATH#$GITHUB_WORKSPACE/}/package.json"
               OLD_VERSION=$(git show "HEAD^:$REL_PKG_JSON_PATH" | jq -r .version 2>/dev/null || echo "")
               if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
-                echo "⚡️ $NAME: \`$OLD_VERSION\` -> \`$NEW_VERSION\`" >> $GITHUB_ENV
+                VERSION_LINE="⚡️ $NAME: \`$OLD_VERSION\` -> \`$NEW_VERSION\`"
               else
-                echo "⚡️ $NAME: \`$NEW_VERSION\`" >> $GITHUB_ENV
+                VERSION_LINE="⚡️ $NAME: \`$NEW_VERSION\`"
               fi
             else
-              echo "⚡️ $NAME: \`$NEW_VERSION\`" >> $GITHUB_ENV
+              VERSION_LINE="⚡️ $NAME: \`$NEW_VERSION\`"
             fi
-          done
-          echo "EOF" >> $GITHUB_ENV
+            if [ -n "$SLACK_VERSIONS" ]; then
+              SLACK_VERSIONS="$SLACK_VERSIONS
+$VERSION_LINE"
+            else
+              SLACK_VERSIONS="$VERSION_LINE"
+            fi
+          done < <(jq -c '.[]' <<<"$PUBLISHED_PACKAGES")
+          # Build a single-line JSON payload so multiline version info is safely escaped.
+          SLACK_PAYLOAD=$(jq -nc \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg versions "$SLACK_VERSIONS" \
+            --arg sha "$GITHUB_SHA" \
+            '{text: "🚀 New SDK version published!\n*Repository:* \($repository)\n*Versions:*\n\($versions)\n*Commit:* \($sha)"}')
+          echo "SLACK_PAYLOAD=$SLACK_PAYLOAD" >> "$GITHUB_ENV"
 
       - name: Send Slack Notification
         if: steps.changesets.outputs.published == 'true'
         uses: slackapi/slack-github-action@fcfb566f8b0aab22203f066d80ca1d7e4b5d05b3 # v1.27.1
         with:
-          payload: |
-            {
-              "text": "🚀 New SDK version published!\n*Repository:* ${{ github.repository }}\n*Versions:*\n${{ env.SLACK_VERSIONS }}\n*Commit:* ${{ github.sha }}"
-            }
+          payload: ${{ env.SLACK_PAYLOAD }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_RELEASE_WEBHOOK_URL }}
