@@ -28,7 +28,6 @@ import { z } from "zod/v3";
 // ── Standalone tool ─────────────────────────────────────────────
 // Internal data lookup — no Composio auth needed.
 // ctx.userId identifies which user's session is running.
-
 const profiles: Record<string, { name: string; email: string; tier: string }> = {
   "user_1": { name: "Alice Johnson", email: "alice@myapp.com", tier: "enterprise" },
   "user_2": { name: "Bob Smith", email: "bob@myapp.com", tier: "free" },
@@ -46,10 +45,8 @@ const getUserProfile = experimental_createTool("GET_USER_PROFILE", {
 });
 
 // ── Extension tool ──────────────────────────────────────────────
-// Wraps Gmail API with business logic. Inherits Gmail auth from the session
-// via extendsToolkit, so ctx.proxyExecute() handles credentials automatically.
-// This constrains the agent to send only the approved promo template.
-
+// Wraps Gmail API with business logic. Inherits auth via extendsToolkit,
+// so ctx.proxyExecute() handles credentials automatically.
 const sendPromoEmail = experimental_createTool("SEND_PROMO_EMAIL", {
   name: "Send promo email",
   description: "Send the standard promotional email to a recipient",
@@ -73,10 +70,8 @@ const sendPromoEmail = experimental_createTool("SEND_PROMO_EMAIL", {
 });
 
 // ── Custom toolkit ──────────────────────────────────────────────
-// Groups related tools under a namespace.
-// Tools inside a toolkit must NOT use extendsToolkit — they inherit
-// the toolkit identity instead.
-
+// Groups standalone tools that don't need Composio auth under a toolkit.
+// Tools inside a toolkit cannot use extendsToolkit.
 const userManagement = experimental_createToolkit("USER_MANAGEMENT", {
   name: "User management",
   description: "Manage user roles and permissions",
@@ -96,7 +91,6 @@ const userManagement = experimental_createToolkit("USER_MANAGEMENT", {
 // ── Bind to session ─────────────────────────────────────────────
 // Pass custom tools and toolkits via the experimental option.
 // session.tools() returns both remote Composio tools and your custom tools.
-
 const composio = new Composio({ apiKey: "your_api_key" });
 
 const session = await composio.create("user_1", {
