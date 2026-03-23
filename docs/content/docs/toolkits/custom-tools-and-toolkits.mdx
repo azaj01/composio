@@ -113,10 +113,3 @@ Every custom tool's `execute` function receives `(input, ctx)`. The `ctx` object
 | `ctx.userId` | The user ID for the current session. |
 | `ctx.proxyExecute(params)` | Authenticated HTTP request via Composio's auth layer. Params: `toolkit`, `endpoint`, `method`, `body?`, `parameters?` (array of `{ in: "query" \| "header", name, value }`). |
 | `ctx.execute(toolSlug, args)` | Execute any Composio native tool from within your custom tool. |
-
-## Slug rules
-
-- Slugs are auto-prefixed with `LOCAL_` (e.g. `GET_USER_PROFILE` → `LOCAL_GET_USER_PROFILE`)
-- Toolkit tools get both prefixes (e.g. `LOCAL_USER_MANAGEMENT_ASSIGN_ROLE`)
-- Max 60 characters after prefixing
-- Cannot start with `LOCAL_` or `COMPOSIO_`
