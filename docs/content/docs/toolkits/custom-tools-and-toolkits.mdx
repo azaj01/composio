@@ -30,8 +30,8 @@ import { z } from "zod/v3";
 // ctx.userId identifies which user's session is running.
 
 const profiles: Record<string, { name: string; email: string; tier: string }> = {
-  "user_1": { name: "Alice Johnson", email: "alice@acme.com", tier: "enterprise" },
-  "user_2": { name: "Bob Smith", email: "bob@acme.com", tier: "free" },
+  "user_1": { name: "Alice Johnson", email: "alice@myapp.com", tier: "enterprise" },
+  "user_2": { name: "Bob Smith", email: "bob@myapp.com", tier: "free" },
 };
 
 const getUserProfile = experimental_createTool("GET_USER_PROFILE", {
@@ -58,8 +58,8 @@ const sendPromoEmail = experimental_createTool("SEND_PROMO_EMAIL", {
     to: z.string().describe("Recipient email address"),
   }),
   execute: async (input, ctx) => {
-    const subject = "You're invited to try Composio Pro";
-    const body = "Hi there,\n\nWe'd love for you to try Composio Pro — free for 14 days.\n\nBest,\nThe Composio Team";
+    const subject = "You're invited to try MyApp Pro";
+    const body = "Hi there,\n\nWe'd love for you to try MyApp Pro — free for 14 days.\n\nBest,\nThe MyApp Team";
     const raw = btoa(`To: ${input.to}\r\nSubject: ${subject}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${body}`);
 
     const res = await ctx.proxyExecute({

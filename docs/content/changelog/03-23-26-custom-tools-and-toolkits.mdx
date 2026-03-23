@@ -45,7 +45,7 @@ const sendPromoEmail = experimental_createTool("SEND_PROMO_EMAIL", {
   extendsToolkit: "gmail",
   inputParams: z.object({ to: z.string().describe("Recipient email") }),
   execute: async (input, ctx) => {
-    const raw = btoa(`To: ${input.to}\r\nSubject: Try Composio Pro\r\n\r\nFree for 14 days.`);
+    const raw = btoa(`To: ${input.to}\r\nSubject: Try MyApp Pro\r\n\r\nFree for 14 days.`);
     const res = await ctx.proxyExecute({
       toolkit: "gmail",
       endpoint: "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
