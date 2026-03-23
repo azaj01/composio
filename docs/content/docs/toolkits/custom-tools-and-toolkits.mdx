@@ -1,7 +1,7 @@
 ---
-title: "Custom Tools and Toolkits (Beta)"
+title: "Custom Tools and Toolkits (Experimental)"
 description: Define local tools that run in-process alongside remote Composio tools
-keywords: [custom tools, custom toolkits, beta, experimental, local tools, proxy execute]
+keywords: [custom tools, custom toolkits, experimental, local tools, proxy execute]
 ---
 
 <Callout type="warn">
@@ -18,11 +18,10 @@ Custom tools let you define local tools that run in-process alongside remote Com
 
 A tool with no Composio-managed authentication:
 
-```ts
-// @noErrors
+```typescript
 import { experimental_createTool } from "@composio/core";
-import { z } from "zod";
-
+import { z } from "zod/v3";
+// ---cut---
 const getUser = experimental_createTool("GET_USER", {
   name: "Get user",
   description: "Look up an internal user by ID",
@@ -39,11 +38,10 @@ const getUser = experimental_createTool("GET_USER", {
 
 Inherits authentication from an existing Composio toolkit via `extendsToolkit`. The second argument to `execute` is a `SessionContext` for authenticated API calls:
 
-```ts
-// @noErrors
+```typescript
 import { experimental_createTool } from "@composio/core";
-import { z } from "zod";
-
+import { z } from "zod/v3";
+// ---cut---
 const createDraft = experimental_createTool("CREATE_DRAFT", {
   name: "Create Gmail draft",
   description: "Create a Gmail draft via the Gmail API",
@@ -76,11 +74,10 @@ const createDraft = experimental_createTool("CREATE_DRAFT", {
 
 Group related tools under a namespace. Tools inside a toolkit must **not** use `extendsToolkit` — they inherit the toolkit identity instead:
 
-```ts
-// @noErrors
+```typescript
 import { experimental_createTool, experimental_createToolkit } from "@composio/core";
-import { z } from "zod";
-
+import { z } from "zod/v3";
+// ---cut---
 const setRole = experimental_createTool("SET_ROLE", {
   name: "Set role",
   description: "Set a user's role",
@@ -102,12 +99,15 @@ const roleManager = experimental_createToolkit("ROLE_MANAGER", {
 
 Pass custom tools and toolkits via the `experimental` option:
 
-```ts
-// @noErrors
-import { Composio } from "@composio/core";
+```typescript
+import { Composio, experimental_createTool, experimental_createToolkit } from "@composio/core";
+import { z } from "zod/v3";
 
-const composio = new Composio();
-
+const getUser = experimental_createTool("GET_USER", { name: "Get user", description: "Look up user", inputParams: z.object({ user_id: z.string() }), execute: async () => ({ name: "Alice" }) });
+const createDraft = experimental_createTool("CREATE_DRAFT", { name: "Create draft", description: "Create draft", extendsToolkit: "gmail", inputParams: z.object({ to: z.string() }), execute: async (input, ctx) => { const res = await ctx.proxyExecute({ toolkit: "gmail", endpoint: "https://gmail.googleapis.com/gmail/v1/users/me/drafts", method: "POST", body: {} }); return res.data as Record<string, unknown>; } });
+const roleManager = experimental_createToolkit("ROLE_MANAGER", { name: "Role Manager", description: "Manage roles", tools: [experimental_createTool("SET_ROLE", { name: "Set role", description: "Set role", inputParams: z.object({ user_id: z.string() }), execute: async () => ({ updated: true }) })] });
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
 const session = await composio.create("user_123", {
   toolkits: ["gmail"],
   experimental: {
