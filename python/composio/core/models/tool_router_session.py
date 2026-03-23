@@ -184,9 +184,7 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
                     )
                     processed_arguments = modified.get("arguments", arguments)
 
-                result = self._route_multi_execute(
-                    processed_arguments, tools_model, modifiers
-                )
+                result = self._route_multi_execute(processed_arguments, tools_model)
 
                 # Apply after_execute modifiers
                 if modifiers is not None:
@@ -226,19 +224,20 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         self,
         input_args: t.Dict[str, t.Any],
         tools_model: t.Any,
-        modifiers: t.Optional["Modifiers"],
     ) -> t.Dict[str, t.Any]:
         """Route a COMPOSIO_MULTI_EXECUTE_TOOL call.
 
         Splits the tools[] array into local and remote, executes each
         appropriately, and merges results preserving original order.
+
+        Note: modifiers are NOT applied here — the caller (routing_execute)
+        handles before_execute/after_execute to avoid double application.
         """
         tool_items = input_args.get("tools")
         if not isinstance(tool_items, list) or len(tool_items) == 0:
-            # Fallback: send to backend as-is
+            # Fallback: send to backend as-is (no modifiers — caller handles them)
             return tools_model._wrap_execute_tool_for_tool_router(
                 session_id=self.session_id,
-                modifiers=modifiers,
             )(COMPOSIO_MULTI_EXECUTE_TOOL, input_args)
 
         parsed = [self._parse_tool_item(item) for item in tool_items]
@@ -253,11 +252,10 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
             else:
                 remote_indices.append(i)
 
-        # All remote — just forward entire payload
+        # All remote — just forward entire payload (no modifiers — caller handles them)
         if not local_items:
             return tools_model._wrap_execute_tool_for_tool_router(
                 session_id=self.session_id,
-                modifiers=modifiers,
             )(COMPOSIO_MULTI_EXECUTE_TOOL, input_args)
 
         ctx = self._session_context
@@ -280,13 +278,13 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
                 local_futures.append((idx, future))
 
             # Submit remote batch (single call) if any
+            # No modifiers here — the outer routing_execute handles them
             remote_future = None
             if remote_indices:
                 remote_tool_items = [tool_items[i] for i in remote_indices]
                 remote_input = {**input_args, "tools": remote_tool_items}
                 execute_fn = tools_model._wrap_execute_tool_for_tool_router(
                     session_id=self.session_id,
-                    modifiers=modifiers,
                 )
                 remote_future = pool.submit(
                     execute_fn,

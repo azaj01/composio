@@ -537,7 +537,6 @@ class TestMultiExecuteRouting:
         result = s._route_multi_execute(
             {"tools": [{"tool_slug": "GREP", "arguments": {"pattern": "x"}}]},
             MagicMock(),
-            None,
         )
         assert result["successful"] is True
         assert result["data"]["matches"] == ["x"]
@@ -548,7 +547,7 @@ class TestMultiExecuteRouting:
         remote = {"data": {"results": []}, "error": None, "successful": True}
         tm._wrap_execute_tool_for_tool_router.return_value = lambda slug, args: remote
         result = s._route_multi_execute(
-            {"tools": [{"tool_slug": "REMOTE", "arguments": {}}]}, tm, None
+            {"tools": [{"tool_slug": "REMOTE", "arguments": {}}]}, tm
         )
         assert result == remote
 
@@ -573,7 +572,6 @@ class TestMultiExecuteRouting:
                 ]
             },
             tm,
-            None,
         )
         assert len(result["data"]["results"]) == 2
 
@@ -597,7 +595,6 @@ class TestMultiExecuteRouting:
                 ]
             },
             MagicMock(),
-            None,
         )
         assert result["successful"] is False
         assert "1 out of 2" in result["error"]
