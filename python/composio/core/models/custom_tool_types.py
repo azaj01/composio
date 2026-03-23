@@ -81,7 +81,7 @@ class SessionContext(te.Protocol):
 
 @dataclass(frozen=True)
 class CustomTool:
-    """Custom tool definition returned from ``experimental_create_tool()``.
+    """Custom tool definition returned from ``@composio.experimental.tool()``.
 
     Pass to ``composio.create(user_id, experimental={"custom_tools": [...]})``
     to bind to a session.
@@ -99,7 +99,7 @@ class CustomTool:
 
 @dataclass(frozen=True)
 class CustomToolkit:
-    """Custom toolkit definition returned from ``experimental_create_toolkit()``.
+    """Custom toolkit definition returned from ``composio.experimental.Toolkit()``.
 
     Pass to ``composio.create(user_id, experimental={"custom_toolkits": [...]})``
     to bind to a session.
