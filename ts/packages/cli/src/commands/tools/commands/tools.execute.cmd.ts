@@ -1,14 +1,11 @@
 import { Args, Command, Options } from '@effect/cli';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import util from 'node:util';
 import { Effect, Option, Either, Exit, Fiber, Cause } from 'effect';
-import { FileSystem } from '@effect/platform';
-import { parse as parseJsonWithComments } from 'comment-json';
 import { encodingForModel } from 'js-tiktoken';
 import { redact } from 'src/ui/redact';
-import { readStdin, readStdinIfPiped } from 'src/effects/read-stdin';
+import { parseJsonIsh } from 'src/utils/parse-json-ish';
 import { requireAuth } from 'src/effects/require-auth';
+import { resolveOptionalTextInput } from 'src/effects/resolve-optional-text-input';
 import {
   getCachedToolInputDefinition,
   getOrFetchToolInputDefinition,
@@ -19,19 +16,11 @@ import {
   validateToolInputArgumentsWithDefinition,
 } from 'src/services/tool-input-validation';
 import { TerminalUI } from 'src/services/terminal-ui';
-import {
-  ActionExecuteConnectedAccountNotFoundError,
-  ToolsExecutor,
-} from 'src/services/tools-executor';
+import { ToolsExecutor } from 'src/services/tools-executor';
 import type { ToolExecuteParams, ToolExecuteResponse } from 'src/services/tools-executor';
 import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { ComposioUserContext } from 'src/services/user-context';
 import { ProjectContext } from 'src/services/project-context';
-import {
-  extractApiErrorDetails,
-  extractMessage,
-  extractSlug,
-} from 'src/utils/api-error-extraction';
 import { handleHttpServerError } from 'src/effects/handle-http-error';
 import { formatToolInputParameters } from '../format';
 import { ComposioClientSingleton } from 'src/services/composio-clients';
@@ -45,6 +34,15 @@ import {
   getFreshConsumerConnectedToolkitsFromCache,
   refreshConsumerConnectedToolkitsCache,
 } from 'src/services/consumer-short-term-cache';
+import {
+  appendCliSessionHistory,
+  resolveCliSessionArtifacts,
+} from 'src/services/cli-session-artifacts';
+import { storeCliSessionArtifact } from 'src/services/cli-session-artifacts';
+import {
+  ComposioNoActiveConnectionError,
+  mapComposioError,
+} from 'src/services/composio-error-overrides';
 
 const slug = Args.text({ name: 'slug' }).pipe(
   Args.withDescription('Tool slug (e.g. "GITHUB_CREATE_ISSUE")')
@@ -66,58 +64,37 @@ const projectName = Options.text('project-name').pipe(
   Options.withDescription('Developer project name override for this command')
 );
 
-const getSchema = Options.boolean('get-schema').pipe(Options.withDefault(false));
-const dryRun = Options.boolean('dry-run').pipe(Options.withDefault(false));
+const getSchema = Options.boolean('get-schema').pipe(
+  Options.withDescription('Fetch and print the raw tool schema without executing'),
+  Options.withDefault(false)
+);
+const dryRun = Options.boolean('dry-run').pipe(
+  Options.withDescription('Validate and preview the tool call without executing'),
+  Options.withDefault(false)
+);
 const skipConnectionCheck = Options.boolean('skip-connection-check').pipe(
+  Options.withDescription('Skip the linked-account check'),
   Options.withDefault(false)
 );
 const skipToolParamsCheck = Options.boolean('skip-tool-params-check').pipe(
+  Options.withDescription('Skip input validation against cached schema'),
   Options.withDefault(false)
 );
-const noVerify = Options.boolean('no-verify').pipe(Options.withDefault(false));
+const noVerify = Options.boolean('no-verify').pipe(
+  Options.withDescription('Skip both connection and input validation checks'),
+  Options.withDefault(false)
+);
 
 const resolveInput = (input: Option.Option<string>) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-
-    if (Option.isSome(input)) {
-      const value = input.value.trim();
-      if (value === '-') {
-        return yield* readStdin;
-      }
-      if (value.startsWith('@')) {
-        const filePath = value.slice(1).trim();
-        if (!filePath) {
-          return yield* Effect.fail(new Error('Missing file path after "@" in --data'));
-        }
-        return yield* fs.readFileString(filePath, 'utf-8');
-      }
-      return value;
-    }
-
-    const piped = yield* readStdinIfPiped;
-    if (Option.isSome(piped)) {
-      return piped.value;
-    }
-
+  resolveOptionalTextInput(input, {
     // Default to empty object when no data provided (e.g. tools with no required args)
-    return '{}';
+    missingValue: '{}',
   });
 
 const parseArguments = (raw: string) =>
   Effect.gen(function* () {
     const parsed = yield* Effect.try({
-      try: () => {
-        try {
-          return JSON.parse(raw) as unknown;
-        } catch {
-          try {
-            return parseJsonWithComments(raw, undefined, true) as unknown;
-          } catch {
-            return Function(`"use strict"; return (${raw});`)() as unknown;
-          }
-        }
-      },
+      try: () => parseJsonIsh(raw),
       catch: () =>
         new Error(
           'Invalid JSON input. Provide JSON or a JS-style object literal, e.g. -d \'{ "key": "value" }\''
@@ -160,17 +137,6 @@ const connectionTips = (toolSlug: string, surface: 'root' | 'manage' | 'dev') =>
     ),
     executeStep.replace('Retry:', 'Then retry:'),
   ].join('\n');
-};
-
-const isNoActiveConnectionError = (details: { code?: number; slug?: string } | undefined) =>
-  details?.code === 4302 || details?.slug === 'ToolRouterV2_NoActiveConnection';
-
-const noActiveConnectionMessage = (toolSlug: string) => {
-  const toolkit = toolkitFromToolSlug(toolSlug);
-  if (!toolkit) {
-    return 'No active connection found for this tool call. Link the required toolkit/app, then retry.';
-  }
-  return `No active connection found for toolkit "${toolkit}". Run \`composio link ${toolkit}\`, then retry.`;
 };
 
 const ciRedactReplacer = (_key: string, value: unknown): unknown => {
@@ -227,85 +193,65 @@ type StoredExecuteOutputSummary = {
 const serializeExecuteOutput = (result: unknown): string =>
   JSON.stringify(result, ciRedactReplacer, 2);
 
-const randomToken = (length = 16) => crypto.randomUUID().replace(/-/g, '').slice(0, length);
+const persistLargeExecuteOutput = (toolSlug: string, json: string, sharedDirectory?: string) =>
+  Effect.gen(function* () {
+    const outputFilePath = yield* storeCliSessionArtifact({
+      contents: json,
+      name: `${toolSlug}_OUTPUT`,
+      extension: 'json',
+      directoryPath: sharedDirectory?.trim() || process.env.COMPOSIO_RUN_OUTPUT_DIR?.trim(),
+    });
 
-const persistLargeExecuteOutput = (json: string): StoredExecuteOutputSummary => {
-  const directoryPath = path.join('/tmp/composio', randomToken());
-  const outputHash = randomToken();
-  const outputFilePath = path.join(directoryPath, `output-${outputHash}.json`);
-  fs.mkdirSync(directoryPath, { recursive: true });
-  fs.writeFileSync(outputFilePath, json, 'utf8');
-
-  return {
-    successful: true,
-    error: null,
-    logId: '',
-    storedInFile: true,
-    tokenCount: getExecuteOutputEncoder().encode(json).length,
-    outputFilePath,
-  };
-};
+    return {
+      successful: true,
+      error: null,
+      logId: '',
+      storedInFile: true,
+      tokenCount: getExecuteOutputEncoder().encode(json).length,
+      outputFilePath,
+    } satisfies StoredExecuteOutputSummary;
+  });
 
 const perfDebugEpoch = Date.now();
 const perfDebugLog = (label: string, details: Record<string, unknown> = {}) => {
   if (!isPerfDebugEnabled()) return;
-  console.error(
+  process.stderr.write(
     `[perf] ${JSON.stringify({
       phase: 'event',
       label,
       elapsedMs: Date.now() - perfDebugEpoch,
       ...details,
-    })}`
+    })}\n`
   );
 };
 const toolDebugLog = (label: string, details: Record<string, unknown> = {}) => {
   if (!isToolDebugEnabled()) return;
-  console.error(`[tool-debug] ${JSON.stringify({ label, ...details })}`);
+  process.stderr.write(`[tool-debug] ${JSON.stringify({ label, ...details })}\n`);
 };
 
-const prepareExecuteOutput = (result: ToolExecuteResponse) => {
-  const json = serializeExecuteOutput(result);
-  const tokenCount = getExecuteOutputEncoder().encode(json).length;
-  if (tokenCount <= EXECUTE_INLINE_OUTPUT_TOKEN_THRESHOLD) {
+const prepareExecuteOutput = (
+  toolSlug: string,
+  result: ToolExecuteResponse,
+  sharedDirectory?: string
+) =>
+  Effect.gen(function* () {
+    const json = serializeExecuteOutput(result);
+    const tokenCount = getExecuteOutputEncoder().encode(json).length;
+    if (tokenCount <= EXECUTE_INLINE_OUTPUT_TOKEN_THRESHOLD) {
+      return {
+        kind: 'inline' as const,
+        json,
+      };
+    }
+
     return {
-      kind: 'inline' as const,
-      json,
+      kind: 'file' as const,
+      summary: {
+        ...(yield* persistLargeExecuteOutput(toolSlug, json, sharedDirectory)),
+        logId: result.logId,
+      } satisfies StoredExecuteOutputSummary,
     };
-  }
-
-  return {
-    kind: 'file' as const,
-    summary: {
-      ...persistLargeExecuteOutput(json),
-      logId: result.logId,
-    } satisfies StoredExecuteOutputSummary,
-  };
-};
-
-const normalizeError = (error: unknown): unknown => {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-
-  while (current && typeof current === 'object' && !seen.has(current)) {
-    seen.add(current);
-
-    if (current instanceof Error) {
-      return current;
-    }
-
-    if ('error' in current) {
-      current = (current as { error?: unknown }).error;
-      continue;
-    }
-    if ('cause' in current) {
-      current = (current as { cause?: unknown }).cause;
-      continue;
-    }
-    break;
-  }
-
-  return current;
-};
+  });
 
 export const showToolsExecuteInputHelp = (toolSlug: string) =>
   Effect.gen(function* () {
@@ -356,7 +302,8 @@ const handleExecutionError = (
   context: { toolSlug: string; surface: 'root' | 'manage' | 'dev' }
 ) =>
   Effect.gen(function* () {
-    const normalized = normalizeError(error);
+    const mapped = mapComposioError({ error, toolSlug: context.toolSlug });
+    const normalized = mapped.normalized;
     if (normalized instanceof ToolInputValidationError) {
       yield* ui.log.error(`Input validation failed for ${context.toolSlug}`);
       yield* ui.note(
@@ -368,48 +315,25 @@ const handleExecutionError = (
       return { error: normalized.message, slug: context.toolSlug };
     }
 
-    const connAccountDetails =
-      normalized instanceof ActionExecuteConnectedAccountNotFoundError
-        ? normalized.details
-        : undefined;
+    const apiDetails = mapped.apiDetails;
+    const slugValue = mapped.slugValue;
 
-    const apiDetails =
-      extractApiErrorDetails(error) ??
-      extractApiErrorDetails(normalized) ??
-      extractApiErrorDetails(connAccountDetails);
-    const slugValue = apiDetails?.slug ?? extractSlug(error) ?? extractSlug(connAccountDetails);
-    const noActiveConnection =
-      normalized instanceof ActionExecuteConnectedAccountNotFoundError ||
-      isNoActiveConnectionError(apiDetails);
-    const message = extractMessage(apiDetails) ?? extractMessage(normalized) ?? 'Unknown error';
-
-    if (noActiveConnection) {
-      const rewrittenMessage = noActiveConnectionMessage(context.toolSlug);
-      yield* ui.log.error(rewrittenMessage);
+    if (normalized instanceof ComposioNoActiveConnectionError) {
+      yield* ui.log.error(mapped.message);
       if (toolkitFromToolSlug(context.toolSlug)) {
         yield* ui.note(connectionTips(context.toolSlug, context.surface), 'Tips');
       }
-      return { error: rewrittenMessage, slug: slugValue ?? context.toolSlug };
+      return { error: mapped.message, slug: slugValue ?? context.toolSlug };
     }
 
-    yield* ui.log.error(message);
+    yield* ui.log.error(mapped.message);
 
-    const detailsObject =
-      apiDetails ??
-      (normalized instanceof ActionExecuteConnectedAccountNotFoundError &&
-      normalized.details &&
-      typeof normalized.details === 'object'
-        ? (normalized.details as object)
-        : undefined);
+    const detailsObject = apiDetails;
     if (detailsObject) {
       yield* ui.note(formatUnknownObject(redactRequestId(detailsObject)), 'Error details');
     }
 
-    if (normalized instanceof ActionExecuteConnectedAccountNotFoundError) {
-      yield* ui.note(connectionTips(context.toolSlug, context.surface), 'Tips');
-    }
-
-    return { error: message, slug: slugValue };
+    return { error: mapped.message, slug: slugValue };
   });
 
 class ToolExecutionError {
@@ -592,6 +516,7 @@ type ResolvedExecuteContext = {
   readonly args: Record<string, unknown>;
   readonly resolvedUserId: string;
   readonly executeParams: ToolExecuteParams;
+  readonly executeOutputDir?: string;
 };
 
 const emitCachedSchema = (
@@ -634,7 +559,7 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
     const userContext = yield* ComposioUserContext;
     const projectContext = yield* ProjectContext;
 
-    const input = yield* resolveInput(params.data);
+    const input = (yield* resolveInput(params.data)) ?? '{}';
     const args = yield* parseArguments(input);
     const localProjectContext = yield* projectContext.resolve.pipe(
       Effect.catchAll(() => Effect.succeed(Option.none()))
@@ -662,6 +587,15 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
       orgId: resolvedProject.orgId,
       projectId: resolvedProject.projectId,
     });
+    const executeOutputDir =
+      process.env.COMPOSIO_RUN_OUTPUT_DIR?.trim() ||
+      Option.getOrUndefined(
+        yield* resolveCliSessionArtifacts({
+          orgId: resolvedProject.projectType === 'CONSUMER' ? resolvedProject.orgId : undefined,
+          consumerUserId:
+            resolvedProject.projectType === 'CONSUMER' ? resolvedProject.consumerUserId : undefined,
+        }).pipe(Effect.map(Option.map(artifacts => artifacts.directoryPath)))
+      );
 
     return {
       ui,
@@ -669,6 +603,7 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
       resolvedProject,
       args,
       resolvedUserId: resolvedUserId.value,
+      executeOutputDir,
       executeParams: {
         userId: resolvedUserId.value,
         arguments: args,
@@ -784,6 +719,7 @@ const runExecuteWithSpinner = (params: {
   readonly args: Record<string, unknown>;
   readonly resolvedUserId: string;
   readonly executeParams: ToolExecuteParams;
+  readonly executeOutputDir?: string;
   readonly skipToolParamsCheck: boolean;
   readonly noVerify: boolean;
 }) =>
@@ -843,6 +779,22 @@ const runExecuteWithSpinner = (params: {
               : 'No tool was executed. Arguments were validated locally only.'
           );
           yield* params.ui.output(JSON.stringify(summary, ciRedactReplacer, 2));
+          yield* appendCliSessionHistory({
+            orgId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.orgId
+                : undefined,
+            consumerUserId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.consumerUserId
+                : undefined,
+            entry: {
+              command: 'execute',
+              status: 'dry-run',
+              slug: params.slug,
+              arguments: params.args,
+            },
+          }).pipe(Effect.catchAll(() => Effect.void));
           return;
         }
 
@@ -872,6 +824,23 @@ const runExecuteWithSpinner = (params: {
           yield* params.ui.output(
             JSON.stringify({ successful: false, ...summary }, ciRedactReplacer, 2)
           );
+          yield* appendCliSessionHistory({
+            orgId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.orgId
+                : undefined,
+            consumerUserId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.consumerUserId
+                : undefined,
+            entry: {
+              command: 'execute',
+              status: 'error',
+              slug: params.slug,
+              arguments: params.args,
+              error: summary.error,
+            },
+          }).pipe(Effect.catchAll(() => Effect.void));
           return yield* Effect.fail(new ToolExecutionError(summary.error));
         }
 
@@ -906,17 +875,55 @@ const runExecuteWithSpinner = (params: {
           ? ` (logId: ${redact({ value: result.logId, prefix: 'log_' })})`
           : '';
         yield* spinner.stop(`Execution successful${logId}`);
-        const output = prepareExecuteOutput(result);
+        const output = yield* prepareExecuteOutput(params.slug, result, params.executeOutputDir);
         if (output.kind === 'file') {
           yield* params.ui.log.message(
             `Response stored in ${output.summary.outputFilePath} (${output.summary.tokenCount} tokens)`
           );
           yield* params.ui.output(JSON.stringify(output.summary, ciRedactReplacer, 2));
+          yield* appendCliSessionHistory({
+            orgId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.orgId
+                : undefined,
+            consumerUserId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.consumerUserId
+                : undefined,
+            entry: {
+              command: 'execute',
+              status: 'success',
+              slug: params.slug,
+              arguments: params.args,
+              storedInFile: true,
+              outputFilePath: output.summary.outputFilePath,
+              tokenCount: output.summary.tokenCount,
+              logId: result.logId,
+            },
+          }).pipe(Effect.catchAll(() => Effect.void));
           return;
         }
 
         yield* params.ui.log.message(`Response\n${output.json}`);
         yield* params.ui.output(output.json);
+        yield* appendCliSessionHistory({
+          orgId:
+            params.resolvedProject.projectType === 'CONSUMER'
+              ? params.resolvedProject.orgId
+              : undefined,
+          consumerUserId:
+            params.resolvedProject.projectType === 'CONSUMER'
+              ? params.resolvedProject.consumerUserId
+              : undefined,
+          entry: {
+            command: 'execute',
+            status: 'success',
+            slug: params.slug,
+            arguments: params.args,
+            storedInFile: false,
+            logId: result.logId,
+          },
+        }).pipe(Effect.catchAll(() => Effect.void));
       })
     );
   });
@@ -1011,24 +1018,23 @@ export const toolsCmd$Execute = Command.make(
 ).pipe(
   Command.withDescription(
     [
-      'Execute a tool by slug with JSON arguments, or preview it locally with --dry-run.',
-      'Arguments are validated against cached tool schemas in `~/.composio/tool_definitions/` when available.',
-      'Use `--get-schema` to fetch the latest raw input schema into the cache and print it without executing the tool.',
-      'Use `composio tools info <slug>` for the same schema plus a short human summary and jq hints.',
-      'Successful execute responses are parsed immediately, and failed calls validate inputs against cached schemas when available, so it is often fastest to just try the real call first before inspecting schema.',
+      'Execute a tool by slug. Validates inputs against cached schemas and checks connections',
+      'automatically — just try it and it will tell you what to fix.',
       '',
       'Examples:',
       '  composio execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-connection-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-tool-params-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --no-verify -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --get-schema',
+      "  composio execute GMAIL_SEND_EMAIL --dry-run -d '{ ... }'   Preview without executing",
+      '  composio execute GMAIL_SEND_EMAIL --get-schema              Fetch and print the input schema',
       '',
-      'Related:',
-      '  composio run \'const first = await execute("TOOL_SLUG", { ... }); const second = await execute("OTHER_TOOL", { ... }); console.log({ first, second })\'',
-      '  composio search "<query>"',
-      '  composio link <toolkit>',
+      'Flags:',
+      '  --skip-connection-check     Skip the linked-account check',
+      '  --skip-tool-params-check    Skip input validation against cached schema',
+      '  --no-verify                 Skip both checks above',
+      '',
+      'See also:',
+      '  composio search "<query>"               Find tool slugs by use case',
+      '  composio tools info <slug>              Schema summary with jq hints',
+      '  composio link <toolkit>                 Connect an account for a toolkit',
     ].join('\n')
   )
 );
@@ -1053,24 +1059,23 @@ export const rootToolsCmd$Execute = Command.make(
 ).pipe(
   Command.withDescription(
     [
-      'Execute a tool by slug with JSON arguments, or preview it locally with --dry-run.',
-      'Arguments are validated against cached tool schemas in `~/.composio/tool_definitions/` when available.',
-      'Use `--get-schema` to fetch the latest raw input schema into the cache and print it without executing the tool.',
-      'Use `composio tools info <slug>` for the same schema plus a short human summary and jq hints.',
-      'Successful execute responses are parsed immediately, and failed calls validate inputs against cached schemas when available, so it is often fastest to just try the real call first before inspecting schema.',
+      'Execute a tool by slug. Validates inputs against cached schemas and checks connections',
+      'automatically — just try it and it will tell you what to fix.',
       '',
       'Examples:',
       '  composio execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-connection-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-tool-params-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --no-verify -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --get-schema',
+      "  composio execute GMAIL_SEND_EMAIL --dry-run -d '{ ... }'   Preview without executing",
+      '  composio execute GMAIL_SEND_EMAIL --get-schema              Fetch and print the input schema',
       '',
-      'Related:',
-      '  composio run \'const first = await execute("TOOL_SLUG", { ... }); const second = await execute("OTHER_TOOL", { ... }); console.log({ first, second })\'',
-      '  composio search "<query>"',
-      '  composio link <toolkit>',
+      'Flags:',
+      '  --skip-connection-check     Skip the linked-account check',
+      '  --skip-tool-params-check    Skip input validation against cached schema',
+      '  --no-verify                 Skip both checks above',
+      '',
+      'See also:',
+      '  composio search "<query>"               Find tool slugs by use case',
+      '  composio tools info <slug>              Schema summary with jq hints',
+      '  composio link <toolkit>                 Connect an account for a toolkit',
     ].join('\n')
   )
 );
