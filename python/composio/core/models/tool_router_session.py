@@ -336,6 +336,15 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
             {**entry, "index": i}
             for i, entry in enumerate([*remote_results_list, *local_entries])
         ]
+        failed = sum(1 for r in all_results if r.get("error"))
+        merged_data = {**remote_data, "results": all_results}
+        if local_entries and any(
+            key in remote_data
+            for key in ("total_count", "success_count", "error_count")
+        ):
+            merged_data["total_count"] = len(all_results)
+            merged_data["success_count"] = len(all_results) - failed
+            merged_data["error_count"] = failed
 
         remote_error = (
             str(remote_result.get("error"))
@@ -345,7 +354,6 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         has_any_error = any(r.get("error") for _, r in local_results) or bool(
             remote_error
         )
-        failed = sum(1 for r in all_results if r.get("error"))
         error_message = None
         if has_any_error:
             error_message = (
@@ -355,7 +363,7 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
             )
 
         return {
-            "data": {**remote_data, "results": all_results},
+            "data": merged_data,
             "error": error_message,
             "successful": not has_any_error,
         }

@@ -469,12 +469,24 @@ export class ToolRouterSession<
         index: i,
       })
     );
+    const failedCount = allResults.filter(r => r.error).length;
+    const mergedData: Record<string, unknown> = {
+      ...remoteData,
+      results: allResults,
+    };
+    if (
+      localEntries.length > 0 &&
+      ['total_count', 'success_count', 'error_count'].some(key => key in remoteData)
+    ) {
+      mergedData.total_count = allResults.length;
+      mergedData.success_count = allResults.length - failedCount;
+      mergedData.error_count = failedCount;
+    }
     const remoteError = typeof remoteResult?.error === 'string' ? remoteResult.error : null;
     const hasAnyError = localResults.some(r => r.result.error) || !!remoteError;
-    const failedCount = allResults.filter(r => r.error).length;
 
     return {
-      data: { ...remoteData, results: allResults },
+      data: mergedData,
       error: hasAnyError
         ? remoteError && failedCount === 0
           ? remoteError

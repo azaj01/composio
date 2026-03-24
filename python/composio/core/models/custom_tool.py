@@ -221,6 +221,35 @@ def _create_tool(
     )
 
 
+def _get_caller_locals(depth: int = 2) -> t.Optional[t.Mapping[str, t.Any]]:
+    """Best-effort lookup of a caller frame's locals."""
+    frame = inspect.currentframe()
+    try:
+        caller = frame
+        for _ in range(depth):
+            caller = caller.f_back if caller is not None else None
+        return caller.f_locals if caller is not None else None
+    finally:
+        del frame
+
+
+def _resolve_function_annotations(
+    fn: t.Callable[..., t.Any],
+    *,
+    localns: t.Optional[t.Mapping[str, t.Any]] = None,
+) -> t.Dict[str, t.Any]:
+    """Resolve annotations, including postponed string annotations when possible."""
+    try:
+        return t.get_type_hints(
+            fn,
+            globalns=getattr(fn, "__globals__", {}),
+            localns=dict(localns) if localns is not None else None,
+            include_extras=True,
+        )
+    except Exception:
+        return {}
+
+
 def _infer_tool_from_function(
     fn: t.Callable[..., t.Any],
     *,
@@ -229,6 +258,7 @@ def _infer_tool_from_function(
     description: t.Optional[str] = None,
     extends_toolkit: t.Optional[str] = None,
     output_params: t.Optional[t.Type[BaseModel]] = None,
+    annotation_locals: t.Optional[t.Mapping[str, t.Any]] = None,
 ) -> CustomTool:
     """Create a CustomTool by inferring metadata from a decorated function.
 
@@ -263,6 +293,10 @@ def _infer_tool_from_function(
 
     sig = inspect.signature(fn)
     params = list(sig.parameters.values())
+    resolved_annotations = _resolve_function_annotations(
+        fn,
+        localns=annotation_locals,
+    )
 
     if not params:
         raise ValidationError(
@@ -280,15 +314,16 @@ def _infer_tool_from_function(
 
     # First param must be the input model
     first = params[0]
-    if first.annotation is inspect.Parameter.empty or not (
-        isinstance(first.annotation, type) and issubclass(first.annotation, BaseModel)
+    first_annotation = resolved_annotations.get(first.name, first.annotation)
+    if first_annotation is inspect.Parameter.empty or not (
+        isinstance(first_annotation, type) and issubclass(first_annotation, BaseModel)
     ):
         raise ValidationError(
             f'experimental.tool: first parameter of "{fn.__name__}" must be annotated '
-            f"with a Pydantic BaseModel subclass. Got: {first.annotation!r}. "
+            f"with a Pydantic BaseModel subclass. Got: {first_annotation!r}. "
             f"Expected: def {fn.__name__}(input: MyInput, ctx): ..."
         )
-    input_params: t.Type[BaseModel] = first.annotation
+    input_params: t.Type[BaseModel] = first_annotation
 
     # Wrap function to match CustomToolExecuteFn: (input, ctx) -> dict
     if len(params) == 1:
@@ -383,12 +418,14 @@ class ExperimentalToolkit:
         """
 
         def decorator(f: t.Callable[..., t.Any]) -> CustomTool:
+            annotation_locals = _get_caller_locals()
             custom_tool = _infer_tool_from_function(
                 f,
                 slug=slug,
                 name=name,
                 description=description,
                 output_params=output_params,
+                annotation_locals=annotation_locals,
                 # No extends_toolkit for toolkit tools
             )
             _validate_slug_length(
@@ -398,7 +435,21 @@ class ExperimentalToolkit:
             return custom_tool
 
         if fn is not None:
-            return decorator(fn)
+            custom_tool = _infer_tool_from_function(
+                fn,
+                slug=slug,
+                name=name,
+                description=description,
+                output_params=output_params,
+                annotation_locals=_get_caller_locals(),
+            )
+            _validate_slug_length(
+                custom_tool.slug,
+                self.slug,
+                f'experimental.Toolkit("{self.slug}").tool',
+            )
+            self._tools.append(custom_tool)
+            return custom_tool
         return decorator
 
 
@@ -467,6 +518,7 @@ class ExperimentalAPI:
         """
 
         def decorator(f: t.Callable[..., t.Any]) -> CustomTool:
+            annotation_locals = _get_caller_locals()
             return _infer_tool_from_function(
                 f,
                 slug=slug,
@@ -474,10 +526,19 @@ class ExperimentalAPI:
                 description=description,
                 extends_toolkit=extends_toolkit,
                 output_params=output_params,
+                annotation_locals=annotation_locals,
             )
 
         if fn is not None:
-            return decorator(fn)
+            return _infer_tool_from_function(
+                fn,
+                slug=slug,
+                name=name,
+                description=description,
+                extends_toolkit=extends_toolkit,
+                output_params=output_params,
+                annotation_locals=_get_caller_locals(),
+            )
         return decorator
 
 

@@ -671,6 +671,26 @@ describe('ToolRouterSession execution routing', () => {
       expect(result.successful).toBe(true);
     });
 
+    it('should recompute remote counters when local results are merged', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce(
+        backendResponse([{ tool_slug: 'GMAIL_SEND_EMAIL', data: { sent: true } }])
+      );
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'counts' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      expect(result.data.total_count).toBe(2);
+      expect(result.data.success_count).toBe(2);
+      expect(result.data.error_count).toBe(0);
+    });
+
     it('should handle remote null data without crashing', async () => {
       const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
 

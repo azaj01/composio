@@ -241,6 +241,47 @@ class TestDecoratorTool:
                 """Swapped order — ctx first, input second."""
                 return {}
 
+    def test_future_annotations_are_resolved(self):
+        namespace = {"exp": exp}
+        exec(
+            """
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+
+class FutureInput(BaseModel):
+    pattern: str = Field(description="Pattern to search for")
+
+
+@exp.tool()
+def future_tool(input: FutureInput, ctx):
+    '''Resolved from postponed annotations.'''
+    return {}
+""",
+            namespace,
+        )
+
+        future_tool = namespace["future_tool"]
+        future_input = namespace["FutureInput"]
+
+        assert future_tool.input_params is future_input
+
+    def test_local_string_annotations_are_resolved(self):
+        def build_tool():
+            class LocalInput(BaseModel):
+                pattern: str = Field(description="Pattern to search for")
+
+            @exp.tool
+            def nested_search(input: "LocalInput", ctx):
+                """Resolved from local string annotations."""
+                return {}
+
+            return nested_search, LocalInput
+
+        local_tool, local_input = build_tool()
+        assert local_tool.input_params is local_input
+
     def test_async_function_rejected(self):
         with pytest.raises(ValidationError, match="async"):
 
@@ -655,8 +696,11 @@ class TestMultiExecuteRouting:
         remote = {
             "data": {
                 "results": [
-                    {"tool_slug": "R", "response": {"successful": True, "data": {}}}
-                ]
+                    {"tool_slug": "R", "response": {"successful": True, "data": {}}},
+                ],
+                "total_count": 1,
+                "success_count": 1,
+                "error_count": 0,
             },
             "error": None,
             "successful": True,
@@ -676,6 +720,9 @@ class TestMultiExecuteRouting:
         # Remotes first, locals appended (matches TS)
         assert results[0]["tool_slug"] == "R"
         assert results[1]["tool_slug"] == "GREP"
+        assert result["data"]["total_count"] == 2
+        assert result["data"]["success_count"] == 2
+        assert result["data"]["error_count"] == 0
 
     def test_failure_propagated(self):
         @exp.tool()
