@@ -240,7 +240,7 @@ def _infer_tool_from_function(
     # Infer slug
     actual_slug = slug or fn.__name__.upper()
     actual_name = name or fn.__name__.replace("_", " ").title()
-    actual_description = description or (fn.__doc__ or "").strip()
+    actual_description = description or inspect.cleandoc(fn.__doc__ or "")
 
     if not actual_description:
         raise ValidationError(

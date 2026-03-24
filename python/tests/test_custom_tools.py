@@ -166,6 +166,36 @@ class TestDecoratorTool:
 
         assert my_func.description == "Trimmed docstring."
 
+    def test_multiline_docstring(self):
+        @exp.tool()
+        def multi(input: GrepInput, ctx):
+            """Search for users by email.
+
+            This tool searches the internal database for users
+            matching the given pattern. Returns a list of matches.
+
+            Supports wildcards.
+            """
+            return {}
+
+        assert multi.description.startswith("Search for users by email.")
+        # inspect.cleandoc strips indentation
+        assert "\n    " not in multi.description
+        assert "Supports wildcards." in multi.description
+
+    def test_indented_docstring_cleaned(self):
+        @exp.tool()
+        def indented(input: GrepInput, ctx):
+            """
+            Leading and trailing whitespace removed.
+            Indentation normalized.
+            """
+            return {}
+
+        assert indented.description == (
+            "Leading and trailing whitespace removed.\nIndentation normalized."
+        )
+
     def test_missing_docstring_raises(self):
         with pytest.raises(ValidationError, match="description is required"):
 
