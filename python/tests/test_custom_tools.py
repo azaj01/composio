@@ -15,6 +15,12 @@ Covers:
 from unittest.mock import MagicMock
 
 import pytest
+from composio_client.types.tool_router.session_execute_response import (
+    SessionExecuteResponse,
+)
+from composio_client.types.tool_router.session_proxy_execute_response import (
+    SessionProxyExecuteResponse,
+)
 from pydantic import BaseModel, Field
 
 from composio.core.models.custom_tool import (
@@ -478,14 +484,16 @@ class TestSessionContextImpl:
             client=MagicMock(), user_id="u", session_id="s", custom_tools_map=m
         )
         result = ctx.execute("GREP", {"pattern": "test"})
+        assert isinstance(result, SessionExecuteResponse)
         assert result.error is None
+        assert result.log_id == ""
         assert result.data["matches"] == ["test"]
 
     def test_remote_fallback(self, grep_tool):
         m = build_custom_tools_map([grep_tool])
         mock_client = MagicMock()
-        mock_client.tool_router.session.execute.return_value = MagicMock(
-            data={"remote": True}, error=None
+        mock_client.tool_router.session.execute.return_value = SessionExecuteResponse(
+            data={"remote": True}, error=None, log_id="log_123"
         )
         ctx = SessionContextImpl(
             client=mock_client, user_id="u", session_id="s", custom_tools_map=m
@@ -495,13 +503,16 @@ class TestSessionContextImpl:
 
     def test_proxy_execute(self):
         mock_client = MagicMock()
-        mock_client.tool_router.session.proxy_execute.return_value = MagicMock(
-            status=200, data={"ok": True}, headers={}, binary_data=None
+        mock_client.tool_router.session.proxy_execute.return_value = (
+            SessionProxyExecuteResponse(
+                status=200, data={"ok": True}, headers={}, binary_data=None
+            )
         )
         ctx = SessionContextImpl(client=mock_client, user_id="u", session_id="s")
         result = ctx.proxy_execute(
             toolkit="gmail", endpoint="https://example.com", method="GET"
         )
+        assert isinstance(result, SessionProxyExecuteResponse)
         assert result.status == 200
 
 
@@ -540,16 +551,16 @@ class TestToolRouterSessionCustomTools:
         s = _session(mock_session_deps)
         result = s.execute("GREP", arguments={"pattern": "x"})
         # Returns SessionExecuteResponse — same type as remote
+        assert isinstance(result, SessionExecuteResponse)
         assert result.error is None
         assert result.log_id == ""
         assert result.data["matches"] == ["x"]
         mock_session_deps["client"].tool_router.session.execute.assert_not_called()
 
     def test_execute_remote(self, mock_session_deps):
-        mock_response = MagicMock()
-        mock_response.data = {"sent": True}
-        mock_response.error = None
-        mock_response.log_id = "log_123"
+        mock_response = SessionExecuteResponse(
+            data={"sent": True}, error=None, log_id="log_123"
+        )
         mock_session_deps[
             "client"
         ].tool_router.session.execute.return_value = mock_response
@@ -557,8 +568,22 @@ class TestToolRouterSessionCustomTools:
         result = s.execute("GMAIL_SEND_EMAIL", arguments={"to": "a@b.com"})
         mock_session_deps["client"].tool_router.session.execute.assert_called_once()
         # Remote returns client model as-is (backward compat, supports attribute access)
+        assert isinstance(result, SessionExecuteResponse)
         assert result.data == {"sent": True}
         assert result.log_id == "log_123"
+
+    def test_proxy_execute(self, mock_session_deps):
+        mock_session_deps["client"].tool_router.session.proxy_execute.return_value = (
+            SessionProxyExecuteResponse(
+                status=200, data={"ok": True}, headers={}, binary_data=None
+            )
+        )
+        s = _session(mock_session_deps)
+        result = s.proxy_execute(
+            toolkit="gmail", endpoint="https://example.com", method="GET"
+        )
+        assert isinstance(result, SessionProxyExecuteResponse)
+        assert result.status == 200
 
     def test_custom_tools_list(self, mock_session_deps):
         s = _session(mock_session_deps)

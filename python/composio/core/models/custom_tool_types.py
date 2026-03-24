@@ -63,7 +63,10 @@ class SessionContext(te.Protocol):
         tool_slug: str,
         arguments: t.Dict[str, t.Any],
     ) -> SessionExecuteResponse:
-        """Execute any Composio tool from within a custom tool."""
+        """Execute any Composio tool from within a custom tool.
+
+        Returns the same response model as ``session.execute()``.
+        """
         ...
 
     def proxy_execute(
@@ -75,7 +78,10 @@ class SessionContext(te.Protocol):
         body: t.Any = None,
         parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
     ) -> SessionProxyExecuteResponse:
-        """Proxy API calls through Composio's auth layer."""
+        """Proxy API calls through Composio's auth layer.
+
+        Returns the same response model as ``session.proxy_execute()``.
+        """
         ...
 
 

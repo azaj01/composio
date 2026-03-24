@@ -118,6 +118,8 @@ class SessionContextImpl:
 
         Routes to sibling local tools in-process when available,
         otherwise delegates to the backend API.
+
+        Returns the same response model as ``session.execute()``.
         """
         # Try local tool first (sibling routing)
         entry = find_custom_tool(self._custom_tools_map, tool_slug)
@@ -148,7 +150,10 @@ class SessionContextImpl:
         body: t.Any = None,
         parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
     ) -> SessionProxyExecuteResponse:
-        """Proxy API calls through Composio's auth layer."""
+        """Proxy API calls through Composio's auth layer.
+
+        Returns the same response model as ``session.proxy_execute()``.
+        """
         return proxy_execute_impl(
             self._client,
             self._session_id,
