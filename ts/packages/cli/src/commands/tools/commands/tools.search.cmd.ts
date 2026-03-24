@@ -13,6 +13,8 @@ import {
   resolveCommandProject,
   formatResolveCommandProjectError,
 } from 'src/services/command-project';
+import { commandHintExample, commandHintStep } from 'src/services/command-hints';
+import { primeConsumerConnectedToolkitsCacheInBackground } from 'src/services/consumer-short-term-cache';
 
 const query = Args.text({ name: 'query' }).pipe(
   Args.withDescription(
@@ -90,6 +92,12 @@ const runToolsSearch = (params: {
           orgId: resolvedProject.orgId,
           projectId: resolvedProject.projectId,
         });
+        if (resolvedProject.projectType === 'CONSUMER') {
+          yield* primeConsumerConnectedToolkitsCacheInBackground({
+            orgId: resolvedProject.orgId,
+            consumerUserId: resolvedUserId.value,
+          });
+        }
         const { sessionId } = yield* resolveToolRouterSession(client, resolvedUserId.value, {
           toolkits: toolkitList,
         });
@@ -169,12 +177,22 @@ const runToolsSearch = (params: {
 
     if (firstSlug) {
       const executeHint = params.rootOnly
-        ? `> composio execute "${firstSlug}" ${firstDataArg}`
-        : `> composio manage tools execute "${firstSlug}" --user-id "<user-id>" ${firstDataArg}`;
+        ? commandHintStep('Execute a tool', 'root.execute', {
+            slug: firstSlug,
+            data: firstDataArg,
+          })
+        : commandHintStep('Execute a tool', 'dev.execute', {
+            slug: firstSlug,
+            userId: '<user-id>',
+            data: firstDataArg,
+          });
       const linkHint = params.rootOnly
-        ? `> composio link <toolkit>`
-        : `> composio manage connected-accounts link <toolkit> --user-id "<user-id>"`;
-      yield* ui.log.step(['Hints:', executeHint, linkHint].join('\n'));
+        ? commandHintStep('Link an account', 'root.link', { toolkit: '<toolkit>' })
+        : commandHintStep('Link an account', 'manage.connectedAccounts.link', {
+            toolkit: '<toolkit>',
+            userId: '<user-id>',
+          });
+      yield* ui.log.step([executeHint, linkHint].join('\n'));
     }
 
     if (searchResponse.error) {
@@ -186,16 +204,23 @@ const runToolsSearch = (params: {
       cta.push({
         action: 'Execute a tool',
         command: params.rootOnly
-          ? `composio execute "${firstSlug}" ${firstDataArg}`
-          : `composio manage tools execute "${firstSlug}" --user-id "<user-id>" ${firstDataArg}`,
+          ? commandHintExample('root.execute', { slug: firstSlug, data: firstDataArg })
+          : commandHintExample('dev.execute', {
+              slug: firstSlug,
+              userId: '<user-id>',
+              data: firstDataArg,
+            }),
       });
     }
     if (firstToolkit) {
       cta.push({
         action: 'Connect a user account',
         command: params.rootOnly
-          ? `composio link ${String(firstToolkit).toLowerCase()}`
-          : `composio manage connected-accounts link ${String(firstToolkit).toLowerCase()} --user-id "<user-id>"`,
+          ? commandHintExample('root.link', { toolkit: String(firstToolkit).toLowerCase() })
+          : commandHintExample('manage.connectedAccounts.link', {
+              toolkit: String(firstToolkit).toLowerCase(),
+              userId: '<user-id>',
+            }),
       });
     }
 
@@ -217,6 +242,7 @@ export const toolsCmd$Search = Command.make(
       'Semantically search tools by use case; returns best-fit tools plus recommended usage guidance.',
       '',
       'Related:',
+      '  composio run \'const result = await execute("TOOL_SLUG", { ... }); console.log(result)\'',
       '  composio link <toolkit>',
       "  composio execute <slug> -d '{}'",
     ].join('\n')
@@ -241,6 +267,7 @@ export const rootToolsCmd$Search = Command.make(
       'Semantically search tools by use case; returns best-fit tools plus recommended usage guidance.',
       '',
       'Related:',
+      '  composio run \'const result = await execute("TOOL_SLUG", { ... }); console.log(result)\'',
       '  composio link <toolkit>',
       "  composio execute <slug> -d '{}'",
     ].join('\n')

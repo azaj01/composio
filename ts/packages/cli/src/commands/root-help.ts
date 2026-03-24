@@ -47,17 +47,43 @@ const BASIC_COMMANDS: ReadonlyArray<BasicCommand> = [
     usage: 'logout',
   },
   {
-    name: 'init',
-    description: 'Initialize this directory with a developer project.',
-    usage: 'init [--no-browser] [-y, --yes]',
+    name: 'run',
+    description: 'Run inline ESNext TS/JS code or a file with Bun and injected Composio helpers.',
+    usage:
+      'run <code> [-- ...args] | run [-f, --file text] [-- ...args] [--dry-run] [--skip-connection-check] [--skip-tool-params-check] [--no-verify]',
     options: [
-      { name: '--no-browser', description: 'Skip opening browser for auth' },
-      { name: '-y, --yes', description: 'Auto-select the default developer project' },
+      {
+        name: '<code>',
+        description:
+          'Inline Bun ESNext code with injected execute(slug, data?) and search(query, options?) helpers',
+      },
+      {
+        name: '-f, --file',
+        description: 'Run a TS/JS file with the Bun runtime instead of inline code',
+      },
+      {
+        name: '--dry-run',
+        description: 'Preview execute(...) calls without running remote actions',
+      },
+      {
+        name: '--skip-connection-check',
+        description:
+          'Skip the short-lived linked-account fail-fast check if you just connected an account',
+      },
+      {
+        name: '--skip-tool-params-check',
+        description: 'Skip the local tool parameter/schema validation check',
+      },
+      {
+        name: '--no-verify',
+        description:
+          'Skip both the linked-account fail-fast check and the local tool parameter check',
+      },
     ],
   },
   {
     name: 'search',
-    description: 'Search tools by use case across toolkits/apps.',
+    description: 'Semantic search for tools by use case across all toolkits/apps.',
     usage: 'search <query> [--toolkits text] [--limit integer]',
     options: [
       { name: '<query>', description: 'Semantic use-case query (e.g. "send emails")' },
@@ -66,12 +92,53 @@ const BASIC_COMMANDS: ReadonlyArray<BasicCommand> = [
     ],
   },
   {
+    name: 'tools',
+    description: 'List tools for one toolkit, or inspect a cached schema-backed summary.',
+    usage: 'tools list <toolkit> [--query text] | tools info <slug>',
+    options: [
+      {
+        name: 'list <toolkit>',
+        description: 'Non-semantic per-toolkit listing; use this when you already know the toolkit',
+      },
+      {
+        name: 'info <slug>',
+        description:
+          'Print a brief summary and cache the same raw schema used by execute --get-schema',
+      },
+    ],
+  },
+  {
     name: 'execute',
-    description: 'Execute a tool.',
-    usage: 'execute <slug> [-d, --data text]',
+    description: 'Execute a tool, preview it with --dry-run, or fetch its input schema.',
+    usage:
+      'execute <slug> [-d, --data text] [--dry-run] [--get-schema] [--skip-connection-check] [--skip-tool-params-check] [--no-verify]',
     options: [
       { name: '<slug>', description: 'Tool slug (e.g. "GITHUB_CREATE_ISSUE")' },
-      { name: '-d, --data', description: 'JSON arguments, @file, or - for stdin' },
+      {
+        name: '-d, --data',
+        description:
+          'JSON or JS-style object arguments, e.g. -d \'{ repo: "foo" }\', @file, or - for stdin',
+      },
+      { name: '--dry-run', description: 'Validate and preview the tool call without executing it' },
+      {
+        name: '--get-schema',
+        description:
+          'Fetch and print the raw cached schema; tools info shows the same schema with a brief summary',
+      },
+      {
+        name: '--skip-connection-check',
+        description:
+          'Skip the short-lived linked-account fail-fast check if you just connected an account',
+      },
+      {
+        name: '--skip-tool-params-check',
+        description: 'Skip the local tool parameter/schema validation check',
+      },
+      {
+        name: '--no-verify',
+        description:
+          'Skip both the linked-account fail-fast check and the local tool parameter check',
+      },
     ],
   },
   {
@@ -83,28 +150,14 @@ const BASIC_COMMANDS: ReadonlyArray<BasicCommand> = [
       { name: '--no-browser', description: 'Skip auto-opening the browser' },
     ],
   },
-  {
-    name: 'listen',
-    description: 'Listen for trigger events.',
-    usage:
-      'listen [--toolkits text] [--trigger-id text] [--user-id text] [--max-events integer] [--forward text] [--out text]',
-    options: [
-      { name: '--toolkits', description: 'Filter by toolkit slugs, comma-separated' },
-      { name: '--trigger-id', description: 'Filter by trigger id' },
-      { name: '--user-id', description: 'Filter by user id' },
-      { name: '--max-events', description: 'Stop after N matching events' },
-      {
-        name: '--forward',
-        description: 'Forward events to URL (signed with COMPOSIO_WEBHOOK_SECRET)',
-      },
-      { name: '--out', description: 'Append events to file' },
-      { name: '--json', description: 'Show raw event payload as JSON' },
-      { name: '--table', description: 'Show compact table rows' },
-    ],
-  },
 ];
 
 const ADVANCED_COMMANDS: ReadonlyArray<{ name: string; description: string }> = [
+  {
+    name: 'dev',
+    description:
+      'Developer workflows: init a local project, execute tools with playground users, listen for triggers, and inspect logs.',
+  },
   {
     name: 'generate',
     description:
@@ -113,7 +166,7 @@ const ADVANCED_COMMANDS: ReadonlyArray<{ name: string; description: string }> = 
   {
     name: 'manage',
     description:
-      'Developer/admin workflows: orgs, toolkits, triggers, auth configs, logs, and deprecated project commands.',
+      'Manage your developer orgs, toolkits, connected accounts, triggers, auth configs, and projects.',
   },
 ];
 
@@ -146,7 +199,9 @@ export function printRootHelp(): Effect.Effect<void> {
 
   const lines: string[] = [
     '',
-    'Connect AI agents to external tools. `search`, `link`, and `execute` use your org consumer project by default. `init`, `listen`, and `manage` use developer project context.',
+    'Connect AI agents to external tools. `search`, `link`, `execute`, and `run` let you take actions across 1000+ apps directly; if you can describe it, it is probably supported.',
+    "Try `execute` sooner than you'd think. It parses inputs, validates them against cached schemas when available, and will usually tell you whether you need to fix arguments, inspect schema, or `link` an account.",
+    'Use `dev` when you are building with Composio and want scaffolding, playground execution, triggers, and logs.',
     '',
     bold('USAGE'),
     `  ${name} <command> [options]`,
