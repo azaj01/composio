@@ -24,13 +24,16 @@ composio = Composio(provider=OpenAIAgentsProvider())
 
 # ── 1. Standalone tool — slug/name/description inferred from function ──
 
+
 class UserLookupInput(BaseModel):
     user_id: str = Field(description="User ID (e.g. user-1)")
+
 
 USERS = {
     "user-1": {"name": "Alice Johnson", "email": "alice@acme.com", "role": "admin"},
     "user-2": {"name": "Bob Smith", "email": "bob@acme.com", "role": "developer"},
 }
+
 
 @composio.experimental.tool()
 def get_user(input: UserLookupInput, ctx):
@@ -39,15 +42,15 @@ def get_user(input: UserLookupInput, ctx):
     if not user:
         raise ValueError(f'User "{input.user_id}" not found')
     return user
-# slug = GET_USER (from function name)
-# name = Get User (humanized)
-# description = "Look up an internal user by ID..." (from docstring)
+
 
 # ── 2. Standalone tool with overrides ──────────────────────────────────
+
 
 class GreetInput(BaseModel):
     name: str = Field(description="Name to greet")
     style: str = Field(default="friendly", description="Greeting style")
+
 
 @composio.experimental.tool(
     slug="GREET_V2",
@@ -62,16 +65,16 @@ def greet(input: GreetInput, ctx):
         "casual": f"Yo {input.name}, what's up?",
     }
     return {"message": greetings.get(input.style, f"Hello {input.name}!")}
-# slug = GREET_V2 (overridden, not GREET)
-# name = Greeting Generator (overridden, not Greet)
-# description = "Generate a personalized..." (overridden, not docstring)
+
 
 # ── 3. Extension tool — inherits Gmail auth via ctx.proxy_execute() ────
+
 
 class DraftInput(BaseModel):
     to: str = Field(description="Recipient email address")
     subject: str = Field(description="Email subject")
     body: str = Field(description="Email body (plain text)")
+
 
 @composio.experimental.tool(extends_toolkit="gmail")
 def create_draft(input: DraftInput, ctx):
@@ -92,6 +95,7 @@ def create_draft(input: DraftInput, ctx):
     data = res["data"]
     return {"draft_id": data["id"], "to": input.to, "subject": input.subject}
 
+
 # ── 4. Custom toolkit — groups related tools under one namespace ───────
 
 role_manager = composio.experimental.Toolkit(
@@ -100,21 +104,26 @@ role_manager = composio.experimental.Toolkit(
     description="Manage user roles in the system",
 )
 
+
 class SetRoleInput(BaseModel):
     user_id: str = Field(description="User ID")
     role: str = Field(description="New role (admin, developer, viewer)")
+
 
 @role_manager.tool()
 def set_role(input: SetRoleInput, ctx):
     """Set a user's role. Returns confirmation."""
     return {"user_id": input.user_id, "role": input.role, "updated": True}
 
+
 @role_manager.tool(name="List All Roles")
 def list_roles(input: UserLookupInput, ctx):
     """List available roles for a user."""
     return {"roles": ["admin", "developer", "viewer"], "current": "admin"}
 
+
 # ── Agent ──────────────────────────────────────────────────────────────
+
 
 async def run_test(prompt, test_name):
     print(f"\n{'=' * 60}")
@@ -150,6 +159,7 @@ async def run_test(prompt, test_name):
         print(f"\nERROR: {e}")
         return False
 
+
 async def main():
     tests = [
         ("Look up user-2", "Standalone (inferred slug/name)"),
@@ -157,8 +167,14 @@ async def main():
         ("Set user-1 role to developer", "Toolkit tool"),
         ("Look up user-1 and set their role to viewer", "Mixed local tools"),
         ("What is the weather in Tokyo?", "Remote (weathermap)"),
-        ('Draft an email to bob@acme.com with subject "Test" and body "Hello!"', "Gmail proxy"),
-        ("Look up user-1, draft them an email saying hi, include weather in SF", "Mixed all"),
+        (
+            'Draft an email to bob@acme.com with subject "Test" and body "Hello!"',
+            "Gmail proxy",
+        ),
+        (
+            "Look up user-1, draft them an email saying hi, include weather in SF",
+            "Mixed all",
+        ),
     ]
 
     results = []
@@ -172,6 +188,7 @@ async def main():
     for name, ok in results:
         print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
     print(f"\n{sum(1 for _, ok in results if ok)}/{len(results)} passed")
+
 
 if __name__ == "__main__":
     if not os.environ.get("OPENAI_API_KEY"):

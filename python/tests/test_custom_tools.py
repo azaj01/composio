@@ -236,11 +236,20 @@ class TestDecoratorTool:
                 return {}
 
     def test_async_function_rejected(self):
-        with pytest.raises(ValidationError, match="synchronous"):
+        with pytest.raises(ValidationError, match="async"):
 
             @exp.tool()
             async def async_tool(input: GrepInput, ctx):
                 """Async tool."""
+                return {}
+
+    def test_async_single_param_rejected(self):
+        """Async must be caught even when wrapper hides it (single-param path)."""
+        with pytest.raises(ValidationError, match="async"):
+
+            @exp.tool()
+            async def async_single(input: GrepInput):
+                """Async single param."""
                 return {}
 
     def test_root_model_rejected(self):

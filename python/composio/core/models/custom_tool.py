@@ -253,6 +253,14 @@ def _infer_tool_from_function(
     #   (input: BaseModel)          — no session context needed
     #   (input: BaseModel, ctx)     — with session context
     # The first param MUST be annotated with a BaseModel subclass.
+    # Reject async before wrapping (wrapper would hide it from _create_tool)
+    if asyncio.iscoroutinefunction(fn):
+        raise ValidationError(
+            f'experimental.tool: "{fn.__name__}" is async. '
+            f"The Composio Python SDK is synchronous — use a regular "
+            f"'def {fn.__name__}(input, ctx)' instead of 'async def'."
+        )
+
     sig = inspect.signature(fn)
     params = list(sig.parameters.values())
 
