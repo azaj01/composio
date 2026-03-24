@@ -22,6 +22,10 @@ from composio.core.models.custom_tool_types import (
 from composio.core.models.tools import ToolExecutionResponse
 
 
+_VALID_METHODS = frozenset({"GET", "POST", "PUT", "DELETE", "PATCH"})
+_VALID_PARAM_TYPES = frozenset({"header", "query"})
+
+
 def proxy_execute_impl(
     client: HttpClient,
     session_id: str,
@@ -33,16 +37,38 @@ def proxy_execute_impl(
     parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
 ) -> ProxyExecuteResponse:
     """Shared proxy execute implementation used by SessionContextImpl and ToolRouterSession."""
-    # Transform parameters to API format using the composio_client Parameter type
+    from composio.exceptions import ValidationError
+
+    # Client-side validation (matches TS SessionProxyExecuteParamsSchema)
+    if not toolkit:
+        raise ValidationError("proxy_execute: toolkit is required")
+    if not endpoint:
+        raise ValidationError("proxy_execute: endpoint is required")
+    if method not in _VALID_METHODS:
+        raise ValidationError(
+            f"proxy_execute: method must be one of {sorted(_VALID_METHODS)}, got {method!r}"
+        )
+
+    # Transform and validate parameters
     from composio_client.types.tool_router.session_proxy_execute_params import Parameter
 
     api_params: t.List[Parameter] = []
     if parameters:
-        for p in parameters:
+        for i, p in enumerate(parameters):
+            if not isinstance(p, dict) or "name" not in p or "value" not in p:
+                raise ValidationError(
+                    f"proxy_execute: parameters[{i}] must be a dict with 'name' and 'value' keys"
+                )
+            param_type = p.get("in", p.get("type", "header"))
+            if param_type not in _VALID_PARAM_TYPES:
+                raise ValidationError(
+                    f"proxy_execute: parameters[{i}].type must be 'header' or 'query', "
+                    f"got {param_type!r}"
+                )
             api_params.append(
                 Parameter(
                     name=p["name"],
-                    type=p.get("in", p.get("type", "header")),  # type: ignore[typeddict-item]
+                    type=param_type,  # type: ignore[typeddict-item]
                     value=str(p["value"]),
                 )
             )

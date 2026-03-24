@@ -248,28 +248,42 @@ def _infer_tool_from_function(
             f'Add a docstring to "{fn.__name__}" or pass description=...'
         )
 
-    # Infer input_params from type annotation
+    # Validate and infer function signature.
+    # Accepted shapes (consistent with TS CustomToolExecuteFn):
+    #   (input: BaseModel)          — no session context needed
+    #   (input: BaseModel, ctx)     — with session context
+    # The first param MUST be annotated with a BaseModel subclass.
     sig = inspect.signature(fn)
     params = list(sig.parameters.values())
-    input_params: t.Optional[t.Type[BaseModel]] = None
-    for p in params:
-        if p.annotation is not inspect.Parameter.empty:
-            ann = p.annotation
-            if isinstance(ann, type) and issubclass(ann, BaseModel):
-                input_params = ann
-                break
 
-    if input_params is None:
+    if not params:
         raise ValidationError(
-            f'experimental.tool: could not infer input parameters for "{fn.__name__}". '
-            f"Annotate a parameter with a Pydantic BaseModel subclass, e.g. "
+            f'experimental.tool: "{fn.__name__}" must accept at least one parameter '
+            f"annotated with a Pydantic BaseModel subclass, e.g. "
             f"def {fn.__name__}(input: MyInput, ctx): ..."
         )
 
+    if len(params) > 2:
+        raise ValidationError(
+            f'experimental.tool: "{fn.__name__}" accepts {len(params)} parameters, '
+            f"but custom tools accept at most 2: (input: BaseModel, ctx). "
+            f"Extra parameters will not be populated at runtime."
+        )
+
+    # First param must be the input model
+    first = params[0]
+    if first.annotation is inspect.Parameter.empty or not (
+        isinstance(first.annotation, type) and issubclass(first.annotation, BaseModel)
+    ):
+        raise ValidationError(
+            f'experimental.tool: first parameter of "{fn.__name__}" must be annotated '
+            f"with a Pydantic BaseModel subclass. Got: {first.annotation!r}. "
+            f"Expected: def {fn.__name__}(input: MyInput, ctx): ..."
+        )
+    input_params: t.Type[BaseModel] = first.annotation
+
     # Wrap function to match CustomToolExecuteFn: (input, ctx) -> dict
-    # Support both (input) and (input, ctx) signatures
-    num_params = len(params)
-    if num_params <= 1:
+    if len(params) == 1:
 
         def execute(input: t.Any, ctx: t.Any) -> t.Dict[str, t.Any]:
             return fn(input)

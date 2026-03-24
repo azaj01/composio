@@ -230,6 +230,10 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         Splits the tools[] array into local and remote, executes each
         appropriately, and merges results preserving original order.
 
+        Note: Results are merged in the original request order (index-based).
+        This intentionally differs from TS which appends locals after remotes —
+        preserving order is more predictable for callers.
+
         Note: modifiers are NOT applied here — the caller (routing_execute)
         handles before_execute/after_execute to avoid double application.
         """
@@ -510,25 +514,31 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         For custom tools, accepts the original slug (e.g. "GREP") or the
         full slug (e.g. "LOCAL_GREP"). Custom tools are executed in-process;
         remote tools are sent to the Composio backend.
+
+        Returns a dict with ``data``, ``error``, and ``log_id`` keys for both
+        local and remote execution paths.
         """
         # Check if this is a local tool (by original or final slug)
         entry = find_custom_tool(self._custom_tools_map, tool_slug)
         if entry and self._session_context:
             result = execute_custom_tool(entry, arguments or {}, self._session_context)
-            # Normalize to match SessionExecuteResponse shape (data, error, log_id)
             return {
                 "data": result["data"],
                 "error": result["error"],
                 "log_id": "",
             }
 
-        # Remote execution — return the SessionExecuteResponse model as-is
-        # to preserve backward compatibility for callers using attribute access
-        return self._client.tool_router.session.execute(
+        # Remote execution — normalize to dict for consistent return type
+        response = self._client.tool_router.session.execute(
             session_id=self.session_id,
             tool_slug=tool_slug,
             arguments=arguments if arguments is not None else omit,
         )
+        return {
+            "data": response.data if hasattr(response, "data") else {},
+            "error": response.error if hasattr(response, "error") else None,
+            "log_id": response.log_id if hasattr(response, "log_id") else "",
+        }
 
     def custom_tools(
         self, *, toolkit: t.Optional[str] = None

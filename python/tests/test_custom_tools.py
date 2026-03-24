@@ -181,6 +181,30 @@ class TestDecoratorTool:
                 """Bad tool."""
                 return {}
 
+    def test_no_params_rejected(self):
+        with pytest.raises(ValidationError, match="at least one parameter"):
+
+            @exp.tool()
+            def no_params():
+                """No params."""
+                return {}
+
+    def test_too_many_params_rejected(self):
+        with pytest.raises(ValidationError, match="at most 2"):
+
+            @exp.tool()
+            def three_params(input: GrepInput, ctx, extra):
+                """Three params."""
+                return {}
+
+    def test_first_param_must_be_basemodel(self):
+        with pytest.raises(ValidationError, match="first parameter"):
+
+            @exp.tool()
+            def swapped(ctx, input: GrepInput):
+                """Swapped order — ctx first, input second."""
+                return {}
+
     def test_async_function_rejected(self):
         with pytest.raises(ValidationError, match="synchronous"):
 
@@ -480,12 +504,20 @@ class TestToolRouterSessionCustomTools:
         mock_session_deps["client"].tool_router.session.execute.assert_not_called()
 
     def test_execute_remote(self, mock_session_deps):
+        mock_response = MagicMock()
+        mock_response.data = {"sent": True}
+        mock_response.error = None
+        mock_response.log_id = "log_123"
         mock_session_deps[
             "client"
-        ].tool_router.session.execute.return_value = MagicMock()
+        ].tool_router.session.execute.return_value = mock_response
         s = _session(mock_session_deps)
-        s.execute("GMAIL_SEND_EMAIL", arguments={"to": "a@b.com"})
+        result = s.execute("GMAIL_SEND_EMAIL", arguments={"to": "a@b.com"})
         mock_session_deps["client"].tool_router.session.execute.assert_called_once()
+        # Remote returns same dict shape as local
+        assert isinstance(result, dict)
+        assert result["data"] == {"sent": True}
+        assert result["log_id"] == "log_123"
 
     def test_custom_tools_list(self, mock_session_deps):
         s = _session(mock_session_deps)
