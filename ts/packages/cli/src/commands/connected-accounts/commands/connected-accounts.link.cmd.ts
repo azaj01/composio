@@ -13,6 +13,7 @@ import {
   resolveCommandProject,
   formatResolveCommandProjectError,
 } from 'src/services/command-project';
+import { invalidateConsumerConnectedToolkitsCache } from 'src/services/consumer-short-term-cache';
 
 const toolkit = Args.text({ name: 'toolkit' }).pipe(
   Args.withDescription('Toolkit slug to link (e.g. "github", "gmail")'),
@@ -206,12 +207,14 @@ const runConnectedAccountsLink = (params: {
       });
       if (Option.isNone(resolvedUserId)) {
         return yield* Effect.fail(
-          new Error('Missing user id. Provide --user-id or run composio init to set test_user_id.')
+          new Error(
+            'Missing user id. Provide --user-id or run composio dev init to set test_user_id.'
+          )
         );
       }
       if (Option.isNone(params.projectName) && Option.isNone(resolvedProjectContext)) {
         yield* ui.log.error(
-          '`--auth-config` is developer-project scoped. Pass `--project-name <name>` or run from a directory initialized with `composio init`.'
+          '`--auth-config` is developer-project scoped. Pass `--project-name <name>` or run from a directory initialized with `composio dev init`.'
         );
         return;
       }
@@ -336,6 +339,7 @@ const runConnectedAccountsLink = (params: {
     if (Option.isNone(validatedLink)) return;
 
     const { connectedAccountId: connAccountId, redirectUrl } = validatedLink.value;
+    yield* invalidateConsumerConnectedToolkitsCache().pipe(Effect.catchAll(() => Effect.void));
 
     if (params.noWait) {
       yield* ui.note(redirectUrl, 'Redirect URL');
