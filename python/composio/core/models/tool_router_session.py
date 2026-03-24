@@ -26,13 +26,13 @@ from composio.core.models.custom_tool_types import (
     RegisteredCustomTool,
     RegisteredCustomToolkit,
 )
-from composio.core.models.session_context import SessionContextImpl
-from composio.core.models.tools import ToolExecutionResponse
+from composio.core.models._modifiers import Modifiers, apply_modifier_by_type
+from composio.core.models.session_context import SessionContextImpl, proxy_execute_impl
+from composio.core.models.tools import ToolExecuteParams, ToolExecutionResponse
 from composio.core.provider import TTool, TToolCollection
 from composio.core.provider.base import BaseProvider
 
 if t.TYPE_CHECKING:
-    from composio.core.models._modifiers import Modifiers
     from composio.core.models.tool_router import ToolRouterSessionExperimental
 
 COMPOSIO_MULTI_EXECUTE_TOOL = "COMPOSIO_MULTI_EXECUTE_TOOL"
@@ -170,9 +170,6 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
                 # Apply before_execute modifiers
                 processed_arguments = arguments
                 if modifiers is not None:
-                    from composio.core.models._modifiers import apply_modifier_by_type
-                    from composio.core.models.tools import ToolExecuteParams
-
                     type_before: t.Literal["before_execute"] = "before_execute"
                     params: ToolExecuteParams = {"arguments": arguments}
                     modified = apply_modifier_by_type(
@@ -188,8 +185,6 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
 
                 # Apply after_execute modifiers
                 if modifiers is not None:
-                    from composio.core.models.tools import ToolExecutionResponse
-
                     type_after: t.Literal["after_execute"] = "after_execute"
                     result = t.cast(
                         t.Dict[str, t.Any],
@@ -625,8 +620,6 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         :param parameters: Query/header parameters
         :returns: Proxied API response
         """
-        from composio.core.models.session_context import proxy_execute_impl
-
         return proxy_execute_impl(
             self._client,
             self.session_id,

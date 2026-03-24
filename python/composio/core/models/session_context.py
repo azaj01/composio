@@ -9,6 +9,7 @@ from __future__ import annotations
 import typing as t
 
 from composio_client import omit
+from composio_client.types.tool_router.session_proxy_execute_params import Parameter
 
 from composio.client import HttpClient
 from composio.core.models.custom_tool_execution import (
@@ -19,7 +20,8 @@ from composio.core.models.custom_tool_types import (
     CustomToolsMap,
     ProxyExecuteResponse,
 )
-from composio.core.models.tools import ToolExecutionResponse
+from composio.core.models.tools import ToolExecutionResponse, _serialize_arguments
+from composio.exceptions import ValidationError
 
 
 _VALID_METHODS = frozenset({"GET", "POST", "PUT", "DELETE", "PATCH"})
@@ -37,8 +39,6 @@ def proxy_execute_impl(
     parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
 ) -> ProxyExecuteResponse:
     """Shared proxy execute implementation used by SessionContextImpl and ToolRouterSession."""
-    from composio.exceptions import ValidationError
-
     # Client-side validation (matches TS SessionProxyExecuteParamsSchema)
     if not toolkit:
         raise ValidationError("proxy_execute: toolkit is required")
@@ -50,8 +50,6 @@ def proxy_execute_impl(
         )
 
     # Transform and validate parameters
-    from composio_client.types.tool_router.session_proxy_execute_params import Parameter
-
     api_params: t.List[Parameter] = []
     if parameters:
         for i, p in enumerate(parameters):
@@ -140,9 +138,6 @@ class SessionContextImpl:
             return execute_custom_tool(entry, arguments, self)
 
         # Serialize any Pydantic model instances before sending to remote API
-        # (custom tools receive validated Pydantic inputs that may be forwarded)
-        from composio.core.models.tools import _serialize_arguments
-
         serialized = _serialize_arguments(arguments)
 
         # Fall back to remote execution
