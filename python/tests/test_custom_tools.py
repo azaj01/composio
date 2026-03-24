@@ -573,10 +573,10 @@ class TestToolRouterSessionCustomTools:
         assert result.log_id == "log_123"
 
     def test_proxy_execute(self, mock_session_deps):
-        mock_session_deps["client"].tool_router.session.proxy_execute.return_value = (
-            SessionProxyExecuteResponse(
-                status=200, data={"ok": True}, headers={}, binary_data=None
-            )
+        mock_session_deps[
+            "client"
+        ].tool_router.session.proxy_execute.return_value = SessionProxyExecuteResponse(
+            status=200, data={"ok": True}, headers={}, binary_data=None
         )
         s = _session(mock_session_deps)
         result = s.proxy_execute(

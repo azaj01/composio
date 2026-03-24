@@ -328,7 +328,9 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         remote_data_raw = (remote_result or {}).get("data")
         remote_data = remote_data_raw if isinstance(remote_data_raw, dict) else {}
         remote_results_list = (
-            remote_data.get("results", []) if isinstance(remote_data.get("results"), list) else []
+            remote_data.get("results", [])
+            if isinstance(remote_data.get("results"), list)
+            else []
         )
         all_results = [
             {**entry, "index": i}
@@ -340,7 +342,9 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
             if remote_result and remote_result.get("error") is not None
             else None
         )
-        has_any_error = any(r.get("error") for _, r in local_results) or bool(remote_error)
+        has_any_error = any(r.get("error") for _, r in local_results) or bool(
+            remote_error
+        )
         failed = sum(1 for r in all_results if r.get("error"))
         error_message = None
         if has_any_error:
