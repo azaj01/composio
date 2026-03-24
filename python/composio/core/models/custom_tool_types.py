@@ -12,11 +12,12 @@ from dataclasses import dataclass, field
 import typing_extensions as te
 from pydantic import BaseModel
 
+from composio_client.types.tool_router.session_execute_response import (
+    SessionExecuteResponse,
+)
 from composio_client.types.tool_router.session_proxy_execute_response import (
     SessionProxyExecuteResponse,
 )
-
-from composio.core.models.tools import ToolExecutionResponse
 
 # ────────────────────────────────────────────────────────────────
 # Constants
@@ -61,7 +62,7 @@ class SessionContext(te.Protocol):
         self,
         tool_slug: str,
         arguments: t.Dict[str, t.Any],
-    ) -> ToolExecutionResponse:
+    ) -> SessionExecuteResponse:
         """Execute any Composio tool from within a custom tool."""
         ...
 

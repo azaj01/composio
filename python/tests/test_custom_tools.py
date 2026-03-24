@@ -478,7 +478,8 @@ class TestSessionContextImpl:
             client=MagicMock(), user_id="u", session_id="s", custom_tools_map=m
         )
         result = ctx.execute("GREP", {"pattern": "test"})
-        assert result["successful"] is True
+        assert result.error is None
+        assert result.data["matches"] == ["test"]
 
     def test_remote_fallback(self, grep_tool):
         m = build_custom_tools_map([grep_tool])

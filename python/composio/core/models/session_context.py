@@ -10,6 +10,9 @@ import typing as t
 
 from composio_client import omit
 from composio_client.types.tool_router.session_proxy_execute_params import Parameter
+from composio_client.types.tool_router.session_execute_response import (
+    SessionExecuteResponse,
+)
 from composio_client.types.tool_router.session_proxy_execute_response import (
     SessionProxyExecuteResponse,
 )
@@ -20,7 +23,7 @@ from composio.core.models.custom_tool_execution import (
     find_custom_tool,
 )
 from composio.core.models.custom_tool_types import CustomToolsMap
-from composio.core.models.tools import ToolExecutionResponse, _serialize_arguments
+from composio.core.models.tools import _serialize_arguments
 from composio.exceptions import ValidationError
 
 
@@ -110,7 +113,7 @@ class SessionContextImpl:
         self,
         tool_slug: str,
         arguments: t.Dict[str, t.Any],
-    ) -> ToolExecutionResponse:
+    ) -> SessionExecuteResponse:
         """Execute any tool from within a custom tool.
 
         Routes to sibling local tools in-process when available,
@@ -119,22 +122,22 @@ class SessionContextImpl:
         # Try local tool first (sibling routing)
         entry = find_custom_tool(self._custom_tools_map, tool_slug)
         if entry:
-            return execute_custom_tool(entry, arguments, self)
+            result = execute_custom_tool(entry, arguments, self)
+            return SessionExecuteResponse(
+                data=result["data"],
+                error=result["error"],
+                log_id="",
+            )
 
         # Serialize any Pydantic model instances before sending to remote API
         serialized = _serialize_arguments(arguments)
 
         # Fall back to remote execution
-        response = self._client.tool_router.session.execute(
+        return self._client.tool_router.session.execute(
             session_id=self._session_id,
             tool_slug=tool_slug,
             arguments=serialized,
         )
-        return {
-            "data": response.data if hasattr(response, "data") else {},
-            "error": response.error if hasattr(response, "error") else None,
-            "successful": not (hasattr(response, "error") and response.error),
-        }
 
     def proxy_execute(
         self,
