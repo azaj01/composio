@@ -1,4 +1,5 @@
-import { Effect } from 'effect';
+import process from 'node:process';
+import { Effect, Option } from 'effect';
 import { Command } from '@effect/cli';
 import * as constants from 'src/constants';
 import { $defaultCmd } from './$default.cmd';
@@ -8,16 +9,25 @@ import { upgradeCmd } from './upgrade.cmd';
 import { whoamiCmd } from './whoami.cmd';
 import { loginCmd } from './login.cmd';
 import { logoutCmd } from './logout.cmd';
+import { runCmd } from './run.cmd';
 import { installCmd } from './install.cmd';
-import { initCmd } from './init.cmd';
 import { generateCmd } from './generate/generate.cmd';
 import { manageCmd } from './manage/manage.cmd';
+import { devCmd } from './dev.cmd';
 import { showToolsExecuteInputHelp } from './tools/commands/tools.execute.cmd';
 import { printRootHelp } from './root-help';
 import { rootToolsCmd$Search } from './tools/commands/tools.search.cmd';
 import { rootToolsCmd$Execute } from './tools/commands/tools.execute.cmd';
+import { rootToolsCmd } from './tools/tools.cmd';
 import { rootConnectedAccountsCmd$Link } from './connected-accounts/commands/connected-accounts.link.cmd';
-import { triggersCmd$Listen } from './triggers/commands/triggers.listen.cmd';
+import { renderCommandHintGraph } from 'src/services/command-hints';
+import { resetRuntimeDebugFlags, setRuntimeDebugFlags } from 'src/services/runtime-debug-flags';
+import { ComposioUserContext } from 'src/services/user-context';
+import { TerminalUI } from 'src/services/terminal-ui';
+import {
+  formatResolveCommandProjectError,
+  resolveCommandProject,
+} from 'src/services/command-project';
 
 const $cmd = $defaultCmd.pipe(
   Command.withSubcommands([
@@ -26,12 +36,13 @@ const $cmd = $defaultCmd.pipe(
     whoamiCmd,
     loginCmd,
     logoutCmd,
+    runCmd,
     installCmd,
-    initCmd,
+    devCmd,
+    rootToolsCmd,
     rootToolsCmd$Search,
     rootConnectedAccountsCmd$Link,
     rootToolsCmd$Execute,
-    triggersCmd$Listen,
     generateCmd,
     manageCmd,
   ])
@@ -102,9 +113,62 @@ const normalizeVersionShortFlag = (argv: ReadonlyArray<string>): ReadonlyArray<s
   return argv;
 };
 
+const normalizeHiddenDebugFlags = (argv: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const normalized: string[] = [...argv.slice(0, 2)];
+  const args = argv.slice(2);
+  let perfDebug: boolean | undefined;
+  let toolDebug: boolean | undefined;
+
+  for (const arg of args) {
+    if (arg === '--perf-debug') {
+      perfDebug = true;
+      continue;
+    }
+    if (arg === '--tool-debug') {
+      toolDebug = true;
+      continue;
+    }
+    if (arg === '--perf-debug=false') {
+      perfDebug = false;
+      continue;
+    }
+    if (arg === '--tool-debug=false') {
+      toolDebug = false;
+      continue;
+    }
+    if (arg === '--perf-debug=true') {
+      perfDebug = true;
+      continue;
+    }
+    if (arg === '--tool-debug=true') {
+      toolDebug = true;
+      continue;
+    }
+    normalized.push(arg);
+  }
+
+  resetRuntimeDebugFlags();
+  setRuntimeDebugFlags({
+    ...(perfDebug === undefined ? {} : { perfDebug }),
+    ...(toolDebug === undefined ? {} : { toolDebug }),
+  });
+
+  return normalized;
+};
+
 const isRootHelp = (argv: ReadonlyArray<string>): boolean => {
   const args = argv.slice(2);
   return args.length === 1 && (args[0] === '--help' || args[0] === '-h');
+};
+
+const isGenerateGraph = (argv: ReadonlyArray<string>): boolean => {
+  const args = argv.slice(2);
+  return args.length === 2 && args[0] === 'debug' && args[1] === 'generate-graph';
+};
+
+const isDebugApiInfo = (argv: ReadonlyArray<string>): boolean => {
+  const args = argv.slice(2);
+  return args.length === 2 && args[0] === 'debug' && args[1] === 'api-info';
 };
 
 export const runWithConfig = Effect.gen(function* () {
@@ -116,9 +180,52 @@ export const runWithConfig = Effect.gen(function* () {
   });
 
   return (argv: ReadonlyArray<string>) => {
-    const normalizedArgv = normalizeVersionShortFlag(argv);
+    const normalizedArgv = normalizeHiddenDebugFlags(normalizeVersionShortFlag(argv));
     if (isRootHelp(normalizedArgv)) {
       return printRootHelp();
+    }
+    if (isGenerateGraph(normalizedArgv)) {
+      return Effect.sync(() => {
+        process.stdout.write(`${JSON.stringify(renderCommandHintGraph(), null, 2)}\n`);
+      });
+    }
+    if (isDebugApiInfo(normalizedArgv)) {
+      return Effect.gen(function* () {
+        const ui = yield* TerminalUI;
+        const confirmed = yield* ui.confirm(
+          'This will print your current CLI API key and scoped identifiers to stdout. Continue?',
+          { defaultValue: false }
+        );
+        if (!confirmed) {
+          return yield* Effect.fail(new Error('Aborted printing API credentials.'));
+        }
+        const ctx = yield* ComposioUserContext;
+        const apiKey = Option.getOrUndefined(ctx.data.apiKey);
+        if (!apiKey) {
+          return yield* Effect.fail(new Error('No user API key found in the current CLI session.'));
+        }
+        const orgId = Option.getOrUndefined(ctx.data.orgId);
+        const consumerProject = yield* resolveCommandProject({ mode: 'consumer' }).pipe(
+          Effect.mapError(formatResolveCommandProjectError),
+          Effect.option
+        );
+        return yield* Effect.sync(() => {
+          process.stdout.write(
+            `${JSON.stringify(
+              {
+                apiKey,
+                orgId: orgId ?? null,
+                consumerUserId:
+                  Option.isSome(consumerProject) && consumerProject.value.projectType === 'CONSUMER'
+                    ? (consumerProject.value.consumerUserId ?? null)
+                    : null,
+              },
+              null,
+              2
+            )}\n`
+          );
+        });
+      });
     }
     const executeHelpSlug = parseExecuteInputHelpSlug(normalizedArgv);
     if (executeHelpSlug) {
