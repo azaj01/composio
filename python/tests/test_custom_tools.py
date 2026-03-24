@@ -605,7 +605,11 @@ class TestMultiExecuteRouting:
             },
             tm,
         )
-        assert len(result["data"]["results"]) == 2
+        results = result["data"]["results"]
+        assert len(results) == 2
+        # Remotes first, locals appended (matches TS)
+        assert results[0]["tool_slug"] == "R"
+        assert results[1]["tool_slug"] == "GREP"
 
     def test_failure_propagated(self):
         @exp.tool()

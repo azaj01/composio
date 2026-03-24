@@ -193,8 +193,8 @@ class ToolRouterExperimentalConfig(te.TypedDict, total=False):
     """
 
     assistive_prompt: ToolRouterAssistivePromptConfig
-    custom_tools: t.List["CustomTool"]
-    custom_toolkits: t.List["ExperimentalToolkit"]
+    custom_tools: t.List[CustomTool]
+    custom_toolkits: t.List[ExperimentalToolkit]
 
 
 @dataclass

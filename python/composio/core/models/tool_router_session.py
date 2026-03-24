@@ -223,13 +223,10 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         """Route a COMPOSIO_MULTI_EXECUTE_TOOL call.
 
         Splits the tools[] array into local and remote, executes each
-        appropriately, and merges results preserving original order.
+        appropriately, and merges results: remotes first, locals appended
+        (matches TS — remote results may have workbench index references).
 
-        Note: Results are merged in the original request order (index-based).
-        This intentionally differs from TS which appends locals after remotes —
-        preserving order is more predictable for callers.
-
-        Note: modifiers are NOT applied here — the caller (routing_execute)
+        Modifiers are NOT applied here — the caller (routing_execute)
         handles before_execute/after_execute to avoid double application.
         """
         tool_items = input_args.get("tools")
@@ -305,71 +302,42 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         if not remote_indices and len(local_results) == 1:
             return t.cast(t.Dict[str, t.Any], local_results[0][1])
 
-        # Merge results into the backend's results[] format
-        remote_data = (remote_result or {}).get("data", {})
-        remote_results_list: t.List[t.Any] = (
-            remote_data.get("results", []) if isinstance(remote_data, dict) else []
-        )
-
         # Build local result entries matching backend format
         local_entries = []
         for idx, result in local_results:
-            local_entries.append(
-                {
-                    "response": {
-                        "successful": result["successful"],
-                        "data": result["data"],
-                        **({"error": result["error"]} if result.get("error") else {}),
-                    },
-                    "tool_slug": parsed[idx]["tool_slug"],
-                    **({"error": result["error"]} if result.get("error") else {}),
-                }
-            )
+            entry: t.Dict[str, t.Any] = {
+                "response": {
+                    "successful": result["successful"],
+                    "data": result["data"],
+                },
+                "tool_slug": parsed[idx]["tool_slug"],
+            }
+            if result.get("error"):
+                entry["response"]["error"] = result["error"]
+                entry["error"] = result["error"]
+            local_entries.append(entry)
 
-        # Merge: local entries + remote results, re-indexed sequentially
-        merged: t.List[t.Any] = []
-        remote_iter = iter(remote_results_list)
-        local_map = {idx: entry for (idx, _), entry in zip(local_items, local_entries)}
-
-        for i in range(len(parsed)):
-            if i in local_map:
-                merged.append(local_map[i])
-            else:
-                merged.append(next(remote_iter, {}))
-
-        # Detect failures across local and remote results
-        failed_count = sum(
-            1
-            for entry in merged
-            if isinstance(entry, dict)
-            and isinstance(entry.get("response"), dict)
-            and not entry["response"].get("successful", True)
+        # Merge: remotes first, locals appended (matches TS behavior —
+        # remote results may be stored in workbench with index references)
+        remote_data = (remote_result or {}).get("data", {})
+        remote_results_list = (
+            remote_data.get("results", []) if isinstance(remote_data, dict) else []
         )
-        has_any_error = failed_count > 0 or (
-            remote_result is not None and not remote_result.get("successful", True)
+        all_results = [
+            {**entry, "index": i}
+            for i, entry in enumerate([*remote_results_list, *local_entries])
+        ]
+
+        has_any_error = any(r.get("error") for _, r in local_results) or bool(
+            remote_result and remote_result.get("error")
         )
-
-        # Preserve any extra metadata from the remote batch response
-        merged_data: t.Dict[str, t.Any] = {}
-        if isinstance(remote_data, dict):
-            merged_data.update(remote_data)
-        merged_data["results"] = merged
-
-        # Build error message — include remote batch error if present
-        remote_batch_error = remote_result.get("error") if remote_result else None
-        if has_any_error:
-            parts = []
-            if failed_count > 0:
-                parts.append(f"{failed_count} out of {len(merged)} tools failed")
-            if remote_batch_error:
-                parts.append(f"remote batch error: {remote_batch_error}")
-            error_msg = "; ".join(parts) if parts else "execution failed"
-        else:
-            error_msg = None
+        failed = sum(1 for r in all_results if r.get("error"))
 
         return {
-            "data": merged_data,
-            "error": error_msg,
+            "data": {**remote_data, "results": all_results},
+            "error": f"{failed} out of {len(all_results)} tools failed"
+            if has_any_error
+            else None,
             "successful": not has_any_error,
         }
 
