@@ -54,7 +54,6 @@ from .custom_tool_types import (
     SLUG_REGEX,
     CustomTool,
     CustomToolExecuteFn,
-    CustomToolkit,
     CustomToolsMap,
     CustomToolsMapEntry,
 )
@@ -490,7 +489,7 @@ def serialize_custom_tools(tools: t.List[CustomTool]) -> t.List[t.Dict[str, t.An
 
 
 def serialize_custom_toolkits(
-    toolkits: t.Sequence[t.Union[CustomToolkit, ExperimentalToolkit]],
+    toolkits: t.Sequence[ExperimentalToolkit],
 ) -> t.List[t.Dict[str, t.Any]]:
     """Serialize custom toolkits into the format expected by the backend."""
     result = []
@@ -524,7 +523,7 @@ def serialize_custom_toolkits(
 
 def build_custom_tools_map(
     tools: t.List[CustomTool],
-    toolkits: t.Optional[t.List[t.Union[CustomToolkit, ExperimentalToolkit]]] = None,
+    toolkits: t.Optional[t.List[ExperimentalToolkit]] = None,
 ) -> CustomToolsMap:
     """Build a CustomToolsMap from custom tools and toolkits."""
     by_final_slug: t.Dict[str, CustomToolsMapEntry] = {}
@@ -578,13 +577,13 @@ def build_custom_tools_map(
     return CustomToolsMap(
         by_final_slug=by_final_slug,
         by_original_slug=by_original_slug,
-        toolkits=list(toolkits) if toolkits else None,  # type: ignore[arg-type]
+        toolkits=list(toolkits) if toolkits else None,
     )
 
 
 def build_custom_tools_map_from_response(
     tools: t.List[CustomTool],
-    toolkits: t.Optional[t.List[t.Union[CustomToolkit, ExperimentalToolkit]]],
+    toolkits: t.Optional[t.List[ExperimentalToolkit]],
     experimental: t.Optional[SessionCreateResponseExperimental],
 ) -> CustomToolsMap:
     """Build a CustomToolsMap using the slug/original_slug mapping from the backend response."""
@@ -638,5 +637,5 @@ def build_custom_tools_map_from_response(
     return CustomToolsMap(
         by_final_slug=by_final_slug,
         by_original_slug=by_original_slug,
-        toolkits=list(toolkits) if toolkits else None,  # type: ignore[arg-type]
+        toolkits=list(toolkits) if toolkits else None,
     )

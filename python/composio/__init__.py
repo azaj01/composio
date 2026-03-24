@@ -1,7 +1,7 @@
 from .__version__ import __version__
+from .core.models.custom_tool import ExperimentalToolkit
 from .core.models.custom_tool_types import (
     CustomTool,
-    CustomToolkit,
     SessionContext,
 )
 from .core.models.tool_router_session_files import RemoteFile
@@ -31,7 +31,7 @@ from .sdk import Composio
 __all__ = (
     "Composio",
     "CustomTool",
-    "CustomToolkit",
+    "ExperimentalToolkit",
     "RemoteFile",
     "SessionContext",
     "ConnectionExpiredEvent",

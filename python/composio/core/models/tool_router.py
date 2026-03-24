@@ -25,7 +25,6 @@ from composio.core.models.custom_tool import (
 )
 from composio.core.models.custom_tool_types import (
     CustomTool,
-    CustomToolkit,
     CustomToolsMap,
 )
 from composio.core.models.tool_router_session import ToolRouterSession
@@ -195,7 +194,7 @@ class ToolRouterExperimentalConfig(te.TypedDict, total=False):
 
     assistive_prompt: ToolRouterAssistivePromptConfig
     custom_tools: t.List["CustomTool"]
-    custom_toolkits: t.List[t.Union["CustomToolkit", "ExperimentalToolkit"]]
+    custom_toolkits: t.List["ExperimentalToolkit"]
 
 
 @dataclass
@@ -712,9 +711,7 @@ class ToolRouter(Resource, t.Generic[TTool, TToolCollection]):
         # Map SDK's experimental.assistive_prompt.user_timezone to API's
         # experimental.assistive_prompt_config.user_timezone
         custom_tools: t.Optional[t.List[CustomTool]] = None
-        custom_toolkits: t.Optional[
-            t.List[t.Union[CustomToolkit, ExperimentalToolkit]]
-        ] = None
+        custom_toolkits: t.Optional[t.List[ExperimentalToolkit]] = None
 
         if experimental is not None:
             experimental_payload: t.Dict[str, t.Any] = {}

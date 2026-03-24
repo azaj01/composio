@@ -3,7 +3,6 @@ from .connected_accounts import ConnectedAccounts
 from .custom_tool import ExperimentalAPI, ExperimentalToolkit
 from .custom_tool_types import (
     CustomTool,
-    CustomToolkit,
     ProxyExecuteResponse,
     RegisteredCustomTool,
     RegisteredCustomToolkit,
@@ -34,7 +33,6 @@ __all__ = [
     "ConnectionState",
     "ConnectionStatusEnum",
     "CustomTool",
-    "CustomToolkit",
     "ExperimentalAPI",
     "ExperimentalToolkit",
     "MCP",

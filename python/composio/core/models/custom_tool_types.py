@@ -97,20 +97,6 @@ class CustomTool:
     output_schema: t.Optional[t.Dict[str, t.Any]] = None
 
 
-@dataclass(frozen=True)
-class CustomToolkit:
-    """Custom toolkit definition returned from ``composio.experimental.Toolkit()``.
-
-    Pass to ``composio.create(user_id, experimental={"custom_toolkits": [...]})``
-    to bind to a session.
-    """
-
-    slug: str
-    name: str
-    description: str
-    tools: t.Tuple[CustomTool, ...]
-
-
 # ────────────────────────────────────────────────────────────────
 # Internal routing map types
 # ────────────────────────────────────────────────────────────────
@@ -131,7 +117,7 @@ class CustomToolsMap:
 
     by_final_slug: t.Dict[str, CustomToolsMapEntry] = field(default_factory=dict)
     by_original_slug: t.Dict[str, CustomToolsMapEntry] = field(default_factory=dict)
-    toolkits: t.Optional[t.List[CustomToolkit]] = None
+    toolkits: t.Optional[t.List[t.Any]] = None
 
 
 # ────────────────────────────────────────────────────────────────
