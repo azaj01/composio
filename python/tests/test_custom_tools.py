@@ -538,8 +538,10 @@ class TestToolRouterSessionCustomTools:
     def test_execute_local(self, mock_session_deps):
         s = _session(mock_session_deps)
         result = s.execute("GREP", arguments={"pattern": "x"})
-        assert result["error"] is None
-        assert result["log_id"] == ""
+        # Returns SessionExecuteResponse — same type as remote
+        assert result.error is None
+        assert result.log_id == ""
+        assert result.data["matches"] == ["x"]
         mock_session_deps["client"].tool_router.session.execute.assert_not_called()
 
     def test_execute_remote(self, mock_session_deps):
