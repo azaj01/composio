@@ -126,7 +126,7 @@ Use `session.customTools()` to list registered tools (with their final `LOCAL_` 
 
 ## Programmatic execution
 
-Use `session.execute()` to run custom tools directly, outside of an agent loop. Accepts the original slug — no `LOCAL_` prefix needed (e.g. `session.execute("GET_USER_PROFILE")`). Custom tools execute in-process; remote tools are sent to the backend automatically.
+Use `session.execute()` to run custom tools directly, outside of an agent loop (e.g. `session.execute("GET_USER_PROFILE")`). Custom tools execute in-process; remote tools are sent to the backend automatically.
 
 ## SessionContext
 
