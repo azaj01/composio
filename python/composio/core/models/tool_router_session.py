@@ -478,8 +478,9 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         full slug (e.g. "LOCAL_GREP"). Custom tools are executed in-process;
         remote tools are sent to the Composio backend.
 
-        Returns a dict with ``data``, ``error``, and ``log_id`` keys for both
-        local and remote execution paths.
+        Local tools return a dict with ``data``, ``error``, ``log_id`` keys.
+        Remote tools return the ``SessionExecuteResponse`` model from the client
+        (backward-compatible — supports attribute access like ``result.data``).
         """
         # Check if this is a local tool (by original or final slug)
         entry = find_custom_tool(self._custom_tools_map, tool_slug)
@@ -491,17 +492,12 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
                 "log_id": "",
             }
 
-        # Remote execution — normalize to dict for consistent return type
-        response = self._client.tool_router.session.execute(
+        # Remote execution — return client model as-is for backward compat
+        return self._client.tool_router.session.execute(
             session_id=self.session_id,
             tool_slug=tool_slug,
             arguments=arguments if arguments is not None else omit,
         )
-        return {
-            "data": response.data if hasattr(response, "data") else {},
-            "error": response.error if hasattr(response, "error") else None,
-            "log_id": response.log_id if hasattr(response, "log_id") else "",
-        }
 
     def custom_tools(
         self, *, toolkit: t.Optional[str] = None

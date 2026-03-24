@@ -553,10 +553,9 @@ class TestToolRouterSessionCustomTools:
         s = _session(mock_session_deps)
         result = s.execute("GMAIL_SEND_EMAIL", arguments={"to": "a@b.com"})
         mock_session_deps["client"].tool_router.session.execute.assert_called_once()
-        # Remote returns same dict shape as local
-        assert isinstance(result, dict)
-        assert result["data"] == {"sent": True}
-        assert result["log_id"] == "log_123"
+        # Remote returns client model as-is (backward compat, supports attribute access)
+        assert result.data == {"sent": True}
+        assert result.log_id == "log_123"
 
     def test_custom_tools_list(self, mock_session_deps):
         s = _session(mock_session_deps)
