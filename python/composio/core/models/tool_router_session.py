@@ -305,7 +305,7 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         # Build local result entries matching backend format
         local_entries = []
         for idx, result in local_results:
-            entry: t.Dict[str, t.Any] = {
+            local_entry: t.Dict[str, t.Any] = {
                 "response": {
                     "successful": result["successful"],
                     "data": result["data"],
@@ -313,9 +313,9 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
                 "tool_slug": parsed[idx]["tool_slug"],
             }
             if result.get("error"):
-                entry["response"]["error"] = result["error"]
-                entry["error"] = result["error"]
-            local_entries.append(entry)
+                local_entry["response"]["error"] = result["error"]
+                local_entry["error"] = result["error"]
+            local_entries.append(local_entry)
 
         # Merge: remotes first, locals appended (matches TS behavior —
         # remote results may be stored in workbench with index references)

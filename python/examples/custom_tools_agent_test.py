@@ -1,7 +1,9 @@
 """
-Custom Tools Agent Test — decorator API with OpenAI Agents SDK.
+Custom Tools — local tools + proxy execute with OpenAI Agents SDK.
 
-Tests all custom tool patterns end-to-end through a real LLM agent loop.
+Shows how to create custom tools that run in-process alongside
+remote Composio tools. Includes all three patterns: standalone,
+extension (Gmail proxy), and custom toolkit.
 
 Usage:
     COMPOSIO_API_KEY=... OPENAI_API_KEY=... python examples/custom_tools_agent_test.py
@@ -21,7 +23,7 @@ from composio_openai_agents import OpenAIAgentsProvider
 composio = Composio(provider=OpenAIAgentsProvider())
 
 
-# ── 1. Standalone tool ──────────────────────────────────────────
+# ── 1. Standalone tool — slug/name/description inferred from function ──
 
 
 class UserLookupInput(BaseModel):
@@ -43,7 +45,40 @@ def get_user(input: UserLookupInput, ctx):
     return user
 
 
-# ── 2. Extension tool (Gmail proxy) ─────────────────────────────
+# slug = GET_USER (from function name)
+# name = Get User (humanized)
+# description = "Look up an internal user by ID..." (from docstring)
+
+
+# ── 2. Standalone tool with overrides ──────────────────────────────────
+
+
+class GreetInput(BaseModel):
+    name: str = Field(description="Name to greet")
+    style: str = Field(default="friendly", description="Greeting style")
+
+
+@composio.experimental.tool(
+    slug="GREET_V2",
+    name="Greeting Generator",
+    description="Generate a personalized greeting message in different styles.",
+)
+def greet(input: GreetInput, ctx):
+    """This docstring is ignored because description= is set above."""
+    greetings = {
+        "friendly": f"Hey {input.name}! Great to see you!",
+        "formal": f"Dear {input.name}, I hope this message finds you well.",
+        "casual": f"Yo {input.name}, what's up?",
+    }
+    return {"message": greetings.get(input.style, f"Hello {input.name}!")}
+
+
+# slug = GREET_V2 (overridden, not GREET)
+# name = Greeting Generator (overridden, not Greet)
+# description = "Generate a personalized..." (overridden, not docstring)
+
+
+# ── 3. Extension tool — inherits Gmail auth via ctx.proxy_execute() ────
 
 
 class DraftInput(BaseModel):
@@ -72,12 +107,7 @@ def create_draft(input: DraftInput, ctx):
     return {"draft_id": data["id"], "to": input.to, "subject": input.subject}
 
 
-# ── 3. Custom toolkit ───────────────────────────────────────────
-
-
-class SetRoleInput(BaseModel):
-    user_id: str = Field(description="User ID")
-    role: str = Field(description="New role (admin, developer, viewer)")
+# ── 4. Custom toolkit — groups related tools under one namespace ───────
 
 
 role_manager = composio.experimental.Toolkit(
@@ -87,13 +117,24 @@ role_manager = composio.experimental.Toolkit(
 )
 
 
+class SetRoleInput(BaseModel):
+    user_id: str = Field(description="User ID")
+    role: str = Field(description="New role (admin, developer, viewer)")
+
+
 @role_manager.tool()
 def set_role(input: SetRoleInput, ctx):
     """Set a user's role. Returns confirmation."""
     return {"user_id": input.user_id, "role": input.role, "updated": True}
 
 
-# ── Agent test runner ───────────────────────────────────────────
+@role_manager.tool(name="List All Roles")
+def list_roles(input: UserLookupInput, ctx):
+    """List available roles for a user."""
+    return {"roles": ["admin", "developer", "viewer"], "current": "admin"}
+
+
+# ── Agent ──────────────────────────────────────────────────────────────
 
 
 async def run_test(prompt, test_name):
@@ -106,7 +147,7 @@ async def run_test(prompt, test_name):
         toolkits=["gmail", "weathermap"],
         manage_connections=True,
         experimental={
-            "custom_tools": [get_user, create_draft],
+            "custom_tools": [get_user, greet, create_draft],
             "custom_toolkits": [role_manager],
         },
     )
@@ -133,48 +174,26 @@ async def run_test(prompt, test_name):
 
 
 async def main():
+    tests = [
+        ("Look up user-2", "Standalone (inferred slug/name)"),
+        ("Generate a formal greeting for Alice", "Standalone (overridden slug/name)"),
+        ("Set user-1 role to developer", "Toolkit tool"),
+        ("Look up user-1 and set their role to viewer", "Mixed local tools"),
+        ("What is the weather in Tokyo?", "Remote (weathermap)"),
+        (
+            'Draft an email to bob@acme.com with subject "Test" and body "Hello!"',
+            "Gmail proxy (extends_toolkit)",
+        ),
+        (
+            "Look up user-1, draft them an email saying hi, include weather in SF",
+            "Mixed all paths",
+        ),
+    ]
+
     results = []
-    results.append(
-        ("Standalone (GET_USER)", await run_test("Look up user-2", "Standalone"))
-    )
-    results.append(
-        (
-            "Toolkit (SET_ROLE)",
-            await run_test("Set user-1 role to developer", "Toolkit"),
-        )
-    )
-    results.append(
-        (
-            "Mixed local",
-            await run_test(
-                "Look up user-1 and set their role to viewer", "Mixed local"
-            ),
-        )
-    )
-    results.append(
-        (
-            "Remote (weathermap)",
-            await run_test("What is the weather in Tokyo?", "Remote"),
-        )
-    )
-    results.append(
-        (
-            "Gmail proxy",
-            await run_test(
-                'Create a Gmail draft to bob@acme.com with subject "Test" and body "Hello!"',
-                "Gmail proxy",
-            ),
-        )
-    )
-    results.append(
-        (
-            "Mixed all",
-            await run_test(
-                "Look up user-1, draft them an email saying hi, include weather in SF",
-                "Mixed all",
-            ),
-        )
-    )
+    for prompt, name in tests:
+        ok = await run_test(prompt, name)
+        results.append((name, ok))
 
     print(f"\n{'=' * 60}")
     print("RESULTS")
