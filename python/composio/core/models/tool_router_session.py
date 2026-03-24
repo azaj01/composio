@@ -12,6 +12,12 @@ import typing as t
 from concurrent.futures import ThreadPoolExecutor
 
 from composio_client import omit
+from composio_client.types.tool_router.session_execute_response import (
+    SessionExecuteResponse,
+)
+from composio_client.types.tool_router.session_proxy_execute_response import (
+    SessionProxyExecuteResponse,
+)
 
 from composio.client import HttpClient
 from composio.core.models.connected_accounts import ConnectionRequest
@@ -22,7 +28,6 @@ from composio.core.models.custom_tool_execution import (
 from composio.core.models.custom_tool_types import (
     CustomToolsMap,
     CustomToolsMapEntry,
-    ProxyExecuteResponse,
     RegisteredCustomTool,
     RegisteredCustomToolkit,
 )
@@ -470,7 +475,7 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         tool_slug: str,
         *,
         arguments: t.Optional[t.Dict[str, t.Any]] = None,
-    ) -> t.Any:
+    ) -> SessionExecuteResponse:
         """
         Execute a tool within the session.
 
@@ -574,11 +579,8 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         method: t.Literal["GET", "POST", "PUT", "DELETE", "PATCH"],
         body: t.Any = None,
         parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
-    ) -> ProxyExecuteResponse:
+    ) -> SessionProxyExecuteResponse:
         """Proxy an API call through Composio's auth layer.
-
-        The backend resolves the connected account from the toolkit
-        within the session.
 
         :param toolkit: Composio toolkit slug (e.g. 'gmail', 'github')
         :param endpoint: API endpoint URL

@@ -12,6 +12,10 @@ from dataclasses import dataclass, field
 import typing_extensions as te
 from pydantic import BaseModel
 
+from composio_client.types.tool_router.session_proxy_execute_response import (
+    SessionProxyExecuteResponse,
+)
+
 from composio.core.models.tools import ToolExecutionResponse
 
 # ────────────────────────────────────────────────────────────────
@@ -69,7 +73,7 @@ class SessionContext(te.Protocol):
         method: t.Literal["GET", "POST", "PUT", "DELETE", "PATCH"],
         body: t.Any = None,
         parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
-    ) -> ProxyExecuteResponse:
+    ) -> SessionProxyExecuteResponse:
         """Proxy API calls through Composio's auth layer."""
         ...
 
@@ -145,22 +149,3 @@ class RegisteredCustomToolkit:
     name: str
     description: str
     tools: t.List[RegisteredCustomTool]
-
-
-# ────────────────────────────────────────────────────────────────
-# Proxy execute response types
-# ────────────────────────────────────────────────────────────────
-
-
-class ProxyExecuteBinaryData(te.TypedDict, total=False):
-    content_type: str
-    size: int
-    url: str
-    expires_at: t.Optional[str]
-
-
-class ProxyExecuteResponse(te.TypedDict, total=False):
-    status: int
-    data: t.Optional[t.Any]
-    headers: t.Optional[t.Dict[str, str]]
-    binary_data: ProxyExecuteBinaryData

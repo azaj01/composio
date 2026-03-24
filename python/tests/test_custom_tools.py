@@ -501,7 +501,7 @@ class TestSessionContextImpl:
         result = ctx.proxy_execute(
             toolkit="gmail", endpoint="https://example.com", method="GET"
         )
-        assert result["status"] == 200
+        assert result.status == 200
 
 
 # ────────────────────────────────────────────────────────────────

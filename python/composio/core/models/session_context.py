@@ -10,16 +10,16 @@ import typing as t
 
 from composio_client import omit
 from composio_client.types.tool_router.session_proxy_execute_params import Parameter
+from composio_client.types.tool_router.session_proxy_execute_response import (
+    SessionProxyExecuteResponse,
+)
 
 from composio.client import HttpClient
 from composio.core.models.custom_tool_execution import (
     execute_custom_tool,
     find_custom_tool,
 )
-from composio.core.models.custom_tool_types import (
-    CustomToolsMap,
-    ProxyExecuteResponse,
-)
+from composio.core.models.custom_tool_types import CustomToolsMap
 from composio.core.models.tools import ToolExecutionResponse, _serialize_arguments
 from composio.exceptions import ValidationError
 
@@ -37,7 +37,7 @@ def proxy_execute_impl(
     method: t.Literal["GET", "POST", "PUT", "DELETE", "PATCH"],
     body: t.Any = None,
     parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
-) -> ProxyExecuteResponse:
+) -> SessionProxyExecuteResponse:
     """Shared proxy execute implementation used by SessionContextImpl and ToolRouterSession."""
     # Client-side validation (matches TS SessionProxyExecuteParamsSchema)
     if not toolkit:
@@ -71,7 +71,7 @@ def proxy_execute_impl(
                 )
             )
 
-    response = client.tool_router.session.proxy_execute(
+    return client.tool_router.session.proxy_execute(
         session_id=session_id,
         toolkit_slug=toolkit,
         endpoint=endpoint,
@@ -79,22 +79,6 @@ def proxy_execute_impl(
         body=body if body is not None else omit,
         parameters=api_params if api_params else omit,
     )
-
-    result: ProxyExecuteResponse = {
-        "status": int(response.status),
-        "data": response.data,
-        "headers": response.headers,
-    }
-
-    if response.binary_data:
-        result["binary_data"] = {
-            "content_type": response.binary_data.content_type,
-            "size": int(response.binary_data.size),
-            "url": response.binary_data.url,
-            "expires_at": response.binary_data.expires_at,
-        }
-
-    return result
 
 
 class SessionContextImpl:
@@ -160,7 +144,7 @@ class SessionContextImpl:
         method: t.Literal["GET", "POST", "PUT", "DELETE", "PATCH"],
         body: t.Any = None,
         parameters: t.Optional[t.List[t.Dict[str, t.Any]]] = None,
-    ) -> ProxyExecuteResponse:
+    ) -> SessionProxyExecuteResponse:
         """Proxy API calls through Composio's auth layer."""
         return proxy_execute_impl(
             self._client,

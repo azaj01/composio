@@ -3,7 +3,6 @@ from .connected_accounts import ConnectedAccounts
 from .custom_tool import ExperimentalAPI, ExperimentalToolkit
 from .custom_tool_types import (
     CustomTool,
-    ProxyExecuteResponse,
     RegisteredCustomTool,
     RegisteredCustomToolkit,
     SessionContext,
@@ -36,7 +35,6 @@ __all__ = [
     "ExperimentalAPI",
     "ExperimentalToolkit",
     "MCP",
-    "ProxyExecuteResponse",
     "RegisteredCustomTool",
     "RegisteredCustomToolkit",
     "RemoteFile",
