@@ -71,12 +71,6 @@ const CORE_COMMANDS: ReadonlyArray<DetailedCommand> = [
       { name: '-d, --data', description: 'Request body as raw text, JSON, @file, or - for stdin' },
     ],
   },
-  {
-    name: 'artifacts',
-    description: 'Inspect the cwd-scoped session artifact directory and history.',
-    usage: 'artifacts cwd',
-    options: [{ name: 'cwd', description: 'Print the current session artifact directory path' }],
-  },
 ];
 
 // ── Developer commands ─────────────────────────────────────────────────
@@ -554,7 +548,6 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       { name: '--table', description: 'Show compact table rows' },
     ],
   },
-
   // ── Manage commands ───────────────────────────────────────────────────
 
   'manage toolkits list': {
