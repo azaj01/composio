@@ -9,7 +9,7 @@ Custom tools are experimental. The `experimental_` prefix and `experimental` ses
 </Callout>
 
 <Callout type="info">
-Custom tools work with **native tools** (`session.tools()`). MCP support is coming soon.
+Custom tools work with **native tools** (`session.tools()`). MCP support is coming soon — custom tools are not available via the MCP server URL yet.
 </Callout>
 
 Custom tools let you define tools that run in-process alongside remote Composio tools within a session. There are three patterns:
@@ -103,6 +103,74 @@ const session = await composio.create("user_1", {
 
 const tools = await session.tools();
 ```
+
+## How custom tools work with meta tools
+
+Custom tools integrate seamlessly with Composio's meta tools:
+
+- **`COMPOSIO_SEARCH_TOOLS`** automatically includes your custom tools and toolkits in search results, giving slight priority to tools that don't require auth or are already connected
+- **`COMPOSIO_GET_TOOL_SCHEMAS`** returns schemas for custom tools alongside remote tools — the agent sees them as first-class tools
+- **`COMPOSIO_MULTI_EXECUTE_TOOL`** intelligently splits execution — custom tools run in-process while remote tools go to the backend, results are merged transparently
+- **`COMPOSIO_MANAGE_CONNECTIONS`** handles auth for extension tools — if a tool extends `gmail`, the agent can prompt the user to connect Gmail just like any other toolkit
+- Custom tools are **not supported in Workbench** — the LLM is made aware of this and will not attempt to use them there
+
+## Tool naming
+
+Tool names exposed to the agent are automatically prefixed with `LOCAL_` and the toolkit name (if any):
+
+- `GET_USER_PROFILE` → `LOCAL_GET_USER_PROFILE`
+- `SEND_PROMO_EMAIL` → `LOCAL_SEND_PROMO_EMAIL`
+- `ASSIGN_ROLE` in `USER_MANAGEMENT` toolkit → `LOCAL_USER_MANAGEMENT_ASSIGN_ROLE`
+
+Slugs cannot start with `LOCAL_` or `COMPOSIO_` — these prefixes are reserved.
+
+## Verifying registration
+
+After creating a session, use `session.customTools()` and `session.customToolkits()` to verify your tools were registered correctly:
+
+```typescript
+import { Composio, experimental_createTool, experimental_createToolkit } from "@composio/core";
+import { z } from "zod/v3";
+
+const getUserProfile = experimental_createTool("GET_USER_PROFILE", { name: "Get user profile", description: "Retrieve profile", inputParams: z.object({}), execute: async (_input, ctx) => ({}) });
+const userManagement = experimental_createToolkit("USER_MANAGEMENT", { name: "User management", description: "Manage roles", tools: [experimental_createTool("ASSIGN_ROLE", { name: "Assign role", description: "Assign role", inputParams: z.object({ user_id: z.string() }), execute: async () => ({}) })] });
+const composio = new Composio({ apiKey: "your_api_key" });
+const session = await composio.create("user_1", { experimental: { customTools: [getUserProfile], customToolkits: [userManagement] } });
+// ---cut---
+// List all registered custom tools (with their final LOCAL_ prefixed slugs)
+const registeredTools = session.customTools();
+console.log(registeredTools);
+// [{ slug: "LOCAL_GET_USER_PROFILE", name: "Get user profile", ... }]
+
+// Filter by toolkit
+const managementTools = session.customTools({ toolkit: "USER_MANAGEMENT" });
+
+// List registered custom toolkits
+const registeredToolkits = session.customToolkits();
+console.log(registeredToolkits);
+// [{ slug: "USER_MANAGEMENT", name: "User management", tools: [...] }]
+```
+
+## Programmatic execution
+
+Use `session.execute()` to run custom tools directly — outside of an agent loop. You can use the original slug without the `LOCAL_` prefix:
+
+```typescript
+import { Composio, experimental_createTool } from "@composio/core";
+import { z } from "zod/v3";
+
+const getUserProfile = experimental_createTool("GET_USER_PROFILE", { name: "Get user profile", description: "Retrieve profile", inputParams: z.object({}), execute: async (_input, ctx) => ({ name: "Alice", tier: "enterprise" }) });
+const composio = new Composio({ apiKey: "your_api_key" });
+const session = await composio.create("user_1", { experimental: { customTools: [getUserProfile] } });
+// ---cut---
+// Both work — original slug or full LOCAL_ prefixed slug
+const result = await session.execute("GET_USER_PROFILE");
+const same = await session.execute("LOCAL_GET_USER_PROFILE");
+
+console.log(result.data); // { name: "Alice", tier: "enterprise" }
+```
+
+Custom tools execute in-process. Remote Composio tools are sent to the backend automatically.
 
 ## SessionContext
 
