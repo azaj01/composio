@@ -391,12 +391,6 @@ class ExperimentalToolkit:
                 output_params=output_params,
                 # No extends_toolkit for toolkit tools
             )
-            if custom_tool.extends_toolkit:
-                raise ValidationError(
-                    f'experimental.Toolkit.tool: tool "{custom_tool.slug}" has '
-                    f"extends_toolkit set. Tools in a custom toolkit must not "
-                    f"use extends_toolkit — they inherit the toolkit identity."
-                )
             _validate_slug_length(
                 custom_tool.slug, self.slug, f'experimental.Toolkit("{self.slug}").tool'
             )

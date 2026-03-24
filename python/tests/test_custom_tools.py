@@ -700,3 +700,44 @@ class TestMultiExecuteRouting:
         )
         assert result["successful"] is False
         assert "1 out of 2" in result["error"]
+
+    def test_remote_null_data_does_not_crash(self, grep_tool):
+        s = self._make_session(grep_tool)
+        tm = MagicMock()
+        remote = {"data": None, "error": None, "successful": True}
+        tm._wrap_execute_tool_for_tool_router.return_value = lambda slug, args: remote
+        result = s._route_multi_execute(
+            {
+                "tools": [
+                    {"tool_slug": "GREP", "arguments": {"pattern": "x"}},
+                    {"tool_slug": "REMOTE", "arguments": {}},
+                ]
+            },
+            tm,
+        )
+        assert result["successful"] is True
+        assert result["data"]["results"][0]["tool_slug"] == "GREP"
+
+    def test_remote_batch_error_without_item_errors_uses_batch_message(self, grep_tool):
+        s = self._make_session(grep_tool)
+        tm = MagicMock()
+        remote = {
+            "data": None,
+            "error": "Remote batch failed before per-tool results were produced",
+            "successful": False,
+        }
+        tm._wrap_execute_tool_for_tool_router.return_value = lambda slug, args: remote
+        result = s._route_multi_execute(
+            {
+                "tools": [
+                    {"tool_slug": "GREP", "arguments": {"pattern": "x"}},
+                    {"tool_slug": "REMOTE", "arguments": {}},
+                ]
+            },
+            tm,
+        )
+        assert result["successful"] is False
+        assert (
+            result["error"]
+            == "Remote batch failed before per-tool results were produced"
+        )

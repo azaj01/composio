@@ -169,6 +169,10 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         Applies before_execute/after_execute modifiers around the overall
         COMPOSIO_MULTI_EXECUTE_TOOL call, consistent with the standard path.
         """
+        backend_execute = tools_model._wrap_execute_tool_for_tool_router(
+            session_id=self.session_id,
+            modifiers=modifiers,
+        )
 
         def routing_execute(slug: str, arguments: t.Dict) -> t.Dict:
             if slug == COMPOSIO_MULTI_EXECUTE_TOOL:
@@ -204,10 +208,7 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
 
                 return result
             # Non-multi-execute meta tools always go to backend
-            return tools_model._wrap_execute_tool_for_tool_router(
-                session_id=self.session_id,
-                modifiers=modifiers,
-            )(slug, arguments)
+            return backend_execute(slug, arguments)
 
         return routing_execute
 
@@ -323,26 +324,35 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
             local_entries.append(local_entry)
 
         # Merge: remotes first, locals appended (matches TS behavior —
-        # remote results may be stored in workbench with index references)
-        remote_data = (remote_result or {}).get("data", {})
+        # remote results may have workbench index references)
+        remote_data_raw = (remote_result or {}).get("data")
+        remote_data = remote_data_raw if isinstance(remote_data_raw, dict) else {}
         remote_results_list = (
-            remote_data.get("results", []) if isinstance(remote_data, dict) else []
+            remote_data.get("results", []) if isinstance(remote_data.get("results"), list) else []
         )
         all_results = [
             {**entry, "index": i}
             for i, entry in enumerate([*remote_results_list, *local_entries])
         ]
 
-        has_any_error = any(r.get("error") for _, r in local_results) or bool(
-            remote_result and remote_result.get("error")
+        remote_error = (
+            str(remote_result.get("error"))
+            if remote_result and remote_result.get("error") is not None
+            else None
         )
+        has_any_error = any(r.get("error") for _, r in local_results) or bool(remote_error)
         failed = sum(1 for r in all_results if r.get("error"))
+        error_message = None
+        if has_any_error:
+            error_message = (
+                remote_error
+                if remote_error is not None and failed == 0
+                else f"{failed} out of {len(all_results)} tools failed"
+            )
 
         return {
             "data": {**remote_data, "results": all_results},
-            "error": f"{failed} out of {len(all_results)} tools failed"
-            if has_any_error
-            else None,
+            "error": error_message,
             "successful": not has_any_error,
         }
 

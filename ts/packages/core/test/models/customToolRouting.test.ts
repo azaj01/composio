@@ -671,6 +671,28 @@ describe('ToolRouterSession execution routing', () => {
       expect(result.successful).toBe(true);
     });
 
+    it('should handle remote null data without crashing', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: null,
+        error: null,
+        successful: true,
+      });
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'x' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      expect(result.successful).toBe(true);
+      expect(result.data.results).toHaveLength(1);
+      expect(findResult(result.data.results, 'LOCAL_GET_USER_CONTEXT')).toBeDefined();
+    });
+
     it('should surface errors from both local and remote tools', async () => {
       const throwingHandle = createCustomTool('MIXED_THROWER', {
         name: 'Throws in batch',
@@ -723,6 +745,27 @@ describe('ToolRouterSession execution routing', () => {
 
       expect(result.successful).toBe(false);
       expect(result.error).toContain('2 out of 4');
+    });
+
+    it('should preserve batch-level remote errors when no per-tool remote results exist', async () => {
+      const { executeFn, toolsInstance } = await setupMultiExecute(mockClient, [customToolHandle]);
+
+      toolsInstance.executeMetaTool.mockResolvedValueOnce({
+        data: null,
+        error: 'Remote batch failed before per-tool results were produced',
+        successful: false,
+      });
+
+      const result = await executeFn('COMPOSIO_MULTI_EXECUTE_TOOL', {
+        tools: [
+          { tool_slug: 'LOCAL_GET_USER_CONTEXT', arguments: { category: 'x' } },
+          { tool_slug: 'GMAIL_SEND_EMAIL', arguments: { to: 'a@b.com' } },
+        ],
+        sync_response_to_workbench: false,
+      });
+
+      expect(result.successful).toBe(false);
+      expect(result.error).toBe('Remote batch failed before per-tool results were produced');
     });
 
     it('should forward to backend when tools array is empty', async () => {
