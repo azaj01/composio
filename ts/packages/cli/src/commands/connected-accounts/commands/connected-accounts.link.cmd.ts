@@ -170,7 +170,7 @@ const runConnectedAccountsLink = (params: {
       if (Option.isSome(params.authConfig)) {
         return yield* Effect.fail(
           new Error(
-            'Top-level `composio link` is consumer-only and does not accept `--auth-config`. Use `composio manage connected-accounts link --auth-config ...` for developer-scoped usage.'
+            'Top-level `composio link` is consumer-only and does not accept `--auth-config`. Use `composio dev connected-accounts link --auth-config ...` for developer-scoped usage.'
           )
         );
       }
@@ -179,8 +179,8 @@ const runConnectedAccountsLink = (params: {
     if (Option.isSome(params.toolkit) && Option.isSome(params.authConfig)) {
       yield* ui.log.error(
         'Cannot use both <toolkit> and --auth-config. Choose one:\n' +
-          '  Tool Router: composio manage connected-accounts link <toolkit>\n' +
-          '  Legacy:      composio manage connected-accounts link --auth-config <id>'
+          '  Tool Router: composio dev connected-accounts link <toolkit>\n' +
+          '  Legacy:      composio dev connected-accounts link --auth-config <id>'
       );
       return;
     }
@@ -190,8 +190,8 @@ const runConnectedAccountsLink = (params: {
         params.rootOnly
           ? 'Missing argument. Provide a toolkit slug:\n  composio link github'
           : 'Missing argument. Provide a toolkit slug or --auth-config:\n' +
-              '  composio manage connected-accounts link github\n' +
-              '  composio manage connected-accounts link --auth-config "ac_..."'
+              '  composio dev connected-accounts link github\n' +
+              '  composio dev connected-accounts link --auth-config "ac_..."'
       );
       return;
     }
@@ -251,7 +251,7 @@ const runConnectedAccountsLink = (params: {
                 extractMessage(error) ?? `Failed to create link for auth config "${authConfigId}".`;
               yield* ui.log.error(message);
               yield* ui.log.step(
-                'Browse available auth configs:\n> composio manage auth-configs list'
+                'Browse available auth configs:\n> composio dev auth-configs list'
               );
               return Option.none();
             })
@@ -329,7 +329,7 @@ const runConnectedAccountsLink = (params: {
               extractMessage(error) ?? `Failed to create link for toolkit "${toolkitSlug}".`;
             yield* ui.log.error(message);
             yield* Effect.logDebug('Link error:', error);
-            yield* ui.log.step('Browse available toolkits:\n> composio manage toolkits list');
+            yield* ui.log.step('Browse available toolkits:\n> composio dev toolkits list');
             return Option.none();
           })
         )

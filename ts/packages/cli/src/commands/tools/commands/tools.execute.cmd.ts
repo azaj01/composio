@@ -117,11 +117,11 @@ const parseArguments = (raw: string) =>
     return parsed as Record<string, unknown>;
   });
 
-const connectionTips = (toolSlug: string, surface: 'root' | 'manage' | 'dev') => {
+const connectionTips = (toolSlug: string, surface: 'root' | 'dev') => {
   const toolkit = toolkitFromToolSlug(toolSlug);
   const executeStep =
     surface === 'dev'
-      ? commandHintStep('Retry', 'dev.execute', {
+      ? commandHintStep('Retry', 'dev.playgroundExecute', {
           slug: toolSlug,
           userId: '<user-id>',
           data: '...',
@@ -133,7 +133,7 @@ const connectionTips = (toolSlug: string, surface: 'root' | 'manage' | 'dev') =>
   return [
     commandHintStep(
       'Link the toolkit first',
-      surface === 'dev' ? 'manage.connectedAccounts.link' : 'root.link',
+      surface === 'dev' ? 'dev.connectedAccounts.link' : 'root.link',
       surface === 'dev' ? { toolkit, userId: '<user-id>' } : { toolkit }
     ),
     executeStep.replace('Retry:', 'Then retry:'),
@@ -258,7 +258,7 @@ const emitExecuteFailureTelemetry = (params: {
   readonly toolSlug: string;
   readonly args: Record<string, unknown>;
   readonly error: unknown;
-  readonly surface: 'root' | 'manage' | 'dev';
+  readonly surface: 'root' | 'dev';
   readonly projectMode: 'consumer' | 'developer';
   readonly stage: 'schema_fetch' | 'dry_run' | 'validation' | 'execution';
   readonly mappedError?: ReturnType<typeof mapComposioError>;
@@ -343,7 +343,7 @@ export const showToolsExecuteInputHelp = (toolSlug: string) =>
           handleHttpServerError(ui, {
             fallbackMessage: `Tool "${toolSlug}" not found.`,
             hint: [
-              commandHintStep('Browse available toolkits', 'manage.toolkits.list'),
+              commandHintStep('Browse available toolkits', 'dev.toolkits.list'),
               commandHintStep('Then list tools', 'root.tools.list'),
             ].join('\n'),
             fallbackValue: Option.none(),
@@ -376,7 +376,7 @@ const handleExecutionError = (
   context: {
     toolSlug: string;
     args: Record<string, unknown>;
-    surface: 'root' | 'manage' | 'dev';
+    surface: 'root' | 'dev';
     projectMode: 'consumer' | 'developer';
     stage: 'schema_fetch' | 'dry_run' | 'validation' | 'execution';
   }
@@ -593,7 +593,7 @@ type RunToolsExecuteParams = {
   data: Option.Option<string>;
   userId: Option.Option<string>;
   projectName: Option.Option<string>;
-  surface: 'root' | 'manage' | 'dev';
+  surface: 'root' | 'dev';
   projectMode: 'consumer' | 'developer';
   getSchema: boolean;
   dryRun: boolean;
@@ -753,7 +753,7 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
 
 const runConnectedToolkitFailFast = (params: {
   readonly slug: string;
-  readonly surface: 'root' | 'manage' | 'dev';
+  readonly surface: 'root' | 'dev';
   readonly ui: TerminalUI;
   readonly resolvedProject: ResolvedExecuteContext['resolvedProject'];
   readonly resolvedUserId: string;
@@ -851,7 +851,7 @@ const runConnectedToolkitFailFast = (params: {
 // eslint-disable-next-line max-lines-per-function
 const runExecuteWithSpinner = (params: {
   readonly slug: string;
-  readonly surface: 'root' | 'manage' | 'dev';
+  readonly surface: 'root' | 'dev';
   readonly projectMode: 'consumer' | 'developer';
   readonly dryRun: boolean;
   readonly ui: TerminalUI;
@@ -1166,7 +1166,7 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
 const parseParallelExecuteArgs = (
   args: ReadonlyArray<string>,
   config: {
-    readonly surface: 'root' | 'manage' | 'dev';
+    readonly surface: 'root' | 'dev';
     readonly projectMode: 'consumer' | 'developer';
     readonly allowUserId: boolean;
     readonly allowProjectName: boolean;
@@ -1312,17 +1312,7 @@ const isParallelExecuteCommand = (argv: ReadonlyArray<string>) => {
       allowProjectName: false,
     };
   }
-  if (args[0] === 'manage' && args[1] === 'tools' && args[2] === 'execute') {
-    return {
-      matched: args.includes('--parallel') || args.includes('-p'),
-      tail: args.slice(3),
-      surface: 'manage' as const,
-      projectMode: 'consumer' as const,
-      allowUserId: true,
-      allowProjectName: true,
-    };
-  }
-  if (args[0] === 'dev' && args[1] === 'execute') {
+  if (args[0] === 'dev' && args[1] === 'playground-execute') {
     return {
       matched: args.includes('--parallel') || args.includes('-p'),
       tail: args.slice(2),
@@ -1572,70 +1562,6 @@ export const runParallelToolsExecuteFromArgv = (argv: ReadonlyArray<string>) => 
     catch: error => (error instanceof Error ? error : new Error(String(error))),
   }).pipe(Effect.flatMap(runParallelToolsExecuteFromParsed));
 };
-
-export const toolsCmd$Execute = Command.make(
-  'execute',
-  {
-    slug,
-    data,
-    userId,
-    projectName,
-    getSchema,
-    dryRun,
-    skipConnectionCheck,
-    skipToolParamsCheck,
-    noVerify,
-  },
-  ({
-    slug,
-    data,
-    userId,
-    projectName,
-    getSchema,
-    dryRun,
-    skipConnectionCheck,
-    skipToolParamsCheck,
-    noVerify,
-  }) =>
-    runToolsExecute({
-      slug,
-      data,
-      userId,
-      projectName,
-      surface: 'manage',
-      projectMode: 'consumer',
-      getSchema,
-      dryRun,
-      skipConnectionCheck,
-      skipToolParamsCheck,
-      noVerify,
-    })
-).pipe(
-  Command.withDescription(
-    [
-      'Execute a tool by slug. Validates inputs against cached schemas and checks connections',
-      'automatically — just try it and it will tell you what to fix.',
-      '',
-      'Examples:',
-      '  composio execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute --parallel GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", subject: "Hello", body: "World" }\' GITHUB_CREATE_ISSUE -d \'{ owner: "acme", repo: "app", title: "Bug report", body: "Steps to reproduce..." }\'',
-      "  composio execute GMAIL_SEND_EMAIL --dry-run -d '{ ... }'   Preview without executing",
-      '  composio execute GMAIL_SEND_EMAIL --get-schema              Fetch and print the input schema',
-      '',
-      'Flags:',
-      '  -p, --parallel              Execute repeated TOOL_SLUG -d <json> groups concurrently',
-      '  --skip-connection-check     Skip the linked-account check',
-      '  --skip-tool-params-check    Skip input validation against cached schema',
-      '  --no-verify                 Skip both checks above',
-      '',
-      'See also:',
-      '  composio search "<query>"               Find tool slugs by use case',
-      '  composio tools info <slug>              Schema summary with jq hints',
-      '  composio link <toolkit>                 Connect an account for a toolkit',
-    ].join('\n')
-  )
-);
-
 export const rootToolsCmd$Execute = Command.make(
   'execute',
   { slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, noVerify },
@@ -1680,7 +1606,7 @@ export const rootToolsCmd$Execute = Command.make(
 );
 
 export const devToolsCmd$Execute = Command.make(
-  'execute',
+  'playground-execute',
   {
     slug,
     data,
@@ -1719,15 +1645,15 @@ export const devToolsCmd$Execute = Command.make(
 ).pipe(
   Command.withDescription(
     [
-      'Execute a tool with your playground test user id against your developer project auth configs.',
+      'Test tool executions against playground users using your developer project auth configs.',
       'Uses --user-id when provided, otherwise falls back to your local or global playground test user id.',
       'Arguments are validated against cached tool schemas in `~/.composio/tool_definitions/` when available.',
       '',
       'Examples:',
-      '  composio dev execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio dev execute --parallel GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", subject: "Hello", body: "World" }\' GITHUB_CREATE_ISSUE -d \'{ owner: "acme", repo: "app", title: "Bug report", body: "Steps to reproduce..." }\'',
-      '  composio dev execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio dev execute GMAIL_SEND_EMAIL --get-schema',
+      '  composio dev playground-execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
+      '  composio dev playground-execute --parallel GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", subject: "Hello", body: "World" }\' GITHUB_CREATE_ISSUE -d \'{ owner: "acme", repo: "app", title: "Bug report", body: "Steps to reproduce..." }\'',
+      '  composio dev playground-execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
+      '  composio dev playground-execute GMAIL_SEND_EMAIL --get-schema',
     ].join('\n')
   )
 );
