@@ -1,7 +1,7 @@
 import { Args, Command, Options } from '@effect/cli';
 import { Effect, Option, Schedule } from 'effect';
+import type { Composio as RawComposioClient } from '@composio/client';
 import open from 'open';
-import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { ComposioUserContext } from 'src/services/user-context';
 import { TerminalUI } from 'src/services/terminal-ui';
 import { requireAuth } from 'src/effects/require-auth';
@@ -14,6 +14,7 @@ import {
   formatResolveCommandProjectError,
 } from 'src/services/command-project';
 import { invalidateConsumerConnectedToolkitsCache } from 'src/services/consumer-short-term-cache';
+import { appendCliSessionHistory } from 'src/services/cli-session-artifacts';
 
 const toolkit = Args.text({ name: 'toolkit' }).pipe(
   Args.withDescription('Toolkit slug to link (e.g. "github", "gmail")'),
@@ -47,7 +48,7 @@ const noWait = Options.boolean('no-wait').pipe(
 
 const waitForActiveConnection = (
   ui: TerminalUI,
-  repo: ComposioToolkitsRepository,
+  client: RawComposioClient,
   connectedAccountId: string,
   redirectUrl: string,
   noBrowser: boolean
@@ -83,7 +84,9 @@ const waitForActiveConnection = (
     yield* ui.useMakeSpinner('Waiting for authentication...', spinner =>
       Effect.retry(
         Effect.gen(function* () {
-          const account = yield* repo.getConnectedAccount(connectedAccountId);
+          const account = yield* Effect.tryPromise(() =>
+            client.connectedAccounts.retrieve(connectedAccountId)
+          );
           if (account.status === 'ACTIVE') {
             return account;
           }
@@ -159,7 +162,6 @@ const runConnectedAccountsLink = (params: {
     if (!(yield* requireAuth)) return;
 
     const ui = yield* TerminalUI;
-    const repo = yield* ComposioToolkitsRepository;
     const clientSingleton = yield* ComposioClientSingleton;
     const projectContext = yield* ProjectContext;
     const userContext = yield* ComposioUserContext;
@@ -168,7 +170,7 @@ const runConnectedAccountsLink = (params: {
       if (Option.isSome(params.authConfig)) {
         return yield* Effect.fail(
           new Error(
-            'Top-level `composio link` is consumer-only and does not accept `--auth-config`. Use `composio manage connected-accounts link --auth-config ...` for developer-scoped usage.'
+            'Top-level `composio link` is consumer-only and does not accept `--auth-config`. Use `composio dev connected-accounts link --auth-config ...` for developer-scoped usage.'
           )
         );
       }
@@ -177,8 +179,8 @@ const runConnectedAccountsLink = (params: {
     if (Option.isSome(params.toolkit) && Option.isSome(params.authConfig)) {
       yield* ui.log.error(
         'Cannot use both <toolkit> and --auth-config. Choose one:\n' +
-          '  Tool Router: composio manage connected-accounts link <toolkit>\n' +
-          '  Legacy:      composio manage connected-accounts link --auth-config <id>'
+          '  Tool Router: composio dev connected-accounts link <toolkit>\n' +
+          '  Legacy:      composio dev connected-accounts link --auth-config <id>'
       );
       return;
     }
@@ -188,8 +190,8 @@ const runConnectedAccountsLink = (params: {
         params.rootOnly
           ? 'Missing argument. Provide a toolkit slug:\n  composio link github'
           : 'Missing argument. Provide a toolkit slug or --auth-config:\n' +
-              '  composio manage connected-accounts link github\n' +
-              '  composio manage connected-accounts link --auth-config "ac_..."'
+              '  composio dev connected-accounts link github\n' +
+              '  composio dev connected-accounts link --auth-config "ac_..."'
       );
       return;
     }
@@ -249,7 +251,7 @@ const runConnectedAccountsLink = (params: {
                 extractMessage(error) ?? `Failed to create link for auth config "${authConfigId}".`;
               yield* ui.log.error(message);
               yield* ui.log.step(
-                'Browse available auth configs:\n> composio manage auth-configs list'
+                'Browse available auth configs:\n> composio dev auth-configs list'
               );
               return Option.none();
             })
@@ -278,7 +280,7 @@ const runConnectedAccountsLink = (params: {
           )
         );
       } else {
-        yield* waitForActiveConnection(ui, repo, connId, redirectUrl, params.noBrowser);
+        yield* waitForActiveConnection(ui, client, connId, redirectUrl, params.noBrowser);
       }
       return;
     }
@@ -327,7 +329,7 @@ const runConnectedAccountsLink = (params: {
               extractMessage(error) ?? `Failed to create link for toolkit "${toolkitSlug}".`;
             yield* ui.log.error(message);
             yield* Effect.logDebug('Link error:', error);
-            yield* ui.log.step('Browse available toolkits:\n> composio manage toolkits list');
+            yield* ui.log.step('Browse available toolkits:\n> composio dev toolkits list');
             return Option.none();
           })
         )
@@ -357,8 +359,32 @@ const runConnectedAccountsLink = (params: {
           2
         )
       );
+      yield* appendCliSessionHistory({
+        orgId: resolvedProject.projectType === 'CONSUMER' ? resolvedProject.orgId : undefined,
+        consumerUserId:
+          resolvedProject.projectType === 'CONSUMER' ? resolvedProject.consumerUserId : undefined,
+        entry: {
+          command: 'link',
+          status: 'pending',
+          toolkit: toolkitSlug,
+          connectedAccountId: connAccountId,
+          redirectUrl,
+        },
+      }).pipe(Effect.catchAll(() => Effect.void));
     } else {
-      yield* waitForActiveConnection(ui, repo, connAccountId, redirectUrl, params.noBrowser);
+      yield* waitForActiveConnection(ui, client, connAccountId, redirectUrl, params.noBrowser);
+      yield* appendCliSessionHistory({
+        orgId: resolvedProject.projectType === 'CONSUMER' ? resolvedProject.orgId : undefined,
+        consumerUserId:
+          resolvedProject.projectType === 'CONSUMER' ? resolvedProject.consumerUserId : undefined,
+        entry: {
+          command: 'link',
+          status: 'active',
+          toolkit: toolkitSlug,
+          connectedAccountId: connAccountId,
+          redirectUrl,
+        },
+      }).pipe(Effect.catchAll(() => Effect.void));
     }
   });
 
@@ -378,11 +404,16 @@ export const connectedAccountsCmd$Link = Command.make(
 ).pipe(
   Command.withDescription(
     [
-      'Link an external account via OAuth redirect.',
+      'Connect an external account (GitHub, Gmail, Slack, etc.) so tools can act on your behalf.',
+      'Opens a browser for OAuth authorization and waits for confirmation.',
       '',
-      'Related:',
-      '  composio search "<query>"',
-      "  composio execute <slug> -d '{}'",
+      'Examples:',
+      '  composio link github',
+      '  composio link gmail --no-browser          Print the auth URL instead of opening it',
+      '',
+      'See also:',
+      '  composio search "<query>"                 Find tools to use after linking',
+      "  composio execute <slug> -d '{ ... }'      Execute a tool with your connected account",
     ].join('\n')
   )
 );
@@ -403,11 +434,16 @@ export const rootConnectedAccountsCmd$Link = Command.make(
 ).pipe(
   Command.withDescription(
     [
-      'Link an external account via OAuth redirect.',
+      'Connect an external account (GitHub, Gmail, Slack, etc.) so tools can act on your behalf.',
+      'Opens a browser for OAuth authorization and waits for confirmation.',
       '',
-      'Related:',
-      '  composio search "<query>"',
-      "  composio execute <slug> -d '{}'",
+      'Examples:',
+      '  composio link github',
+      '  composio link gmail --no-browser          Print the auth URL instead of opening it',
+      '',
+      'See also:',
+      '  composio search "<query>"                 Find tools to use after linking',
+      "  composio execute <slug> -d '{ ... }'      Execute a tool with your connected account",
     ].join('\n')
   )
 );

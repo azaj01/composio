@@ -10,12 +10,16 @@ import { whoamiCmd } from './whoami.cmd';
 import { loginCmd } from './login.cmd';
 import { logoutCmd } from './logout.cmd';
 import { runCmd } from './run.cmd';
+import { proxyCmd } from './proxy.cmd';
+import { artifactsCmd } from './artifacts.cmd';
 import { installCmd } from './install.cmd';
 import { generateCmd } from './generate/generate.cmd';
-import { manageCmd } from './manage/manage.cmd';
 import { devCmd } from './dev.cmd';
-import { showToolsExecuteInputHelp } from './tools/commands/tools.execute.cmd';
-import { printRootHelp } from './root-help';
+import {
+  runParallelToolsExecuteFromArgv,
+  showToolsExecuteInputHelp,
+} from './tools/commands/tools.execute.cmd';
+import { printRootHelp, matchSubcommandHelp, printSubcommandHelp } from './root-help';
 import { rootToolsCmd$Search } from './tools/commands/tools.search.cmd';
 import { rootToolsCmd$Execute } from './tools/commands/tools.execute.cmd';
 import { rootToolsCmd } from './tools/tools.cmd';
@@ -24,6 +28,7 @@ import { renderCommandHintGraph } from 'src/services/command-hints';
 import { resetRuntimeDebugFlags, setRuntimeDebugFlags } from 'src/services/runtime-debug-flags';
 import { ComposioUserContext } from 'src/services/user-context';
 import { TerminalUI } from 'src/services/terminal-ui';
+import { detectMaster } from 'src/services/master-detector';
 import {
   formatResolveCommandProjectError,
   resolveCommandProject,
@@ -37,6 +42,8 @@ const $cmd = $defaultCmd.pipe(
     loginCmd,
     logoutCmd,
     runCmd,
+    proxyCmd,
+    artifactsCmd,
     installCmd,
     devCmd,
     rootToolsCmd,
@@ -44,7 +51,6 @@ const $cmd = $defaultCmd.pipe(
     rootConnectedAccountsCmd$Link,
     rootToolsCmd$Execute,
     generateCmd,
-    manageCmd,
   ])
 );
 export const rootCommand = $cmd;
@@ -52,13 +58,13 @@ export const rootCommand = $cmd;
 const parseExecuteInputHelpSlug = (argv: ReadonlyArray<string>): string | undefined => {
   const args = argv.slice(2);
   const isRootExecute = args[0] === 'execute';
-  const isManageExecute = args[0] === 'manage' && args[1] === 'tools' && args[2] === 'execute';
-  if (!isRootExecute && !isManageExecute) return undefined;
+  const isDevExecute = args[0] === 'dev' && args[1] === 'playground-execute';
+  if (!isRootExecute && !isDevExecute) return undefined;
 
   const hasHelp = args.includes('--help') || args.includes('-h');
   if (!hasHelp) return undefined;
 
-  const tail = isRootExecute ? args.slice(1) : args.slice(3);
+  const tail = isRootExecute ? args.slice(1) : args.slice(2);
   for (let i = 0; i < tail.length; i += 1) {
     const token = tail[i];
     if (!token) continue;
@@ -78,6 +84,8 @@ const parseExecuteInputHelpSlug = (argv: ReadonlyArray<string>): string | undefi
     if (
       token === '--data' ||
       token === '-d' ||
+      token === '--parallel' ||
+      token === '-p' ||
       token === '--user-id' ||
       token === '--project-name'
     ) {
@@ -87,6 +95,8 @@ const parseExecuteInputHelpSlug = (argv: ReadonlyArray<string>): string | undefi
     if (
       token.startsWith('--data=') ||
       token.startsWith('-d=') ||
+      token === '--parallel' ||
+      token === '-p' ||
       token.startsWith('--user-id=') ||
       token.startsWith('--project-name=')
     ) {
@@ -118,6 +128,7 @@ const normalizeHiddenDebugFlags = (argv: ReadonlyArray<string>): ReadonlyArray<s
   const args = argv.slice(2);
   let perfDebug: boolean | undefined;
   let toolDebug: boolean | undefined;
+  let acpOnly: boolean | undefined;
 
   for (const arg of args) {
     if (arg === '--perf-debug') {
@@ -144,6 +155,18 @@ const normalizeHiddenDebugFlags = (argv: ReadonlyArray<string>): ReadonlyArray<s
       toolDebug = true;
       continue;
     }
+    if (arg === '--acp-only') {
+      acpOnly = true;
+      continue;
+    }
+    if (arg === '--acp-only=false') {
+      acpOnly = false;
+      continue;
+    }
+    if (arg === '--acp-only=true') {
+      acpOnly = true;
+      continue;
+    }
     normalized.push(arg);
   }
 
@@ -152,6 +175,11 @@ const normalizeHiddenDebugFlags = (argv: ReadonlyArray<string>): ReadonlyArray<s
     ...(perfDebug === undefined ? {} : { perfDebug }),
     ...(toolDebug === undefined ? {} : { toolDebug }),
   });
+  if (acpOnly === undefined) {
+    delete process.env.COMPOSIO_RUN_ACP_ONLY;
+  } else {
+    process.env.COMPOSIO_RUN_ACP_ONLY = acpOnly ? '1' : '0';
+  }
 
   return normalized;
 };
@@ -171,6 +199,11 @@ const isDebugApiInfo = (argv: ReadonlyArray<string>): boolean => {
   return args.length === 2 && args[0] === 'debug' && args[1] === 'api-info';
 };
 
+const isDebugWhoIsMyMaster = (argv: ReadonlyArray<string>): boolean => {
+  const args = argv.slice(2);
+  return args.length === 2 && args[0] === 'debug' && args[1] === 'who-is-my-master';
+};
+
 export const runWithConfig = Effect.gen(function* () {
   const version = yield* getVersion;
   const run = Command.run($cmd, {
@@ -183,6 +216,14 @@ export const runWithConfig = Effect.gen(function* () {
     const normalizedArgv = normalizeHiddenDebugFlags(normalizeVersionShortFlag(argv));
     if (isRootHelp(normalizedArgv)) {
       return printRootHelp();
+    }
+    const subHelp = matchSubcommandHelp(normalizedArgv);
+    if (subHelp) {
+      return printSubcommandHelp(subHelp);
+    }
+    const parallelExecute = runParallelToolsExecuteFromArgv(normalizedArgv);
+    if (parallelExecute) {
+      return parallelExecute;
     }
     if (isGenerateGraph(normalizedArgv)) {
       return Effect.sync(() => {
@@ -225,6 +266,11 @@ export const runWithConfig = Effect.gen(function* () {
             )}\n`
           );
         });
+      });
+    }
+    if (isDebugWhoIsMyMaster(normalizedArgv)) {
+      return Effect.sync(() => {
+        process.stdout.write(`${JSON.stringify({ master: detectMaster() }, null, 2)}\n`);
       });
     }
     const executeHelpSlug = parseExecuteInputHelpSlug(normalizedArgv);

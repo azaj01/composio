@@ -1,14 +1,12 @@
 import { Args, Command, Options } from '@effect/cli';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import util from 'node:util';
 import { Effect, Option, Either, Exit, Fiber, Cause } from 'effect';
-import { FileSystem } from '@effect/platform';
-import { parse as parseJsonWithComments } from 'comment-json';
 import { encodingForModel } from 'js-tiktoken';
 import { redact } from 'src/ui/redact';
-import { readStdin, readStdinIfPiped } from 'src/effects/read-stdin';
+import { parseJsonIsh } from 'src/utils/parse-json-ish';
+import { toolkitFromToolSlug } from 'src/utils/toolkit-from-tool-slug';
 import { requireAuth } from 'src/effects/require-auth';
+import { resolveOptionalTextInput } from 'src/effects/resolve-optional-text-input';
 import {
   getCachedToolInputDefinition,
   getOrFetchToolInputDefinition,
@@ -19,19 +17,18 @@ import {
   validateToolInputArgumentsWithDefinition,
 } from 'src/services/tool-input-validation';
 import { TerminalUI } from 'src/services/terminal-ui';
-import {
-  ActionExecuteConnectedAccountNotFoundError,
-  ToolsExecutor,
-} from 'src/services/tools-executor';
+import { ToolsExecutor } from 'src/services/tools-executor';
 import type { ToolExecuteParams, ToolExecuteResponse } from 'src/services/tools-executor';
 import { ComposioToolkitsRepository } from 'src/services/composio-clients';
 import { ComposioUserContext } from 'src/services/user-context';
 import { ProjectContext } from 'src/services/project-context';
+import { trackCliEventEffect } from 'src/analytics/dispatch';
 import {
-  extractApiErrorDetails,
-  extractMessage,
-  extractSlug,
-} from 'src/utils/api-error-extraction';
+  getToolExecuteFailedEvent,
+  getToolExecuteToolNotFoundEvent,
+  getToolExecuteValidationFailedEvent,
+  isMaybeToolNotFoundError,
+} from 'src/analytics/events';
 import { handleHttpServerError } from 'src/effects/handle-http-error';
 import { formatToolInputParameters } from '../format';
 import { ComposioClientSingleton } from 'src/services/composio-clients';
@@ -45,6 +42,16 @@ import {
   getFreshConsumerConnectedToolkitsFromCache,
   refreshConsumerConnectedToolkitsCache,
 } from 'src/services/consumer-short-term-cache';
+import {
+  appendCliSessionHistory,
+  resolveCliSessionArtifacts,
+} from 'src/services/cli-session-artifacts';
+import { storeCliSessionArtifact } from 'src/services/cli-session-artifacts';
+import {
+  ComposioNoActiveConnectionError,
+  mapComposioError,
+  normalizeCliError,
+} from 'src/services/composio-error-overrides';
 
 const slug = Args.text({ name: 'slug' }).pipe(
   Args.withDescription('Tool slug (e.g. "GITHUB_CREATE_ISSUE")')
@@ -66,58 +73,37 @@ const projectName = Options.text('project-name').pipe(
   Options.withDescription('Developer project name override for this command')
 );
 
-const getSchema = Options.boolean('get-schema').pipe(Options.withDefault(false));
-const dryRun = Options.boolean('dry-run').pipe(Options.withDefault(false));
+const getSchema = Options.boolean('get-schema').pipe(
+  Options.withDescription('Fetch and print the raw tool schema without executing'),
+  Options.withDefault(false)
+);
+const dryRun = Options.boolean('dry-run').pipe(
+  Options.withDescription('Validate and preview the tool call without executing'),
+  Options.withDefault(false)
+);
 const skipConnectionCheck = Options.boolean('skip-connection-check').pipe(
+  Options.withDescription('Skip the connected-account check'),
   Options.withDefault(false)
 );
 const skipToolParamsCheck = Options.boolean('skip-tool-params-check').pipe(
+  Options.withDescription('Skip input validation against cached schema'),
   Options.withDefault(false)
 );
-const noVerify = Options.boolean('no-verify').pipe(Options.withDefault(false));
+const skipChecks = Options.boolean('skip-checks').pipe(
+  Options.withDescription('Skip both connection and input validation checks'),
+  Options.withDefault(false)
+);
 
 const resolveInput = (input: Option.Option<string>) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-
-    if (Option.isSome(input)) {
-      const value = input.value.trim();
-      if (value === '-') {
-        return yield* readStdin;
-      }
-      if (value.startsWith('@')) {
-        const filePath = value.slice(1).trim();
-        if (!filePath) {
-          return yield* Effect.fail(new Error('Missing file path after "@" in --data'));
-        }
-        return yield* fs.readFileString(filePath, 'utf-8');
-      }
-      return value;
-    }
-
-    const piped = yield* readStdinIfPiped;
-    if (Option.isSome(piped)) {
-      return piped.value;
-    }
-
+  resolveOptionalTextInput(input, {
     // Default to empty object when no data provided (e.g. tools with no required args)
-    return '{}';
+    missingValue: '{}',
   });
 
 const parseArguments = (raw: string) =>
   Effect.gen(function* () {
     const parsed = yield* Effect.try({
-      try: () => {
-        try {
-          return JSON.parse(raw) as unknown;
-        } catch {
-          try {
-            return parseJsonWithComments(raw, undefined, true) as unknown;
-          } catch {
-            return Function(`"use strict"; return (${raw});`)() as unknown;
-          }
-        }
-      },
+      try: () => parseJsonIsh(raw),
       catch: () =>
         new Error(
           'Invalid JSON input. Provide JSON or a JS-style object literal, e.g. -d \'{ "key": "value" }\''
@@ -131,19 +117,11 @@ const parseArguments = (raw: string) =>
     return parsed as Record<string, unknown>;
   });
 
-const toolkitFromToolSlug = (toolSlug: string): string | undefined => {
-  const idx = toolSlug.indexOf('_');
-  if (idx <= 0) return toolSlug.toLowerCase();
-  const prefix = toolSlug.slice(0, idx).toLowerCase();
-  if (prefix === 'composio') return undefined;
-  return prefix;
-};
-
-const connectionTips = (toolSlug: string, surface: 'root' | 'manage' | 'dev') => {
+const connectionTips = (toolSlug: string, surface: 'root' | 'dev') => {
   const toolkit = toolkitFromToolSlug(toolSlug);
   const executeStep =
     surface === 'dev'
-      ? commandHintStep('Retry', 'dev.execute', {
+      ? commandHintStep('Retry', 'dev.playgroundExecute', {
           slug: toolSlug,
           userId: '<user-id>',
           data: '...',
@@ -155,22 +133,11 @@ const connectionTips = (toolSlug: string, surface: 'root' | 'manage' | 'dev') =>
   return [
     commandHintStep(
       'Link the toolkit first',
-      surface === 'dev' ? 'manage.connectedAccounts.link' : 'root.link',
+      surface === 'dev' ? 'dev.connectedAccounts.link' : 'root.link',
       surface === 'dev' ? { toolkit, userId: '<user-id>' } : { toolkit }
     ),
     executeStep.replace('Retry:', 'Then retry:'),
   ].join('\n');
-};
-
-const isNoActiveConnectionError = (details: { code?: number; slug?: string } | undefined) =>
-  details?.code === 4302 || details?.slug === 'ToolRouterV2_NoActiveConnection';
-
-const noActiveConnectionMessage = (toolSlug: string) => {
-  const toolkit = toolkitFromToolSlug(toolSlug);
-  if (!toolkit) {
-    return 'No active connection found for this tool call. Link the required toolkit/app, then retry.';
-  }
-  return `No active connection found for toolkit "${toolkit}". Run \`composio link ${toolkit}\`, then retry.`;
 };
 
 const ciRedactReplacer = (_key: string, value: unknown): unknown => {
@@ -227,85 +194,138 @@ type StoredExecuteOutputSummary = {
 const serializeExecuteOutput = (result: unknown): string =>
   JSON.stringify(result, ciRedactReplacer, 2);
 
-const randomToken = (length = 16) => crypto.randomUUID().replace(/-/g, '').slice(0, length);
+const persistLargeExecuteOutput = (toolSlug: string, json: string, sharedDirectory?: string) =>
+  Effect.gen(function* () {
+    const outputFilePath = yield* storeCliSessionArtifact({
+      contents: json,
+      name: `${toolSlug}_OUTPUT`,
+      extension: 'json',
+      directoryPath: sharedDirectory?.trim() || process.env.COMPOSIO_RUN_OUTPUT_DIR?.trim(),
+    });
 
-const persistLargeExecuteOutput = (json: string): StoredExecuteOutputSummary => {
-  const directoryPath = path.join('/tmp/composio', randomToken());
-  const outputHash = randomToken();
-  const outputFilePath = path.join(directoryPath, `output-${outputHash}.json`);
-  fs.mkdirSync(directoryPath, { recursive: true });
-  fs.writeFileSync(outputFilePath, json, 'utf8');
-
-  return {
-    successful: true,
-    error: null,
-    logId: '',
-    storedInFile: true,
-    tokenCount: getExecuteOutputEncoder().encode(json).length,
-    outputFilePath,
-  };
-};
+    return {
+      successful: true,
+      error: null,
+      logId: '',
+      storedInFile: true,
+      tokenCount: getExecuteOutputEncoder().encode(json).length,
+      outputFilePath,
+    } satisfies StoredExecuteOutputSummary;
+  });
 
 const perfDebugEpoch = Date.now();
 const perfDebugLog = (label: string, details: Record<string, unknown> = {}) => {
   if (!isPerfDebugEnabled()) return;
-  console.error(
+  process.stderr.write(
     `[perf] ${JSON.stringify({
       phase: 'event',
       label,
       elapsedMs: Date.now() - perfDebugEpoch,
       ...details,
-    })}`
+    })}\n`
   );
 };
 const toolDebugLog = (label: string, details: Record<string, unknown> = {}) => {
   if (!isToolDebugEnabled()) return;
-  console.error(`[tool-debug] ${JSON.stringify({ label, ...details })}`);
+  process.stderr.write(`[tool-debug] ${JSON.stringify({ label, ...details })}\n`);
 };
 
-const prepareExecuteOutput = (result: ToolExecuteResponse) => {
-  const json = serializeExecuteOutput(result);
-  const tokenCount = getExecuteOutputEncoder().encode(json).length;
-  if (tokenCount <= EXECUTE_INLINE_OUTPUT_TOKEN_THRESHOLD) {
+const prepareExecuteOutput = (
+  toolSlug: string,
+  result: ToolExecuteResponse,
+  sharedDirectory?: string
+) =>
+  Effect.gen(function* () {
+    const json = serializeExecuteOutput(result);
+    const tokenCount = getExecuteOutputEncoder().encode(json).length;
+    if (tokenCount <= EXECUTE_INLINE_OUTPUT_TOKEN_THRESHOLD) {
+      return {
+        kind: 'inline' as const,
+        json,
+      };
+    }
+
     return {
-      kind: 'inline' as const,
-      json,
+      kind: 'file' as const,
+      summary: {
+        ...(yield* persistLargeExecuteOutput(toolSlug, json, sharedDirectory)),
+        logId: result.logId,
+      } satisfies StoredExecuteOutputSummary,
     };
-  }
+  });
 
-  return {
-    kind: 'file' as const,
-    summary: {
-      ...persistLargeExecuteOutput(json),
-      logId: result.logId,
-    } satisfies StoredExecuteOutputSummary,
-  };
-};
+const emitExecuteFailureTelemetry = (params: {
+  readonly toolSlug: string;
+  readonly args: Record<string, unknown>;
+  readonly error: unknown;
+  readonly surface: 'root' | 'dev';
+  readonly projectMode: 'consumer' | 'developer';
+  readonly stage: 'schema_fetch' | 'dry_run' | 'validation' | 'execution';
+  readonly mappedError?: ReturnType<typeof mapComposioError>;
+}) =>
+  Effect.gen(function* () {
+    const normalized = params.mappedError?.normalized ?? normalizeCliError(params.error);
 
-const normalizeError = (error: unknown): unknown => {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-
-  while (current && typeof current === 'object' && !seen.has(current)) {
-    seen.add(current);
-
-    if (current instanceof Error) {
-      return current;
+    if (normalized instanceof ToolInputValidationError) {
+      yield* trackCliEventEffect(
+        getToolExecuteValidationFailedEvent({
+          toolSlug: params.toolSlug,
+          args: params.args,
+          error: normalized,
+          surface: params.surface,
+          projectMode: params.projectMode,
+          stage: params.stage === 'dry_run' ? 'dry_run' : 'validation',
+        })
+      );
+      return;
     }
 
-    if ('error' in current) {
-      current = (current as { error?: unknown }).error;
-      continue;
-    }
-    if ('cause' in current) {
-      current = (current as { cause?: unknown }).cause;
-      continue;
-    }
-    break;
-  }
+    const mapped =
+      params.mappedError ??
+      mapComposioError({
+        error: params.error,
+        toolSlug: params.toolSlug,
+      });
+    const apiDetails = mapped.apiDetails;
+    const message = mapped.message;
+    const errorSlug = mapped.slugValue;
+    const status = apiDetails?.status;
+    const apiCode = apiDetails?.code;
+    const isNoConnectionError =
+      normalized instanceof ComposioNoActiveConnectionError || Boolean(mapped.override);
 
-  return current;
-};
+    const event = isMaybeToolNotFoundError({
+      message,
+      errorSlug,
+      status,
+    })
+      ? getToolExecuteToolNotFoundEvent({
+          toolSlug: params.toolSlug,
+          args: params.args,
+          surface: params.surface,
+          projectMode: params.projectMode,
+          stage: params.stage === 'validation' ? 'execution' : params.stage,
+          errorSlug,
+          status,
+          apiCode,
+          message,
+        })
+      : getToolExecuteFailedEvent({
+          toolSlug: params.toolSlug,
+          args: params.args,
+          surface: params.surface,
+          projectMode: params.projectMode,
+          stage: params.stage === 'validation' ? 'execution' : params.stage,
+          errorSlug,
+          status,
+          apiCode,
+          message,
+          errorName: normalized instanceof Error ? normalized.name : undefined,
+          isNoConnectionError,
+        });
+
+    yield* trackCliEventEffect(event);
+  });
 
 export const showToolsExecuteInputHelp = (toolSlug: string) =>
   Effect.gen(function* () {
@@ -323,7 +343,7 @@ export const showToolsExecuteInputHelp = (toolSlug: string) =>
           handleHttpServerError(ui, {
             fallbackMessage: `Tool "${toolSlug}" not found.`,
             hint: [
-              commandHintStep('Browse available toolkits', 'manage.toolkits.list'),
+              commandHintStep('Browse available toolkits', 'dev.toolkits.list'),
               commandHintStep('Then list tools', 'root.tools.list'),
             ].join('\n'),
             fallbackValue: Option.none(),
@@ -353,11 +373,26 @@ export const showToolsExecuteInputHelp = (toolSlug: string) =>
 const handleExecutionError = (
   ui: TerminalUI,
   error: unknown,
-  context: { toolSlug: string; surface: 'root' | 'manage' | 'dev' }
+  context: {
+    toolSlug: string;
+    args: Record<string, unknown>;
+    surface: 'root' | 'dev';
+    projectMode: 'consumer' | 'developer';
+    stage: 'schema_fetch' | 'dry_run' | 'validation' | 'execution';
+  }
 ) =>
   Effect.gen(function* () {
-    const normalized = normalizeError(error);
+    const mapped = mapComposioError({ error, toolSlug: context.toolSlug });
+    const normalized = mapped.normalized;
     if (normalized instanceof ToolInputValidationError) {
+      yield* emitExecuteFailureTelemetry({
+        toolSlug: context.toolSlug,
+        args: context.args,
+        error: normalized,
+        surface: context.surface,
+        projectMode: context.projectMode,
+        stage: context.stage,
+      });
       yield* ui.log.error(`Input validation failed for ${context.toolSlug}`);
       yield* ui.note(
         [`Schema: ${normalized.schemaPath}`, ...normalized.issues.map(issue => `- ${issue}`)].join(
@@ -368,48 +403,35 @@ const handleExecutionError = (
       return { error: normalized.message, slug: context.toolSlug };
     }
 
-    const connAccountDetails =
-      normalized instanceof ActionExecuteConnectedAccountNotFoundError
-        ? normalized.details
-        : undefined;
+    const apiDetails = mapped.apiDetails;
+    const slugValue = mapped.slugValue;
 
-    const apiDetails =
-      extractApiErrorDetails(error) ??
-      extractApiErrorDetails(normalized) ??
-      extractApiErrorDetails(connAccountDetails);
-    const slugValue = apiDetails?.slug ?? extractSlug(error) ?? extractSlug(connAccountDetails);
-    const noActiveConnection =
-      normalized instanceof ActionExecuteConnectedAccountNotFoundError ||
-      isNoActiveConnectionError(apiDetails);
-    const message = extractMessage(apiDetails) ?? extractMessage(normalized) ?? 'Unknown error';
+    yield* emitExecuteFailureTelemetry({
+      toolSlug: context.toolSlug,
+      args: context.args,
+      error,
+      surface: context.surface,
+      projectMode: context.projectMode,
+      stage: context.stage,
+      mappedError: mapped,
+    });
 
-    if (noActiveConnection) {
-      const rewrittenMessage = noActiveConnectionMessage(context.toolSlug);
-      yield* ui.log.error(rewrittenMessage);
+    if (normalized instanceof ComposioNoActiveConnectionError) {
+      yield* ui.log.error(mapped.message);
       if (toolkitFromToolSlug(context.toolSlug)) {
         yield* ui.note(connectionTips(context.toolSlug, context.surface), 'Tips');
       }
-      return { error: rewrittenMessage, slug: slugValue ?? context.toolSlug };
+      return { error: mapped.message, slug: slugValue ?? context.toolSlug };
     }
 
-    yield* ui.log.error(message);
+    yield* ui.log.error(mapped.message);
 
-    const detailsObject =
-      apiDetails ??
-      (normalized instanceof ActionExecuteConnectedAccountNotFoundError &&
-      normalized.details &&
-      typeof normalized.details === 'object'
-        ? (normalized.details as object)
-        : undefined);
+    const detailsObject = apiDetails;
     if (detailsObject) {
       yield* ui.note(formatUnknownObject(redactRequestId(detailsObject)), 'Error details');
     }
 
-    if (normalized instanceof ActionExecuteConnectedAccountNotFoundError) {
-      yield* ui.note(connectionTips(context.toolSlug, context.surface), 'Tips');
-    }
-
-    return { error: message, slug: slugValue };
+    return { error: mapped.message, slug: slugValue };
   });
 
 class ToolExecutionError {
@@ -571,14 +593,55 @@ type RunToolsExecuteParams = {
   data: Option.Option<string>;
   userId: Option.Option<string>;
   projectName: Option.Option<string>;
-  surface: 'root' | 'manage' | 'dev';
+  surface: 'root' | 'dev';
   projectMode: 'consumer' | 'developer';
   getSchema: boolean;
   dryRun: boolean;
   skipConnectionCheck: boolean;
   skipToolParamsCheck: boolean;
-  noVerify: boolean;
+  skipChecks: boolean;
 };
+
+type SharedRunToolsExecuteParams = Omit<RunToolsExecuteParams, 'slug' | 'data'>;
+
+type ParallelExecuteSpec = {
+  readonly slug: string;
+  readonly data: Option.Option<string>;
+};
+
+type ParsedParallelExecuteArgs = SharedRunToolsExecuteParams & {
+  readonly specs: ReadonlyArray<ParallelExecuteSpec>;
+};
+
+type ParallelExecuteResult =
+  | {
+      readonly slug: string;
+      readonly successful: true;
+      readonly dryRun: true;
+      readonly arguments: Record<string, unknown>;
+      readonly userId: string;
+      readonly schemaPath?: string;
+      readonly schemaVersion?: string | null;
+    }
+  | {
+      readonly slug: string;
+      readonly successful: true;
+      readonly version: string | null;
+      readonly schemaPath: string;
+      readonly inputSchema: Record<string, unknown>;
+    }
+  | ({
+      readonly slug: string;
+    } & ToolExecuteResponse)
+  | ({
+      readonly slug: string;
+    } & StoredExecuteOutputSummary)
+  | {
+      readonly slug: string;
+      readonly successful: false;
+      readonly error: string;
+      readonly logId?: string;
+    };
 
 type ResolvedExecuteContext = {
   readonly ui: TerminalUI;
@@ -592,6 +655,7 @@ type ResolvedExecuteContext = {
   readonly args: Record<string, unknown>;
   readonly resolvedUserId: string;
   readonly executeParams: ToolExecuteParams;
+  readonly executeOutputDir?: string;
 };
 
 const emitCachedSchema = (
@@ -634,7 +698,7 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
     const userContext = yield* ComposioUserContext;
     const projectContext = yield* ProjectContext;
 
-    const input = yield* resolveInput(params.data);
+    const input = (yield* resolveInput(params.data)) ?? '{}';
     const args = yield* parseArguments(input);
     const localProjectContext = yield* projectContext.resolve.pipe(
       Effect.catchAll(() => Effect.succeed(Option.none()))
@@ -662,6 +726,15 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
       orgId: resolvedProject.orgId,
       projectId: resolvedProject.projectId,
     });
+    const executeOutputDir =
+      process.env.COMPOSIO_RUN_OUTPUT_DIR?.trim() ||
+      Option.getOrUndefined(
+        yield* resolveCliSessionArtifacts({
+          orgId: resolvedProject.projectType === 'CONSUMER' ? resolvedProject.orgId : undefined,
+          consumerUserId:
+            resolvedProject.projectType === 'CONSUMER' ? resolvedProject.consumerUserId : undefined,
+        }).pipe(Effect.map(Option.map(artifacts => artifacts.directoryPath)))
+      );
 
     return {
       ui,
@@ -669,6 +742,7 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
       resolvedProject,
       args,
       resolvedUserId: resolvedUserId.value,
+      executeOutputDir,
       executeParams: {
         userId: resolvedUserId.value,
         arguments: args,
@@ -679,18 +753,18 @@ const resolveExecuteContext = (params: RunToolsExecuteParams) =>
 
 const runConnectedToolkitFailFast = (params: {
   readonly slug: string;
-  readonly surface: 'root' | 'manage' | 'dev';
+  readonly surface: 'root' | 'dev';
   readonly ui: TerminalUI;
   readonly resolvedProject: ResolvedExecuteContext['resolvedProject'];
   readonly resolvedUserId: string;
   readonly skipConnectionCheck: boolean;
-  readonly noVerify: boolean;
+  readonly skipChecks: boolean;
 }) =>
   Effect.gen(function* () {
-    if (params.skipConnectionCheck || params.noVerify) {
+    if (params.skipConnectionCheck || params.skipChecks) {
       perfDebugLog('execute.connected_toolkits.skipped', {
         slug: params.slug,
-        reason: params.noVerify ? 'no-verify' : 'skip-connection-check',
+        reason: params.skipChecks ? 'skip-checks' : 'skip-connection-check',
       });
       return;
     }
@@ -774,9 +848,11 @@ const runConnectedToolkitFailFast = (params: {
     }
   });
 
+// eslint-disable-next-line max-lines-per-function
 const runExecuteWithSpinner = (params: {
   readonly slug: string;
-  readonly surface: 'root' | 'manage' | 'dev';
+  readonly surface: 'root' | 'dev';
+  readonly projectMode: 'consumer' | 'developer';
   readonly dryRun: boolean;
   readonly ui: TerminalUI;
   readonly executor: ToolsExecutor;
@@ -784,11 +860,12 @@ const runExecuteWithSpinner = (params: {
   readonly args: Record<string, unknown>;
   readonly resolvedUserId: string;
   readonly executeParams: ToolExecuteParams;
+  readonly executeOutputDir?: string;
   readonly skipToolParamsCheck: boolean;
-  readonly noVerify: boolean;
+  readonly skipChecks: boolean;
 }) =>
   Effect.gen(function* () {
-    const verificationDisabled = params.noVerify || params.skipToolParamsCheck;
+    const verificationDisabled = params.skipChecks || params.skipToolParamsCheck;
     const cachedDefinition = verificationDisabled
       ? null
       : yield* getCachedToolInputDefinition(params.slug);
@@ -823,9 +900,35 @@ const runExecuteWithSpinner = (params: {
               (yield* getOrFetchToolInputDefinition(params.slug, {
                 orgId: params.resolvedProject.orgId,
                 projectId: params.resolvedProject.projectId,
-              })));
+              }).pipe(
+                Effect.tapError(error =>
+                  emitExecuteFailureTelemetry({
+                    toolSlug: params.slug,
+                    args: params.args,
+                    error,
+                    surface: params.surface,
+                    projectMode: params.projectMode,
+                    stage: 'dry_run',
+                  })
+                )
+              )));
           if (definition) {
-            yield* validateToolInputArgumentsWithDefinition(params.slug, params.args, definition);
+            yield* validateToolInputArgumentsWithDefinition(
+              params.slug,
+              params.args,
+              definition
+            ).pipe(
+              Effect.tapError(error =>
+                emitExecuteFailureTelemetry({
+                  toolSlug: params.slug,
+                  args: params.args,
+                  error,
+                  surface: params.surface,
+                  projectMode: params.projectMode,
+                  stage: 'dry_run',
+                })
+              )
+            );
           }
           const summary: DryRunSummary = {
             successful: true,
@@ -843,6 +946,22 @@ const runExecuteWithSpinner = (params: {
               : 'No tool was executed. Arguments were validated locally only.'
           );
           yield* params.ui.output(JSON.stringify(summary, ciRedactReplacer, 2));
+          yield* appendCliSessionHistory({
+            orgId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.orgId
+                : undefined,
+            consumerUserId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.consumerUserId
+                : undefined,
+            entry: {
+              command: 'execute',
+              status: 'dry-run',
+              slug: params.slug,
+              arguments: params.args,
+            },
+          }).pipe(Effect.catchAll(() => Effect.void));
           return;
         }
 
@@ -867,11 +986,31 @@ const runExecuteWithSpinner = (params: {
           yield* spinner.error();
           const summary = yield* handleExecutionError(params.ui, resultEither.left, {
             toolSlug: params.slug,
+            args: params.args,
             surface: params.surface,
+            projectMode: params.projectMode,
+            stage: 'execution',
           });
           yield* params.ui.output(
             JSON.stringify({ successful: false, ...summary }, ciRedactReplacer, 2)
           );
+          yield* appendCliSessionHistory({
+            orgId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.orgId
+                : undefined,
+            consumerUserId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.consumerUserId
+                : undefined,
+            entry: {
+              command: 'execute',
+              status: 'error',
+              slug: params.slug,
+              arguments: params.args,
+              error: summary.error,
+            },
+          }).pipe(Effect.catchAll(() => Effect.void));
           return yield* Effect.fail(new ToolExecutionError(summary.error));
         }
 
@@ -896,7 +1035,10 @@ const runExecuteWithSpinner = (params: {
 
           const summary = yield* handleExecutionError(params.ui, result.error ?? result, {
             toolSlug: params.slug,
+            args: params.args,
             surface: params.surface,
+            projectMode: params.projectMode,
+            stage: 'execution',
           });
           yield* params.ui.output(JSON.stringify(result, ciRedactReplacer, 2));
           return yield* Effect.fail(new ToolExecutionError(summary.error));
@@ -906,17 +1048,55 @@ const runExecuteWithSpinner = (params: {
           ? ` (logId: ${redact({ value: result.logId, prefix: 'log_' })})`
           : '';
         yield* spinner.stop(`Execution successful${logId}`);
-        const output = prepareExecuteOutput(result);
+        const output = yield* prepareExecuteOutput(params.slug, result, params.executeOutputDir);
         if (output.kind === 'file') {
           yield* params.ui.log.message(
             `Response stored in ${output.summary.outputFilePath} (${output.summary.tokenCount} tokens)`
           );
           yield* params.ui.output(JSON.stringify(output.summary, ciRedactReplacer, 2));
+          yield* appendCliSessionHistory({
+            orgId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.orgId
+                : undefined,
+            consumerUserId:
+              params.resolvedProject.projectType === 'CONSUMER'
+                ? params.resolvedProject.consumerUserId
+                : undefined,
+            entry: {
+              command: 'execute',
+              status: 'success',
+              slug: params.slug,
+              arguments: params.args,
+              storedInFile: true,
+              outputFilePath: output.summary.outputFilePath,
+              tokenCount: output.summary.tokenCount,
+              logId: result.logId,
+            },
+          }).pipe(Effect.catchAll(() => Effect.void));
           return;
         }
 
         yield* params.ui.log.message(`Response\n${output.json}`);
         yield* params.ui.output(output.json);
+        yield* appendCliSessionHistory({
+          orgId:
+            params.resolvedProject.projectType === 'CONSUMER'
+              ? params.resolvedProject.orgId
+              : undefined,
+          consumerUserId:
+            params.resolvedProject.projectType === 'CONSUMER'
+              ? params.resolvedProject.consumerUserId
+              : undefined,
+          entry: {
+            command: 'execute',
+            status: 'success',
+            slug: params.slug,
+            arguments: params.args,
+            storedInFile: false,
+            logId: result.logId,
+          },
+        }).pipe(Effect.catchAll(() => Effect.void));
       })
     );
   });
@@ -930,7 +1110,18 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
       const definition = yield* getOrFetchToolInputDefinition(params.slug, {
         orgId: context.resolvedProject.orgId,
         projectId: context.resolvedProject.projectId,
-      });
+      }).pipe(
+        Effect.tapError(error =>
+          emitExecuteFailureTelemetry({
+            toolSlug: params.slug,
+            args: context.args,
+            error,
+            surface: params.surface,
+            projectMode: params.projectMode,
+            stage: 'schema_fetch',
+          })
+        )
+      );
       yield* emitCachedSchema(context.ui, params.slug, definition);
       return;
     }
@@ -942,7 +1133,7 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
       resolvedProject: context.resolvedProject,
       resolvedUserId: context.resolvedUserId,
       skipConnectionCheck: params.skipConnectionCheck,
-      noVerify: params.noVerify,
+      skipChecks: params.skipChecks,
     });
     toolDebugLog('execute_params', {
       slug: params.slug,
@@ -959,6 +1150,7 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
     yield* runExecuteWithSpinner({
       slug: params.slug,
       surface: params.surface,
+      projectMode: params.projectMode,
       dryRun: params.dryRun,
       ui: context.ui,
       executor: context.executor,
@@ -967,76 +1159,413 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
       resolvedUserId: context.resolvedUserId,
       executeParams: context.executeParams,
       skipToolParamsCheck: params.skipToolParamsCheck,
-      noVerify: params.noVerify,
+      skipChecks: params.skipChecks,
     });
   });
 
-export const toolsCmd$Execute = Command.make(
-  'execute',
-  {
-    slug,
-    data,
-    userId,
-    projectName,
-    getSchema,
-    dryRun,
-    skipConnectionCheck,
-    skipToolParamsCheck,
-    noVerify,
-  },
-  ({
-    slug,
-    data,
-    userId,
-    projectName,
-    getSchema,
-    dryRun,
-    skipConnectionCheck,
-    skipToolParamsCheck,
-    noVerify,
-  }) =>
-    runToolsExecute({
-      slug,
-      data,
-      userId,
-      projectName,
-      surface: 'manage',
-      projectMode: 'consumer',
-      getSchema,
-      dryRun,
-      skipConnectionCheck,
-      skipToolParamsCheck,
-      noVerify,
-    })
-).pipe(
-  Command.withDescription(
-    [
-      'Execute a tool by slug with JSON arguments, or preview it locally with --dry-run.',
-      'Arguments are validated against cached tool schemas in `~/.composio/tool_definitions/` when available.',
-      'Use `--get-schema` to fetch the latest raw input schema into the cache and print it without executing the tool.',
-      'Use `composio tools info <slug>` for the same schema plus a short human summary and jq hints.',
-      'Successful execute responses are parsed immediately, and failed calls validate inputs against cached schemas when available, so it is often fastest to just try the real call first before inspecting schema.',
-      '',
-      'Examples:',
-      '  composio execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-connection-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-tool-params-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --no-verify -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --get-schema',
-      '',
-      'Related:',
-      '  composio run \'const first = await execute("TOOL_SLUG", { ... }); const second = await execute("OTHER_TOOL", { ... }); console.log({ first, second })\'',
-      '  composio search "<query>"',
-      '  composio link <toolkit>',
-    ].join('\n')
-  )
-);
+const parseParallelExecuteArgs = (
+  args: ReadonlyArray<string>,
+  config: {
+    readonly surface: 'root' | 'dev';
+    readonly projectMode: 'consumer' | 'developer';
+    readonly allowUserId: boolean;
+    readonly allowProjectName: boolean;
+  }
+): ParsedParallelExecuteArgs => {
+  let getSchema = false;
+  let dryRun = false;
+  let skipConnectionCheck = false;
+  let skipToolParamsCheck = false;
+  let skipChecks = false;
+  let userId = Option.none<string>();
+  let projectName = Option.none<string>();
+  const specs: ParallelExecuteSpec[] = [];
+  let currentSpec: ParallelExecuteSpec | null = null;
 
+  const pushCurrentSpec = () => {
+    if (!currentSpec) return;
+    specs.push(currentSpec);
+    currentSpec = null;
+  };
+
+  const readValue = (token: string, index: number) => {
+    if (token.includes('=')) {
+      return {
+        value: token.slice(token.indexOf('=') + 1),
+        nextIndex: index,
+      };
+    }
+
+    const next = args[index + 1];
+    if (!next) {
+      throw new Error(`Missing value for ${token}.`);
+    }
+    return { value: next, nextIndex: index + 1 };
+  };
+
+  for (let i = 0; i < args.length; i += 1) {
+    const token = args[i];
+    if (!token) continue;
+
+    if (token === '--parallel' || token === '-p') {
+      continue;
+    }
+    if (token === '--get-schema') {
+      getSchema = true;
+      continue;
+    }
+    if (token === '--dry-run') {
+      dryRun = true;
+      continue;
+    }
+    if (token === '--skip-connection-check') {
+      skipConnectionCheck = true;
+      continue;
+    }
+    if (token === '--skip-tool-params-check') {
+      skipToolParamsCheck = true;
+      continue;
+    }
+    if (token === '--skip-checks') {
+      skipChecks = true;
+      continue;
+    }
+    if (token === '--user-id' || token.startsWith('--user-id=')) {
+      if (!config.allowUserId) {
+        throw new Error(`${token} is not supported for this execute command.`);
+      }
+      const parsed = readValue(token, i);
+      userId = Option.some(parsed.value);
+      i = parsed.nextIndex;
+      continue;
+    }
+    if (token === '--project-name' || token.startsWith('--project-name=')) {
+      if (!config.allowProjectName) {
+        throw new Error(`${token} is not supported for this execute command.`);
+      }
+      const parsed = readValue(token, i);
+      projectName = Option.some(parsed.value);
+      i = parsed.nextIndex;
+      continue;
+    }
+    if (
+      token === '--data' ||
+      token === '-d' ||
+      token.startsWith('--data=') ||
+      token.startsWith('-d=')
+    ) {
+      if (!currentSpec) {
+        throw new Error(
+          `Expected a tool slug before ${token}. Use: composio execute --parallel TOOL_SLUG -d '{}' TOOL_SLUG_2 -d '{}'.`
+        );
+      }
+      const parsed = readValue(token, i);
+      currentSpec = {
+        slug: currentSpec.slug,
+        data: Option.some(parsed.value),
+      };
+      i = parsed.nextIndex;
+      continue;
+    }
+    if (token.startsWith('-')) {
+      throw new Error(`Unknown option for parallel execute: ${token}`);
+    }
+
+    pushCurrentSpec();
+    currentSpec = {
+      slug: token,
+      data: Option.none(),
+    };
+  }
+
+  pushCurrentSpec();
+
+  if (specs.length === 0) {
+    throw new Error(
+      "No tool slugs were provided. Use: composio execute --parallel TOOL_SLUG -d '{}' TOOL_SLUG_2 -d '{}'."
+    );
+  }
+
+  return {
+    specs,
+    userId,
+    projectName,
+    surface: config.surface,
+    projectMode: config.projectMode,
+    getSchema,
+    dryRun,
+    skipConnectionCheck,
+    skipToolParamsCheck,
+    skipChecks,
+  };
+};
+
+const isParallelExecuteCommand = (argv: ReadonlyArray<string>) => {
+  const args = argv.slice(2);
+  if (args[0] === 'execute') {
+    return {
+      matched: args.includes('--parallel') || args.includes('-p'),
+      tail: args.slice(1),
+      surface: 'root' as const,
+      projectMode: 'consumer' as const,
+      allowUserId: false,
+      allowProjectName: false,
+    };
+  }
+  if (args[0] === 'dev' && args[1] === 'playground-execute') {
+    return {
+      matched: args.includes('--parallel') || args.includes('-p'),
+      tail: args.slice(2),
+      surface: 'dev' as const,
+      projectMode: 'developer' as const,
+      allowUserId: true,
+      allowProjectName: true,
+    };
+  }
+  return null;
+};
+
+const checkConnectedToolkitOrFail = (params: {
+  readonly slug: string;
+  readonly resolvedProject: ResolvedExecuteContext['resolvedProject'];
+  readonly resolvedUserId: string;
+  readonly skipConnectionCheck: boolean;
+  readonly skipChecks: boolean;
+}) =>
+  Effect.gen(function* () {
+    if (params.skipConnectionCheck || params.skipChecks) return;
+    if (params.resolvedProject.projectType !== 'CONSUMER') return;
+
+    yield* refreshConsumerConnectedToolkitsCache({
+      orgId: params.resolvedProject.orgId,
+      consumerUserId: params.resolvedUserId,
+    }).pipe(
+      Effect.catchAll(() => Effect.void),
+      Effect.forkDaemon,
+      Effect.asVoid
+    );
+
+    const toolkit = toolkitFromToolSlug(params.slug);
+    if (!toolkit) return;
+
+    const cachedToolkits = yield* getFreshConsumerConnectedToolkitsFromCache({
+      orgId: params.resolvedProject.orgId,
+      consumerUserId: params.resolvedUserId,
+    });
+
+    if (Option.isSome(cachedToolkits) && !cachedToolkits.value.includes(toolkit)) {
+      throw new ToolExecutionError(
+        `Toolkit "${toolkit}" is not connected for this user (cached within the last 5 minutes). If you just connected the account, use --skip-connection-check.`
+      );
+    }
+  });
+
+const runParallelToolsExecuteFromParsed = (params: ParsedParallelExecuteArgs) =>
+  Effect.gen(function* () {
+    if (!(yield* requireAuth)) return;
+
+    const contexts = yield* Effect.forEach(
+      params.specs,
+      spec =>
+        resolveExecuteContext({
+          slug: spec.slug,
+          data: spec.data,
+          userId: params.userId,
+          projectName: params.projectName,
+          surface: params.surface,
+          projectMode: params.projectMode,
+          getSchema: params.getSchema,
+          dryRun: params.dryRun,
+          skipConnectionCheck: params.skipConnectionCheck,
+          skipToolParamsCheck: params.skipToolParamsCheck,
+          skipChecks: params.skipChecks,
+        }),
+      { concurrency: 'unbounded' }
+    );
+    const entries = contexts.map((context, index) => ({
+      context,
+      spec: params.specs[index]!,
+    }));
+
+    const ui = contexts[0]?.ui;
+    const results = yield* Effect.forEach(
+      entries,
+      ({ context, spec }) =>
+        Effect.gen(function* () {
+          const toolSlug = spec.slug;
+
+          try {
+            if (params.getSchema) {
+              const definition = yield* getOrFetchToolInputDefinition(toolSlug, {
+                orgId: context.resolvedProject.orgId,
+                projectId: context.resolvedProject.projectId,
+              });
+              return {
+                slug: toolSlug,
+                successful: true,
+                version: definition.version,
+                schemaPath: definition.schemaPath,
+                inputSchema: definition.schema,
+              };
+            }
+
+            yield* checkConnectedToolkitOrFail({
+              slug: toolSlug,
+              resolvedProject: context.resolvedProject,
+              resolvedUserId: context.resolvedUserId,
+              skipConnectionCheck: params.skipConnectionCheck,
+              skipChecks: params.skipChecks,
+            });
+
+            if (params.dryRun) {
+              const verificationDisabled = params.skipChecks || params.skipToolParamsCheck;
+              const definition = verificationDisabled
+                ? null
+                : yield* getOrFetchToolInputDefinition(toolSlug, {
+                    orgId: context.resolvedProject.orgId,
+                    projectId: context.resolvedProject.projectId,
+                  });
+              if (definition) {
+                yield* validateToolInputArgumentsWithDefinition(toolSlug, context.args, definition);
+              }
+              return {
+                successful: true,
+                dryRun: true,
+                slug: toolSlug,
+                arguments: context.args,
+                userId: context.resolvedUserId,
+                schemaPath: definition?.schemaPath,
+                schemaVersion: definition?.version,
+              } satisfies DryRunSummary;
+            }
+
+            if (!params.skipChecks && !params.skipToolParamsCheck) {
+              const definition = yield* getOrFetchToolInputDefinition(toolSlug, {
+                orgId: context.resolvedProject.orgId,
+                projectId: context.resolvedProject.projectId,
+              });
+              yield* validateToolInputArgumentsWithDefinition(toolSlug, context.args, definition);
+            }
+
+            const result = yield* context.executor.execute(toolSlug, context.executeParams);
+            if (!result.successful) {
+              return {
+                slug: toolSlug,
+                successful: false,
+                error: result.error ?? 'Execution failed.',
+                logId: result.logId,
+              };
+            }
+
+            const output = yield* prepareExecuteOutput(toolSlug, result, context.executeOutputDir);
+            if (output.kind === 'file') {
+              return {
+                slug: toolSlug,
+                ...output.summary,
+              };
+            }
+
+            return {
+              slug: toolSlug,
+              ...result,
+            };
+          } catch (error) {
+            const mapped = mapComposioError({ error, toolSlug });
+            return {
+              slug: toolSlug,
+              successful: false,
+              error: mapped.message,
+            };
+          }
+        }),
+      { concurrency: 'unbounded' }
+    );
+
+    if (ui) {
+      for (const result of results) {
+        if (!result.successful) {
+          const logId =
+            'logId' in result && typeof result.logId === 'string' && result.logId.length > 0
+              ? ` (logId: ${redact({ value: result.logId, prefix: 'log_' })})`
+              : '';
+          yield* ui.log.error(`[${result.slug}] ${result.error}${logId}`);
+          continue;
+        }
+
+        if ('dryRun' in result && result.dryRun) {
+          yield* ui.log.step(`[${result.slug}] Dry run successful`);
+          continue;
+        }
+
+        if ('inputSchema' in result) {
+          yield* ui.log.step(`[${result.slug}] Schema fetched: ${result.schemaPath}`);
+          continue;
+        }
+
+        if ('storedInFile' in result && result.storedInFile) {
+          yield* ui.log.step(
+            `[${result.slug}] Response stored in ${result.outputFilePath} (${result.tokenCount} tokens)`
+          );
+          continue;
+        }
+
+        const logId =
+          'logId' in result && typeof result.logId === 'string' && result.logId.length > 0
+            ? ` (logId: ${redact({ value: result.logId, prefix: 'log_' })})`
+            : '';
+        yield* ui.log.step(`[${result.slug}] Execution successful${logId}`);
+        if ('data' in result) {
+          yield* ui.note(serializeExecuteOutput(result), `Response: ${result.slug}`);
+        }
+      }
+    }
+
+    const successful = results.every(result => result.successful);
+    if (ui) {
+      yield* ui.log.message(
+        `Parallel execute completed: ${results.filter(result => result.successful).length}/${results.length} successful`
+      );
+      yield* ui.output(
+        JSON.stringify(
+          {
+            successful,
+            parallel: true,
+            results,
+          },
+          ciRedactReplacer,
+          2
+        )
+      );
+    }
+
+    if (!successful) {
+      return yield* Effect.fail(
+        new ToolExecutionError('One or more parallel tool executions failed.')
+      );
+    }
+  });
+
+export const runParallelToolsExecuteFromArgv = (argv: ReadonlyArray<string>) => {
+  const command = isParallelExecuteCommand(argv);
+  if (!command?.matched) {
+    return null;
+  }
+
+  return Effect.try({
+    try: () =>
+      parseParallelExecuteArgs(command.tail, {
+        surface: command.surface,
+        projectMode: command.projectMode,
+        allowUserId: command.allowUserId,
+        allowProjectName: command.allowProjectName,
+      }),
+    catch: error => (error instanceof Error ? error : new Error(String(error))),
+  }).pipe(Effect.flatMap(runParallelToolsExecuteFromParsed));
+};
 export const rootToolsCmd$Execute = Command.make(
   'execute',
-  { slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, noVerify },
-  ({ slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, noVerify }) =>
+  { slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, skipChecks },
+  ({ slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, skipChecks }) =>
     runToolsExecute({
       slug,
       data,
@@ -1048,35 +1577,34 @@ export const rootToolsCmd$Execute = Command.make(
       dryRun,
       skipConnectionCheck,
       skipToolParamsCheck,
-      noVerify,
+      skipChecks,
     })
 ).pipe(
   Command.withDescription(
     [
-      'Execute a tool by slug with JSON arguments, or preview it locally with --dry-run.',
-      'Arguments are validated against cached tool schemas in `~/.composio/tool_definitions/` when available.',
-      'Use `--get-schema` to fetch the latest raw input schema into the cache and print it without executing the tool.',
-      'Use `composio tools info <slug>` for the same schema plus a short human summary and jq hints.',
-      'Successful execute responses are parsed immediately, and failed calls validate inputs against cached schemas when available, so it is often fastest to just try the real call first before inspecting schema.',
+      'Execute a tool by slug. Validates inputs against cached schemas and checks connections',
+      'automatically — just try it and it will tell you what to fix.',
       '',
       'Examples:',
       '  composio execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-connection-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --skip-tool-params-check -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --no-verify -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute GMAIL_SEND_EMAIL --get-schema',
+      "  composio execute GMAIL_SEND_EMAIL --dry-run -d '{ ... }'   Preview without executing",
+      '  composio execute GMAIL_SEND_EMAIL --get-schema              Fetch and print the input schema',
       '',
-      'Related:',
-      '  composio run \'const first = await execute("TOOL_SLUG", { ... }); const second = await execute("OTHER_TOOL", { ... }); console.log({ first, second })\'',
-      '  composio search "<query>"',
-      '  composio link <toolkit>',
+      'Flags:',
+      '  --skip-connection-check     Skip the connected-account check',
+      '  --skip-tool-params-check    Skip input validation against cached schema',
+      '  --skip-checks               Skip both checks above',
+      '',
+      'See also:',
+      '  composio search "<query>"               Find tool slugs by use case',
+      '  composio tools info <slug>              Schema summary with jq hints',
+      '  composio link <toolkit>                 Connect an account for a toolkit',
     ].join('\n')
   )
 );
 
 export const devToolsCmd$Execute = Command.make(
-  'execute',
+  'playground-execute',
   {
     slug,
     data,
@@ -1086,7 +1614,7 @@ export const devToolsCmd$Execute = Command.make(
     dryRun,
     skipConnectionCheck,
     skipToolParamsCheck,
-    noVerify,
+    skipChecks,
   },
   ({
     slug,
@@ -1097,7 +1625,7 @@ export const devToolsCmd$Execute = Command.make(
     dryRun,
     skipConnectionCheck,
     skipToolParamsCheck,
-    noVerify,
+    skipChecks,
   }) =>
     runToolsExecute({
       slug,
@@ -1110,19 +1638,19 @@ export const devToolsCmd$Execute = Command.make(
       dryRun,
       skipConnectionCheck,
       skipToolParamsCheck,
-      noVerify,
+      skipChecks,
     })
 ).pipe(
   Command.withDescription(
     [
-      'Execute a tool with your playground test user id against your developer project auth configs.',
+      'Test tool executions against playground users using your developer project auth configs.',
       'Uses --user-id when provided, otherwise falls back to your local or global playground test user id.',
       'Arguments are validated against cached tool schemas in `~/.composio/tool_definitions/` when available.',
       '',
       'Examples:',
-      '  composio dev execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio dev execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio dev execute GMAIL_SEND_EMAIL --get-schema',
+      '  composio dev playground-execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
+      '  composio dev playground-execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
+      '  composio dev playground-execute GMAIL_SEND_EMAIL --get-schema',
     ].join('\n')
   )
 );
