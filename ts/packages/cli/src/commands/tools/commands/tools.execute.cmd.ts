@@ -82,14 +82,14 @@ const dryRun = Options.boolean('dry-run').pipe(
   Options.withDefault(false)
 );
 const skipConnectionCheck = Options.boolean('skip-connection-check').pipe(
-  Options.withDescription('Skip the linked-account check'),
+  Options.withDescription('Skip the connected-account check'),
   Options.withDefault(false)
 );
 const skipToolParamsCheck = Options.boolean('skip-tool-params-check').pipe(
   Options.withDescription('Skip input validation against cached schema'),
   Options.withDefault(false)
 );
-const noVerify = Options.boolean('no-verify').pipe(
+const skipChecks = Options.boolean('skip-checks').pipe(
   Options.withDescription('Skip both connection and input validation checks'),
   Options.withDefault(false)
 );
@@ -599,7 +599,7 @@ type RunToolsExecuteParams = {
   dryRun: boolean;
   skipConnectionCheck: boolean;
   skipToolParamsCheck: boolean;
-  noVerify: boolean;
+  skipChecks: boolean;
 };
 
 type SharedRunToolsExecuteParams = Omit<RunToolsExecuteParams, 'slug' | 'data'>;
@@ -758,13 +758,13 @@ const runConnectedToolkitFailFast = (params: {
   readonly resolvedProject: ResolvedExecuteContext['resolvedProject'];
   readonly resolvedUserId: string;
   readonly skipConnectionCheck: boolean;
-  readonly noVerify: boolean;
+  readonly skipChecks: boolean;
 }) =>
   Effect.gen(function* () {
-    if (params.skipConnectionCheck || params.noVerify) {
+    if (params.skipConnectionCheck || params.skipChecks) {
       perfDebugLog('execute.connected_toolkits.skipped', {
         slug: params.slug,
-        reason: params.noVerify ? 'no-verify' : 'skip-connection-check',
+        reason: params.skipChecks ? 'skip-checks' : 'skip-connection-check',
       });
       return;
     }
@@ -862,10 +862,10 @@ const runExecuteWithSpinner = (params: {
   readonly executeParams: ToolExecuteParams;
   readonly executeOutputDir?: string;
   readonly skipToolParamsCheck: boolean;
-  readonly noVerify: boolean;
+  readonly skipChecks: boolean;
 }) =>
   Effect.gen(function* () {
-    const verificationDisabled = params.noVerify || params.skipToolParamsCheck;
+    const verificationDisabled = params.skipChecks || params.skipToolParamsCheck;
     const cachedDefinition = verificationDisabled
       ? null
       : yield* getCachedToolInputDefinition(params.slug);
@@ -1133,7 +1133,7 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
       resolvedProject: context.resolvedProject,
       resolvedUserId: context.resolvedUserId,
       skipConnectionCheck: params.skipConnectionCheck,
-      noVerify: params.noVerify,
+      skipChecks: params.skipChecks,
     });
     toolDebugLog('execute_params', {
       slug: params.slug,
@@ -1159,7 +1159,7 @@ const runToolsExecute = (params: RunToolsExecuteParams) =>
       resolvedUserId: context.resolvedUserId,
       executeParams: context.executeParams,
       skipToolParamsCheck: params.skipToolParamsCheck,
-      noVerify: params.noVerify,
+      skipChecks: params.skipChecks,
     });
   });
 
@@ -1176,7 +1176,7 @@ const parseParallelExecuteArgs = (
   let dryRun = false;
   let skipConnectionCheck = false;
   let skipToolParamsCheck = false;
-  let noVerify = false;
+  let skipChecks = false;
   let userId = Option.none<string>();
   let projectName = Option.none<string>();
   const specs: ParallelExecuteSpec[] = [];
@@ -1226,8 +1226,8 @@ const parseParallelExecuteArgs = (
       skipToolParamsCheck = true;
       continue;
     }
-    if (token === '--no-verify') {
-      noVerify = true;
+    if (token === '--skip-checks') {
+      skipChecks = true;
       continue;
     }
     if (token === '--user-id' || token.startsWith('--user-id=')) {
@@ -1296,7 +1296,7 @@ const parseParallelExecuteArgs = (
     dryRun,
     skipConnectionCheck,
     skipToolParamsCheck,
-    noVerify,
+    skipChecks,
   };
 };
 
@@ -1330,10 +1330,10 @@ const checkConnectedToolkitOrFail = (params: {
   readonly resolvedProject: ResolvedExecuteContext['resolvedProject'];
   readonly resolvedUserId: string;
   readonly skipConnectionCheck: boolean;
-  readonly noVerify: boolean;
+  readonly skipChecks: boolean;
 }) =>
   Effect.gen(function* () {
-    if (params.skipConnectionCheck || params.noVerify) return;
+    if (params.skipConnectionCheck || params.skipChecks) return;
     if (params.resolvedProject.projectType !== 'CONSUMER') return;
 
     yield* refreshConsumerConnectedToolkitsCache({
@@ -1378,7 +1378,7 @@ const runParallelToolsExecuteFromParsed = (params: ParsedParallelExecuteArgs) =>
           dryRun: params.dryRun,
           skipConnectionCheck: params.skipConnectionCheck,
           skipToolParamsCheck: params.skipToolParamsCheck,
-          noVerify: params.noVerify,
+          skipChecks: params.skipChecks,
         }),
       { concurrency: 'unbounded' }
     );
@@ -1414,11 +1414,11 @@ const runParallelToolsExecuteFromParsed = (params: ParsedParallelExecuteArgs) =>
               resolvedProject: context.resolvedProject,
               resolvedUserId: context.resolvedUserId,
               skipConnectionCheck: params.skipConnectionCheck,
-              noVerify: params.noVerify,
+              skipChecks: params.skipChecks,
             });
 
             if (params.dryRun) {
-              const verificationDisabled = params.noVerify || params.skipToolParamsCheck;
+              const verificationDisabled = params.skipChecks || params.skipToolParamsCheck;
               const definition = verificationDisabled
                 ? null
                 : yield* getOrFetchToolInputDefinition(toolSlug, {
@@ -1439,7 +1439,7 @@ const runParallelToolsExecuteFromParsed = (params: ParsedParallelExecuteArgs) =>
               } satisfies DryRunSummary;
             }
 
-            if (!params.noVerify && !params.skipToolParamsCheck) {
+            if (!params.skipChecks && !params.skipToolParamsCheck) {
               const definition = yield* getOrFetchToolInputDefinition(toolSlug, {
                 orgId: context.resolvedProject.orgId,
                 projectId: context.resolvedProject.projectId,
@@ -1564,8 +1564,8 @@ export const runParallelToolsExecuteFromArgv = (argv: ReadonlyArray<string>) => 
 };
 export const rootToolsCmd$Execute = Command.make(
   'execute',
-  { slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, noVerify },
-  ({ slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, noVerify }) =>
+  { slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, skipChecks },
+  ({ slug, data, getSchema, dryRun, skipConnectionCheck, skipToolParamsCheck, skipChecks }) =>
     runToolsExecute({
       slug,
       data,
@@ -1577,7 +1577,7 @@ export const rootToolsCmd$Execute = Command.make(
       dryRun,
       skipConnectionCheck,
       skipToolParamsCheck,
-      noVerify,
+      skipChecks,
     })
 ).pipe(
   Command.withDescription(
@@ -1587,15 +1587,13 @@ export const rootToolsCmd$Execute = Command.make(
       '',
       'Examples:',
       '  composio execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio execute --parallel GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", subject: "Hello", body: "World" }\' GITHUB_CREATE_ISSUE -d \'{ owner: "acme", repo: "app", title: "Bug report", body: "Steps to reproduce..." }\'',
       "  composio execute GMAIL_SEND_EMAIL --dry-run -d '{ ... }'   Preview without executing",
       '  composio execute GMAIL_SEND_EMAIL --get-schema              Fetch and print the input schema',
       '',
       'Flags:',
-      '  -p, --parallel              Execute repeated TOOL_SLUG -d <json> groups concurrently',
-      '  --skip-connection-check     Skip the linked-account check',
+      '  --skip-connection-check     Skip the connected-account check',
       '  --skip-tool-params-check    Skip input validation against cached schema',
-      '  --no-verify                 Skip both checks above',
+      '  --skip-checks               Skip both checks above',
       '',
       'See also:',
       '  composio search "<query>"               Find tool slugs by use case',
@@ -1616,7 +1614,7 @@ export const devToolsCmd$Execute = Command.make(
     dryRun,
     skipConnectionCheck,
     skipToolParamsCheck,
-    noVerify,
+    skipChecks,
   },
   ({
     slug,
@@ -1627,7 +1625,7 @@ export const devToolsCmd$Execute = Command.make(
     dryRun,
     skipConnectionCheck,
     skipToolParamsCheck,
-    noVerify,
+    skipChecks,
   }) =>
     runToolsExecute({
       slug,
@@ -1640,7 +1638,7 @@ export const devToolsCmd$Execute = Command.make(
       dryRun,
       skipConnectionCheck,
       skipToolParamsCheck,
-      noVerify,
+      skipChecks,
     })
 ).pipe(
   Command.withDescription(
@@ -1651,7 +1649,6 @@ export const devToolsCmd$Execute = Command.make(
       '',
       'Examples:',
       '  composio dev playground-execute GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
-      '  composio dev playground-execute --parallel GMAIL_SEND_EMAIL -d \'{ recipient_email: "a@b.com", subject: "Hello", body: "World" }\' GITHUB_CREATE_ISSUE -d \'{ owner: "acme", repo: "app", title: "Bug report", body: "Steps to reproduce..." }\'',
       '  composio dev playground-execute GMAIL_SEND_EMAIL --dry-run -d \'{ recipient_email: "a@b.com", body: "Hello" }\'',
       '  composio dev playground-execute GMAIL_SEND_EMAIL --get-schema',
     ].join('\n')

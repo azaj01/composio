@@ -413,7 +413,7 @@ export const connectedAccountsCmd$Link = Command.make(
       '',
       'See also:',
       '  composio search "<query>"                 Find tools to use after linking',
-      "  composio execute <slug> -d '{ ... }'      Execute a tool with your linked account",
+      "  composio execute <slug> -d '{ ... }'      Execute a tool with your connected account",
     ].join('\n')
   )
 );
@@ -443,7 +443,7 @@ export const rootConnectedAccountsCmd$Link = Command.make(
       '',
       'See also:',
       '  composio search "<query>"                 Find tools to use after linking',
-      "  composio execute <slug> -d '{ ... }'      Execute a tool with your linked account",
+      "  composio execute <slug> -d '{ ... }'      Execute a tool with your connected account",
     ].join('\n')
   )
 );

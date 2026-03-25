@@ -23,7 +23,7 @@ const CORE_COMMANDS: ReadonlyArray<DetailedCommand> = [
     options: [
       { name: '<query>', description: 'Semantic use-case query (e.g. "send emails")' },
       { name: '--toolkits', description: 'Filter by toolkit slugs, comma-separated' },
-      { name: '--limit', description: 'Number of results per page (1-1000)' },
+      { name: '--limit', description: 'Maximum number of results (1-1000)' },
     ],
   },
   {
@@ -61,7 +61,8 @@ const CORE_COMMANDS: ReadonlyArray<DetailedCommand> = [
   },
   {
     name: 'proxy',
-    description: 'curl-like access to any toolkit API through Composio using your linked account.',
+    description:
+      'curl-like access to any toolkit API through Composio using your connected account.',
     usage: 'proxy <url> --toolkit text [-X method] [-H header]... [-d data]',
     options: [
       { name: '<url>', description: 'Full API endpoint URL' },
@@ -155,7 +156,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     ],
     options: [
       { name: '--toolkits <text>', description: 'Filter by toolkit slugs, comma-separated' },
-      { name: '--limit <integer>', description: 'Number of results per page (1-1000)' },
+      { name: '--limit <integer>', description: 'Maximum number of results (1-1000)' },
     ],
     examples: [
       '# Find tools for a use case',
@@ -176,7 +177,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     ],
   },
   execute: {
-    usage: 'composio execute <slug> [-d, --data text] [--dry-run] [--get-schema] [--parallel]',
+    usage: 'composio execute <slug> [-d, --data text] [--dry-run] [--get-schema]',
     description:
       'Execute a tool by slug. Validates inputs against cached schemas and checks connections automatically — just try it and it will tell you what to fix.',
     args: [{ name: '<slug>', description: 'Tool slug (e.g. "GITHUB_CREATE_ISSUE")' }],
@@ -185,10 +186,6 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
         name: '-d, --data <text>',
         description:
           'JSON or JS-style object arguments, e.g. -d \'{ repo: "foo" }\', @file, or - for stdin',
-      },
-      {
-        name: '-p, --parallel',
-        description: 'Execute repeated TOOL_SLUG -d <text> groups concurrently',
       },
       {
         name: '--get-schema',
@@ -200,12 +197,12 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       },
     ],
     flags: [
-      { name: '--skip-connection-check', description: 'Skip the linked-account check' },
+      { name: '--skip-connection-check', description: 'Skip the connected-account check' },
       {
         name: '--skip-tool-params-check',
         description: 'Skip input validation against cached schema',
       },
-      { name: '--no-verify', description: 'Skip both checks above' },
+      { name: '--skip-checks', description: 'Skip both checks above' },
     ],
     examples: [
       '# Send an email',
@@ -222,9 +219,6 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       '',
       '# Read arguments from a file',
       'composio execute GITHUB_CREATE_ISSUE -d @issue.json',
-      '',
-      '# Execute multiple tools concurrently',
-      `composio execute --parallel GMAIL_SEND_EMAIL -d '{ recipient_email: "a@b.com" }'  GITHUB_CREATE_AN_ISSUE -d '{ owner: "acme", repo: "app", title: "Bug" }'`,
     ],
     seeAlso: [
       'composio search "<query>"               Find tool slugs by use case',
@@ -248,7 +242,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     examples: ['composio link github', 'composio link gmail --no-browser'],
     seeAlso: [
       'composio search "<query>"               Find tools to use after linking',
-      "composio execute <slug> -d '{ ... }'    Execute a tool with your linked account",
+      "composio execute <slug> -d '{ ... }'    Execute a tool with your connected account",
     ],
   },
   run: {
@@ -263,12 +257,12 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       { name: '--logs-off', description: 'Hide the always-on subAgent streaming logs' },
     ],
     flags: [
-      { name: '--skip-connection-check', description: 'Skip the linked-account check' },
+      { name: '--skip-connection-check', description: 'Skip the connected-account check' },
       {
         name: '--skip-tool-params-check',
         description: 'Skip input validation against cached schema',
       },
-      { name: '--no-verify', description: 'Skip both checks above' },
+      { name: '--skip-checks', description: 'Skip both checks above' },
     ],
     injectedHelpers: [
       {
@@ -276,7 +270,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
         description: 'Run a tool — same as `composio execute`, returns parsed JSON',
       },
       { name: 'search(query, opts?)', description: 'Find tools — same as `composio search`' },
-      { name: 'proxy(toolkit)', description: 'Returns a fetch() bound to your linked account' },
+      { name: 'proxy(toolkit)', description: 'Returns a fetch() bound to your connected account' },
       {
         name: 'subAgent(prompt, opts?)',
         description: 'Spawn a sub-agent (Claude/Codex) with optional structured output',
@@ -324,7 +318,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       `  ));`,
       `'`,
       '',
-      '# proxy(toolkit) — returns a fetch() bound to your linked account',
+      '# proxy(toolkit) — returns a fetch() bound to your connected account',
       `composio run '`,
       `  const f = await proxy("gmail");`,
       `  console.log(await f("https://gmail.googleapis.com/gmail/v1/users/me/profile"));`,
@@ -358,7 +352,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
   proxy: {
     usage: 'composio proxy <url> --toolkit <text> [-X method] [-H header]... [-d data]',
     description:
-      'curl-like access to any toolkit API through Composio using your linked account. Composio handles authentication — just provide the full URL and toolkit.',
+      'curl-like access to any toolkit API through Composio using your connected account. Composio handles authentication — just provide the full URL and toolkit.',
     args: [{ name: '<url>', description: 'Full API endpoint URL' }],
     options: [
       {
@@ -375,7 +369,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
         description: 'Request body as raw text, JSON, @file, or - for stdin',
       },
     ],
-    flags: [{ name: '--skip-connection-check', description: 'Skip the linked-account check' }],
+    flags: [{ name: '--skip-connection-check', description: 'Skip the connected-account check' }],
     examples: [
       'composio proxy https://gmail.googleapis.com/gmail/v1/users/me/profile --toolkit gmail',
       `composio proxy https://gmail.googleapis.com/gmail/v1/users/me/drafts --toolkit gmail \\`,
@@ -430,7 +424,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     options: [
       { name: '--query <text>', description: 'Text search by name, slug, or description' },
       { name: '--tags <text>', description: 'Filter by tags (e.g. "important")' },
-      { name: '--limit <integer>', description: 'Number of results per page (1-1000)' },
+      { name: '--limit <integer>', description: 'Maximum number of results (1-1000)' },
     ],
   },
   'tools info': {
@@ -449,7 +443,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     options: [
       { name: '-o, --output-dir <dir>', description: 'Output directory for type stubs' },
       {
-        name: '--toolkits <text>...',
+        name: '--toolkits <text>... (required)',
         description: 'Toolkits to generate for (repeat for multiple)',
       },
     ],
@@ -470,7 +464,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
         description: 'Output directory for generated TypeScript stubs',
       },
       {
-        name: '--toolkits <text>...',
+        name: '--toolkits <text>... (required)',
         description: 'Toolkits to generate for (repeat for multiple)',
       },
     ],
@@ -495,7 +489,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
         description: 'Output directory for generated Python stubs',
       },
       {
-        name: '--toolkits <text>...',
+        name: '--toolkits <text>... (required)',
         description: 'Toolkits to generate for (repeat for multiple)',
       },
     ],
@@ -528,12 +522,12 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       { name: '--dry-run', description: 'Validate and preview without executing' },
     ],
     flags: [
-      { name: '--skip-connection-check', description: 'Skip the linked-account check' },
+      { name: '--skip-connection-check', description: 'Skip the connected-account check' },
       {
         name: '--skip-tool-params-check',
         description: 'Skip input validation against cached schema',
       },
-      { name: '--no-verify', description: 'Skip both checks above' },
+      { name: '--skip-checks', description: 'Skip both checks above' },
     ],
   },
   'dev listen': {
@@ -564,7 +558,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     description: 'List available toolkits with connection status.',
     options: [
       { name: '--query <text>', description: 'Text search by name, slug, or description' },
-      { name: '--limit <integer>', description: 'Number of results per page (1-1000)' },
+      { name: '--limit <integer>', description: 'Maximum number of results (1-1000)' },
       { name: '--user-id <text>', description: 'User ID override' },
     ],
     flags: [{ name: '--connected', description: 'Show only connected toolkits' }],
@@ -645,21 +639,6 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     args: [{ name: '<id>', description: 'Connected account ID' }],
     flags: [{ name: '-y, --yes', description: 'Skip confirmation prompt' }],
   },
-  'dev connected-accounts link': {
-    usage:
-      'composio dev connected-accounts link [--auth-config text] [--user-id text] [--project-name text] [--no-browser] [--no-wait] [<toolkit>]',
-    description: 'Connect an external account so tools can act on your behalf.',
-    args: [{ name: '<toolkit>', description: 'Toolkit slug to link (e.g. "github", "gmail")' }],
-    options: [
-      { name: '--auth-config <text>', description: 'Auth config ID to use' },
-      { name: '--user-id <text>', description: 'User ID override' },
-      { name: '--project-name <text>', description: 'Project name override' },
-    ],
-    flags: [
-      { name: '--no-browser', description: 'Print the auth URL instead of opening a browser' },
-      { name: '--no-wait', description: 'Print link info and exit without waiting' },
-    ],
-  },
   'dev triggers list': {
     usage: 'composio dev triggers list [--toolkits text] [--limit integer]',
     description: 'List available trigger types.',
@@ -672,25 +651,6 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
     usage: 'composio dev triggers info [<slug>]',
     description: 'View details of a specific trigger type.',
     args: [{ name: '<slug>', description: 'Trigger slug' }],
-  },
-  'dev triggers listen': {
-    usage:
-      'composio dev triggers listen [--toolkits text] [--trigger-slug text] [--json] [--table] [--max-events int] [--forward url] [--out file]',
-    description: 'Listen to realtime trigger events and optionally forward them.',
-    options: [
-      { name: '--toolkits <text>', description: 'Filter by toolkit slugs, comma-separated' },
-      { name: '--trigger-id <text>', description: 'Filter by trigger id' },
-      { name: '--connected-account-id <text>', description: 'Filter by connected account id' },
-      { name: '--trigger-slug <text>', description: 'Filter by trigger slug, comma-separated' },
-      { name: '--user-id <text>', description: 'Filter by user id' },
-      { name: '--max-events <int>', description: 'Stop after receiving N events' },
-      { name: '--forward <url>', description: 'Forward each event to the given URL' },
-      { name: '--out <file>', description: 'Append each event to this file' },
-    ],
-    flags: [
-      { name: '--json', description: 'Show raw event payload as JSON' },
-      { name: '--table', description: 'Show compact table rows' },
-    ],
   },
   'dev triggers status': {
     usage:

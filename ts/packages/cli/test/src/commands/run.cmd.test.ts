@@ -160,7 +160,7 @@ describe('CLI: composio run', () => {
           );
           expect(output).toContain('--skip-connection-check');
           expect(output).toContain('--skip-tool-params-check');
-          expect(output).toContain('--no-verify');
+          expect(output).toContain('--skip-checks');
           expect(output).toContain('--logs-off');
           expect(output).toContain('subAgent');
           expect(output).toContain('schema: z.object');
@@ -259,7 +259,7 @@ describe('buildRunHelpersSource', () => {
     expect(source).toContain('args.push("--dry-run");');
     expect(source).toContain('args.push("--skip-connection-check");');
     expect(source).toContain('args.push("--skip-tool-params-check");');
-    expect(source).toContain('args.push("--no-verify");');
+    expect(source).toContain('args.push("--skip-checks");');
     expect(source).toContain(
       "stdio: ['inherit', 'pipe', perfDebugEnabled || toolDebugEnabled ? 'inherit' : 'pipe']"
     );

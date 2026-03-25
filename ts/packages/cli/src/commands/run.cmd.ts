@@ -35,14 +35,14 @@ const logsOff = Options.boolean('logs-off').pipe(
   Options.withDefault(false)
 );
 const skipConnectionCheck = Options.boolean('skip-connection-check').pipe(
-  Options.withDescription('Skip the linked-account check'),
+  Options.withDescription('Skip the connected-account check'),
   Options.withDefault(false)
 );
 const skipToolParamsCheck = Options.boolean('skip-tool-params-check').pipe(
   Options.withDescription('Skip input validation against cached schema'),
   Options.withDefault(false)
 );
-const noVerify = Options.boolean('no-verify').pipe(
+const skipChecks = Options.boolean('skip-checks').pipe(
   Options.withDescription('Skip both connection and input validation checks'),
   Options.withDefault(false)
 );
@@ -216,7 +216,7 @@ type RunHelperContext = {
   readonly dryRun?: boolean;
   readonly skipConnectionCheck?: boolean;
   readonly skipToolParamsCheck?: boolean;
-  readonly noVerify?: boolean;
+  readonly skipChecks?: boolean;
   readonly master?: MasterKind;
   readonly debug?: boolean;
   readonly acpOnly?: boolean;
@@ -687,8 +687,8 @@ const buildRunBaseHelpersSource = (): ReadonlyArray<string> => [
   '  if (helperContext.skipToolParamsCheck === true) {',
   '    args.push("--skip-tool-params-check");',
   '  }',
-  '  if (helperContext.noVerify === true) {',
-  '    args.push("--no-verify");',
+  '  if (helperContext.skipChecks === true) {',
+  '    args.push("--skip-checks");',
   '  }',
   '  if (data !== undefined) {',
   '    const serialized = typeof data === "string" ? data : JSON.stringify(data);',
@@ -940,7 +940,7 @@ export const runCmd = Command.make('run', {
   logsOff,
   skipConnectionCheck,
   skipToolParamsCheck,
-  noVerify,
+  skipChecks,
   args,
 }).pipe(
   Command.withDescription(
@@ -981,15 +981,15 @@ export const runCmd = Command.make('run', {
       '                                          const me = await f("https://gmail.googleapis.com/gmail/v1/users/me/profile")',
       '  z                              Injected global from `zod` for structured output schemas',
       '',
-      'All helpers reuse your CLI auth state and linked accounts.',
+      'All helpers reuse your CLI auth state and connected accounts.',
       '',
       'Flags:',
       '  --debug                     Log helper steps while the script runs',
       '  --dry-run                   Preview execute() calls without running them',
       '  --logs-off                  Hide the always-on subAgent streaming logs',
-      '  --skip-connection-check     Skip the linked-account check',
+      '  --skip-connection-check     Skip the connected-account check',
       '  --skip-tool-params-check    Skip input validation against cached schema',
-      '  --no-verify                 Skip both checks above',
+      '  --skip-checks               Skip both checks above',
       '',
       'See also:',
       '  composio search "<query>"                 Discover tool slugs before scripting',
@@ -998,7 +998,16 @@ export const runCmd = Command.make('run', {
     ].join('\n')
   ),
   Command.withHandler(
-    ({ file, dryRun, debug, logsOff, skipConnectionCheck, skipToolParamsCheck, noVerify, args }) =>
+    ({
+      file,
+      dryRun,
+      debug,
+      logsOff,
+      skipConnectionCheck,
+      skipToolParamsCheck,
+      skipChecks,
+      args,
+    }) =>
       Effect.gen(function* () {
         const runId = process.env.COMPOSIO_CLI_PARENT_RUN_ID ?? crypto.randomUUID();
         const perfDebug = isPerfDebugEnabled();
@@ -1027,7 +1036,7 @@ export const runCmd = Command.make('run', {
           dryRun,
           skipConnectionCheck,
           skipToolParamsCheck,
-          noVerify,
+          skipChecks,
         };
         const preload = createRunHelpersPreloadFile(inferCliInvocationPrefix(), helperContext);
         let cleanupPaths: ReadonlyArray<string> = [];

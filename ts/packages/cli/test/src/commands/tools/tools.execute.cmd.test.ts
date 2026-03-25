@@ -484,7 +484,7 @@ describe('CLI: composio execute', () => {
         yield* cli([
           'execute',
           '--parallel',
-          '--no-verify',
+          '--skip-checks',
           'GMAIL_SEND_EMAIL',
           '-d',
           '{"recipient":"a"}',

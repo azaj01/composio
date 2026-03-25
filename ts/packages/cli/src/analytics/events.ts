@@ -215,7 +215,7 @@ const getExecuteCommandProperties = (context: CliCommandTelemetryContext) => {
     has_data: isFlagPresent(context.argv, '--data', '-d'),
     skip_connection_check: isFlagPresent(context.argv, '--skip-connection-check'),
     skip_tool_params_check: isFlagPresent(context.argv, '--skip-tool-params-check'),
-    no_verify: isFlagPresent(context.argv, '--no-verify'),
+    skip_checks: isFlagPresent(context.argv, '--skip-checks'),
   };
 };
 
@@ -261,7 +261,7 @@ const getRunCommandProperties = (context: CliCommandTelemetryContext) => ({
   dry_run: isFlagPresent(context.argv, '--dry-run'),
   skip_connection_check: isFlagPresent(context.argv, '--skip-connection-check'),
   skip_tool_params_check: isFlagPresent(context.argv, '--skip-tool-params-check'),
-  no_verify: isFlagPresent(context.argv, '--no-verify'),
+  skip_checks: isFlagPresent(context.argv, '--skip-checks'),
   file_mode: isFlagPresent(context.argv, '--file', '-f'),
   arg_count: Math.max(0, context.argv.length - 3),
 });
