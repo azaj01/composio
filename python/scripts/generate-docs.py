@@ -52,6 +52,13 @@ EXPECTED_CLASSES = {
     "MCP": "mcp",
 }
 
+# Additional public-facing classes worth documenting even though they are not
+# exposed as direct properties on ``Composio``.
+ADDITIONAL_CLASSES = {
+    "ToolRouterSession": "core.models.tool_router_session",
+    "SessionContextImpl": "core.models.session_context",
+}
+
 # Modules to search for classes
 CLASS_MODULES = [
     "core.models.tools",
@@ -488,6 +495,27 @@ def main():
                         }
                         prop_to_class[prop_name] = class_name
                         print(f"  Found {class_name} (via composio.{prop_name})")
+        except (KeyError, AttributeError):
+            continue
+
+    # Add standalone public-facing classes that are not surfaced via a direct
+    # ``composio.<property>`` access pattern.
+    for class_name, module_name in ADDITIONAL_CLASSES.items():
+        try:
+            parts = module_name.split(".")
+            current = package
+            for part in parts:
+                current = current.members[part]
+
+            if class_name in current.members:
+                cls = current.members[class_name]
+                if isinstance(cls, griffe.Class):
+                    classes_to_doc[class_name] = {
+                        "cls": cls,
+                        "access": None,
+                        "prop": None,
+                    }
+                    print(f"  Found {class_name}")
         except (KeyError, AttributeError):
             continue
 

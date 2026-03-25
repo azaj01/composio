@@ -227,13 +227,13 @@ For more best practices, see [How to Build Tools for AI Agents: A Field Guide](h
 
 Use `session.customTools()` / `session.customToolkits()` in TypeScript or `session.custom_tools()` / `session.custom_toolkits()` in Python to list registered tools and toolkits. Registered tool slugs include their final `LOCAL_` prefix, and toolkit-scoped tools also include the toolkit slug.
 
-Reference: [TypeScript ToolRouterSession](/reference/sdk-reference/typescript/tool-router-session) · [Python SDK Reference](/reference/sdk-reference/python)
+Reference: [TypeScript ToolRouterSession](/reference/sdk-reference/typescript/tool-router-session) · [Python ToolRouterSession](/reference/sdk-reference/python/tool-router-session)
 
 ## Programmatic execution
 
 Use `session.execute()` to run custom tools directly, outside of an agent loop (e.g. `session.execute("GET_USER_PROFILE")`). Custom tools execute in-process; remote tools are sent to the backend automatically.
 
-Reference: [Tool Router API Reference](/reference/api-reference/tool-router) · [TypeScript ToolRouterSession](/reference/sdk-reference/typescript/tool-router-session) · [Python SDK Reference](/reference/sdk-reference/python)
+Reference: [TypeScript ToolRouterSession](/reference/sdk-reference/typescript/tool-router-session) · [Python ToolRouterSession](/reference/sdk-reference/python/tool-router-session)
 
 ## SessionContext
 
@@ -262,4 +262,4 @@ Every custom tool's `execute` function receives `(input, ctx)`. The `ctx` object
 
 In Python, `parameters` dictionaries accept both `in` and `type`; this guide uses `in` to match the TypeScript examples.
 
-Reference: [TypeScript SessionContextImpl](/reference/sdk-reference/typescript/session-context-impl) · [Python SDK Reference](/reference/sdk-reference/python)
+Reference: [TypeScript SessionContextImpl](/reference/sdk-reference/typescript/session-context-impl) · [Python SessionContextImpl](/reference/sdk-reference/python/session-context-impl)
