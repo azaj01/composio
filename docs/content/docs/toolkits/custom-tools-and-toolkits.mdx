@@ -227,9 +227,13 @@ For more best practices, see [How to Build Tools for AI Agents: A Field Guide](h
 
 Use `session.customTools()` / `session.customToolkits()` in TypeScript or `session.custom_tools()` / `session.custom_toolkits()` in Python to list registered tools and toolkits. Registered tool slugs include their final `LOCAL_` prefix, and toolkit-scoped tools also include the toolkit slug.
 
+Reference: [TypeScript ToolRouterSession](/reference/sdk-reference/typescript/tool-router-session) · [Python SDK Reference](/reference/sdk-reference/python)
+
 ## Programmatic execution
 
 Use `session.execute()` to run custom tools directly, outside of an agent loop (e.g. `session.execute("GET_USER_PROFILE")`). Custom tools execute in-process; remote tools are sent to the backend automatically.
+
+Reference: [Tool Router API Reference](/reference/api-reference/tool-router) · [TypeScript ToolRouterSession](/reference/sdk-reference/typescript/tool-router-session) · [Python SDK Reference](/reference/sdk-reference/python)
 
 ## SessionContext
 
@@ -250,14 +254,12 @@ Every custom tool's `execute` function receives `(input, ctx)`. The `ctx` object
 | Method | Description |
 |--------|-------------|
 | `ctx.user_id` | The user ID for the current session. |
-| `ctx.proxy_execute(...)` | Authenticated HTTP request via Composio's auth layer. Params: `toolkit`, `endpoint`, `method`, `body=None`, `parameters=[{"type": "query" \| "header", "name": ..., "value": ...}]`. |
+| `ctx.proxy_execute(...)` | Authenticated HTTP request via Composio's auth layer. Params: `toolkit`, `endpoint`, `method`, `body=None`, `parameters=[{"in": "query" \| "header", "name": ..., "value": ...}]`. |
 | `ctx.execute(tool_slug, arguments)` | Execute any Composio native tool from within your custom tool. |
 
 </Tab>
 </Tabs>
 
-## Related reference
+In Python, `parameters` dictionaries accept both `in` and `type`; this guide uses `in` to match the TypeScript examples.
 
-- [Tool Router API Reference](/reference/api-reference/tool-router)
-- [TypeScript ToolRouterSession Reference](/reference/sdk-reference/typescript/tool-router-session)
-- [Python SDK Reference](/reference/sdk-reference/python)
+Reference: [TypeScript SessionContextImpl](/reference/sdk-reference/typescript/session-context-impl) · [Python SDK Reference](/reference/sdk-reference/python)
