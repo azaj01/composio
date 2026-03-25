@@ -272,23 +272,51 @@ def generate_class_mdx(
 
     source_link = info.get("source_link", "")
 
-    # Properties - as table for Composio class
-    if prop_to_class:
-        prop_rows = []
-        for prop in info["properties"]:
-            prop_name = prop["name"]
-            if prop_name in prop_to_class:
-                class_name = prop_to_class[prop_name]
-                link = f"/reference/sdk-reference/python/{to_kebab_case(class_name)}"
-                prop_rows.append(f"| [`{prop_name}`]({link}) | `{class_name}` |")
+    # Properties
+    property_rows = []
+    if info["properties"]:
+        if prop_to_class:
+            for prop in info["properties"]:
+                prop_name = prop["name"]
+                if prop_name in prop_to_class:
+                    class_name = prop_to_class[prop_name]
+                    link = (
+                        f"/reference/sdk-reference/python/{to_kebab_case(class_name)}"
+                    )
+                    property_rows.append(
+                        {
+                            "name": f"[`{prop_name}`]({link})",
+                            "type": f"`{class_name}`",
+                            "description": prop["description"],
+                        }
+                    )
+        elif info["name"] in ADDITIONAL_CLASSES:
+            for prop in info["properties"]:
+                property_rows.append(
+                    {
+                        "name": f"`{prop['name']}`",
+                        "type": f"`{prop['type']}`",
+                        "description": prop["description"],
+                    }
+                )
 
-        if prop_rows:
-            lines.append("## Properties")
-            lines.append("")
+    if property_rows:
+        include_descriptions = any(row["description"] for row in property_rows)
+        lines.append("## Properties")
+        lines.append("")
+        if include_descriptions:
+            lines.append("| Name | Type | Description |")
+            lines.append("|------|------|-------------|")
+            for row in property_rows:
+                lines.append(
+                    f"| {row['name']} | {row['type']} | {row['description']} |"
+                )
+        else:
             lines.append("| Name | Type |")
             lines.append("|------|------|")
-            lines.extend(prop_rows)
-            lines.append("")
+            for row in property_rows:
+                lines.append(f"| {row['name']} | {row['type']} |")
+        lines.append("")
 
     # Methods
     if info["methods"]:

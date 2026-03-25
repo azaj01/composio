@@ -3,6 +3,14 @@ title: ToolRouterSession
 description: "Tool router session containing session information and methods.  Generic Parameters: TTool: The individual tool type returned by the provider. TToo..."
 ---
 
+## Properties
+
+| Name | Type |
+|------|------|
+| `session_id` | `str` |
+| `mcp` | `Any` |
+| `experimental` | `'ToolRouterSessionExperimental'` |
+
 ## Methods
 
 ### tools()
@@ -51,7 +59,7 @@ def authorize(toolkit: str, callback_url: str | None = ...) -> ConnectionRequest
 Get toolkit connection states for the session.
 
 ```python
-def toolkits(toolkits: List[str | None] = ..., next_cursor: str | None = ..., limit: int | None = ..., is_connected: bool | None = ..., search: str | None = ...)
+def toolkits(toolkits: List[str | None] = ..., next_cursor: str | None = ..., limit: int | None = ..., is_connected: bool | None = ..., search: str | None = ...) -> ToolkitConnectionsDetails
 ```
 
 **Parameters**
@@ -64,6 +72,10 @@ def toolkits(toolkits: List[str | None] = ..., next_cursor: str | None = ..., li
 | `is_connected?` | `bool \| None` |
 | `search?` | `str \| None` |
 
+**Returns**
+
+`ToolkitConnectionsDetails`
+
 ---
 
 ### search()
@@ -71,7 +83,7 @@ def toolkits(toolkits: List[str | None] = ..., next_cursor: str | None = ..., li
 Search for tools by semantic use case.  Returns relevant tools for the given query with schemas and guidance.
 
 ```python
-def search(query: str, model: str | None = ...)
+def search(query: str, model: str | None = ...) -> SessionSearchResponse
 ```
 
 **Parameters**
@@ -80,6 +92,10 @@ def search(query: str, model: str | None = ...)
 |------|------|
 | `query` | `str` |
 | `model?` | `str \| None` |
+
+**Returns**
+
+`SessionSearchResponse`
 
 ---
 
@@ -162,4 +178,4 @@ def proxy_execute(toolkit: str, endpoint: str, method: Literal['GET', 'POST', 'P
 
 ---
 
-[View source](https://github.com/composiohq/composio/blob/next/python/composio/core/models/tool_router_session.py#L47)
+[View source](https://github.com/composiohq/composio/blob/next/python/composio/core/models/tool_router_session.py#L53)
