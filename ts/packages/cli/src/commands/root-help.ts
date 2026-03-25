@@ -76,9 +76,12 @@ const CORE_COMMANDS: ReadonlyArray<DetailedCommand> = [
 // ── Developer commands ─────────────────────────────────────────────────
 
 const OTHER_COMMANDS: ReadonlyArray<CompactCommand> = [
-  { name: 'tools info <slug>', description: 'Print tool summary and cache its schema' },
-  { name: 'tools list <toolkit>', description: 'List tools available in a toolkit' },
-  { name: 'artifacts cwd', description: 'Print the cwd-scoped session artifact directory' },
+  { name: 'composio tools info <slug>', description: 'Print tool summary and cache its schema' },
+  { name: 'composio tools list <toolkit>', description: 'List tools available in a toolkit' },
+  {
+    name: 'composio artifacts cwd',
+    description: 'Print the cwd-scoped session artifact directory',
+  },
 ];
 
 const DEVELOPER_COMMANDS: ReadonlyArray<CompactCommand> = [
@@ -260,6 +263,7 @@ const SUBCOMMAND_HELP: Record<string, SubcommandHelp> = {
       { name: '-f, --file <text>', description: 'Run a TS/JS file instead of inline code' },
       { name: '--dry-run', description: 'Preview execute() calls without running them' },
       { name: '--debug', description: 'Log helper steps while the script runs' },
+      { name: '--logs-off', description: 'Hide the always-on subAgent streaming logs' },
     ],
     flags: [
       { name: '--skip-connection-check', description: 'Skip the linked-account check' },
