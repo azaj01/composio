@@ -254,7 +254,7 @@ session = composio.tool_router.create(
     workbench={
         'enable': True,  # default
         'enable_proxy_execution': False,  # Whether to allow proxy execute calls in workbench
-        'auto_offload_threshold': 300  # Maximum execution payload size to offload to workbench
+        'auto_offload_threshold': 300  # Character threshold for auto-offloading large responses to the workbench
     }
 )
 ```
@@ -773,7 +773,7 @@ manage_connections: Union[
 ToolRouterWorkbenchConfig = TypedDict('ToolRouterWorkbenchConfig', {
     'enable': bool,                      # Enable/disable workbench entirely (default: True)
     'enable_proxy_execution': bool,      # Whether to allow proxy execute calls
-    'auto_offload_threshold': int        # Maximum execution payload size to offload to workbench
+    'auto_offload_threshold': int        # Character threshold for auto-offloading execution to workbench
 })
 
 workbench: ToolRouterWorkbenchConfig
