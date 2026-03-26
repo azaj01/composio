@@ -107,6 +107,7 @@ class SessionContextImpl:
 
     @property
     def user_id(self) -> str:
+        """The user ID for the current session."""
         return self._user_id
 
     def execute(
