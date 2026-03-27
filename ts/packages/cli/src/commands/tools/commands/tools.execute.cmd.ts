@@ -210,7 +210,7 @@ const persistLargeExecuteOutput = (toolSlug: string, json: string, sharedDirecto
       logId: '',
       storedInFile: true,
       tokenCount: getExecuteOutputEncoder().encode(json).length,
-      outputFilePath,
+      outputFilePath: outputFilePath ?? '(could not write to disk)',
     } satisfies StoredExecuteOutputSummary;
   });
 
