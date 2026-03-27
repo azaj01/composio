@@ -13,6 +13,7 @@ import {
 } from 'src/commands/run.cmd';
 import {
   RUN_COMPANION_MODULE_FILENAMES,
+  RUN_COMPANION_STATIC_ASSET_RELATIVE_PATHS,
   listMissingInstalledRunCompanionModules,
   readInstalledReleaseTag,
   resolveRunCompanionModulePath,
@@ -114,6 +115,53 @@ describe('CLI: composio run', () => {
             cmd: string[];
           };
           expect(spawnConfig.cmd[3]).toBe('--eval');
+          expect(exit).toHaveBeenCalledWith(0);
+        })
+    );
+  });
+
+  layer(TestLive())(it => {
+    it.scoped(
+      '[Given] a multiline structured experimental_subAgent script [Then] run preserves the inline TypeScript source',
+      () =>
+        Effect.gen(function* () {
+          const script = `
+            const brief = await experimental_subAgent(
+              [
+                "Do not read files.",
+                "Do not run terminal commands.",
+                "Do not inspect the workspace.",
+                "Return exactly this structured value:",
+                "{\\"summary\\":\\"ok\\",\\"urgent\\":[\\"a\\",\\"b\\"]}",
+              ].join("\\n"),
+              {
+                target: "codex",
+                schema: z.object({ summary: z.string(), urgent: z.array(z.string()) }),
+              }
+            );
+            console.log(JSON.stringify(brief));
+            console.log(JSON.stringify(brief.structuredOutput));
+          `;
+          const spawn = vi.fn(() => ({ exited: Promise.resolve(0) }));
+          const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+          vi.stubGlobal('Bun', { spawn });
+
+          yield* cli(['run', '--logs-off', script]);
+
+          expect(spawn).toHaveBeenCalledTimes(1);
+          const spawnConfig = (spawn as any).mock.calls[0][0] as {
+            cmd: string[];
+          };
+          expect(spawnConfig.cmd[3]).toBe('--eval');
+          expect(spawnConfig.cmd[4]).toContain('const brief = await experimental_subAgent(');
+          expect(spawnConfig.cmd[4]).toContain('"Do not run terminal commands."');
+          expect(spawnConfig.cmd[4]).toContain('].join("\\n"),');
+          expect(spawnConfig.cmd[4]).toContain('target: "codex"');
+          expect(spawnConfig.cmd[4]).toContain('console.log(JSON.stringify(brief));');
+          expect(spawnConfig.cmd[4]).toContain(
+            'return (console.log(JSON.stringify(brief.structuredOutput)));'
+          );
+          expect(spawnConfig.cmd[4]).not.toContain('"Do not run terminal\n');
           expect(exit).toHaveBeenCalledWith(0);
         })
     );
@@ -471,7 +519,115 @@ describe('run companion install metadata', () => {
     fs.writeFileSync(path.join(tempDir, RUN_COMPANION_MODULE_FILENAMES[0]!), '', 'utf8');
 
     expect(listMissingInstalledRunCompanionModules(execPath)).toEqual(
-      RUN_COMPANION_MODULE_FILENAMES.slice(1)
+      [...RUN_COMPANION_MODULE_FILENAMES.slice(1), ...RUN_COMPANION_STATIC_ASSET_RELATIVE_PATHS]
+        .slice()
+        .sort()
+    );
+  });
+
+  it('[Given] a nested companion dependency is missing [Then] it reports the missing helper asset', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'composio-run-missing-nested-'));
+    const execPath = path.join(tempDir, 'composio');
+    const servicesDir = path.join(tempDir, 'services');
+    fs.mkdirSync(servicesDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-shared.mjs'),
+      'export * from "./services/run-subagent-shared.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-acp.mjs'),
+      'export * from "./services/run-subagent-acp.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-legacy.mjs'),
+      'export * from "./services/run-subagent-legacy.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-output-mcp.mjs'),
+      'export * from "./services/run-subagent-output-mcp.mjs";\n',
+      'utf8'
+    );
+
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-shared.mjs'),
+      'export const x = 1;\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-acp.mjs'),
+      'export * from "../run-companion-modules-abc123.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-legacy.mjs'),
+      'export const y = 1;\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-output-mcp.mjs'),
+      'export const z = 1;\n',
+      'utf8'
+    );
+
+    expect(listMissingInstalledRunCompanionModules(execPath)).toContain(
+      'run-companion-modules-abc123.mjs'
+    );
+  });
+
+  it('[Given] a named re-export dependency is missing [Then] it reports the missing helper asset', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'composio-run-missing-reexport-'));
+    const execPath = path.join(tempDir, 'composio');
+    const servicesDir = path.join(tempDir, 'services');
+    fs.mkdirSync(servicesDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-shared.mjs'),
+      'export * from "./services/run-subagent-shared.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-acp.mjs'),
+      'export * from "./services/run-subagent-acp.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-legacy.mjs'),
+      'export * from "./services/run-subagent-legacy.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(tempDir, 'run-subagent-output-mcp.mjs'),
+      'export * from "./services/run-subagent-output-mcp.mjs";\n',
+      'utf8'
+    );
+
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-shared.mjs'),
+      'export const sharedValue = 1;\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-acp.mjs'),
+      'export { helperValue } from "../run-companion-modules-def456.mjs";\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-legacy.mjs'),
+      'export const legacyValue = 1;\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(servicesDir, 'run-subagent-output-mcp.mjs'),
+      'export const outputValue = 1;\n',
+      'utf8'
+    );
+
+    expect(listMissingInstalledRunCompanionModules(execPath)).toContain(
+      'run-companion-modules-def456.mjs'
     );
   });
 });

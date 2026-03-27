@@ -43,22 +43,7 @@ const NodeOsTest = Layer.succeed(
   })
 );
 
-const runUpgrade = (configEntries: ReadonlyArray<[string, string]>) =>
-  Effect.gen(function* () {
-    const service = yield* UpgradeBinary;
-    return yield* Effect.flip(service.upgrade());
-  }).pipe(
-    Effect.provide(UpgradeBinary.Default),
-    Effect.provide(FetchHttpClient.layer),
-    Effect.provide(BunFileSystem.layer),
-    Effect.provide(TerminalUINoop),
-    Effect.provide(NodeOsTest),
-    Effect.withConfigProvider(ConfigProvider.fromMap(new Map(configEntries))),
-    Effect.scoped,
-    Effect.runPromise
-  );
-
-const runUpgradeSuccess = (configEntries: ReadonlyArray<[string, string]>) =>
+const makeUpgradeEffect = (configEntries: ReadonlyArray<[string, string]>) =>
   Effect.gen(function* () {
     const service = yield* UpgradeBinary;
     return yield* service.upgrade();
@@ -69,9 +54,14 @@ const runUpgradeSuccess = (configEntries: ReadonlyArray<[string, string]>) =>
     Effect.provide(TerminalUINoop),
     Effect.provide(NodeOsTest),
     Effect.withConfigProvider(ConfigProvider.fromMap(new Map(configEntries))),
-    Effect.scoped,
-    Effect.runPromise
+    Effect.scoped
   );
+
+const runUpgrade = (configEntries: ReadonlyArray<[string, string]>) =>
+  makeUpgradeEffect(configEntries).pipe(Effect.flip, Effect.runPromise);
+
+const runUpgradeSuccess = (configEntries: ReadonlyArray<[string, string]>) =>
+  makeUpgradeEffect(configEntries).pipe(Effect.runPromise);
 
 describe('UpgradeBinary', () => {
   it('wraps non-2xx releases fetch failures with fetch context (no tag branch)', async () => {
@@ -169,83 +159,45 @@ describe('UpgradeBinary', () => {
     }
   });
 
-  it('skips newer releases that do not yet contain a binary for the current platform', async () => {
+  it('skips newer releases that do not contain a binary for the current platform', async () => {
     vi.stubGlobal('Bun', { which: vi.fn(() => null) });
 
     try {
       await withHttpServer(
-        (req, res) => {
-          if (req.url === '/repos/test-owner/test-repo/releases?per_page=100') {
-            res.writeHead(200, { 'content-type': 'application/json' });
-            res.end(
-              JSON.stringify([
-                {
-                  tag_name: '@composio/cli@9.9.9',
-                  prerelease: false,
-                  draft: false,
-                  assets: [],
-                },
-                {
-                  tag_name: '@composio/cli@0.0.1',
-                  prerelease: false,
-                  draft: false,
-                  assets: [],
-                },
-              ])
-            );
-            return;
-          }
-
-          res.writeHead(404, { 'content-type': 'application/json' });
-          res.end(JSON.stringify({ message: 'not found' }));
-        },
-        async apiBaseUrl => {
-          const result = await runUpgradeSuccess([
-            ['GITHUB_API_BASE_URL', apiBaseUrl],
-            ['GITHUB_OWNER', 'test-owner'],
-            ['GITHUB_REPO', 'test-repo'],
-          ]);
-
-          expect(result).toBeUndefined();
-        }
-      );
-    } finally {
-      vi.unstubAllGlobals();
-      vi.restoreAllMocks();
-    }
-  });
-
-  it('treats an explicitly requested release without binaries as no upgrade', async () => {
-    vi.stubGlobal('Bun', { which: vi.fn(() => null) });
-
-    try {
-      await withHttpServer(
-        (req, res) => {
-          if (
-            req.url ===
-            `/repos/test-owner/test-repo/releases/tags/${encodeURIComponent('@composio/cli@9.9.9')}`
-          ) {
-            res.writeHead(200, { 'content-type': 'application/json' });
-            res.end(
-              JSON.stringify({
-                tag_name: '@composio/cli@9.9.9',
-                prerelease: false,
+        (_req, res) => {
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(
+            JSON.stringify([
+              {
+                tag_name: '@composio/cli@0.2.15',
                 draft: false,
-                assets: [],
-              })
-            );
-            return;
-          }
-
-          res.writeHead(404, { 'content-type': 'application/json' });
-          res.end(JSON.stringify({ message: 'not found' }));
+                prerelease: false,
+                assets: [
+                  {
+                    name: 'composio-linux-x64.zip',
+                    browser_download_url: 'http://127.0.0.1/unused-linux.zip',
+                  },
+                ],
+              },
+              {
+                tag_name: '@composio/cli@0.2.14',
+                draft: false,
+                prerelease: false,
+                assets: [
+                  {
+                    name: 'composio-darwin-aarch64.zip',
+                    browser_download_url: 'http://127.0.0.1/current-darwin.zip',
+                  },
+                ],
+              },
+            ])
+          );
         },
         async apiBaseUrl => {
           const result = await runUpgradeSuccess([
             ['GITHUB_API_BASE_URL', apiBaseUrl],
             ['GITHUB_OWNER', 'test-owner'],
             ['GITHUB_REPO', 'test-repo'],
-            ['GITHUB_TAG', '@composio/cli@9.9.9'],
           ]);
 
           expect(result).toBeUndefined();

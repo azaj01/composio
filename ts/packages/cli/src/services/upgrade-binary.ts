@@ -12,7 +12,10 @@ import decompress from 'decompress';
 import type { Predicate } from 'effect/Predicate';
 import { renderPrettyError } from './utils/pretty-error';
 import { TerminalUI } from './terminal-ui';
-import { RUN_COMPANION_MODULE_FILENAMES, writeInstalledReleaseTag } from './run-companion-modules';
+import {
+  collectExpectedRunCompanionAssetRelativePaths,
+  writeInstalledReleaseTag,
+} from './run-companion-modules';
 
 export class UpgradeBinaryError extends Data.TaggedError('services/UpgradeBinaryError')<{
   readonly cause?: unknown;
@@ -36,10 +39,10 @@ type GitHubRelease = {
 
 const CLI_RELEASE_TAG_PATTERN = /^@composio\/cli@\d+\.\d+\.\d+.*$/;
 
-const getBinaryAssetName = (platformArch: PlatformArch): string =>
+const getBinaryAssetName = (platformArch: PlatformArch) =>
   `${CLI_BINARY_NAME}-${platformArch.platform}-${platformArch.arch}.zip`;
 
-const hasBinaryAsset = (release: GitHubRelease, platformArch: PlatformArch): boolean =>
+const hasPlatformBinaryAsset = (release: GitHubRelease, platformArch: PlatformArch) =>
   release.assets.some(asset => asset.name === getBinaryAssetName(platformArch));
 
 // Service to manage CLI binary upgrades
@@ -106,7 +109,7 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
 
     const fetchLatestRelease = (
       platformArch: PlatformArch
-    ): Effect.Effect<Option.Option<GitHubRelease>, UpgradeBinaryError, never> =>
+    ): Effect.Effect<GitHubRelease, UpgradeBinaryError, never> =>
       Effect.gen(function* () {
         const release = yield* githubConfig.TAG.pipe(
           Option.match({
@@ -151,19 +154,24 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
                 );
               }
 
-              const releasesWithBinary = cliReleases.filter(release =>
-                hasBinaryAsset(release, platformArch)
+              const cliReleasesWithBinary = cliReleases.filter(release =>
+                hasPlatformBinaryAsset(release, platformArch)
               );
 
-              if (releasesWithBinary.length === 0) {
-                yield* Effect.logDebug(
-                  `No published CLI releases currently contain ${getBinaryAssetName(platformArch)}`
+              if (cliReleasesWithBinary.length === 0) {
+                return yield* Effect.fail(
+                  new UpgradeBinaryError({
+                    cause: new Error(
+                      `No package-scoped CLI releases found with ${getBinaryAssetName(platformArch)}`
+                    ),
+                    message:
+                      'Failed to determine latest CLI release from @composio/cli tags on GitHub',
+                  })
                 );
-                return Option.none();
               }
 
-              let latest = releasesWithBinary[0];
-              for (const release of releasesWithBinary.slice(1)) {
+              let latest = cliReleasesWithBinary[0];
+              for (const release of cliReleasesWithBinary.slice(1)) {
                 const comparison = yield* semverComparator(latest.tag_name, release.tag_name).pipe(
                   Effect.mapError(
                     error =>
@@ -180,7 +188,7 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
               }
 
               yield* Effect.logDebug(`Resolved latest CLI release tag: ${latest.tag_name}`);
-              return Option.some(latest);
+              return latest;
             }),
             onSome: Effect.fn(function* (tag) {
               yield* Effect.logDebug(`Using tag: ${tag}`);
@@ -192,14 +200,7 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
                 parseErrorMessage: 'Failed to parse GitHub release JSON response',
               });
 
-              if (!hasBinaryAsset(release, platformArch)) {
-                yield* Effect.logDebug(
-                  `Release ${tag} does not yet contain ${getBinaryAssetName(platformArch)}`
-                );
-                return Option.none();
-              }
-
-              return Option.some(release as GitHubRelease);
+              return release as GitHubRelease;
             }),
           })
         );
@@ -500,9 +501,10 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
 
         const sourceDirectory = path.dirname(sourcePath);
         const targetDirectory = path.dirname(targetPath);
-
-        for (const fileName of RUN_COMPANION_MODULE_FILENAMES) {
-          const sourceCompanion = path.join(sourceDirectory, fileName);
+        const companionRelativePaths =
+          collectExpectedRunCompanionAssetRelativePaths(sourceDirectory);
+        for (const relativePath of companionRelativePaths) {
+          const sourceCompanion = path.join(sourceDirectory, relativePath);
           const sourceExists = yield* fs
             .exists(sourceCompanion)
             .pipe(Effect.catchAll(() => Effect.succeed(false)));
@@ -516,8 +518,20 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
             );
           }
 
+          const targetCompanion = path.join(targetDirectory, relativePath);
+          yield* fs.makeDirectory(path.dirname(targetCompanion), { recursive: true }).pipe(
+            Effect.catchAll(error =>
+              Effect.fail(
+                new UpgradeBinaryError({
+                  cause: error as Error,
+                  message: `Failed to create companion module directory: ${relativePath}`,
+                })
+              )
+            )
+          );
+
           yield* fs
-            .copy(sourceCompanion, path.join(targetDirectory, fileName), {
+            .copy(sourceCompanion, targetCompanion, {
               overwrite: true,
             })
             .pipe(
@@ -525,7 +539,7 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
                 Effect.fail(
                   new UpgradeBinaryError({
                     cause: error as Error,
-                    message: `Failed to replace companion module: ${fileName}`,
+                    message: `Failed to replace companion module: ${relativePath}`,
                   })
                 )
               )
@@ -567,13 +581,7 @@ export class UpgradeBinary extends Effect.Service<UpgradeBinary>()('services/Upg
         const didUpgrade = yield* ui.useMakeSpinner('Checking for updates...', spinner =>
           Effect.gen(function* () {
             const platformArch = yield* detectPlatform;
-            const releaseOption = yield* fetchLatestRelease(platformArch);
-            if (Option.isNone(releaseOption)) {
-              yield* spinner.stop('You are already running the latest version!');
-              return false;
-            }
-
-            const release = releaseOption.value;
+            const release = yield* fetchLatestRelease(platformArch);
             const updateAvailable = yield* isUpdateAvailable(release);
             if (!updateAvailable) {
               yield* spinner.stop('You are already running the latest version!');
