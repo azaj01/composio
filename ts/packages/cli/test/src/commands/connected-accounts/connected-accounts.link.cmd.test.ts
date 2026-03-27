@@ -1,9 +1,10 @@
 import { describe, expect, layer } from '@effect/vitest';
-import { ConfigProvider, Effect } from 'effect';
+import { ConfigProvider, Console, Effect } from 'effect';
 import { extendConfigProvider } from 'src/services/config';
 import { cli, TestLive, MockConsole } from 'test/__utils__';
 import type { TestLiveInput } from 'test/__utils__/services/test-layer';
 import type { ConnectedAccountItem } from 'src/models/connected-accounts';
+import { TerminalUI } from 'src/services/terminal-ui';
 
 const extractJsonObject = (output: string): Record<string, unknown> | null => {
   const jsonMatch = output.match(/\{[\s\S]*"status"[\s\S]*\}/);
@@ -38,6 +39,36 @@ const testConfigProvider = ConfigProvider.fromMap(
   new Map([['COMPOSIO_USER_API_KEY', 'test_api_key']])
 ).pipe(extendConfigProvider);
 
+const RecordingTerminalUI = TerminalUI.of({
+  output: (data, options) =>
+    Console.log(
+      JSON.stringify({
+        channel: options?.force ? 'FORCED' : 'NORMAL',
+        data,
+      })
+    ),
+  intro: title => Console.log(title),
+  outro: message => Console.log(message),
+  log: {
+    info: message => Console.log(message),
+    success: message => Console.log(message),
+    warn: message => Console.log(message),
+    error: message => Console.log(message),
+    step: message => Console.log(message),
+    message: message => Console.log(message),
+  },
+  note: (message, title) => Console.log(title ? `[${title}] ${message}` : message),
+  confirm: () => Effect.succeed(true),
+  select: (_message, options) => Effect.succeed(options[0].value),
+  withSpinner: (_message, effect) => effect,
+  useMakeSpinner: (_message, use) =>
+    use({
+      message: () => Effect.void,
+      stop: () => Effect.void,
+      error: () => Effect.void,
+    }),
+});
+
 describe('CLI: composio dev connected-accounts link', () => {
   layer(
     TestLive({
@@ -56,6 +87,55 @@ describe('CLI: composio dev connected-accounts link', () => {
         expect(parsed?.status).toBe('success');
         expect(parsed?.connected_account_id).toBe('con_test_link');
         expect(parsed?.toolkit).toBe('gmail');
+      })
+    );
+  });
+
+  layer(
+    TestLive({
+      baseConfigProvider: testConfigProvider,
+      connectedAccountsData,
+      fixture: 'global-test-user-id',
+      terminalUI: RecordingTerminalUI,
+    })
+  )('[Given] --no-browser [Then] emits a forced raw redirect URL for merged-stream shells', it => {
+    it.scoped('forces the redirect URL through output()', () =>
+      Effect.gen(function* () {
+        yield* cli(['link', 'gmail', '--no-browser']);
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const output = lines.join('\n');
+
+        expect(output).toContain('"channel":"FORCED"');
+        expect(output).toContain('https://app.composio.dev/link?token=lt_test_token');
+      })
+    );
+  });
+
+  layer(
+    TestLive({
+      baseConfigProvider: testConfigProvider,
+      connectedAccountsData,
+      fixture: 'global-test-user-id',
+      terminalUI: RecordingTerminalUI,
+    })
+  )('[Given] --no-browser --no-wait [Then] stdout remains JSON-only', it => {
+    it.scoped('does not emit the raw redirect URL before the pending JSON payload', () =>
+      Effect.gen(function* () {
+        yield* cli(['link', 'gmail', '--no-browser', '--no-wait']);
+        const lines = yield* MockConsole.getLines({ stripAnsi: true });
+        const forcedLines = lines
+          .map(line => {
+            try {
+              return JSON.parse(line) as { channel?: string; data?: string };
+            } catch {
+              return null;
+            }
+          })
+          .filter(line => line?.channel === 'FORCED');
+
+        expect(forcedLines).toHaveLength(1);
+        expect(forcedLines[0]?.data).toContain('"status": "pending"');
+        expect(forcedLines[0]?.data?.trim().startsWith('{')).toBe(true);
       })
     );
   });
