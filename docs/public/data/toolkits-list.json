@@ -36,7 +36,7 @@
     "name": "Notion",
     "logo": "https://logos.composio.dev/api/notion",
     "category": "notes",
-    "toolCount": 47,
+    "toolCount": 48,
     "triggerCount": 5
   },
   {
@@ -44,7 +44,7 @@
     "name": "Google Sheets",
     "logo": "https://logos.composio.dev/api/googlesheets",
     "category": "spreadsheets",
-    "toolCount": 46,
+    "toolCount": 48,
     "triggerCount": 16
   },
   {
@@ -53,7 +53,7 @@
     "logo": "https://logos.composio.dev/api/slack",
     "category": "team chat",
     "toolCount": 151,
-    "triggerCount": 0
+    "triggerCount": 5
   },
   {
     "slug": "supabase",
@@ -68,7 +68,7 @@
     "name": "Outlook",
     "logo": "https://logos.composio.dev/api/outlook",
     "category": "email",
-    "toolCount": 301,
+    "toolCount": 304,
     "triggerCount": 5
   },
   {
@@ -108,7 +108,7 @@
     "name": "HubSpot",
     "logo": "https://logos.composio.dev/api/hubspot",
     "category": "crm",
-    "toolCount": 229,
+    "toolCount": 233,
     "triggerCount": 2
   },
   {
@@ -116,7 +116,7 @@
     "name": "Linear",
     "logo": "https://logos.composio.dev/api/linear",
     "category": "project management",
-    "toolCount": 31,
+    "toolCount": 33,
     "triggerCount": 3
   },
   {
@@ -148,7 +148,7 @@
     "name": "Jira",
     "logo": "https://logos.composio.dev/api/jira",
     "category": "project management",
-    "toolCount": 97,
+    "toolCount": 98,
     "triggerCount": 3
   },
   {
@@ -181,7 +181,7 @@
     "logo": "https://logos.composio.dev/api/slackbot",
     "category": "team chat",
     "toolCount": 87,
-    "triggerCount": 0
+    "triggerCount": 5
   },
   {
     "slug": "canvas",
@@ -196,7 +196,7 @@
     "name": "Bitbucket",
     "logo": "https://logos.composio.dev/api/bitbucket",
     "category": "developer tools",
-    "toolCount": 104,
+    "toolCount": 108,
     "triggerCount": 0
   },
   {
@@ -516,7 +516,7 @@
     "name": "Zoho",
     "logo": "https://logos.composio.dev/api/zoho",
     "category": "crm",
-    "toolCount": 12,
+    "toolCount": 14,
     "triggerCount": 0
   },
   {
@@ -724,7 +724,7 @@
     "name": "Zendesk",
     "logo": "https://logos.composio.dev/api/zendesk",
     "category": "crm",
-    "toolCount": 19,
+    "toolCount": 20,
     "triggerCount": 2
   },
   {
@@ -764,7 +764,7 @@
     "name": "Google Super",
     "logo": "https://logos.composio.dev/api/googlesuper",
     "category": "file management & storage",
-    "toolCount": 429,
+    "toolCount": 431,
     "triggerCount": 20
   },
   {
@@ -1068,7 +1068,7 @@
     "name": "Zoho Books",
     "logo": "https://logos.composio.dev/api/zoho_books",
     "category": "accounting",
-    "toolCount": 264,
+    "toolCount": 265,
     "triggerCount": 0
   },
   {
@@ -1380,7 +1380,7 @@
     "name": "Todoist",
     "logo": "https://logos.composio.dev/api/todoist",
     "category": "task management",
-    "toolCount": 84,
+    "toolCount": 85,
     "triggerCount": 1
   },
   {
@@ -1388,7 +1388,7 @@
     "name": "Zoho Desk",
     "logo": "https://logos.composio.dev/api/zoho_desk",
     "category": "crm",
-    "toolCount": 22,
+    "toolCount": 23,
     "triggerCount": 0
   },
   {
@@ -1652,7 +1652,7 @@
     "name": "Cloudflare",
     "logo": "https://logos.composio.dev/api/cloudflare",
     "category": "security & identity tools",
-    "toolCount": 18,
+    "toolCount": 20,
     "triggerCount": 0
   },
   {
@@ -1676,7 +1676,7 @@
     "name": "Xero",
     "logo": "https://logos.composio.dev/api/xero",
     "category": "accounting",
-    "toolCount": 39,
+    "toolCount": 41,
     "triggerCount": 0
   },
   {
@@ -1692,7 +1692,7 @@
     "name": "ActiveCampaign",
     "logo": "https://logos.composio.dev/api/active_campaign",
     "category": "marketing automation",
-    "toolCount": 298,
+    "toolCount": 299,
     "triggerCount": 0
   },
   {
@@ -1826,9 +1826,9 @@
   {
     "slug": "_1password",
     "name": "1password",
-    "logo": "https://logos.composio.dev/api/onepassword",
+    "logo": "https://logos.composio.dev/api/1password",
     "category": "security & identity tools",
-    "toolCount": 11,
+    "toolCount": 0,
     "triggerCount": 0
   },
   {
@@ -1940,7 +1940,7 @@
     "name": "Agent Mail",
     "logo": "https://logos.composio.dev/api/agent_mail",
     "category": "ai agents",
-    "toolCount": 3,
+    "toolCount": 5,
     "triggerCount": 1
   },
   {
@@ -2572,7 +2572,7 @@
     "name": "Bugherd",
     "logo": "https://logos.composio.dev/api/bugherd",
     "category": "project management",
-    "toolCount": 25,
+    "toolCount": 26,
     "triggerCount": 0
   },
   {
@@ -3364,7 +3364,7 @@
     "name": "DigitalOcean",
     "logo": "https://logos.composio.dev/api/digital_ocean",
     "category": "developer tools",
-    "toolCount": 47,
+    "toolCount": 48,
     "triggerCount": 0
   },
   {
@@ -3548,7 +3548,7 @@
     "name": "Dreamstudio",
     "logo": "https://logos.composio.dev/api/dreamstudio",
     "category": "artificial intelligence",
-    "toolCount": 4,
+    "toolCount": 5,
     "triggerCount": 0
   },
   {
@@ -3820,7 +3820,7 @@
     "name": "Excel",
     "logo": "https://logos.composio.dev/api/excel",
     "category": "spreadsheets",
-    "toolCount": 52,
+    "toolCount": 54,
     "triggerCount": 0
   },
   {
@@ -5596,7 +5596,7 @@
     "name": "NocoDB",
     "logo": "https://logos.composio.dev/api/nocodb",
     "category": "databases",
-    "toolCount": 27,
+    "toolCount": 28,
     "triggerCount": 0
   },
   {
@@ -6444,7 +6444,7 @@
     "name": "Render",
     "logo": "https://logos.composio.dev/api/render",
     "category": "developer tools",
-    "toolCount": 93,
+    "toolCount": 95,
     "triggerCount": 0
   },
   {
@@ -6476,7 +6476,7 @@
     "name": "Replicate",
     "logo": "https://logos.composio.dev/api/replicate",
     "category": "artificial intelligence",
-    "toolCount": 30,
+    "toolCount": 31,
     "triggerCount": 0
   },
   {
@@ -7764,7 +7764,7 @@
     "name": "Vapi",
     "logo": "https://logos.composio.dev/api/vapi",
     "category": "artificial intelligence",
-    "toolCount": 37,
+    "toolCount": 38,
     "triggerCount": 0
   },
   {
@@ -7988,7 +7988,7 @@
     "name": "World news api",
     "logo": "https://logos.composio.dev/api/world_news_api",
     "category": "news & lifestyle",
-    "toolCount": 6,
+    "toolCount": 7,
     "triggerCount": 0
   },
   {

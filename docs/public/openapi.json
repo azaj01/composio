@@ -299,6 +299,52 @@
               "https://www.googleapis.com/auth/gmail.modify"
             ]
           },
+          "scope_requirements": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "all_of": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "any_of": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 1
+                        }
+                      },
+                      "required": [
+                        "any_of"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "all_of"
+            ],
+            "description": "Structured scope requirements for the tool. Null means the tool is legacy and only exposes flat scopes.",
+            "example": {
+              "all_of": [
+                "read:user",
+                {
+                  "any_of": [
+                    "repo",
+                    "public_repo"
+                  ]
+                }
+              ]
+            }
+          },
           "tags": {
             "type": "array",
             "items": {
@@ -385,6 +431,7 @@
           "version",
           "output_parameters",
           "scopes",
+          "scope_requirements",
           "tags",
           "is_deprecated",
           "deprecated"
@@ -5739,6 +5786,251 @@
         }
       }
     },
+    "/api/v3/org/consumer/project/resolve": {
+      "post": {
+        "summary": "Resolve the organization consumer project",
+        "description": "Finds the authenticated organization's single CONSUMER project and provisions it if absent. This endpoint is idempotent and never returns consumer API keys.",
+        "tags": [
+          "Projects"
+        ],
+        "operationId": "postOrgConsumerProjectResolve",
+        "security": [
+          {
+            "UserApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "User API key used to authenticate the request.",
+              "example": "uak_abc123xyz456..."
+            },
+            "required": true,
+            "name": "x-user-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "orgId",
+              "description": "Organization nano ID that scopes the user API key resolution.",
+              "example": "org_abc123xyz456"
+            },
+            "required": true,
+            "name": "x-org-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumer project resolved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "project_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "UUID of the resolved consumer project."
+                    },
+                    "project_nano_id": {
+                      "type": "string",
+                      "format": "projectId",
+                      "description": "Nano ID of the resolved consumer project."
+                    },
+                    "project_name": {
+                      "type": "string",
+                      "description": "Name of the resolved consumer project."
+                    },
+                    "org_id": {
+                      "type": "string",
+                      "format": "orgId",
+                      "description": "Organization nano ID that owns the consumer project."
+                    },
+                    "project_type": {
+                      "type": "string",
+                      "enum": [
+                        "CONSUMER"
+                      ],
+                      "description": "Resolved project type."
+                    },
+                    "consumer_user_id": {
+                      "type": "string",
+                      "description": "Derived internal Composio user ID for the authenticated user in this consumer org context."
+                    }
+                  },
+                  "required": [
+                    "project_id",
+                    "project_nano_id",
+                    "project_name",
+                    "org_id",
+                    "project_type",
+                    "consumer_user_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. x-org-id is required for user API key authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. A valid user API key is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/org/consumer/connected_toolkits": {
+      "get": {
+        "summary": "List active connected toolkits for a consumer user",
+        "description": "Resolves the organization's single CONSUMER project and returns the distinct toolkit slugs for which the specified consumer user has an ACTIVE connection.",
+        "tags": [
+          "Organization Management"
+        ],
+        "operationId": "getOrgConsumerConnectedToolkits",
+        "security": [
+          {
+            "UserApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Consumer user ID to inspect within the consumer project."
+            },
+            "required": true,
+            "description": "Consumer user ID to inspect within the consumer project.",
+            "name": "user_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "User API key used to authenticate the request.",
+              "example": "uak_abc123xyz456..."
+            },
+            "required": true,
+            "name": "x-user-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Organization nano ID that owns the consumer project."
+            },
+            "required": true,
+            "description": "Organization nano ID that owns the consumer project.",
+            "name": "x-org-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active consumer connected toolkits retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "toolkits": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Distinct active toolkit slugs."
+                    }
+                  },
+                  "required": [
+                    "toolkits"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found in organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v3/webhook_subscriptions": {
       "post": {
         "summary": "Create webhook subscription",
@@ -8815,6 +9107,16 @@
               }
             }
           },
+          "408": {
+            "description": "Request timeout - Tool execution exceeded the maximum allowed time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "410": {
             "description": "Gone - Tool has been deprecated and is no longer available",
             "content": {
@@ -9800,6 +10102,16 @@
           },
           "404": {
             "description": "Trigger instance not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request timeout",
             "content": {
               "application/json": {
                 "schema": {
@@ -14401,11 +14713,18 @@
                         "default": false,
                         "description": "When true, the COMPOSIO_WAIT_FOR_CONNECTIONS tool is available for agents to poll connection status after sharing auth URLs. Default is false (disabled). May not work reliably with GPT models.",
                         "example": false
+                      },
+                      "enable_connection_removal": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "default": true,
+                        "description": "Enable the \"remove\" action in COMPOSIO_MANAGE_CONNECTIONS to allow deleting connected accounts. Default true."
                       }
                     },
                     "default": {
                       "enable": true,
-                      "enable_wait_for_connections": false
+                      "enable_wait_for_connections": false,
+                      "enable_connection_removal": true
                     },
                     "additionalProperties": false,
                     "description": "Configuration for connection management settings"
@@ -15121,6 +15440,11 @@
                               "type": "boolean",
                               "default": false,
                               "description": "Enable the COMPOSIO_WAIT_FOR_CONNECTIONS tool for polling connection status. Default false. May not work reliably with GPT models."
+                            },
+                            "enable_connection_removal": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Enable the \"remove\" action in COMPOSIO_MANAGE_CONNECTIONS. Default true."
                             }
                           },
                           "description": "Manage connections configuration"
@@ -15505,6 +15829,11 @@
                         "environment": "production"
                       }
                     }
+                  },
+                  "account": {
+                    "type": "string",
+                    "description": "Account identifier to specify which connected account to use. Use the account ID (e.g. \"coup_hurricane_dal_analytical\") or an alias. When omitted with a single account, the default is used. When omitted with multiple accounts, an error lists available accounts.",
+                    "example": "coup_hurricane_dal_analytical"
                   }
                 },
                 "required": [
@@ -15583,6 +15912,16 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload too large",
             "content": {
               "application/json": {
                 "schema": {
@@ -15753,6 +16092,16 @@
               }
             }
           },
+          "413": {
+            "description": "Payload too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -15914,6 +16263,11 @@
                               "type": "boolean",
                               "default": false,
                               "description": "Enable the COMPOSIO_WAIT_FOR_CONNECTIONS tool for polling connection status. Default false. May not work reliably with GPT models."
+                            },
+                            "enable_connection_removal": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Enable the \"remove\" action in COMPOSIO_MANAGE_CONNECTIONS. Default true."
                             }
                           },
                           "description": "Manage connections configuration"
@@ -16899,6 +17253,16 @@
               }
             }
           },
+          "413": {
+            "description": "Payload too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -17165,6 +17529,16 @@
               }
             }
           },
+          "413": {
+            "description": "Payload too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -17408,6 +17782,53 @@
                             "additionalProperties": {},
                             "description": "Information about the currently connected user (email, name, etc.)"
                           },
+                          "accounts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "description": "Unique identifier for this account"
+                                },
+                                "alias": {
+                                  "type": "string",
+                                  "description": "User-assigned alias for this account"
+                                },
+                                "user_info": {
+                                  "type": "object",
+                                  "additionalProperties": {},
+                                  "description": "Information about the connected user (email, name, etc.)"
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "description": "Connection status (e.g., \"active\")"
+                                },
+                                "created_at": {
+                                  "type": "string",
+                                  "description": "ISO 8601 timestamp of when the account was connected"
+                                },
+                                "is_default": {
+                                  "type": "boolean",
+                                  "description": "Whether this is the default account for the toolkit"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "status",
+                                "created_at",
+                                "is_default"
+                              ]
+                            },
+                            "description": "List of connected accounts for this toolkit. Present when multi-account is enabled."
+                          },
+                          "account_selection": {
+                            "type": "string",
+                            "enum": [
+                              "required"
+                            ],
+                            "description": "When \"required\", the agent must specify which account to use. Present only when multiple accounts exist."
+                          },
                           "status_message": {
                             "type": "string",
                             "description": "Human-readable message about the connection status and next steps"
@@ -17599,6 +18020,16 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload too large",
             "content": {
               "application/json": {
                 "schema": {
