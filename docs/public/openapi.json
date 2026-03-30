@@ -10196,7 +10196,8 @@
                           "state": {
                             "type": "object",
                             "additionalProperties": {},
-                            "description": "State of the trigger instance"
+                            "description": "DEPRECATED: This field exposes internal state and will be removed in a future version.",
+                            "deprecated": true
                           },
                           "updated_at": {
                             "type": "string",
