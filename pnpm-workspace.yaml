@@ -46,7 +46,7 @@ catalog:
   zod: ^4.1.0
   zod-to-json-schema: ^3.25.1
 
-minimumReleaseAge: 300
+minimumReleaseAge: 4320
 
 minimumReleaseAgeExclude:
   - '@composio/client'
