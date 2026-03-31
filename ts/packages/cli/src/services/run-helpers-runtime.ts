@@ -1,8 +1,10 @@
 import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import process from 'node:process';
 import { z } from 'zod';
 import type { MasterKind } from 'src/services/master-detector';
-import { isAcpInvokeError, type InvokeAgentTarget } from 'src/services/run-subagent-shared';
+import { isAcpInvokeError } from 'src/services/run-subagent-shared';
 import { invokeAcpSubAgent } from 'src/services/run-subagent-acp';
 import { invokeLegacySubAgent } from 'src/services/run-subagent-legacy';
 
@@ -209,6 +211,7 @@ export const installRunHelpers = async ({
     if (!perfDebugEnabled) return;
     const elapsedMs = Date.now() - perfDebugStart;
     const payload = { phase, label, elapsedMs, ...details };
+    // eslint-disable-next-line no-console
     console.error(`[perf] ${JSON.stringify(payload)}`);
   };
 
@@ -345,6 +348,67 @@ export const installRunHelpers = async ({
       value: () => stringifyForPrompt('data' in promptable ? promptable.data : promptable),
       enumerable: false,
     });
+    return value;
+  };
+
+  const isPlainObjectForExecute = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+  const runFileExtensionFromMimeType = (mimeType: string | undefined): string => {
+    if (typeof mimeType !== 'string' || mimeType.trim().length === 0) return 'bin';
+    const normalized = mimeType.split(';')[0]?.trim().toLowerCase() ?? '';
+    const explicit: Record<string, string> = {
+      'text/plain': 'txt',
+      'application/json': 'json',
+      'application/pdf': 'pdf',
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    if (explicit[normalized]) return explicit[normalized];
+    const subtype = normalized.split('/')[1] || 'bin';
+    return subtype.includes('+') ? (subtype.split('+').pop() ?? 'bin') : subtype;
+  };
+
+  const writeTempExecuteFile = async (value: unknown): Promise<unknown> => {
+    const outputDir = sharedRunOutputDir || path.join(os.tmpdir(), 'composio-run-files');
+    fs.mkdirSync(outputDir, { recursive: true });
+    if (typeof File !== 'undefined' && value instanceof File) {
+      const safeName =
+        typeof value.name === 'string' && value.name.trim().length > 0
+          ? value.name
+          : `file-${executeId()}.${runFileExtensionFromMimeType(value.type)}`;
+      const filePath = path.join(outputDir, `${executeId()}-${safeName}`);
+      fs.writeFileSync(filePath, new Uint8Array(await value.arrayBuffer()));
+      return filePath;
+    }
+    if (typeof Blob !== 'undefined' && value instanceof Blob) {
+      const filePath = path.join(
+        outputDir,
+        `${executeId()}.${runFileExtensionFromMimeType(value.type)}`
+      );
+      fs.writeFileSync(filePath, new Uint8Array(await value.arrayBuffer()));
+      return filePath;
+    }
+    return value;
+  };
+
+  const materializeExecutePayload = async (value: unknown): Promise<unknown> => {
+    if (typeof File !== 'undefined' && value instanceof File) return writeTempExecuteFile(value);
+    if (typeof Blob !== 'undefined' && value instanceof Blob) return writeTempExecuteFile(value);
+    if (Array.isArray(value)) {
+      return Promise.all(value.map(item => materializeExecutePayload(item)));
+    }
+    if (isPlainObjectForExecute(value)) {
+      const entries = await Promise.all(
+        Object.entries(value).map(async ([key, entryValue]) => [
+          key,
+          await materializeExecutePayload(entryValue),
+        ])
+      );
+      return Object.fromEntries(entries);
+    }
     return value;
   };
 
@@ -682,7 +746,9 @@ export const installRunHelpers = async ({
     if (helperContext.skipToolParamsCheck === true) args.push('--skip-tool-params-check');
     if (helperContext.skipChecks === true) args.push('--skip-checks');
     if (data !== undefined) {
-      const serialized = typeof data === 'string' ? data : JSON.stringify(data);
+      const preparedData = await materializeExecutePayload(data);
+      const serialized =
+        typeof preparedData === 'string' ? preparedData : JSON.stringify(preparedData);
       if (sharedRunOutputDir) {
         const tmpFile = `${sharedRunOutputDir}/execute-data-${slug}-${executeId()}.json`;
         fs.writeFileSync(tmpFile, serialized, 'utf8');
