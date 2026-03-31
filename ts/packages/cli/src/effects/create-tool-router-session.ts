@@ -1,11 +1,21 @@
-import { Effect } from 'effect';
+import { Effect, Option } from 'effect';
 import type { Composio } from '@composio/client';
+import {
+  getFreshConsumerToolRouterAuthConfigsFromCache,
+  writeConsumerConnectedToolkitsCache,
+} from 'src/services/consumer-short-term-cache';
+import { resolveToolRouterSessionConnections } from 'src/services/tool-router-session-connections';
 
 export interface CreateToolRouterSessionOptions {
   /** Enable auto connection management. Default: false. */
   readonly manageConnections?: boolean;
   /** Restrict session to these toolkit slugs. */
   readonly toolkits?: ReadonlyArray<string>;
+  /** Consumer-only cache scope for rolling auth-config reuse. */
+  readonly cacheScope?: {
+    readonly orgId: string;
+    readonly consumerUserId: string;
+  };
 }
 
 /**
@@ -21,16 +31,47 @@ export const createToolRouterSession = (
   userId: string,
   options?: CreateToolRouterSessionOptions
 ) =>
-  Effect.tryPromise(() =>
-    client.toolRouter.session.create({
-      user_id: userId,
-      manage_connections: { enable: options?.manageConnections ?? false },
-      toolkits:
-        options?.toolkits && options.toolkits.length > 0
-          ? { enable: [...options.toolkits] }
-          : undefined,
-    })
-  ).pipe(Effect.map(session => session.session_id));
+  Effect.gen(function* () {
+    const cachedAuthConfigs = options?.cacheScope
+      ? yield* getFreshConsumerToolRouterAuthConfigsFromCache({
+          orgId: options.cacheScope.orgId,
+          consumerUserId: options.cacheScope.consumerUserId,
+          toolkits: options.toolkits,
+        })
+      : Option.none();
+
+    const connectionContext = Option.isSome(cachedAuthConfigs)
+      ? {
+          connectedToolkits: options?.toolkits ?? [],
+          authConfigs: cachedAuthConfigs.value.authConfigs,
+        }
+      : yield* resolveToolRouterSessionConnections(client, userId, {
+          toolkits: options?.toolkits,
+        });
+
+    if (options?.cacheScope && Option.isNone(cachedAuthConfigs)) {
+      yield* writeConsumerConnectedToolkitsCache({
+        orgId: options.cacheScope.orgId,
+        consumerUserId: options.cacheScope.consumerUserId,
+        toolkits: connectionContext.connectedToolkits,
+        toolRouterAuthConfigs: {
+          authConfigs: connectionContext.authConfigs,
+        },
+      }).pipe(Effect.catchAll(() => Effect.void));
+    }
+
+    return yield* Effect.tryPromise(() =>
+      client.toolRouter.session.create({
+        user_id: userId,
+        auth_configs: connectionContext.authConfigs,
+        manage_connections: { enable: options?.manageConnections ?? false },
+        toolkits:
+          options?.toolkits && options.toolkits.length > 0
+            ? { enable: [...options.toolkits] }
+            : undefined,
+      })
+    ).pipe(Effect.map(session => session.session_id));
+  });
 
 /**
  * Resolve the Composio client and create a Tool Router session in one step.
