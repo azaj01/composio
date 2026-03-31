@@ -76,6 +76,37 @@ const normalizeResponse = (
   logId: raw.log_id,
 });
 
+/**
+ * Detect in-band error hints in tool response data.
+ *
+ * Some external services (e.g. Metabase) return HTTP 200 with the error
+ * embedded inside the data payload.  This does NOT override `successful` —
+ * the tool execution itself succeeded — but returns a warning message so
+ * the CLI display layer can surface it to the user.
+ */
+export const detectInBandWarning = (
+  data: Record<string, unknown> | null | undefined
+): string | null => {
+  if (data == null) return null;
+
+  if (typeof data.status === 'string') {
+    const status = data.status.toLowerCase();
+    if (status === 'failed' || status === 'error') {
+      if (typeof data.error === 'string') return data.error;
+      if (typeof data.message === 'string') return data.message;
+      return `Tool response contains status: ${data.status}`;
+    }
+  }
+
+  if (data.successfull === false || data.successful === false) {
+    if (typeof data.error === 'string') return data.error;
+    if (typeof data.message === 'string') return data.message;
+    return 'Tool response indicates unsuccessful execution';
+  }
+
+  return null;
+};
+
 export const ToolsExecutorLive = Layer.effect(
   ToolsExecutor,
   Effect.gen(function* () {
