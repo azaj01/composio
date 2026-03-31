@@ -932,7 +932,7 @@
     "name": "SharePoint",
     "logo": "https://logos.composio.dev/api/share_point",
     "category": "documents",
-    "toolCount": 90,
+    "toolCount": 89,
     "triggerCount": 0
   },
   {
@@ -1884,7 +1884,7 @@
     "name": "ActiveTrail",
     "logo": "https://logos.composio.dev/api/active_trail",
     "category": "email newsletters",
-    "toolCount": 160,
+    "toolCount": 159,
     "triggerCount": 0
   },
   {
@@ -5204,7 +5204,7 @@
     "name": "Loyverse",
     "logo": "https://logos.composio.dev/api/loyverse",
     "category": "ecommerce",
-    "toolCount": 59,
+    "toolCount": 58,
     "triggerCount": 0
   },
   {
@@ -5428,7 +5428,7 @@
     "name": "Mixmax",
     "logo": "https://logos.composio.dev/api/mixmax",
     "category": "email",
-    "toolCount": 95,
+    "toolCount": 94,
     "triggerCount": 0
   },
   {
@@ -7828,7 +7828,7 @@
     "name": "Vercel",
     "logo": "https://logos.composio.dev/api/vercel",
     "category": "developer tools",
-    "toolCount": 147,
+    "toolCount": 146,
     "triggerCount": 0
   },
   {
