@@ -65,11 +65,7 @@ jobs:
             exit 0
           fi
 
-          encoded_beta_tag=$(python3 - <<'PY'
-          import os, urllib.parse
-          print(urllib.parse.quote(os.environ["BETA_TAG_INPUT"], safe=""))
-          PY
-          )
+          encoded_beta_tag=$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["BETA_TAG_INPUT"], safe=""))')
 
           release_json=$(curl -fsSL \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
@@ -94,11 +90,7 @@ jobs:
           stable_status=$(curl -sS -o /tmp/stable-release.json -w "%{http_code}" \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPOSITORY}/releases/tags/$(python3 - <<'PY'
-            import os, urllib.parse
-            print(urllib.parse.quote(os.environ["stable_tag"], safe=""))
-            PY
-            )")
+            "https://api.github.com/repos/${REPOSITORY}/releases/tags/$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["stable_tag"], safe=""))')")
           if [[ "$stable_status" == "200" ]]; then
             echo "Stable release ${stable_tag} already exists"
             exit 1
@@ -223,21 +215,32 @@ jobs:
           cd skills && zip -r ../dist/binaries/composio-skill.zip composio-cli/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.prepare.outputs.release_tag }}
-          name: ${{ needs.prepare.outputs.release_name }}
-          files: |
-            ts/packages/cli/dist/binaries/*.zip
-            ts/packages/cli/dist/binaries/checksums.txt
-          draft: false
-          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
-          generate_release_notes: true
-          make_latest: ${{ needs.prepare.outputs.make_latest }}
-          target_commitish: ${{ needs.prepare.outputs.checkout_ref }}
-          overwrite_files: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+          RELEASE_NAME: ${{ needs.prepare.outputs.release_name }}
+          PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+          MAKE_LATEST: ${{ needs.prepare.outputs.make_latest }}
+          CHECKOUT_REF: ${{ needs.prepare.outputs.checkout_ref }}
+        run: |
+          set -euo pipefail
+
+          flags=(
+            --title "$RELEASE_NAME"
+            --target "$CHECKOUT_REF"
+            --generate-notes
+          )
+
+          if [[ "$PRERELEASE" == "true" ]]; then
+            flags+=(--prerelease)
+            flags+=(--latest=false)
+          else
+            flags+=(--latest)
+          fi
+
+          gh release create "$RELEASE_TAG" "${flags[@]}" \
+            ts/packages/cli/dist/binaries/*.zip \
+            ts/packages/cli/dist/binaries/checksums.txt
 
   test-installation:
     name: Test Installation
