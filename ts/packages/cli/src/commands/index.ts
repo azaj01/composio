@@ -8,6 +8,7 @@ import { versionCmd } from './version.cmd';
 import { upgradeCmd } from './upgrade.cmd';
 import { whoamiCmd } from './whoami.cmd';
 import { loginCmd } from './login.cmd';
+import { listenCmd } from './listen.cmd';
 import { logoutCmd } from './logout.cmd';
 import { runCmd } from './run.cmd';
 import { proxyCmd } from './proxy.cmd';
@@ -23,6 +24,7 @@ import { printRootHelp, matchSubcommandHelp, printSubcommandHelp } from './root-
 import { rootToolsCmd$Search } from './tools/commands/tools.search.cmd';
 import { rootToolsCmd$Execute } from './tools/commands/tools.execute.cmd';
 import { rootToolsCmd } from './tools/tools.cmd';
+import { rootTriggersCmd } from './triggers/root-triggers.cmd';
 import { rootConnectedAccountsCmd$Link } from './connected-accounts/commands/connected-accounts.link.cmd';
 import { orgsCmd } from './orgs/orgs.cmd';
 import { renderCommandHintGraph } from 'src/services/command-hints';
@@ -41,6 +43,7 @@ const $cmd = $defaultCmd.pipe(
     upgradeCmd,
     whoamiCmd,
     loginCmd,
+    listenCmd,
     logoutCmd,
     runCmd,
     proxyCmd,
@@ -48,6 +51,7 @@ const $cmd = $defaultCmd.pipe(
     installCmd,
     devCmd,
     rootToolsCmd,
+    rootTriggersCmd,
     rootToolsCmd$Search,
     rootConnectedAccountsCmd$Link,
     rootToolsCmd$Execute,
@@ -125,6 +129,34 @@ const normalizeVersionShortFlag = (argv: ReadonlyArray<string>): ReadonlyArray<s
   return argv;
 };
 
+const normalizeListenStreamFlag = (argv: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const head = argv.slice(0, 2);
+  const args = argv.slice(2);
+  const isListen = args[0] === 'listen';
+  if (!isListen) {
+    return argv;
+  }
+
+  const normalized: string[] = [...head];
+  for (let i = 0; i < args.length; i += 1) {
+    const token = args[i];
+    if (token !== '--stream') {
+      normalized.push(token ?? '');
+      continue;
+    }
+
+    const next = args[i + 1];
+    if (next === undefined || next.startsWith('-')) {
+      normalized.push('--stream=');
+      continue;
+    }
+
+    normalized.push(token);
+  }
+
+  return normalized;
+};
+
 const normalizeHiddenDebugFlags = (argv: ReadonlyArray<string>): ReadonlyArray<string> => {
   const normalized: string[] = [...argv.slice(0, 2)];
   const args = argv.slice(2);
@@ -188,9 +220,7 @@ const normalizeHiddenDebugFlags = (argv: ReadonlyArray<string>): ReadonlyArray<s
 
 const isRootHelp = (argv: ReadonlyArray<string>): boolean => {
   const args = argv.slice(2);
-  return (
-    args.length === 0 || (args.length === 1 && (args[0] === '--help' || args[0] === '-h'))
-  );
+  return args.length === 0 || (args.length === 1 && (args[0] === '--help' || args[0] === '-h'));
 };
 
 const isGenerateGraph = (argv: ReadonlyArray<string>): boolean => {
@@ -217,7 +247,9 @@ export const runWithConfig = Effect.gen(function* () {
   });
 
   return (argv: ReadonlyArray<string>) => {
-    const normalizedArgv = normalizeHiddenDebugFlags(normalizeVersionShortFlag(argv));
+    const normalizedArgv = normalizeHiddenDebugFlags(
+      normalizeListenStreamFlag(normalizeVersionShortFlag(argv))
+    );
     if (isRootHelp(normalizedArgv)) {
       return printRootHelp();
     }
