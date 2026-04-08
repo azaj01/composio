@@ -12,16 +12,13 @@ In API v3 (`/api/v3/tools/*`), tool-related endpoints default the `version` para
 
 In API v3.1 (`/api/v3.1/tools/*`), the default is flipped: **tool-related endpoints default to the latest toolkit version**. If you're already passing `version: "latest"` in your requests, switching to v3.1 changes nothing for you. If you were relying on the `00000000_00` default, you'll now get the latest version unless you explicitly pin.
 
-**Affected tool endpoints:**
+**Affected tool endpoints (those with a `version` parameter):**
 
 | Endpoint | v3 Default Version | v3.1 Default Version |
 |----------|-------------------|---------------------|
-| `GET /tools` | `00000000_00` | `latest` |
-| `GET /tools/enum` | `00000000_00` | `latest` |
 | `GET /tools/{tool_slug}` | `00000000_00` | `latest` |
 | `POST /tools/execute/{tool_slug}` | `00000000_00` | `latest` |
 | `POST /tools/execute/{tool_slug}/input` | `00000000_00` | `latest` |
-| `POST /tools/execute/proxy` | `00000000_00` | `latest` |
 | `POST /tools/scopes/required` | `00000000_00` | `latest` |
 
 ### All Other Endpoints Are Unchanged
