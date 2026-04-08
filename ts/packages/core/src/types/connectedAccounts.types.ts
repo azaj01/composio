@@ -204,3 +204,19 @@ export const ConnectedAccountRefreshOptionsSchema = z.object({
   validateCredentials: z.boolean().optional(),
 });
 export type ConnectedAccountRefreshOptions = z.infer<typeof ConnectedAccountRefreshOptionsSchema>;
+
+export const UpdateConnectedAccountParamsSchema = z.object({
+  alias: z
+    .string()
+    .describe(
+      'Human-readable alias for the account. Must be unique per entity and toolkit within the project. Pass an empty string to clear the alias.'
+    ),
+});
+export type UpdateConnectedAccountParams = z.infer<typeof UpdateConnectedAccountParamsSchema>;
+
+export const UpdateConnectedAccountResponseSchema = z.object({
+  success: z.boolean(),
+  id: z.string().optional(),
+  status: z.string().optional(),
+});
+export type UpdateConnectedAccountResponse = z.infer<typeof UpdateConnectedAccountResponseSchema>;

@@ -125,6 +125,20 @@ export const transformToolRouterWorkbenchParams = (
   };
 };
 
+export const transformToolRouterMultiAccountParams = (
+  params?: ToolRouterCreateSessionConfig['multiAccount']
+): { enable?: boolean; max_accounts_per_toolkit?: number; require_explicit_selection?: boolean } | undefined => {
+  if (!params) {
+    return undefined;
+  }
+
+  return {
+    enable: params.enable,
+    max_accounts_per_toolkit: params.maxAccountsPerToolkit,
+    require_explicit_selection: params.requireExplicitSelection,
+  };
+};
+
 export const transformToolRouterToolkitsParams = (
   params?: ToolRouterCreateSessionConfig['toolkits']
 ): SessionCreateParams.Enable | SessionCreateParams.Disable | undefined => {
