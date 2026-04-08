@@ -283,31 +283,36 @@ jobs:
 
           curl --fail --silent --location --output "$tmpdir/$archive_name" "$archive_url"
 
-          mapfile -t expected_paths < <(
+          expected_paths="$(
             unzip -Z1 "$tmpdir/$archive_name" \
               | grep -v '/$' \
               | sed "s#^composio-$target/##" \
               | grep -v '^composio$' \
               | sort
-          )
+          )"
 
-          if [[ ${#expected_paths[@]} -eq 0 ]]; then
+          if [ -z "$expected_paths" ]; then
             echo "❌ No bundled support files found in $archive_name"
             exit 1
           fi
 
-          missing_paths=()
-          for relative_path in "${expected_paths[@]}"; do
-            if [[ -f "$install_dir/$relative_path" ]]; then
+          missing=""
+          echo "$expected_paths" | while IFS= read -r relative_path; do
+            if [ -f "$install_dir/$relative_path" ]; then
               echo "✅ Found $relative_path"
             else
-              missing_paths+=("$relative_path")
+              echo "MISSING:$relative_path"
             fi
-          done
+          done > "$tmpdir/check_output"
 
-          if [[ ${#missing_paths[@]} -gt 0 ]]; then
+          cat "$tmpdir/check_output" | grep -v '^MISSING:' || true
+
+          missing="$(grep '^MISSING:' "$tmpdir/check_output" | sed 's/^MISSING://' || true)"
+          if [ -n "$missing" ]; then
             printf '❌ Missing bundled support files after install:\n' >&2
-            printf '  %s\n' "${missing_paths[@]}" >&2
+            echo "$missing" | while IFS= read -r p; do
+              printf '  %s\n' "$p" >&2
+            done
             exit 1
           fi
 
