@@ -7,6 +7,10 @@ describe('transformToolRouterMultiAccountParams', () => {
     expect(transformToolRouterMultiAccountParams(undefined)).toBeUndefined();
   });
 
+  it('should return undefined when all fields are undefined (empty object)', () => {
+    expect(transformToolRouterMultiAccountParams({})).toBeUndefined();
+  });
+
   it('should transform enable only', () => {
     const result = transformToolRouterMultiAccountParams({ enable: true });
     expect(result).toEqual({

@@ -132,11 +132,21 @@ export const transformToolRouterMultiAccountParams = (
     return undefined;
   }
 
-  return {
+  const transformedParams = {
     enable: params.enable,
     max_accounts_per_toolkit: params.maxAccountsPerToolkit,
     require_explicit_selection: params.requireExplicitSelection,
   };
+
+  if (
+    transformedParams.enable === undefined &&
+    transformedParams.max_accounts_per_toolkit === undefined &&
+    transformedParams.require_explicit_selection === undefined
+  ) {
+    return undefined;
+  }
+
+  return transformedParams;
 };
 
 export const transformToolRouterToolkitsParams = (
