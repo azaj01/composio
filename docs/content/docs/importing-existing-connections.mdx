@@ -22,80 +22,12 @@ graph LR
 
 ## Prerequisites
 
-1. **A Composio API key** — from your project settings
+1. **An [auth config](/docs/auth-configuration/programmatic-auth-configs)** for the toolkit you're importing into
 2. **The existing credentials** for each user (API keys, bearer tokens, username/password, etc.)
 3. **A user ID** for each user — any string that uniquely identifies them in your system
 
-## Creating an auth config
-
-Before importing credentials, you need an auth config for the toolkit. This tells Composio which auth scheme to use. This is a one-time setup per toolkit.
-
-<Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
-<Tab value="Python">
-```python
-from composio import Composio
-
-composio = Composio(api_key="your-api-key")
-
-# For API key toolkits (e.g., SendGrid, Tavily)
-auth_config = composio.auth_configs.create("sendgrid", {
-    "type": "use_custom_auth",
-    "authScheme": "API_KEY",
-    "credentials": {},
-})
-
-# For bearer token — works with any OAuth toolkit (Gmail, GitHub, Slack, etc.)
-auth_config = composio.auth_configs.create("gmail", {
-    "type": "use_custom_auth",
-    "authScheme": "BEARER_TOKEN",
-    "credentials": {},
-})
-
-print(f"Auth config ID: {auth_config.id}")
-```
-</Tab>
-<Tab value="TypeScript">
-```typescript
-import { Composio } from '@composio/core';
-
-const composio = new Composio({ apiKey: 'your-api-key' });
-
-// For API key toolkits (e.g., SendGrid, Tavily)
-const authConfig = await composio.authConfigs.create('sendgrid', {
-  type: 'use_custom_auth',
-  authScheme: 'API_KEY',
-  credentials: {},
-});
-
-// For bearer token — works with any OAuth toolkit (Gmail, GitHub, Slack, etc.)
-const authConfig = await composio.authConfigs.create('gmail', {
-  type: 'use_custom_auth',
-  authScheme: 'BEARER_TOKEN',
-  credentials: {},
-});
-
-console.log('Auth config ID:', authConfig.id);
-```
-</Tab>
-<Tab value="curl">
-```bash
-curl -X POST https://backend.composio.dev/api/v3/auth_configs \
-  -H 'x-api-key: YOUR_API_KEY' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "toolkit": {"slug": "gmail"},
-    "auth_config": {
-      "type": "use_custom_auth",
-      "authScheme": "BEARER_TOKEN",
-      "credentials": {}
-    }
-  }'
-```
-</Tab>
-</Tabs>
-
 <Callout type="info">
-Bearer token auth configs work with **any toolkit that supports OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you import your own access tokens without setting up an OAuth app.
+Bearer token auth configs work with **any toolkit that supports OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you use existing access tokens without setting up an OAuth app.
 </Callout>
 
 ## API keys

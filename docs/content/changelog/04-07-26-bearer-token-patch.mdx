@@ -35,7 +35,6 @@ await composio.connectedAccounts.update('ca_abc123', {
 });
 ```
 
-- **Credential rotation** — update expired tokens in place
-- **Alias management** — name connections for multi-account scenarios
+- **Keep access tokens updated** — call PATCH whenever you refresh the token on your end (e.g., after an OAuth refresh flow)
 - **Partial updates** — omitted fields are preserved, fields set to `null` are removed
 - **Supported schemes** — BEARER_TOKEN, API_KEY, BASIC, BASIC_WITH_JWT, GOOGLE_SERVICE_ACCOUNT, SERVICE_ACCOUNT
