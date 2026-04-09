@@ -184,6 +184,7 @@ session = composio.create(
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+// @errors: 2353
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 // ---cut---
@@ -220,6 +221,7 @@ composio.connected_accounts.update("ca_abc123", alias="")
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+// @errors: 2339
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 // ---cut---
