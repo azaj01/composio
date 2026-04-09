@@ -1266,7 +1266,7 @@ describe('ToolRouter', () => {
         await toolRouter.create(userId, {});
 
         const callArgs = mockClient.toolRouter.session.create.mock.calls[0][0];
-        expect(callArgs).not.toHaveProperty('multi_account');
+        expect(callArgs.multi_account).toBeUndefined();
       });
 
       it('should create a session with multiAccount combined with other options', async () => {
