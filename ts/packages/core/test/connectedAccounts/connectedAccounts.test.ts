@@ -24,6 +24,7 @@ const extendedMockClient = {
     refresh: vi.fn(),
     updateStatus: vi.fn(),
     createConnectedAccountLink: vi.fn(),
+    patch: vi.fn(),
   },
   link: {
     create: vi.fn(),
@@ -941,14 +942,13 @@ describe('ConnectedAccounts', () => {
       const nanoid = 'conn_abc123';
       const mockResponse = { success: true, id: nanoid, status: 'ACTIVE' };
 
-      (extendedMockClient as any).patch = vi.fn().mockResolvedValueOnce(mockResponse);
+      extendedMockClient.connectedAccounts.patch.mockResolvedValueOnce(mockResponse);
 
       const result = await connectedAccounts.update(nanoid, { alias: 'work-gmail' });
 
-      expect((extendedMockClient as any).patch).toHaveBeenCalledWith(
-        `/api/v3/connected_accounts/${nanoid}`,
-        { body: { alias: 'work-gmail' } }
-      );
+      expect(extendedMockClient.connectedAccounts.patch).toHaveBeenCalledWith(nanoid, {
+        alias: 'work-gmail',
+      });
       expect(result).toEqual({ success: true, id: nanoid, status: 'ACTIVE' });
     });
 
@@ -956,21 +956,20 @@ describe('ConnectedAccounts', () => {
       const nanoid = 'conn_abc123';
       const mockResponse = { success: true };
 
-      (extendedMockClient as any).patch = vi.fn().mockResolvedValueOnce(mockResponse);
+      extendedMockClient.connectedAccounts.patch.mockResolvedValueOnce(mockResponse);
 
       const result = await connectedAccounts.update(nanoid, { alias: '' });
 
-      expect((extendedMockClient as any).patch).toHaveBeenCalledWith(
-        `/api/v3/connected_accounts/${nanoid}`,
-        { body: { alias: '' } }
-      );
+      expect(extendedMockClient.connectedAccounts.patch).toHaveBeenCalledWith(nanoid, {
+        alias: '',
+      });
       expect(result).toEqual({ success: true });
     });
 
     it('should throw ValidationError for invalid params', async () => {
-      await expect(
-        connectedAccounts.update('conn_abc123', { alias: 123 } as any)
-      ).rejects.toThrow('Failed to parse connected account update params');
+      await expect(connectedAccounts.update('conn_abc123', { alias: 123 } as any)).rejects.toThrow(
+        'Failed to parse connected account update params'
+      );
     });
   });
 
