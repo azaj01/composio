@@ -397,6 +397,7 @@ class ConnectedAccounts:
         callback_url: t.Optional[str] = None,
         allow_multiple: bool = False,
         config: t.Optional[connected_account_create_params.ConnectionState] = None,
+        alias: t.Optional[str] = None,
     ) -> ConnectionRequest:
         """
         Compound function to create a new connected account. This function creates
@@ -410,6 +411,7 @@ class ConnectedAccounts:
         :param callback_url: Callback URL to use for OAuth apps.
         :param config: The configuration to create the connected account with.
         :param allow_multiple: Whether to allow multiple connected accounts for the same user and auth config.
+        :param alias: Optional human-readable alias for the account. Must be unique per entity and toolkit within the project.
         :return: The connection request.
         """
         # Check if there are multiple connected accounts for the authConfig of the user
@@ -435,10 +437,14 @@ class ConnectedAccounts:
         if config is not None:
             connection["state"] = config
 
-        response = self._client.connected_accounts.create(
-            auth_config={"id": auth_config_id},
-            connection=t.cast(connected_account_create_params.Connection, connection),
-        )
+        create_kwargs: dict[str, t.Any] = {
+            "auth_config": {"id": auth_config_id},
+            "connection": t.cast(connected_account_create_params.Connection, connection),
+        }
+        if alias is not None:
+            create_kwargs["alias"] = alias
+
+        response = self._client.connected_accounts.create(**create_kwargs)
         return ConnectionRequest(
             id=response.id,
             status=response.connection_data.val.status,
@@ -452,6 +458,7 @@ class ConnectedAccounts:
         auth_config_id: str,
         *,
         callback_url: t.Optional[str] = None,
+        alias: t.Optional[str] = None,
     ) -> ConnectionRequest:
         """
         Create a Composio Connect Link for a user to connect their account to a given auth config.
@@ -494,6 +501,10 @@ class ConnectedAccounts:
         # Add callback_url only if provided
         if callback_url is not None:
             payload["callback_url"] = callback_url
+
+        # Add alias only if provided
+        if alias is not None:
+            payload["alias"] = alias
 
         # Call the link creation endpoint
         response = self._client.link.create(**payload)

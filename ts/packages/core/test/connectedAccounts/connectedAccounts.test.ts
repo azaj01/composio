@@ -180,6 +180,71 @@ describe('ConnectedAccounts', () => {
       expect(typeof connectionRequest.waitForConnection).toBe('function');
     });
 
+    it('should pass alias to the create API when provided', async () => {
+      const userId = 'user_123';
+      const authConfigId = 'auth_config_123';
+
+      extendedMockClient.connectedAccounts.list.mockResolvedValueOnce({
+        items: [],
+        next_cursor: null,
+        total_pages: 1,
+      });
+
+      const mockResponse = {
+        id: 'conn_123',
+        connectionData: {
+          val: {
+            authScheme: AuthSchemeTypes.OAUTH2,
+            status: 'INITIALIZING',
+            redirectUrl: 'https://auth.example.com/connect',
+          },
+        },
+      };
+
+      extendedMockClient.connectedAccounts.create.mockResolvedValueOnce(mockResponse);
+
+      await connectedAccounts.initiate(userId, authConfigId, {
+        alias: 'work-gmail',
+      });
+
+      expect(extendedMockClient.connectedAccounts.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alias: 'work-gmail',
+          auth_config: { id: authConfigId },
+          connection: expect.objectContaining({ user_id: userId }),
+        })
+      );
+    });
+
+    it('should not include alias in create params when not provided', async () => {
+      const userId = 'user_123';
+      const authConfigId = 'auth_config_123';
+
+      extendedMockClient.connectedAccounts.list.mockResolvedValueOnce({
+        items: [],
+        next_cursor: null,
+        total_pages: 1,
+      });
+
+      const mockResponse = {
+        id: 'conn_123',
+        connectionData: {
+          val: {
+            authScheme: AuthSchemeTypes.OAUTH2,
+            status: 'INITIALIZING',
+            redirectUrl: 'https://auth.example.com/connect',
+          },
+        },
+      };
+
+      extendedMockClient.connectedAccounts.create.mockResolvedValueOnce(mockResponse);
+
+      await connectedAccounts.initiate(userId, authConfigId);
+
+      const callArgs = extendedMockClient.connectedAccounts.create.mock.calls[0]![0];
+      expect(callArgs).not.toHaveProperty('alias');
+    });
+
     it('should throw ComposioMultipleConnectedAccountsError when multiple accounts exist and allowMultiple is false', async () => {
       const userId = 'user_123';
       const authConfigId = 'auth_config_123';

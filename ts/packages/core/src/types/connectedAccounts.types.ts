@@ -43,6 +43,7 @@ export const DefaultCreateConnectedAccountParamsSchema: z.ZodType<{
     callback_url?: string;
     user_id?: string;
   };
+  alias?: string;
 }> = z.object({
   auth_config: z.object({
     id: z.string(),
@@ -53,16 +54,19 @@ export const DefaultCreateConnectedAccountParamsSchema: z.ZodType<{
     callback_url: z.string().optional(),
     user_id: z.string().optional(),
   }),
+  alias: z.string().optional(),
 });
 
 export const CreateConnectedAccountOptionsSchema: z.ZodType<{
   allowMultiple?: boolean;
   callbackUrl?: string;
   config?: z.infer<typeof ConnectionDataSchema>;
+  alias?: string;
 }> = z.object({
   allowMultiple: z.boolean().optional(),
   callbackUrl: z.string().optional(),
   config: ConnectionDataSchema.optional(),
+  alias: z.string().optional(),
 });
 export type CreateConnectedAccountOptions = z.infer<typeof CreateConnectedAccountOptionsSchema>;
 export type CreateConnectedAccountParams = z.infer<typeof CreateConnectedAccountParamsSchema>;
@@ -187,6 +191,10 @@ export const CreateConnectedAccountLinkOptionsSchema = z.object({
    *
    */
   callbackUrl: z.string().optional(),
+  /**
+   * Human-readable alias for the connected account. Must be unique per entity and toolkit within the project.
+   */
+  alias: z.string().optional(),
 });
 export type CreateConnectedAccountLinkOptions = z.infer<
   typeof CreateConnectedAccountLinkOptionsSchema

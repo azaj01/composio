@@ -202,6 +202,7 @@ export class ConnectedAccounts {
         user_id: userId,
         state,
       },
+      ...(options?.alias && { alias: options.alias }),
       // @TODO: This is a temporary fix to allow api_key to be optional, in future ideally we should fix this from API side
     } as ConnectedAccountCreateParamsRaw);
 
@@ -270,6 +271,7 @@ export class ConnectedAccounts {
         auth_config_id: authConfigId,
         user_id: userId,
         ...(requestOptions?.data.callbackUrl && { callback_url: requestOptions.data.callbackUrl }),
+        ...(requestOptions?.data.alias && { alias: requestOptions.data.alias }),
       });
 
       const connectionRequest = createConnectionRequest(
