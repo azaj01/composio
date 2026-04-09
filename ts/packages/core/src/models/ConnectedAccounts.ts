@@ -193,7 +193,7 @@ export class ConnectedAccounts {
     //   state = connectionDataParsed.data;
     // }
 
-    const response = await this.client.connectedAccounts.create({
+    const createParams: ConnectedAccountCreateParamsRaw = {
       auth_config: {
         id: authConfigId,
       },
@@ -202,9 +202,13 @@ export class ConnectedAccounts {
         user_id: userId,
         state,
       },
-      ...(options?.alias != null && { alias: options.alias }),
-      // @TODO: This is a temporary fix to allow api_key to be optional, in future ideally we should fix this from API side
-    } as ConnectedAccountCreateParamsRaw);
+    };
+
+    if (options?.alias != null) {
+      createParams.alias = options.alias;
+    }
+
+    const response = await this.client.connectedAccounts.create(createParams);
 
     const redirectUrl =
       typeof response.connectionData?.val?.redirectUrl === 'string'
@@ -267,12 +271,20 @@ export class ConnectedAccounts {
     }
 
     try {
-      const response = await this.client.link.create({
+      const linkParams: Record<string, string> = {
         auth_config_id: authConfigId,
         user_id: userId,
-        ...(requestOptions?.data.callbackUrl && { callback_url: requestOptions.data.callbackUrl }),
-        ...(requestOptions?.data.alias != null && { alias: requestOptions.data.alias }),
-      });
+      };
+
+      if (requestOptions?.data.callbackUrl) {
+        linkParams.callback_url = requestOptions.data.callbackUrl;
+      }
+
+      if (requestOptions?.data.alias != null) {
+        linkParams.alias = requestOptions.data.alias;
+      }
+
+      const response = await this.client.link.create(linkParams);
 
       const connectionRequest = createConnectionRequest(
         this.client,
