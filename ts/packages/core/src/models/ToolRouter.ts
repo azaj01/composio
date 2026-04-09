@@ -128,14 +128,7 @@ export class ToolRouter<
 
     const multiAccountPayload = transformToolRouterMultiAccountParams(routerConfig.multiAccount);
 
-    // multi_account not yet in SessionCreateParams — cast until next client release
-    const payload: SessionCreateParams & {
-      multi_account?: {
-        enable?: boolean;
-        max_accounts_per_toolkit?: number;
-        require_explicit_selection?: boolean;
-      };
-    } = {
+    const payload: SessionCreateParams = {
       user_id: userId,
       auth_configs: routerConfig.authConfigs,
       connected_accounts: routerConfig.connectedAccounts,
@@ -146,12 +139,9 @@ export class ToolRouter<
         routerConfig.manageConnections
       ),
       workbench: transformToolRouterWorkbenchParams(routerConfig.workbench),
+      multi_account: multiAccountPayload,
       experimental: Object.keys(experimentalPayload).length > 0 ? experimentalPayload : undefined,
     };
-
-    if (multiAccountPayload) {
-      payload.multi_account = multiAccountPayload;
-    }
 
     const session = await this.client.toolRouter.session.create(payload);
 
