@@ -193,7 +193,8 @@ export class ConnectedAccounts {
     //   state = connectionDataParsed.data;
     // }
 
-    const createParams: ConnectedAccountCreateParamsRaw = {
+    // alias is not yet in the published @composio/client types
+    const createParams: ConnectedAccountCreateParamsRaw & { alias?: string } = {
       auth_config: {
         id: authConfigId,
       },
