@@ -28,11 +28,7 @@ graph LR
 
 ## Creating an auth config
 
-Before importing credentials, you need an auth config for the toolkit. This is a one-time setup.
-
-<Callout type="info">
-Bearer token auth configs work with **any toolkit that supports OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you import your own access tokens without setting up an OAuth app.
-</Callout>
+Before importing credentials, you need an auth config for the toolkit. This tells Composio which auth scheme to use. This is a one-time setup per toolkit.
 
 <Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
 <Tab value="Python">
@@ -41,6 +37,14 @@ from composio import Composio
 
 composio = Composio(api_key="your-api-key")
 
+# For API key toolkits (e.g., SendGrid, Tavily)
+auth_config = composio.auth_configs.create("sendgrid", {
+    "type": "use_custom_auth",
+    "authScheme": "API_KEY",
+    "credentials": {},
+})
+
+# For bearer token — works with any OAuth toolkit (Gmail, GitHub, Slack, etc.)
 auth_config = composio.auth_configs.create("gmail", {
     "type": "use_custom_auth",
     "authScheme": "BEARER_TOKEN",
@@ -56,6 +60,14 @@ import { Composio } from '@composio/core';
 
 const composio = new Composio({ apiKey: 'your-api-key' });
 
+// For API key toolkits (e.g., SendGrid, Tavily)
+const authConfig = await composio.authConfigs.create('sendgrid', {
+  type: 'use_custom_auth',
+  authScheme: 'API_KEY',
+  credentials: {},
+});
+
+// For bearer token — works with any OAuth toolkit (Gmail, GitHub, Slack, etc.)
 const authConfig = await composio.authConfigs.create('gmail', {
   type: 'use_custom_auth',
   authScheme: 'BEARER_TOKEN',
@@ -81,6 +93,10 @@ curl -X POST https://backend.composio.dev/api/v3/auth_configs \
 ```
 </Tab>
 </Tabs>
+
+<Callout type="info">
+Bearer token auth configs work with **any toolkit that supports OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you import your own access tokens without setting up an OAuth app.
+</Callout>
 
 ## API keys
 
@@ -266,18 +282,6 @@ curl -X PATCH https://backend.composio.dev/api/v3/connected_accounts/ca_xxx \
 ```
 </Tab>
 </Tabs>
-
-You can also update the alias or both at once:
-
-```bash
-# Update alias
-curl -X PATCH .../api/v3/connected_accounts/ca_xxx \
-  -d '{"alias": "work-gmail"}'
-
-# Remove a field (set to null)
-curl -X PATCH .../api/v3/connected_accounts/ca_xxx \
-  -d '{"connection":{"state":{"authScheme":"API_KEY","val":{"subdomain":null}}}}'
-```
 
 Fields you omit are preserved. Fields set to `null` are removed.
 
