@@ -193,8 +193,8 @@ export class ConnectedAccounts {
     //   state = connectionDataParsed.data;
     // }
 
-    // alias is not yet in the published @composio/client types
-    const createParams: ConnectedAccountCreateParamsRaw & { alias?: string } = {
+    // Cast needed: alias + state types not yet in the published @composio/client
+    const createParams = {
       auth_config: {
         id: authConfigId,
       },
@@ -203,10 +203,10 @@ export class ConnectedAccounts {
         user_id: userId,
         state,
       },
-    };
+    } as ConnectedAccountCreateParamsRaw;
 
     if (options?.alias != null) {
-      createParams.alias = options.alias;
+      (createParams as ConnectedAccountCreateParamsRaw & { alias?: string }).alias = options.alias;
     }
 
     const response = await this.client.connectedAccounts.create(createParams);
@@ -272,7 +272,7 @@ export class ConnectedAccounts {
     }
 
     try {
-      const linkParams: Record<string, string> = {
+      const linkParams: { auth_config_id: string; user_id: string; callback_url?: string; alias?: string } = {
         auth_config_id: authConfigId,
         user_id: userId,
       };
