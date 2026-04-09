@@ -1,7 +1,7 @@
 ---
 title: Importing existing connections
-description: Pass existing API keys, bearer tokens, or other non-OAuth credentials into Composio so your users don't need to re-authenticate
-keywords: [import connections, existing tokens, pass through credentials, bring your own tokens, no re-auth, pre-authenticated]
+description: Pass existing API keys, bearer tokens, or other credentials into Composio so your users don't need to re-authenticate
+keywords: [import connections, existing tokens, pass through credentials, bring your own tokens, no re-auth, pre-authenticated, patch credentials, update token, rotate credentials, oauth bearer token]
 ---
 
 If your users have already authenticated with a service and you have their credentials (API keys, bearer tokens, etc.), you can pass those directly into Composio. No re-authentication required.
@@ -9,28 +9,78 @@ If your users have already authenticated with a service and you have their crede
 This is useful when:
 - Your app already stores API keys or tokens for users
 - You're adopting Composio and want to onboard existing users without disrupting them
-- Another platform already holds credentials for your users' accounts
+- You want to use bearer tokens with OAuth toolkits (Gmail, GitHub, Slack, etc.) without setting up an OAuth app
 
 ## How it works
 
-Instead of asking users to authenticate again, you pass their existing credentials to `connectedAccounts.initiate()` using the `AuthScheme` helpers. Composio creates a connected account directly from those credentials.
-
 ```mermaid
 graph LR
-    A[Your existing credentials] --> B[connectedAccounts.initiate]
-    B --> C[Connected account in Composio]
-    C --> D[Execute tools immediately]
+    A[Create auth config] --> B[Create connection with credentials]
+    B --> C[Use in Tool Router / Execute tools]
+    C --> D[Update credentials when needed]
 ```
 
 ## Prerequisites
 
-1. **An auth config** for the toolkit you're importing into
+1. **A Composio API key** — from your project settings
 2. **The existing credentials** for each user (API keys, bearer tokens, username/password, etc.)
-3. **A user ID** for each user, any string that uniquely identifies them in your system
+3. **A user ID** for each user — any string that uniquely identifies them in your system
 
-<Callout type="warn">
-Importing existing OAuth tokens (access tokens, refresh tokens) is **not currently supported**. For OAuth-based services (Google, GitHub, Slack, etc.), users must authenticate through the standard [OAuth flow](/docs/tools-direct/authenticating-tools). This page covers importing non-OAuth credentials like API keys, bearer tokens, and basic auth.
+## Creating an auth config
+
+Before importing credentials, you need an auth config for the toolkit. This is a one-time setup.
+
+<Callout type="info">
+Bearer token auth configs work with **any toolkit that supports OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you import your own access tokens without setting up an OAuth app.
 </Callout>
+
+<Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
+<Tab value="Python">
+```python
+from composio import Composio
+
+composio = Composio(api_key="your-api-key")
+
+auth_config = composio.auth_configs.create("gmail", {
+    "type": "use_custom_auth",
+    "authScheme": "BEARER_TOKEN",
+    "credentials": {},
+})
+
+print(f"Auth config ID: {auth_config.id}")
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+import { Composio } from '@composio/core';
+
+const composio = new Composio({ apiKey: 'your-api-key' });
+
+const authConfig = await composio.authConfigs.create('gmail', {
+  type: 'use_custom_auth',
+  authScheme: 'BEARER_TOKEN',
+  credentials: {},
+});
+
+console.log('Auth config ID:', authConfig.id);
+```
+</Tab>
+<Tab value="curl">
+```bash
+curl -X POST https://backend.composio.dev/api/v3/auth_configs \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "toolkit": {"slug": "gmail"},
+    "auth_config": {
+      "type": "use_custom_auth",
+      "authScheme": "BEARER_TOKEN",
+      "credentials": {}
+    }
+  }'
+```
+</Tab>
+</Tabs>
 
 ## API keys
 
@@ -79,6 +129,8 @@ console.log('Connected:', connection.id);
 </Tabs>
 
 ## Bearer tokens
+
+For services where you already have an access token — including OAuth toolkits like Gmail, GitHub, Slack, and more:
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
@@ -164,6 +216,91 @@ const connection = await composio.connectedAccounts.initiate(
 
 // Basic auth connections are immediately active
 console.log('Connected:', connection.id);
+```
+</Tab>
+</Tabs>
+
+## Updating credentials
+
+When credentials expire or rotate, update them in place without recreating the connection:
+
+<Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
+<Tab value="Python">
+```python
+composio.connected_accounts.update(
+    "ca_your_connection_id",
+    connection={
+        "state": {
+            "authScheme": "BEARER_TOKEN",
+            "val": {"token": "new-access-token"},
+        },
+    },
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+await composio.connectedAccounts.update('ca_your_connection_id', {
+  connection: {
+    state: {
+      authScheme: 'BEARER_TOKEN',
+      val: { token: 'new-access-token' },
+    },
+  },
+});
+```
+</Tab>
+<Tab value="curl">
+```bash
+curl -X PATCH https://backend.composio.dev/api/v3/connected_accounts/ca_xxx \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "connection": {
+      "state": {
+        "authScheme": "BEARER_TOKEN",
+        "val": {"token": "new-access-token"}
+      }
+    }
+  }'
+```
+</Tab>
+</Tabs>
+
+You can also update the alias or both at once:
+
+```bash
+# Update alias
+curl -X PATCH .../api/v3/connected_accounts/ca_xxx \
+  -d '{"alias": "work-gmail"}'
+
+# Remove a field (set to null)
+curl -X PATCH .../api/v3/connected_accounts/ca_xxx \
+  -d '{"connection":{"state":{"authScheme":"API_KEY","val":{"subdomain":null}}}}'
+```
+
+Fields you omit are preserved. Fields set to `null` are removed.
+
+## Using with Tool Router
+
+Pass the auth config or connection ID when creating a session:
+
+<Tabs groupId="language" items={['Python', 'TypeScript']} persist>
+<Tab value="Python">
+```python
+session = composio.create(
+    "user_123",
+    auth_configs={"gmail": "ac_your_auth_config"},
+    toolkits=["gmail"],
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+const session = await composio.create('user_123', {
+  authConfigs: { gmail: 'ac_your_auth_config' },
+  toolkits: ['gmail'],
+});
 ```
 </Tab>
 </Tabs>
