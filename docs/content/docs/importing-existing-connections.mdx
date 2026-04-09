@@ -170,8 +170,10 @@ console.log('Connected:', connection.id);
 
 ## Updating credentials
 
-When credentials expire or rotate, update them in place without recreating the connection:
+When credentials expire or rotate, update them in place without recreating the connection. Fields you omit are preserved. Fields set to `null` are removed.
 
+<Tabs groupId="auth-scheme" items={['Bearer token', 'API key', 'Basic auth']} persist>
+<Tab value="Bearer token">
 <Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
 <Tab value="Python">
 ```python
@@ -203,19 +205,86 @@ await composio.connectedAccounts.update('ca_your_connection_id', {
 curl -X PATCH https://backend.composio.dev/api/v3/connected_accounts/ca_xxx \
   -H 'x-api-key: YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
-  -d '{
-    "connection": {
-      "state": {
-        "authScheme": "BEARER_TOKEN",
-        "val": {"token": "new-access-token"}
-      }
-    }
-  }'
+  -d '{"connection":{"state":{"authScheme":"BEARER_TOKEN","val":{"token":"new-access-token"}}}}'
 ```
 </Tab>
 </Tabs>
-
-Fields you omit are preserved. Fields set to `null` are removed.
+</Tab>
+<Tab value="API key">
+<Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
+<Tab value="Python">
+```python
+composio.connected_accounts.update(
+    "ca_your_connection_id",
+    connection={
+        "state": {
+            "authScheme": "API_KEY",
+            "val": {"generic_api_key": "new-api-key"},
+        },
+    },
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+await composio.connectedAccounts.update('ca_your_connection_id', {
+  connection: {
+    state: {
+      authScheme: 'API_KEY',
+      val: { generic_api_key: 'new-api-key' },
+    },
+  },
+});
+```
+</Tab>
+<Tab value="curl">
+```bash
+curl -X PATCH https://backend.composio.dev/api/v3/connected_accounts/ca_xxx \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"connection":{"state":{"authScheme":"API_KEY","val":{"generic_api_key":"new-api-key"}}}}'
+```
+</Tab>
+</Tabs>
+</Tab>
+<Tab value="Basic auth">
+<Tabs groupId="language" items={['Python', 'TypeScript', 'curl']} persist>
+<Tab value="Python">
+```python
+composio.connected_accounts.update(
+    "ca_your_connection_id",
+    connection={
+        "state": {
+            "authScheme": "BASIC",
+            "val": {"username": "user@example.com", "password": "new-password"},
+        },
+    },
+)
+```
+</Tab>
+<Tab value="TypeScript">
+```typescript
+await composio.connectedAccounts.update('ca_your_connection_id', {
+  connection: {
+    state: {
+      authScheme: 'BASIC',
+      val: { username: 'user@example.com', password: 'new-password' },
+    },
+  },
+});
+```
+</Tab>
+<Tab value="curl">
+```bash
+curl -X PATCH https://backend.composio.dev/api/v3/connected_accounts/ca_xxx \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"connection":{"state":{"authScheme":"BASIC","val":{"username":"user@example.com","password":"new-password"}}}}'
+```
+</Tab>
+</Tabs>
+</Tab>
+</Tabs>
 
 ## Using with Tool Router
 
