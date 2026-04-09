@@ -76,7 +76,7 @@ console.log('Connected:', connection.id);
 
 If you already have an access token for a service, you can import it directly as a bearer token. This works with **all toolkits that support OAuth2 or S2S auth** — Gmail, GitHub, Slack, Google Docs, and more — so you can skip OAuth app setup entirely. Any additional parameters the toolkit supports (e.g., `subdomain`, `base_url`) work the same way.
 
-Since bearer tokens typically expire, you'll need to keep them updated. Use the [PATCH endpoint](#updating-credentials) to push a refreshed token whenever it changes on your end (e.g., after an OAuth refresh flow).
+Since access tokens typically expire, you'll need to keep them updated. Use the [PATCH endpoint](#updating-credentials) to push a refreshed token whenever it changes on your end (e.g., after an OAuth refresh flow).
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
