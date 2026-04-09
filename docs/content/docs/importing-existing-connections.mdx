@@ -26,10 +26,6 @@ graph LR
 2. **The existing credentials** for each user (API keys, bearer tokens, username/password, etc.)
 3. **A user ID** for each user — any string that uniquely identifies them in your system
 
-<Callout type="info">
-Bearer token auth configs work with **any toolkit that supports OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you use existing access tokens without setting up an OAuth app.
-</Callout>
-
 ## API keys
 
 For services that use API key authentication (e.g., SendGrid, Tavily, PostHog):
@@ -78,7 +74,11 @@ console.log('Connected:', connection.id);
 
 ## Bearer tokens
 
-For services where you already have an access token. Bearer token is supported for **all toolkits that have OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. It also supports the same additional parameters as the original auth scheme (e.g., `subdomain`, `base_url`).
+For services where you already have an access token.
+
+<Callout type="info">
+Bearer token is supported for **all toolkits that have OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you use existing access tokens without setting up an OAuth app. It also supports the same additional parameters as the original auth scheme (e.g., `subdomain`, `base_url`).
+</Callout>
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
