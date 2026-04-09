@@ -74,7 +74,7 @@ console.log('Connected:', connection.id);
 
 ## Bearer tokens
 
-For services where you already have an access token. Bearer token is supported for **all toolkits that have OAuth2 or S2S auth** — including Gmail, GitHub, Slack, Google Docs, and more. This lets you use existing access tokens without setting up an OAuth app. It also supports the same additional parameters as the original auth scheme (e.g., `subdomain`, `base_url`).
+If you already have an access token for a service, you can import it directly as a bearer token. This works with **all toolkits that support OAuth2 or S2S auth** — Gmail, GitHub, Slack, Google Docs, and more — so you can skip OAuth app setup entirely. Any additional parameters the toolkit supports (e.g., `subdomain`, `base_url`) work the same way.
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
