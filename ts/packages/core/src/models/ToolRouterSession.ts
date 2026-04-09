@@ -186,11 +186,18 @@ export class ToolRouterSession<
    * Initiate an authorization flow for a toolkit.
    * Returns a ConnectionRequest with a redirect URL for the user.
    */
-  async authorize(toolkit: string, options?: { callbackUrl?: string }): Promise<ConnectionRequest> {
-    const response = await this.client.toolRouter.session.link(this.sessionId, {
-      ...(options?.callbackUrl ? { callback_url: options.callbackUrl } : {}),
-      toolkit,
-    });
+  async authorize(toolkit: string, options?: { callbackUrl?: string; alias?: string }): Promise<ConnectionRequest> {
+    const linkParams: { toolkit: string; callback_url?: string; alias?: string } = { toolkit };
+
+    if (options?.callbackUrl) {
+      linkParams.callback_url = options.callbackUrl;
+    }
+
+    if (options?.alias != null) {
+      linkParams.alias = options.alias;
+    }
+
+    const response = await this.client.toolRouter.session.link(this.sessionId, linkParams);
 
     return createConnectionRequest(
       this.client,

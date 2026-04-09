@@ -366,7 +366,7 @@ class ConnectedAccounts:
         Update a connected account's alias.
 
         :param nanoid: The unique identifier of the connected account.
-        :param alias: Human-readable alias for the account. Must be unique per entity
+        :param alias: Human-readable alias for the account. Must be unique per userId
                       and toolkit within the project. Pass an empty string to clear.
         :return: Dict with ``success``, and optionally ``id`` and ``status``.
 
@@ -411,7 +411,7 @@ class ConnectedAccounts:
         :param callback_url: Callback URL to use for OAuth apps.
         :param config: The configuration to create the connected account with.
         :param allow_multiple: Whether to allow multiple connected accounts for the same user and auth config.
-        :param alias: Optional human-readable alias for the account. Must be unique per entity and toolkit within the project.
+        :param alias: Optional human-readable alias for the account. Must be unique per userId and toolkit within the project.
         :return: The connection request.
         """
         # Check if there are multiple connected accounts for the authConfig of the user

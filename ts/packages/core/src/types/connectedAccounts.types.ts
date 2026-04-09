@@ -192,7 +192,7 @@ export const CreateConnectedAccountLinkOptionsSchema = z.object({
    */
   callbackUrl: z.string().optional(),
   /**
-   * Human-readable alias for the connected account. Must be unique per entity and toolkit within the project.
+   * Human-readable alias for the connected account. Must be unique per userId and toolkit within the project.
    */
   alias: z.string().optional(),
 });
@@ -217,7 +217,7 @@ export const UpdateConnectedAccountParamsSchema = z.object({
   alias: z
     .string()
     .describe(
-      'Human-readable alias for the account. Must be unique per entity and toolkit within the project. Pass an empty string to clear the alias.'
+      'Human-readable alias for the account. Must be unique per userId and toolkit within the project. Pass an empty string to clear the alias.'
     ),
 });
 export type UpdateConnectedAccountParams = z.infer<typeof UpdateConnectedAccountParamsSchema>;

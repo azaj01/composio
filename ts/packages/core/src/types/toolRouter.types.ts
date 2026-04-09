@@ -212,7 +212,7 @@ export const ToolRouterCreateSessionConfigSchema = z
           .boolean()
           .optional()
           .describe(
-            'When true, enables multi-account mode for this session. When not set, falls back to org/project-level configuration.'
+            'When true, enables multi-account mode for this session. Defaults to false.'
           ),
         maxAccountsPerToolkit: z
           .number()
