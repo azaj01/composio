@@ -193,20 +193,14 @@ export class ConnectedAccounts {
     //   state = connectionDataParsed.data;
     // }
 
-    // Cast needed: alias + state types not yet in the published @composio/client
-    const createParams = {
-      auth_config: {
-        id: authConfigId,
-      },
-      connection: {
-        callback_url: options?.callbackUrl,
-        user_id: userId,
-        state,
-      },
-    } as ConnectedAccountCreateParamsRaw;
+    // alias not yet in ConnectedAccountCreateParams — cast until next client release
+    const createParams: ConnectedAccountCreateParamsRaw & { alias?: string } = {
+      auth_config: { id: authConfigId },
+      connection: { callback_url: options?.callbackUrl, user_id: userId, state },
+    } as ConnectedAccountCreateParamsRaw & { alias?: string };
 
     if (options?.alias != null) {
-      (createParams as ConnectedAccountCreateParamsRaw & { alias?: string }).alias = options.alias;
+      createParams.alias = options.alias;
     }
 
     const response = await this.client.connectedAccounts.create(createParams);
@@ -272,6 +266,7 @@ export class ConnectedAccounts {
     }
 
     try {
+      // alias not yet in LinkCreateParams — inline type until next client release
       const linkParams: { auth_config_id: string; user_id: string; callback_url?: string; alias?: string } = {
         auth_config_id: authConfigId,
         user_id: userId,
@@ -280,7 +275,6 @@ export class ConnectedAccounts {
       if (requestOptions?.data.callbackUrl) {
         linkParams.callback_url = requestOptions.data.callbackUrl;
       }
-
       if (requestOptions?.data.alias != null) {
         linkParams.alias = requestOptions.data.alias;
       }
@@ -509,12 +503,9 @@ export class ConnectedAccounts {
       });
     }
 
-    // The @composio/client doesn't yet have a typed method for this endpoint,
-    // so we call the raw client patch method directly.
-    const response = await (this.client as unknown as { patch: (path: string, opts: unknown) => Promise<unknown> }).patch(
-      `/api/v3/connected_accounts/${nanoid}`,
-      { body: { alias: parsedParams.data.alias } }
-    );
+    const response = await this.client.connectedAccounts.patch(nanoid, {
+      alias: parsedParams.data.alias,
+    });
 
     return UpdateConnectedAccountResponseSchema.parse(response);
   }
