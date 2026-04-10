@@ -11,6 +11,8 @@ from composio import exceptions
 from composio.client import HttpClient
 from composio.client.types import (
     connected_account_create_params,
+    connected_account_patch_params,
+    connected_account_patch_response,
     connected_account_retrieve_response,
     connected_account_update_status_response,
 )
@@ -360,15 +362,17 @@ class ConnectedAccounts:
         self,
         nanoid: str,
         *,
-        alias: str,
-    ) -> t.Dict[str, t.Any]:
+        alias: t.Optional[str] = None,
+        connection: t.Optional[connected_account_patch_params.Connection] = None,
+    ) -> connected_account_patch_response.ConnectedAccountPatchResponse:
         """
-        Update a connected account's alias.
+        Update a connected account's alias and/or credentials.
 
-        :param nanoid: The unique identifier of the connected account.
-        :param alias: Human-readable alias for the account. Must be unique per userId
-                      and toolkit within the project. Pass an empty string to clear.
-        :return: Dict with ``success``, and optionally ``id`` and ``status``.
+        :param nanoid: The connected account ID (ca_xxx).
+        :param alias: Human-readable alias. Pass an empty string to clear.
+                      Must be unique per entity and toolkit within the project.
+        :param connection: Credential update with authScheme and val fields.
+        :return: Response with ``id``, ``status``, and ``success``.
 
         Example:
             # Set an alias
@@ -377,16 +381,10 @@ class ConnectedAccounts:
             # Clear an alias
             composio.connected_accounts.update('ca_abc123', alias='')
         """
-        if not nanoid:
-            raise ValueError(
-                f"Expected a non-empty value for `nanoid` but received {nanoid!r}"
-            )
-        # The composio_client doesn't yet have a typed method for this endpoint,
-        # so we call the raw client patch method directly.
-        return self._client.patch(  # type: ignore[no-any-return]
-            f"/api/v3/connected_accounts/{nanoid}",
-            body={"alias": alias},
-            cast_to=dict,  # type: ignore[arg-type]
+        return self._client.connected_accounts.patch(
+            nanoid,
+            alias=alias,
+            connection=connection,
         )
 
     def initiate(
@@ -437,16 +435,13 @@ class ConnectedAccounts:
         if config is not None:
             connection["state"] = config
 
-        create_kwargs: dict[str, t.Any] = {
-            "auth_config": {"id": auth_config_id},
-            "connection": t.cast(
+        response = self._client.connected_accounts.create(
+            auth_config={"id": auth_config_id},
+            connection=t.cast(
                 connected_account_create_params.Connection, connection
             ),
-        }
-        if alias is not None:
-            create_kwargs["alias"] = alias
-
-        response = self._client.connected_accounts.create(**create_kwargs)
+            alias=alias,
+        )
         return ConnectionRequest(
             id=response.id,
             status=response.connection_data.val.status,
@@ -494,22 +489,12 @@ class ConnectedAccounts:
             # Wait for the connection to be established
             connected_account = composio.connected_accounts.wait_for_connection(connection_request.id)
         """
-        # Prepare the request payload
-        payload: dict[str, t.Any] = {
-            "auth_config_id": auth_config_id,
-            "user_id": user_id,
-        }
-
-        # Add callback_url only if provided
-        if callback_url is not None:
-            payload["callback_url"] = callback_url
-
-        # Add alias only if provided
-        if alias is not None:
-            payload["alias"] = alias
-
-        # Call the link creation endpoint
-        response = self._client.link.create(**payload)
+        response = self._client.link.create(
+            auth_config_id=auth_config_id,
+            user_id=user_id,
+            callback_url=callback_url,
+            alias=alias,
+        )
 
         return ConnectionRequest(
             id=response.connected_account_id,
