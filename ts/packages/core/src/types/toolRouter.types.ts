@@ -342,7 +342,7 @@ export type ToolRouterToolsFn<
 
 export type ToolRouterAuthorizeFn = (
   toolkit: string,
-  options?: { callbackUrl?: string }
+  options?: { callbackUrl?: string; alias?: string }
 ) => Promise<ConnectionRequest>;
 
 export const ToolRouterToolkitsOptionsSchema = z.object({
