@@ -210,7 +210,7 @@ export const ToolRouterCreateSessionConfigSchema = z
       .object({
         enable: z
           .boolean()
-          .optional()
+          .default(false)
           .describe(
             'When true, enables multi-account mode for this session. Defaults to false.'
           ),
