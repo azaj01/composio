@@ -493,15 +493,12 @@ class ConnectedAccounts:
             # Wait for the connection to be established
             connected_account = composio.connected_accounts.wait_for_connection(connection_request.id)
         """
-        link_kwargs: dict[str, t.Any] = {
-            "auth_config_id": auth_config_id,
-            "user_id": user_id,
-            "callback_url": callback_url if callback_url is not None else omit,
-        }
-        if alias is not None:
-            link_kwargs["alias"] = alias
-
-        response = self._client.link.create(**link_kwargs)
+        response = self._client.link.create(
+            auth_config_id=auth_config_id,
+            user_id=user_id,
+            callback_url=callback_url if callback_url is not None else omit,
+            alias=alias if alias is not None else omit,
+        )
 
         return ConnectionRequest(
             id=response.connected_account_id,
