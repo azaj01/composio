@@ -437,9 +437,7 @@ class ConnectedAccounts:
 
         response = self._client.connected_accounts.create(
             auth_config={"id": auth_config_id},
-            connection=t.cast(
-                connected_account_create_params.Connection, connection
-            ),
+            connection=t.cast(connected_account_create_params.Connection, connection),
             alias=alias,
         )
         return ConnectionRequest(
