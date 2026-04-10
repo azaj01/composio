@@ -1,5 +1,12 @@
 # @composio/mastra
 
+## 0.6.10
+
+### Patch Changes
+
+- Updated dependencies [670ecc9]
+  - @composio/core@0.6.10
+
 ## 0.6.9
 
 ### Patch Changes
