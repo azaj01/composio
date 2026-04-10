@@ -965,10 +965,24 @@ describe('ConnectedAccounts', () => {
       expect(result).toEqual({ success: true });
     });
 
-    it('should throw ValidationError for invalid params', async () => {
-      await expect(connectedAccounts.update('conn_abc123', { alias: 123 } as any)).rejects.toThrow(
-        'Failed to parse connected account update params'
-      );
+    it('should update credentials via connection param', async () => {
+      const nanoid = 'conn_abc123';
+      const mockResponse = { success: true, id: nanoid, status: 'ACTIVE' };
+      const params = {
+        connection: {
+          state: {
+            authScheme: 'BEARER_TOKEN' as const,
+            val: { token: 'new-access-token' },
+          },
+        },
+      };
+
+      extendedMockClient.connectedAccounts.patch.mockResolvedValueOnce(mockResponse);
+
+      const result = await connectedAccounts.update(nanoid, params);
+
+      expect(extendedMockClient.connectedAccounts.patch).toHaveBeenCalledWith(nanoid, params);
+      expect(result).toEqual({ success: true, id: nanoid, status: 'ACTIVE' });
     });
   });
 
