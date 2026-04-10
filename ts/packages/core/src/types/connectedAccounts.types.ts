@@ -221,7 +221,14 @@ export const UpdateConnectedAccountParamsSchema = z.object({
   connection: z
     .object({
       state: z.object({
-        authScheme: AuthSchemeEnum,
+        authScheme: z.enum([
+          'BEARER_TOKEN',
+          'API_KEY',
+          'BASIC',
+          'BASIC_WITH_JWT',
+          'GOOGLE_SERVICE_ACCOUNT',
+          'SERVICE_ACCOUNT',
+        ]),
         val: z.record(z.unknown()),
       }),
     })
