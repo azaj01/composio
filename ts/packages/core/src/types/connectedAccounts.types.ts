@@ -213,13 +213,26 @@ export const ConnectedAccountRefreshOptionsSchema = z.object({
 });
 export type ConnectedAccountRefreshOptions = z.infer<typeof ConnectedAccountRefreshOptionsSchema>;
 
+// Use the Stainless-generated type as the source of truth for update params.
+export type { ConnectedAccountPatchParams as UpdateConnectedAccountParams } from '@composio/client/resources/connected-accounts';
+
 export const UpdateConnectedAccountParamsSchema = z.object({
-  alias: z
-    .string()
-    .describe(
-      'Human-readable alias for the account. Must be unique per userId and toolkit within the project. Pass an empty string to clear the alias.'
-    ),
+  alias: z.string().optional(),
+  connection: z
+    .object({
+      state: z.object({
+        authScheme: z.enum([
+          'BEARER_TOKEN',
+          'API_KEY',
+          'BASIC',
+          'BASIC_WITH_JWT',
+          'GOOGLE_SERVICE_ACCOUNT',
+          'SERVICE_ACCOUNT',
+        ]),
+        val: z.record(z.unknown()),
+      }),
+    })
+    .optional(),
 });
-export type UpdateConnectedAccountParams = z.infer<typeof UpdateConnectedAccountParamsSchema>;
 
 // UpdateConnectedAccountResponse is now ConnectedAccountPatchResponse from @composio/client
