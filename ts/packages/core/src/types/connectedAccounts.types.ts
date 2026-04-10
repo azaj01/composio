@@ -213,8 +213,20 @@ export const ConnectedAccountRefreshOptionsSchema = z.object({
 });
 export type ConnectedAccountRefreshOptions = z.infer<typeof ConnectedAccountRefreshOptionsSchema>;
 
-// Re-export the Stainless-generated type directly so it stays in sync
-// with the API contract without hardcoding auth scheme strings.
+// Use the Stainless-generated type as the source of truth for update params.
+// The Zod schema mirrors it for runtime validation (consistent with other methods in this file).
 export type { ConnectedAccountPatchParams as UpdateConnectedAccountParams } from '@composio/client/resources/connected-accounts';
+
+export const UpdateConnectedAccountParamsSchema = z.object({
+  alias: z.string().optional(),
+  connection: z
+    .object({
+      state: z.object({
+        authScheme: AuthSchemeEnum,
+        val: z.record(z.unknown()),
+      }),
+    })
+    .optional(),
+});
 
 // UpdateConnectedAccountResponse is now ConnectedAccountPatchResponse from @composio/client

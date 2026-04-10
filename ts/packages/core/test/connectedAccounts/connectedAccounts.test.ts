@@ -984,6 +984,12 @@ describe('ConnectedAccounts', () => {
       expect(extendedMockClient.connectedAccounts.patch).toHaveBeenCalledWith(nanoid, params);
       expect(result).toEqual({ success: true, id: nanoid, status: 'ACTIVE' });
     });
+
+    it('should throw ValidationError for invalid params', async () => {
+      await expect(connectedAccounts.update('conn_abc123', { alias: 123 } as any)).rejects.toThrow(
+        'Failed to parse connected account update params'
+      );
+    });
   });
 
   describe('link', () => {

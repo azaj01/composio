@@ -28,6 +28,7 @@ import {
   ConnectedAccountRefreshOptions,
   ConnectedAccountRefreshOptionsSchema,
   UpdateConnectedAccountParams,
+  UpdateConnectedAccountParamsSchema,
 } from '../types/connectedAccounts.types';
 import { ConnectionRequest } from '../types/connectionRequest.types';
 import { createConnectionRequest } from './ConnectionRequest';
@@ -492,6 +493,13 @@ export class ConnectedAccounts {
     nanoid: string,
     params: UpdateConnectedAccountParams,
   ): Promise<ConnectedAccountPatchResponse> {
-    return this.client.connectedAccounts.patch(nanoid, params);
+    const parsedParams = UpdateConnectedAccountParamsSchema.safeParse(params);
+    if (!parsedParams.success) {
+      throw new ValidationError('Failed to parse connected account update params', {
+        cause: parsedParams.error,
+      });
+    }
+
+    return this.client.connectedAccounts.patch(nanoid, parsedParams.data);
   }
 }
