@@ -397,7 +397,7 @@ const ToolRouterSessionSearchTimeInfoSchema = z.object({
 
 const ToolRouterSessionSearchToolSchemasSchemaRefSchema = z.object({
   args: z.object({ toolSlugs: z.array(z.string()) }),
-  message: z.string(),
+  message: z.string().optional(),
   tool: z.literal('COMPOSIO_GET_TOOL_SCHEMAS'),
 });
 

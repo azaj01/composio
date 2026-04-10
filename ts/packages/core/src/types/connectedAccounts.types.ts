@@ -42,8 +42,8 @@ export const DefaultCreateConnectedAccountParamsSchema: z.ZodType<{
     data?: Record<string, unknown>;
     callback_url?: string;
     user_id?: string;
+    alias?: string;
   };
-  alias?: string;
 }> = z.object({
   auth_config: z.object({
     id: z.string(),
@@ -53,8 +53,8 @@ export const DefaultCreateConnectedAccountParamsSchema: z.ZodType<{
     data: z.record(z.string(), z.unknown()).optional(),
     callback_url: z.string().optional(),
     user_id: z.string().optional(),
+    alias: z.string().optional(),
   }),
-  alias: z.string().optional(),
 });
 
 export const CreateConnectedAccountOptionsSchema: z.ZodType<{
