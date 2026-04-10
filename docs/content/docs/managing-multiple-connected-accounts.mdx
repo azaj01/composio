@@ -73,8 +73,12 @@ personal_connection = personal_auth.wait_for_connection()
 ```typescript
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
-const session = await composio.create("user_123");
 // ---cut---
+const session = await composio.create("user_123", {
+  toolkits: ["gmail"],
+  multiAccount: { enable: true },
+});
+
 // Connect work account
 const workAuth = await session.authorize("gmail", { alias: "work-gmail" });
 console.log(`Connect work Gmail: ${workAuth.redirectUrl}`);
