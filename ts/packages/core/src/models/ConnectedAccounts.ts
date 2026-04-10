@@ -467,20 +467,26 @@ export class ConnectedAccounts {
   }
 
   /**
-   * Update a connected account's alias.
+   * Update a connected account's alias and/or credentials.
    *
    * @param {string} nanoid - The unique identifier of the connected account
    * @param {UpdateConnectedAccountParams} params - The update parameters
-   * @param {string} params.alias - Human-readable alias for the account. Must be unique per userId and toolkit within the project. Pass an empty string to clear.
    * @returns {Promise<ConnectedAccountPatchResponse>} The update response
    *
    * @example
    * ```typescript
    * // Set an alias
-   * await composio.connectedAccounts.update('conn_abc123', { alias: 'work-gmail' });
+   * await composio.connectedAccounts.update('ca_abc123', { alias: 'work-gmail' });
    *
-   * // Clear an alias
-   * await composio.connectedAccounts.update('conn_abc123', { alias: '' });
+   * // Update credentials
+   * await composio.connectedAccounts.update('ca_abc123', {
+   *   connection: {
+   *     state: {
+   *       authScheme: 'BEARER_TOKEN',
+   *       val: { token: 'new-access-token' },
+   *     },
+   *   },
+   * });
    * ```
    */
   async update(
@@ -496,6 +502,7 @@ export class ConnectedAccounts {
 
     return this.client.connectedAccounts.patch(nanoid, {
       alias: parsedParams.data.alias,
+      connection: parsedParams.data.connection,
     });
   }
 }

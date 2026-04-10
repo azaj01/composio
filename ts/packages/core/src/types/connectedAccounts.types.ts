@@ -216,9 +216,26 @@ export type ConnectedAccountRefreshOptions = z.infer<typeof ConnectedAccountRefr
 export const UpdateConnectedAccountParamsSchema = z.object({
   alias: z
     .string()
+    .optional()
     .describe(
       'Human-readable alias for the account. Must be unique per userId and toolkit within the project. Pass an empty string to clear the alias.'
     ),
+  connection: z
+    .object({
+      state: z.object({
+        authScheme: z.enum([
+          'BEARER_TOKEN',
+          'API_KEY',
+          'BASIC',
+          'BASIC_WITH_JWT',
+          'GOOGLE_SERVICE_ACCOUNT',
+          'SERVICE_ACCOUNT',
+        ]),
+        val: z.record(z.unknown()),
+      }),
+    })
+    .optional()
+    .describe('Credential fields to update. Only provided fields are changed — omitted fields are preserved. Set a field to null to remove it.'),
 });
 export type UpdateConnectedAccountParams = z.infer<typeof UpdateConnectedAccountParamsSchema>;
 
