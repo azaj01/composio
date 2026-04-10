@@ -9,6 +9,7 @@ import typing_extensions as te
 
 from composio import exceptions
 from composio.client import HttpClient
+from composio_client import omit
 from composio.client.types import (
     connected_account_create_params,
     connected_account_patch_params,
@@ -383,8 +384,8 @@ class ConnectedAccounts:
         """
         return self._client.connected_accounts.patch(
             nanoid,
-            alias=alias,
-            connection=connection,
+            alias=alias if alias is not None else omit,
+            connection=connection if connection is not None else omit,
         )
 
     def initiate(
@@ -435,11 +436,16 @@ class ConnectedAccounts:
         if config is not None:
             connection["state"] = config
 
-        response = self._client.connected_accounts.create(
-            auth_config={"id": auth_config_id},
-            connection=t.cast(connected_account_create_params.Connection, connection),
-            alias=alias,
-        )
+        create_kwargs: dict[str, t.Any] = {
+            "auth_config": {"id": auth_config_id},
+            "connection": t.cast(
+                connected_account_create_params.Connection, connection
+            ),
+        }
+        if alias is not None:
+            create_kwargs["alias"] = alias
+
+        response = self._client.connected_accounts.create(**create_kwargs)
         return ConnectionRequest(
             id=response.id,
             status=response.connection_data.val.status,
@@ -487,12 +493,15 @@ class ConnectedAccounts:
             # Wait for the connection to be established
             connected_account = composio.connected_accounts.wait_for_connection(connection_request.id)
         """
-        response = self._client.link.create(
-            auth_config_id=auth_config_id,
-            user_id=user_id,
-            callback_url=callback_url,
-            alias=alias,
-        )
+        link_kwargs: dict[str, t.Any] = {
+            "auth_config_id": auth_config_id,
+            "user_id": user_id,
+            "callback_url": callback_url if callback_url is not None else omit,
+        }
+        if alias is not None:
+            link_kwargs["alias"] = alias
+
+        response = self._client.link.create(**link_kwargs)
 
         return ConnectionRequest(
             id=response.connected_account_id,

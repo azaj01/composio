@@ -396,12 +396,15 @@ class ToolRouterSession(t.Generic[TTool, TToolCollection]):
         :param alias: Human-readable alias for the connection. Must be unique
             per userId and toolkit within the project.
         """
-        response = self._client.tool_router.session.link(
-            session_id=self.session_id,
-            toolkit=toolkit,
-            callback_url=callback_url if callback_url else omit,
-            alias=alias if alias is not None else omit,
-        )
+        link_kwargs: dict[str, t.Any] = {
+            "session_id": self.session_id,
+            "toolkit": toolkit,
+            "callback_url": callback_url if callback_url else omit,
+        }
+        if alias is not None:
+            link_kwargs["alias"] = alias
+
+        response = self._client.tool_router.session.link(**link_kwargs)
         return ConnectionRequest(
             id=response.connected_account_id,
             redirect_url=response.redirect_url,
