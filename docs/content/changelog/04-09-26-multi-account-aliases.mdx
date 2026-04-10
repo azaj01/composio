@@ -4,13 +4,16 @@ description: "Enable multiple connected accounts per toolkit and label them with
 date: "2026-04-09"
 ---
 
-Two features for managing multiple accounts per toolkit.
+This release adds two features for managing multiple accounts per toolkit.
 
 ## Multi-account mode
 
 Sessions now support a `multiAccount` config that lets users connect and use multiple accounts for the same toolkit (e.g., work and personal Gmail) within a single session.
 
 ```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+// ---cut---
 const session = await composio.create('user_123', {
   toolkits: ['gmail'],
   multiAccount: {
@@ -27,6 +30,11 @@ By default, multi-account mode is disabled and each session uses one account per
 Connected accounts can now have human-readable aliases (e.g., `"work-gmail"`, `"personal-github"`). Aliases can be set during connection or updated after.
 
 ```typescript
+// @errors: 2353
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your_api_key' });
+const session = await composio.create('user_123');
+// ---cut---
 // Set alias during connection
 await session.authorize('gmail', { alias: 'work-gmail' });
 
