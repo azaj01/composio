@@ -734,21 +734,8 @@ class ToolRouter(Resource, t.Generic[TTool, TToolCollection]):
             if execution_payload:
                 create_params["workbench"] = execution_payload
 
-        # Build multi_account config
         if multi_account is not None:
-            multi_account_payload: t.Dict[str, t.Any] = {}
-            if "enable" in multi_account:
-                multi_account_payload["enable"] = multi_account["enable"]
-            if "max_accounts_per_toolkit" in multi_account:
-                multi_account_payload["max_accounts_per_toolkit"] = multi_account[
-                    "max_accounts_per_toolkit"
-                ]
-            if "require_explicit_selection" in multi_account:
-                multi_account_payload["require_explicit_selection"] = multi_account[
-                    "require_explicit_selection"
-                ]
-            if multi_account_payload:
-                create_params["multi_account"] = multi_account_payload
+            create_params["multi_account"] = multi_account
 
         # Build experimental config
         # Map SDK's experimental.assistive_prompt.user_timezone to API's
