@@ -214,7 +214,6 @@ export const ConnectedAccountRefreshOptionsSchema = z.object({
 export type ConnectedAccountRefreshOptions = z.infer<typeof ConnectedAccountRefreshOptionsSchema>;
 
 // Use the Stainless-generated type as the source of truth for update params.
-// The Zod schema mirrors it for runtime validation (consistent with other methods in this file).
 export type { ConnectedAccountPatchParams as UpdateConnectedAccountParams } from '@composio/client/resources/connected-accounts';
 
 export const UpdateConnectedAccountParamsSchema = z.object({
