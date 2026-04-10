@@ -30,7 +30,6 @@ By default, multi-account mode is disabled and each session uses one account per
 Connected accounts can now have human-readable aliases (e.g., `"work-gmail"`, `"personal-github"`). Aliases can be set during connection or updated after.
 
 ```typescript
-// @errors: 2353
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 const session = await composio.create('user_123');

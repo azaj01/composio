@@ -71,7 +71,6 @@ personal_connection = personal_auth.wait_for_connection()
 </Tab>
 <Tab value="TypeScript">
 ```typescript
-// @errors: 2353
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 const session = await composio.create("user_123");
@@ -125,7 +124,6 @@ connection_request = composio.connected_accounts.link(
 </Tab>
 <Tab value="TypeScript">
 ```typescript
-// @errors: 2353
 import { Composio } from '@composio/core';
 const composio = new Composio({ apiKey: 'your_api_key' });
 const session = await composio.create("user_123");
