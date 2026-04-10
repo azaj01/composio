@@ -188,6 +188,9 @@ composio.connected_accounts.update(
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your-api-key' });
+// ---cut---
 await composio.connectedAccounts.update('ca_your_connection_id', {
   connection: {
     state: {
@@ -225,6 +228,9 @@ composio.connected_accounts.update(
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your-api-key' });
+// ---cut---
 await composio.connectedAccounts.update('ca_your_connection_id', {
   connection: {
     state: {
@@ -262,6 +268,9 @@ composio.connected_accounts.update(
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your-api-key' });
+// ---cut---
 await composio.connectedAccounts.update('ca_your_connection_id', {
   connection: {
     state: {
@@ -300,6 +309,9 @@ session = composio.create(
 </Tab>
 <Tab value="TypeScript">
 ```typescript
+import { Composio } from '@composio/core';
+const composio = new Composio({ apiKey: 'your-api-key' });
+// ---cut---
 const session = await composio.create('user_123', {
   authConfigs: { gmail: 'ac_your_auth_config' },
   toolkits: ['gmail'],
