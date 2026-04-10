@@ -1,5 +1,11 @@
 # @composio/core
 
+## 0.6.9
+
+### Patch Changes
+
+- 5b5723a: release
+
 ## 0.6.8
 
 ### Patch Changes

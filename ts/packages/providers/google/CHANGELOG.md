@@ -1,5 +1,12 @@
 # @composio/google
 
+## 0.6.9
+
+### Patch Changes
+
+- Updated dependencies [5b5723a]
+  - @composio/core@0.6.9
+
 ## 0.6.8
 
 ### Patch Changes
