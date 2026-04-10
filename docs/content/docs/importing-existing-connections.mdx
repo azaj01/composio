@@ -74,9 +74,9 @@ console.log('Connected:', connection.id);
 
 ## Bearer tokens
 
-If you already have an access token for a service, you can import it directly as a bearer token. This works with **all toolkits that support OAuth2 or S2S auth** — Gmail, GitHub, Slack, Google Docs, and more — so you can skip OAuth app setup entirely. Any additional parameters the toolkit supports (e.g., `subdomain`, `base_url`) work the same way.
+If you already have an access token for a service (e.g., from an OAuth flow you manage), you can pass it directly to Composio as a bearer token. This works with **all toolkits that support OAuth2 or S2S auth** — Gmail, GitHub, Slack, Google Docs, and more. Any additional parameters the toolkit supports (e.g., `subdomain`, `base_url`) work the same way.
 
-Since access tokens typically expire, you'll need to keep them updated. Use the [PATCH endpoint](#updating-credentials) to push a refreshed token whenever it changes on your end (e.g., after an OAuth refresh flow).
+After [creating an auth config](/docs/auth-configuration/programmatic-auth-configs) with `authScheme: "BEARER_TOKEN"`, use the snippet below to create a connected account. Since access tokens typically expire, use the [PATCH endpoint](#updating-credentials) to push a refreshed token whenever it changes on your end.
 
 <Tabs groupId="language" items={['Python', 'TypeScript']} persist>
 <Tab value="Python">
