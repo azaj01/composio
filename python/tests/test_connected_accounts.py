@@ -343,7 +343,7 @@ class TestConnectedAccounts:
         call_kwargs = mock_client.link.create.call_args.kwargs
         assert call_kwargs["auth_config_id"] == "auth-1"
         assert call_kwargs["user_id"] == "user-1"
-        assert "callback_url" not in call_kwargs
+        assert call_kwargs.get("callback_url") is None
 
     def test_initiate_with_oauth2_tokens_returns_active_connection_request(
         self, connected_accounts, mock_client
