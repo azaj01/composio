@@ -222,9 +222,4 @@ export const UpdateConnectedAccountParamsSchema = z.object({
 });
 export type UpdateConnectedAccountParams = z.infer<typeof UpdateConnectedAccountParamsSchema>;
 
-export const UpdateConnectedAccountResponseSchema = z.object({
-  success: z.boolean(),
-  id: z.string().optional(),
-  status: z.string().optional(),
-});
-export type UpdateConnectedAccountResponse = z.infer<typeof UpdateConnectedAccountResponseSchema>;
+// UpdateConnectedAccountResponse is now ConnectedAccountPatchResponse from @composio/client

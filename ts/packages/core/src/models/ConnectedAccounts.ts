@@ -14,6 +14,7 @@ import {
   ConnectedAccountUpdateStatusResponse,
   ConnectedAccountListParams as ConnectedAccountListParamsRaw,
   ConnectedAccountCreateParams as ConnectedAccountCreateParamsRaw,
+  ConnectedAccountPatchResponse,
 } from '@composio/client/resources/connected-accounts';
 import {
   CreateConnectedAccountOptions,
@@ -28,8 +29,6 @@ import {
   ConnectedAccountRefreshOptionsSchema,
   UpdateConnectedAccountParams,
   UpdateConnectedAccountParamsSchema,
-  UpdateConnectedAccountResponse,
-  UpdateConnectedAccountResponseSchema,
 } from '../types/connectedAccounts.types';
 import { ConnectionRequest } from '../types/connectionRequest.types';
 import { createConnectionRequest } from './ConnectionRequest';
@@ -193,15 +192,15 @@ export class ConnectedAccounts {
     //   state = connectionDataParsed.data;
     // }
 
-    // alias not yet in ConnectedAccountCreateParams — cast until next client release
-    const createParams: ConnectedAccountCreateParamsRaw & { alias?: string } = {
+    const createParams: ConnectedAccountCreateParamsRaw = {
       auth_config: { id: authConfigId },
-      connection: { callback_url: options?.callbackUrl, user_id: userId, state },
-    } as ConnectedAccountCreateParamsRaw & { alias?: string };
-
-    if (options?.alias != null) {
-      createParams.alias = options.alias;
-    }
+      connection: {
+        callback_url: options?.callbackUrl,
+        user_id: userId,
+        state: state as ConnectedAccountCreateParamsRaw.Connection['state'],
+        ...(options?.alias != null && { alias: options.alias }),
+      },
+    };
 
     const response = await this.client.connectedAccounts.create(createParams);
 
@@ -266,20 +265,12 @@ export class ConnectedAccounts {
     }
 
     try {
-      // alias not yet in LinkCreateParams — inline type until next client release
-      const linkParams: { auth_config_id: string; user_id: string; callback_url?: string; alias?: string } = {
+      const response = await this.client.link.create({
         auth_config_id: authConfigId,
         user_id: userId,
-      };
-
-      if (requestOptions?.data.callbackUrl) {
-        linkParams.callback_url = requestOptions.data.callbackUrl;
-      }
-      if (requestOptions?.data.alias != null) {
-        linkParams.alias = requestOptions.data.alias;
-      }
-
-      const response = await this.client.link.create(linkParams);
+        ...(requestOptions?.data.callbackUrl && { callback_url: requestOptions.data.callbackUrl }),
+        ...(requestOptions?.data.alias != null && { alias: requestOptions.data.alias }),
+      });
 
       const connectionRequest = createConnectionRequest(
         this.client,
@@ -481,7 +472,7 @@ export class ConnectedAccounts {
    * @param {string} nanoid - The unique identifier of the connected account
    * @param {UpdateConnectedAccountParams} params - The update parameters
    * @param {string} params.alias - Human-readable alias for the account. Must be unique per userId and toolkit within the project. Pass an empty string to clear.
-   * @returns {Promise<UpdateConnectedAccountResponse>} The update response
+   * @returns {Promise<ConnectedAccountPatchResponse>} The update response
    *
    * @example
    * ```typescript
@@ -495,7 +486,7 @@ export class ConnectedAccounts {
   async update(
     nanoid: string,
     params: UpdateConnectedAccountParams
-  ): Promise<UpdateConnectedAccountResponse> {
+  ): Promise<ConnectedAccountPatchResponse> {
     const parsedParams = UpdateConnectedAccountParamsSchema.safeParse(params);
     if (!parsedParams.success) {
       throw new ValidationError('Failed to parse connected account update params', {
@@ -503,10 +494,8 @@ export class ConnectedAccounts {
       });
     }
 
-    const response = await this.client.connectedAccounts.patch(nanoid, {
+    return this.client.connectedAccounts.patch(nanoid, {
       alias: parsedParams.data.alias,
     });
-
-    return UpdateConnectedAccountResponseSchema.parse(response);
   }
 }

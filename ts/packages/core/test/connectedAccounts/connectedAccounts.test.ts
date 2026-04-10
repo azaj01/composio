@@ -210,9 +210,8 @@ describe('ConnectedAccounts', () => {
 
       expect(extendedMockClient.connectedAccounts.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          alias: 'work-gmail',
           auth_config: { id: authConfigId },
-          connection: expect.objectContaining({ user_id: userId }),
+          connection: expect.objectContaining({ user_id: userId, alias: 'work-gmail' }),
         })
       );
     });
@@ -243,7 +242,7 @@ describe('ConnectedAccounts', () => {
       await connectedAccounts.initiate(userId, authConfigId);
 
       const callArgs = extendedMockClient.connectedAccounts.create.mock.calls[0]![0];
-      expect(callArgs).not.toHaveProperty('alias');
+      expect(callArgs.connection).not.toHaveProperty('alias');
     });
 
     it('should throw ComposioMultipleConnectedAccountsError when multiple accounts exist and allowMultiple is false', async () => {

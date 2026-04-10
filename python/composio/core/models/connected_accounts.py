@@ -432,20 +432,17 @@ class ConnectedAccounts:
         connection: dict[str, t.Any] = {"user_id": user_id}
         if callback_url is not None:
             connection["callback_url"] = callback_url
-
         if config is not None:
             connection["state"] = config
+        if alias is not None:
+            connection["alias"] = alias
 
-        create_kwargs: dict[str, t.Any] = {
-            "auth_config": {"id": auth_config_id},
-            "connection": t.cast(
+        response = self._client.connected_accounts.create(
+            auth_config={"id": auth_config_id},
+            connection=t.cast(
                 connected_account_create_params.Connection, connection
             ),
-        }
-        if alias is not None:
-            create_kwargs["alias"] = alias
-
-        response = self._client.connected_accounts.create(**create_kwargs)
+        )
         return ConnectionRequest(
             id=response.id,
             status=response.connection_data.val.status,
