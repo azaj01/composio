@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { Effect, Option } from 'effect';
-import { Command } from '@effect/cli';
+import { Command, HelpDoc, ValidationError } from '@effect/cli';
 import { $defaultCmd } from './$default.cmd';
 import { getVersion } from 'src/effects/version';
 import { versionCmd } from './version.cmd';
@@ -76,10 +76,101 @@ export const buildRootCommand = (visibility: CommandVisibility) => {
   return $defaultCmd.pipe(Command.withSubcommands(subcommands as any));
 };
 
+const formatSubcommandChoices = (choices: ReadonlyArray<string>) =>
+  choices.map(choice => `'${choice}'`).join(', ');
+
+/**
+ * Internal shape of an `@effect/cli` command descriptor. The public
+ * `CommandDescriptor.getSubcommands` helper flattens nested subcommand trees
+ * and only returns the *parent* Standard node for each branch, which means we
+ * can't use it to walk deeper than one level. Walking the `_tag`-based
+ * internal tree directly is the only way to recover the full descendable
+ * structure without losing subcommand context on descent.
+ */
+type InternalDescriptor =
+  | { _tag: 'Standard'; name: string }
+  | { _tag: 'GetUserInput'; name: string }
+  | { _tag: 'Map'; command: InternalDescriptor }
+  | {
+      _tag: 'Subcommands';
+      parent: InternalDescriptor;
+      children: ReadonlyArray<InternalDescriptor>;
+    };
+
+type UnwrappedDescriptor = Exclude<InternalDescriptor, { _tag: 'Map' }>;
+
+const unwrapMaps = (cmd: InternalDescriptor): UnwrappedDescriptor => {
+  let current: InternalDescriptor = cmd;
+  while (current._tag === 'Map') {
+    current = current.command;
+  }
+  return current;
+};
+
+const getCommandName = (cmd: InternalDescriptor): string => {
+  const unwrapped = unwrapMaps(cmd);
+  if (unwrapped._tag === 'Subcommands') {
+    return getCommandName(unwrapped.parent);
+  }
+  return unwrapped.name;
+};
+
+const getChildEntries = (
+  cmd: InternalDescriptor
+): ReadonlyArray<readonly [string, InternalDescriptor]> => {
+  const unwrapped = unwrapMaps(cmd);
+  if (unwrapped._tag !== 'Subcommands') {
+    return [];
+  }
+  return unwrapped.children.map(child => [getCommandName(child), child] as const);
+};
+
+const findNestedSubcommandMismatch = (
+  argv: ReadonlyArray<string>,
+  rootCommand: ReturnType<typeof buildRootCommand>
+): ReturnType<typeof ValidationError.commandMismatch> | undefined => {
+  const args = argv.slice(2);
+  let current: InternalDescriptor = rootCommand.descriptor as unknown as InternalDescriptor;
+  const path = ['composio'];
+
+  for (const token of args) {
+    if (!token || token === '--' || token === '--help' || token === '-h' || token.startsWith('-')) {
+      return undefined;
+    }
+
+    const children = getChildEntries(current);
+    if (children.length === 0) {
+      return undefined;
+    }
+
+    const match = children.find(([name]) => name === token);
+    if (match) {
+      current = match[1];
+      path.push(token);
+      continue;
+    }
+
+    if (path.length === 1) {
+      return undefined;
+    }
+
+    const available = children.map(([name]) => name).sort();
+    return ValidationError.commandMismatch(
+      HelpDoc.p(
+        `Invalid subcommand for ${path.join(' ')} - use one of ${formatSubcommandChoices(available)}`
+      )
+    );
+  }
+
+  return undefined;
+};
+
 const ROOT_INSTALL_SKILL_FLAGS = ['--instal-skill', '--install-skill'] as const;
-const SKILL_INSTALL_TARGETS = ['claude', 'codex', 'openclaw'] as const satisfies ReadonlyArray<
-  SkillInstallTarget
->;
+const SKILL_INSTALL_TARGETS = [
+  'claude',
+  'codex',
+  'openclaw',
+] as const satisfies ReadonlyArray<SkillInstallTarget>;
 
 type RootInstallSkillRequest =
   | {
@@ -122,8 +213,7 @@ export const parseRootInstallSkillRequest = (
         if (!isSkillInstallTarget(target)) {
           return {
             _tag: 'error',
-            message:
-              'Invalid target for --instal-skill. Expected one of: claude, codex, openclaw.',
+            message: 'Invalid target for --instal-skill. Expected one of: claude, codex, openclaw.',
           };
         }
         return { _tag: 'parsed', target };
@@ -134,8 +224,7 @@ export const parseRootInstallSkillRequest = (
         if (!isSkillInstallTarget(target)) {
           return {
             _tag: 'error',
-            message:
-              'Invalid target for --instal-skill. Expected one of: claude, codex, openclaw.',
+            message: 'Invalid target for --instal-skill. Expected one of: claude, codex, openclaw.',
           };
         }
         return { _tag: 'parsed', skillName, target };
@@ -374,6 +463,10 @@ export const runWithConfig = Effect.gen(function* () {
     const subHelp = matchSubcommandHelp(normalizedArgv, visibility);
     if (subHelp) {
       return printSubcommandHelp(subHelp, visibility);
+    }
+    const nestedMismatch = findNestedSubcommandMismatch(normalizedArgv, rootCommand);
+    if (nestedMismatch) {
+      return Effect.fail(nestedMismatch);
     }
     const parallelExecute = runParallelToolsExecuteFromArgv(normalizedArgv);
     if (parallelExecute) {

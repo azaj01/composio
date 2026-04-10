@@ -11,13 +11,7 @@ describe('CLI: --instal-skill', () => {
 
   it('parses an explicit skill name and target', () => {
     expect(
-      parseRootInstallSkillRequest([
-        'node',
-        'composio',
-        '--instal-skill',
-        'composio-cli',
-        'codex',
-      ])
+      parseRootInstallSkillRequest(['node', 'composio', '--instal-skill', 'composio-cli', 'codex'])
     ).toEqual({
       _tag: 'parsed',
       skillName: 'composio-cli',
@@ -26,12 +20,12 @@ describe('CLI: --instal-skill', () => {
   });
 
   it('accepts the --install-skill alias', () => {
-    expect(parseRootInstallSkillRequest(['node', 'composio', '--install-skill', 'openclaw'])).toEqual(
-      {
-        _tag: 'parsed',
-        target: 'openclaw',
-      }
-    );
+    expect(
+      parseRootInstallSkillRequest(['node', 'composio', '--install-skill', 'openclaw'])
+    ).toEqual({
+      _tag: 'parsed',
+      target: 'openclaw',
+    });
   });
 
   it('accepts the root flag after leading global options', () => {
