@@ -42,12 +42,12 @@ Every non-tool endpoint (`/auth_configs`, `/connected_accounts`, `/triggers`, `/
 
 **Before (v3):**
 ```bash
-curl https://backend.composio.dev/api/v3/tools?toolkit_slug=gmail&toolkit_versions=latest \
+curl "https://backend.composio.dev/api/v3/tools/GMAIL_SEND_EMAIL?version=latest" \
   -H "x-api-key: YOUR_KEY"
 ```
 
 **After (v3.1):**
 ```bash
-curl https://backend.composio.dev/api/v3.1/tools?toolkit_slug=gmail \
+curl "https://backend.composio.dev/api/v3.1/tools/GMAIL_SEND_EMAIL" \
   -H "x-api-key: YOUR_KEY"
 ```
