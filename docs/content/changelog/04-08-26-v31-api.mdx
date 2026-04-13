@@ -8,7 +8,7 @@ We're rolling out API v3.1 endpoints that change how tool versions are resolved.
 
 ### What Changed
 
-In API v3 (`/api/v3/tools/*`), tool-related endpoints default the `version` parameter to `00000000_00` (the initial pinned version). This means callers must explicitly pass `version: "latest"` or a specific version string to get the most recent tool definitions.
+In API v3 (`/api/v3/tools/*`), tool-related endpoints default the version parameter to `00000000_00` (the initial pinned version). This means callers must explicitly pass `version: "latest"` (or `toolkit_versions: "latest"` for `GET /tools`) to get the most recent tool definitions.
 
 In API v3.1 (`/api/v3.1/tools/*`), the default is flipped: **tool-related endpoints default to the latest toolkit version**. If you're already passing `version: "latest"` in your requests, switching to v3.1 changes nothing for you. If you were relying on the `00000000_00` default, you'll now get the latest version unless you explicitly pin.
 
@@ -37,8 +37,8 @@ Every non-tool endpoint (`/auth_configs`, `/connected_accounts`, `/triggers`, `/
 **If you're calling the API directly:**
 
 1. Replace `/api/v3/` with `/api/v3.1/` in your tool endpoint URLs
-2. If you depend on a specific pinned version, pass `version: "00000000_00"` explicitly
-3. If you were already passing `version: "latest"`, you can drop the parameter entirely on v3.1
+2. If you depend on a specific pinned version, pass it explicitly — `version=00000000_00` for most endpoints, or `toolkit_versions=00000000_00` for `GET /tools` (see table above)
+3. If you were already passing `version: "latest"` (or `toolkit_versions: "latest"`), you can drop the parameter entirely on v3.1
 
 **Before (v3):**
 ```bash
