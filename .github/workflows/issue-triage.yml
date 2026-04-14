@@ -81,54 +81,81 @@ jobs:
           }
           EOF
 
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: Classify issue with Claude Sonnet
         id: classify
-        uses: anthropics/claude-code-action@v1
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ISSUE_TITLE: ${{ github.event_name == 'workflow_dispatch' && steps.issue-context.outputs.issue_title || github.event.issue.title }}
           ISSUE_BODY: ${{ github.event_name == 'workflow_dispatch' && steps.issue-context.outputs.issue_body || github.event.issue.body }}
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          show_full_output: true
-          prompt: |
-            Read the issue title and body from the ISSUE_TITLE and ISSUE_BODY environment variables.
+        run: |
+          set -euo pipefail
 
-            Classify the issue for routing and determine whether it is a bug report.
+          PROMPT=$(cat <<'EOF'
+          Read the issue title and body from the ISSUE_TITLE and ISSUE_BODY environment variables.
 
-            Allowed categories:
-            - docs
-            - py
-            - ts
-            - cli
-            - tool-request
-            - feature-request
-            - other
+          Classify the issue for routing and determine whether it is a bug report.
 
-            Use semantic meaning, not only keywords.
-            Choose tool-request when the issue is primarily asking for a new integration, toolkit, app, or tool.
-            Choose feature-request when the issue is asking for a product, SDK, docs, or CLI improvement that is not a tool request.
-            Choose cli only when the issue is specifically about the CLI experience or ts/packages/cli.
-            Choose py only when the issue is primarily about the Python SDK.
-            Choose ts only when the issue is primarily about the TypeScript SDK or TS packages other than the CLI.
-            Choose docs only when the issue is primarily about documentation.
-            Set is_bug to true when the issue is primarily reporting broken behavior, a defect, an error, a regression, or unexpected behavior.
-            Set is_bug to false for feature requests, questions, maintenance, cleanup, and tool requests.
-            Set should_comment to true only when the issue appears incorrect, non-actionable, or missing the information needed to reproduce or investigate.
-            Set should_comment to false otherwise.
+          Allowed categories:
+          - docs
+          - py
+          - ts
+          - cli
+          - tool-request
+          - feature-request
+          - other
 
-            If should_comment is true, provide comment_body as a short issue comment addressed to the reporter.
-            The comment must:
-            - clearly say it is an automated Claude triage note
-            - clearly say Claude cannot reply back in a conversation
-            - ask for the specific missing details needed to investigate, especially repro steps, expected behavior, actual behavior, environment, logs, or screenshots when relevant
-            - stay concise and professional
+          Use semantic meaning, not only keywords.
+          Choose tool-request when the issue is primarily asking for a new integration, toolkit, app, or tool.
+          Choose feature-request when the issue is asking for a product, SDK, docs, or CLI improvement that is not a tool request.
+          Choose cli only when the issue is specifically about the CLI experience or ts/packages/cli.
+          Choose py only when the issue is primarily about the Python SDK.
+          Choose ts only when the issue is primarily about the TypeScript SDK or TS packages other than the CLI.
+          Choose docs only when the issue is primarily about documentation.
+          Set is_bug to true when the issue is primarily reporting broken behavior, a defect, an error, a regression, or unexpected behavior.
+          Set is_bug to false for feature requests, questions, maintenance, cleanup, and tool requests.
+          Set should_comment to true only when the issue appears incorrect, non-actionable, or missing the information needed to reproduce or investigate.
+          Set should_comment to false otherwise.
 
-            If should_comment is false, set comment_body to an empty string.
-          claude_args: |
-            --model claude-sonnet-4-6
-            --json-schema /tmp/issue-triage-schema.json
-            --max-turns 10
-            --verbose
+          If should_comment is true, provide comment_body as a short issue comment addressed to the reporter.
+          The comment must:
+          - clearly say it is an automated Claude triage note
+          - clearly say Claude cannot reply back in a conversation
+          - ask for the specific missing details needed to investigate, especially repro steps, expected behavior, actual behavior, environment, logs, or screenshots when relevant
+          - stay concise and professional
+
+          If should_comment is false, set comment_body to an empty string.
+          EOF
+          )
+
+          claude -p "$PROMPT" \
+            --model claude-sonnet-4-6 \
+            --max-turns 10 \
+            --output-format json \
+            --append-system-prompt "Respond with ONLY a raw JSON object (no markdown fences, no prose) that matches the schema in /tmp/issue-triage-schema.json." \
+            > /tmp/claude-response.json
+
+          echo "--- raw claude response ---"
+          cat /tmp/claude-response.json
+          echo
+          echo "--- end raw ---"
+
+          STRUCTURED=$(jq -r '.result' /tmp/claude-response.json)
+
+          # Strip optional ```json fences just in case
+          STRUCTURED=$(echo "$STRUCTURED" | sed -E 's/^```(json)?//; s/```$//' | jq -c .)
+
+          echo "--- parsed structured output ---"
+          echo "$STRUCTURED"
+          echo "--- end parsed ---"
+
+          {
+            echo "structured_output<<CLAUDE_EOF"
+            echo "$STRUCTURED"
+            echo "CLAUDE_EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Apply labels, assignees, and tool-request handling
         uses: actions/github-script@v8
