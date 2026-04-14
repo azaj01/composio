@@ -91,7 +91,10 @@ jobs:
           ISSUE_TITLE: ${{ github.event_name == 'workflow_dispatch' && steps.issue-context.outputs.issue_title || github.event.issue.title }}
           ISSUE_BODY: ${{ github.event_name == 'workflow_dispatch' && steps.issue-context.outputs.issue_body || github.event.issue.body }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
+
+          which claude
+          claude --version || true
 
           PROMPT=$(cat <<'EOF'
           Read the issue title and body from the ISSUE_TITLE and ISSUE_BODY environment variables.
@@ -130,17 +133,30 @@ jobs:
           EOF
           )
 
+          set +e
           claude -p "$PROMPT" \
             --model claude-sonnet-4-6 \
             --max-turns 10 \
             --output-format json \
+            --dangerously-skip-permissions \
             --append-system-prompt "Respond with ONLY a raw JSON object (no markdown fences, no prose) that matches the schema in /tmp/issue-triage-schema.json." \
-            > /tmp/claude-response.json
+            > /tmp/claude-response.json 2> /tmp/claude-stderr.log
+          CLAUDE_EXIT=$?
+          set -e
 
+          echo "--- claude exit code: $CLAUDE_EXIT ---"
+          echo "--- claude stderr ---"
+          cat /tmp/claude-stderr.log || true
+          echo "--- end stderr ---"
           echo "--- raw claude response ---"
-          cat /tmp/claude-response.json
+          cat /tmp/claude-response.json || true
           echo
           echo "--- end raw ---"
+
+          if [ "$CLAUDE_EXIT" -ne 0 ]; then
+            echo "Claude CLI failed with exit code $CLAUDE_EXIT"
+            exit 1
+          fi
 
           STRUCTURED=$(jq -r '.result' /tmp/claude-response.json)
 
