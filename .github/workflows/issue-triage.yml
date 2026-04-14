@@ -270,8 +270,6 @@ jobs:
                   "Hey, please ask for tool requests here https://request.composio.dev/boards/tool-requests",
                   "",
                   "I've tagged this as `tool-request` and I'm closing it here.",
-                  "",
-                  `Classifier note: ${reason}`
                 ].join("\n"),
               });
 
