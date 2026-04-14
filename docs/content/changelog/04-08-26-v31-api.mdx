@@ -40,6 +40,8 @@ Every non-tool endpoint (`/auth_configs`, `/connected_accounts`, `/triggers`, `/
 2. If you depend on a specific pinned version, pass it explicitly — `version=00000000_00` for most endpoints, or `toolkit_versions=00000000_00` for `GET /tools` (see table above)
 3. If you were already passing `version: "latest"` (or `toolkit_versions: "latest"`), you can drop the parameter entirely on v3.1
 
+**Which default is right for you?** If your application passes tool outputs to an LLM or AI agent, the v3.1 default (`latest`) is the better fit — agents interpret responses dynamically and benefit from always having the newest tools. If your code parses tool outputs programmatically (e.g., destructuring specific fields or mapping to a database schema), pin to a specific version so schema changes don't silently break your integration. See [Toolkit Versioning](/docs/tools-direct/toolkit-versioning#choosing-between-latest-and-a-pinned-version) for details.
+
 **Before (v3):**
 ```bash
 curl "https://backend.composio.dev/api/v3/tools/GMAIL_SEND_EMAIL?version=latest" \

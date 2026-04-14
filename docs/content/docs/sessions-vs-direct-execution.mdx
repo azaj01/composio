@@ -19,6 +19,7 @@ Use sessions unless you need full control over which tools are available and whe
 | **Auth** | [In-chat](/docs/authenticating-users/in-chat-authentication): agent prompts the user to connect when needed. Also supports [manual](/docs/authenticating-users/manually-authenticating) | You build the auth flow with [connect links](/docs/tools-direct/authenticating-tools) |
 | **[Workbench](/docs/workbench)** | Built in, large responses offloaded automatically | Not available |
 | **Human approval** | You configure approval rules on the session. Harder to intercept individual calls since tools are discovered dynamically | You intercept before each call in your code |
+| **Version management** | Always uses `latest` — ideal for agentic workflows where an LLM interprets outputs | You [choose the version](/docs/tools-direct/toolkit-versioning#choosing-between-latest-and-a-pinned-version): `latest` for agent-consumed outputs, pinned for programmatic parsing |
 | **Latency** | Multiple LLM turns (search, then execute) | Single call |
 
 Sessions are configurable. You can [enable or disable specific toolkits](/docs/toolkits/enable-and-disable-toolkits), set [auth configs](/docs/auth-configuration/custom-auth-configs) for white-labeled OAuth, and pin specific [connected accounts](/docs/configuring-sessions#account-selection). See [Configuring Sessions](/docs/configuring-sessions) for the full list.
