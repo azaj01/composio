@@ -127,6 +127,8 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-6
             --json-schema /tmp/issue-triage-schema.json
+            --max-turns 1
+            --allowed-tools ""
             --verbose
 
       - name: Apply labels, assignees, and tool-request handling
