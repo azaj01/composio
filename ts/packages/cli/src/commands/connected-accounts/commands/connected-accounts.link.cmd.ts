@@ -184,7 +184,7 @@ const handleNoManagedAuth = (ui: TerminalUI, toolkitSlug: string) =>
     const webURL = userContext.data.webURL.replace(/\/+$/, '');
     const apiKey = Option.getOrUndefined(userContext.data.apiKey);
 
-    let orgSlug = '~';
+    let orgName = '~';
     if (apiKey) {
       const sessionInfo = yield* getSessionInfoByUserApiKey({
         baseURL: userContext.data.baseURL,
@@ -192,11 +192,14 @@ const handleNoManagedAuth = (ui: TerminalUI, toolkitSlug: string) =>
       }).pipe(Effect.catchAll(() => Effect.succeed(null)));
 
       if (sessionInfo?.project.org.name) {
-        orgSlug = sessionInfo.project.org.name;
+        orgName = sessionInfo.project.org.name;
       }
     }
 
-    const dashboardUrl = `${webURL}/${orgSlug}/~/connect/apps/${toolkitSlug}?open=true`;
+    // Encode path segments so special characters in org names (spaces, @, etc.)
+    // don't corrupt the URL structure — without this, `?open=true` can get
+    // baked into the path as `%3Fopen%3Dtrue`, causing 404s on the dashboard.
+    const dashboardUrl = `${webURL}/${encodeURIComponent(orgName)}/~/connect/apps/${encodeURIComponent(toolkitSlug)}?open=true`;
 
     yield* ui.log.warn(
       `Composio does not manage auth for "${toolkitSlug}" — opening the dashboard to connect manually.`
