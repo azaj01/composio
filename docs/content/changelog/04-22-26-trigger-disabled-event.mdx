@@ -13,8 +13,8 @@ The event is emitted only for platform-initiated disables. `data.disabled_reason
 | `disabled_reason` | What it means |
 |---|---|
 | `connection_expired` | The connected account entered `EXPIRED` and the trigger was paused. Auto-re-enabled when the account returns to `ACTIVE`. |
-| `subscription_auth_failure` | Composio tried to refresh the provider-side webhook subscription and the provider rejected the credential. |
-| `subscription_refresh_failure` | Composio tried to refresh the provider-side webhook subscription and retries ran out. |
+| `subscription_auth_failure` | The provider rejected the credentials when Composio tried to refresh the webhook subscription. Re-auth the connection to resolve. |
+| `subscription_refresh_failure` | Composio could not reach the provider to refresh the webhook subscription (provider error, timeout, or network issue). Re-enable the trigger once the provider is healthy. |
 | `polling_failure_in_composio_infra` | A polling trigger was reported unhealthy by Composio's polling infrastructure. |
 
 The event does not fire when you disable a trigger yourself — neither through the trigger instance manage endpoint nor by deactivating the connected account with `PATCH /api/v3/connected_accounts/{nanoid}/status`.
@@ -65,30 +65,4 @@ The event is V3-only. Subscriptions on V1 or V2 payloads cannot enable it.
 
 `user_id` is `null` on triggers from toolkits that do not require authentication. The `data` object mirrors the non-deprecated fields returned per item by `GET /api/v3/trigger_instances/active`, plus `disabled_reason`.
 
-## Handling
-
-Route on `type` alongside your existing handlers:
-
-```typescript
-type NextApiRequest = { body: any };
-type NextApiResponse = { status: (code: number) => { json: (data: any) => void } };
-// ---cut---
-export default async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
-  const payload = req.body;
-
-  if (payload.type === 'composio.trigger.disabled') {
-    const { id, connected_account_id, trigger_name, disabled_reason } = payload.data;
-
-    if (disabled_reason === 'connection_expired') {
-      // Prompt the user to re-authenticate; the trigger re-enables on its own.
-    } else {
-      // subscription_auth_failure, subscription_refresh_failure, polling_failure_in_composio_infra
-      // These do not auto-re-enable — inspect the trigger and re-enable once resolved.
-    }
-  }
-
-  res.status(200).json({ status: 'ok' });
-}
-```
-
-For general webhook setup, see [subscribing to triggers](/docs/setting-up-triggers/subscribing-to-events); for re-auth flows on connection expiry, see [subscribing to connection expiry events](/docs/subscribing-to-connection-expiry-events).
+See [subscribing to triggers](/docs/setting-up-triggers/subscribing-to-events) for handler setup and [subscribing to connection expiry events](/docs/subscribing-to-connection-expiry-events) for re-auth flows on `connection_expired`.
