@@ -59,6 +59,4 @@ The event is V3-only. Subscriptions on V1 or V2 payloads cannot enable it.
 }
 ```
 
-`user_id` is `null` on triggers from toolkits that do not require authentication. `trigger_config` holds the configuration you passed when creating the trigger — its fields vary per trigger type (the example above shows GitHub's `owner` / `repo`).
-
 See [subscribing to triggers](/docs/setting-up-triggers/subscribing-to-events) for handler setup and [subscribing to connection expiry events](/docs/subscribing-to-connection-expiry-events) for re-auth flows on `connection_expired`.
