@@ -15,7 +15,7 @@ The event is emitted only for platform-initiated disables. `data.disabled_reason
 | `connection_expired` | The connected account entered `EXPIRED` and the trigger was paused. Auto-re-enabled when the account returns to `ACTIVE`. |
 | `subscription_auth_failure` | The provider rejected the credentials when Composio tried to refresh the webhook subscription. Re-auth the connection to resolve. |
 | `subscription_refresh_failure` | Composio could not reach the provider to refresh the webhook subscription (provider error, timeout, or network issue). Re-enable the trigger once the provider is healthy. |
-| `polling_failure_in_composio_infra` | A polling trigger was reported unhealthy by Composio's polling infrastructure. Rare in practice, and the reliability of our polling stack continues to improve. |
+| `polling_failure_in_composio_infra` | Composio's polling service failed to fetch events for this trigger after repeated retries. Rare in practice. |
 
 The event does not fire when you disable a trigger yourself — neither through `PATCH /api/v3/trigger_instances/manage/{id}` nor by deactivating the connected account via `PATCH /api/v3/connected_accounts/{id}/status`.
 
