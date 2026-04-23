@@ -17,20 +17,19 @@ The event is emitted only for platform-initiated disables. `data.disabled_reason
 | `subscription_refresh_failure` | Composio could not reach the provider to refresh the webhook subscription (provider error, timeout, or network issue). Re-enable the trigger once the provider is healthy. |
 | `polling_failure_in_composio_infra` | A polling trigger was reported unhealthy by Composio's polling infrastructure. Rare in practice, and the reliability of our polling stack continues to improve. |
 
-The event does not fire when you disable a trigger yourself — neither through the trigger instance manage endpoint nor by deactivating the connected account with `PATCH /api/v3/connected_accounts/{nanoid}/status`.
+The event does not fire when you disable a trigger yourself — neither through `PATCH /api/v3/trigger_instances/manage/{id}` nor by deactivating the connected account via `PATCH /api/v3/connected_accounts/{id}/status`.
 
 ## Subscribe
 
 Add `composio.trigger.disabled` from the [dashboard webhook settings](https://platform.composio.dev?next_page=/settings/webhook) — the fastest path for most teams. Select the event in the **Events** list and save.
 
-Or via the Webhook Subscriptions API:
+Or via the Webhook Subscriptions API — PATCH an existing subscription's `enabled_events`:
 
 ```bash
-curl -X POST https://backend.composio.dev/api/v3.1/webhook_subscriptions \
+curl -X PATCH https://backend.composio.dev/api/v3/webhook_subscriptions/ws_your-subscription-id \
   -H "X-API-KEY: <your-composio-api-key>" \
   -H "Content-Type: application/json" \
   -d '{
-    "webhook_url": "https://example.com/webhook",
     "enabled_events": [
       "composio.trigger.message",
       "composio.trigger.disabled"
@@ -44,16 +43,16 @@ The event is V3-only. Subscriptions on V1 or V2 payloads cannot enable it.
 
 ```json
 {
-  "id": "msg_abc123",
+  "id": "msg_847cdfcd-d219-4f18-a6dd-91acd42ca94a",
   "type": "composio.trigger.disabled",
   "metadata": {
     "project_id": "pr_your-project-id"
   },
   "data": {
-    "id": "ti_xyz789",
-    "connected_account_id": "ca_def456",
+    "id": "ti_your-trigger-id",
+    "connected_account_id": "ca_your-connected-account-id",
     "trigger_name": "GITHUB_COMMIT_EVENT",
-    "user_id": "user-id-12345",
+    "user_id": "your-user-id",
     "trigger_config": { "owner": "composio", "repo": "hermes" },
     "disabled_at": "2026-04-23T11:59:59.000Z",
     "disabled_reason": "connection_expired"
@@ -62,6 +61,6 @@ The event is V3-only. Subscriptions on V1 or V2 payloads cannot enable it.
 }
 ```
 
-`user_id` is `null` on triggers from toolkits that do not require authentication.
+`user_id` is `null` on triggers from toolkits that do not require authentication. `trigger_config` holds the configuration you passed when creating the trigger — its fields vary per trigger type (the example above shows GitHub's `owner` / `repo`).
 
 See [subscribing to triggers](/docs/setting-up-triggers/subscribing-to-events) for handler setup and [subscribing to connection expiry events](/docs/subscribing-to-connection-expiry-events) for re-auth flows on `connection_expired`.
