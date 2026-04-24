@@ -8,6 +8,12 @@ To prevent a connection's `Authorization` header from being forwarded to an unin
 
 Cross-subdomain requests on the same registrable domain continue to work — for example, a Gmail connection with base `https://gmail.googleapis.com` can still call `https://www.googleapis.com/...`. Relative endpoints (`/users/me/messages`) are resolved against the connection's `base_url` as before and are unaffected.
 
+<Callout type="warn">
+**Breaking Change**
+
+Existing proxy calls that pass an absolute `endpoint` URL whose registrable domain does not match the connection's `base_url` will now fail with `400 OriginMismatch` instead of being forwarded. Calls that omit both `connected_account_id` and `custom_connection_data` will fail with `400 MissingAuthContext` instead of being forwarded without auth.
+</Callout>
+
 ### What changed
 
 - Absolute `endpoint` URLs on a different registrable domain than the connection's `base_url` are rejected with HTTP `400 OriginMismatch`. The upstream request is never made.
