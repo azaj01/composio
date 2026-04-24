@@ -39,7 +39,7 @@ Custom auth configs are unaffected because they are backed by your own OAuth app
 ```bash
 curl -X POST https://backend.composio.dev/api/v3/connected_accounts \
   -H "Content-Type: application/json" \
-  -H "x-api-key: ak_your_api_key" \
+  -H "x-api-key: <YOUR_API_KEY>" \
   -d '{
     "auth_config": { "id": "ac_your_composio_managed_oauth_config" },
     "connection": { "user_id": "your_end_user_id" }
@@ -51,7 +51,7 @@ curl -X POST https://backend.composio.dev/api/v3/connected_accounts \
 ```bash
 curl -X POST https://backend.composio.dev/api/v3/connected_accounts/link \
   -H "Content-Type: application/json" \
-  -H "x-api-key: ak_your_api_key" \
+  -H "x-api-key: <YOUR_API_KEY>" \
   -d '{
     "auth_config_id": "ac_your_composio_managed_oauth_config",
     "user_id": "your_end_user_id"
