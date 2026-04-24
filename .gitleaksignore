@@ -24,3 +24,7 @@ be30c1c2be63d5b8651ba520779c19662d5fd6c3:docs/content/docs/observability/usage.m
 be30c1c2be63d5b8651ba520779c19662d5fd6c3:docs/content/docs/observability/usage.mdx:curl-auth-header:155
 be30c1c2be63d5b8651ba520779c19662d5fd6c3:docs/content/docs/observability/usage.mdx:curl-auth-header:171
 be30c1c2be63d5b8651ba520779c19662d5fd6c3:docs/content/docs/observability/usage.mdx:curl-auth-header:185
+
+# SEC-339 link auth migration changelog — curl examples use <YOUR_API_KEY> placeholder (not real secrets)
+eb38c367b73d0476e21de5d552252f5166ba7698:docs/content/changelog/04-24-26-link-auth-migration.mdx:curl-auth-header:38
+eb38c367b73d0476e21de5d552252f5166ba7698:docs/content/changelog/04-24-26-link-auth-migration.mdx:curl-auth-header:50
