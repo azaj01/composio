@@ -155,6 +155,10 @@ console.log(data);
 
 The `endpoint` can be an **absolute URL** (`https://api.example.com/v1/resource`) or a **relative path** (`/v1/resource`). Relative paths are resolved against the toolkit's default base URL — only use the absolute form when calling a host that isn't the toolkit's standard API (for example, a regional Salesforce or Zendesk domain).
 
+<Callout type="warn">
+Proxy execute rejects cross-domain requests. The `endpoint` must resolve to the same domain as the connected account's toolkit (for example, a GitHub connection can only call `api.github.com` paths). Pointing the proxy at an arbitrary third-party host will fail — this is an intentional security boundary, not a quota, so it cannot be bypassed by adjusting the request.
+</Callout>
+
 ## Parameters
 
 | Parameter | Required | Type | Description |
